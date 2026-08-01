@@ -1,0 +1,308 @@
+{
+    "LabelColor": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "FoldersData": {
+        "Keys": [
+            "2c126c299f45e1547843d37cb1ed469b",
+            "d6277bd850e44a209a4d51585e1a6749",
+            "dbc50f465b14298439f1814c5a8fe6e5",
+            "b3bcb62bbd9fc5347893edd77219197b",
+            "bb79828b17ab7fe45959c96261883ccb",
+            "84469d188c0dcdf46aeb0a8bb7abe943",
+            "09e63a70b73d4d448b4be95918a6cfad",
+            "5fc2f2d2c6b47ca40a9ffbf4e1570939",
+            "743070bdd13b4b73a563caeb309b712a",
+            "5870e441408fe684ba5cebf770690eaa",
+            "6a7bec10a0cf85c438cac5bf84ce6c20",
+            "1c3c6091ef85ad643888497e900c0244",
+            "5f155ce5c47bd6943b2ff651b20d2e07",
+            "8c29e4414a459ac4785aafa525ee21f0",
+            "7992fa4651861de4ea7849393390a5b6",
+            "444bf60c48cb40e499c787bcabc004eb",
+            "15a1b02dcc91db745bf120caa6bb59c6",
+            "8c742678bdd3b5f4a895402efb493dd1",
+            "67d42b4720007ea48b32e0b06fa082f1",
+            "06b4bb15485d7a2478df5f2676c594fa",
+            "9ed7faaeecb7be2ed8d22a6083acb0e3"
+        ],
+        "Values": [
+            {
+                "_guid": "2c126c299f45e1547843d37cb1ed469b",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "角色精灵库",
+                "_desc": "当前只有 Characters 子目录。用于角色 Sprite Library 资产入口，和角色外观/换装分类相关。"
+            },
+            {
+                "_guid": "d6277bd850e44a209a4d51585e1a6749",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "正式配置",
+                "_desc": "当前包含 EquipmentSystem 和 GameCore 两类项目正式配置资产。这里放已经进入项目链路的 ScriptableObject/配置资产，不放插件 Demo 或临时样例。"
+            },
+            {
+                "_guid": "dbc50f465b14298439f1814c5a8fe6e5",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "GAS生成代码",
+                "_desc": "当前包含 FantasyWord.GAS.GeneratedRuntime.asmdef 和 XAbility/XAttribute/XAttrSet/XCue 等 .gen.cs。这里是 GAS 相关生成代码，不手改。"
+            },
+            {
+                "_guid": "b3bcb62bbd9fc5347893edd77219197b",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "Luban输出",
+                "_desc": "当前只有 Luban 子目录。这里是 Luban/配置流程生成产物入口，不手改生成结果；要改内容应回到来源配置或生成流程。"
+            },
+            {
+                "_guid": "bb79828b17ab7fe45959c96261883ccb",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "PuertsMCP文件",
+                "_desc": "当前只有 PuertsUnityMcp 子目录。这里是 StreamingAssets 下原样打包给 Puerts Unity MCP 使用的文件入口。"
+            },
+            {
+                "_guid": "84469d188c0dcdf46aeb0a8bb7abe943",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "俯视角参考",
+                "_desc": "TopDownEngine Imported Subset：README 写明这是已导入的 TopDown Engine 子集，保留 Common、Demos、ThirdParty，用作俯视角样板参考。"
+            },
+            {
+                "_guid": "09e63a70b73d4d448b4be95918a6cfad",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "音频资源配置",
+                "_desc": "BroAudio 项目级资源目录，当前只有 Editor 和 Resources。包源码在 Packages/com.ami.broaudio；这里更像项目配置和 Resources 资产落点。"
+            },
+            {
+                "_guid": "5fc2f2d2c6b47ca40a9ffbf4e1570939",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "补间动画",
+                "_desc": "Demigiant 目录当前承载 DOTween 子目录。用于补间动画能力来源，实际插件内容在 DOTween 内。"
+            },
+            {
+                "_guid": "743070bdd13b4b73a563caeb309b712a",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "表格编辑",
+                "_desc": "TableForge：当前包含 Demo、Editor、Runtime。按表格/配置编辑插件看待；具体数据产物不在这里手写。"
+            },
+            {
+                "_guid": "5870e441408fe684ba5cebf770690eaa",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "动画序列",
+                "_desc": "Animation Sequencer：package.json 描述为用友好界面创建复杂动画/事件序列，依赖 DOTween；目录含 Scripts、README、Documentation、CHANGELOG。"
+            },
+            {
+                "_guid": "6a7bec10a0cf85c438cac5bf84ce6c20",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "网格寻路",
+                "_desc": "AStar 2D Grid Pathfinding：当前只有 AStar 子目录。作为 2D 网格寻路插件来源，具体示例和脚本在 AStar 内部。"
+            },
+            {
+                "_guid": "1c3c6091ef85ad643888497e900c0244",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "场景转场",
+                "_desc": "Easy Transition：README 写明是基于 ScriptableObject 的 Unity 场景转场系统，含 Demo、Documentation、Materials、Prefabs、Scripts、Shaders、Transition Effects。"
+            },
+            {
+                "_guid": "5f155ce5c47bd6943b2ff651b20d2e07",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "配置生成",
+                "_desc": "ExOpenSource 当前只包含 LubanForConfig。用途限定为 Luban 配置生成相关来源；和 DataGenerated 的生成产物分开看。"
+            },
+            {
+                "_guid": "8c29e4414a459ac4785aafa525ee21f0",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "多态字段选择",
+                "_desc": "SerializeReference Extensions：package.json 描述为给 [SerializeReference] 字段提供 Inspector 类型选择弹窗；目录分 Editor、Runtime。"
+            },
+            {
+                "_guid": "7992fa4651861de4ea7849393390a5b6",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "序列化字典",
+                "_desc": "SerializableDictionary：package.json 描述为 Unity 可序列化 HashSet 和 Dictionary；目录分 Editor、Runtime。"
+            },
+            {
+                "_guid": "444bf60c48cb40e499c787bcabc004eb",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "Inspector辅助",
+                "_desc": "Wingman：含 Wingman.cs、Settings.cs、Clipboard 相关脚本和 asmdef。命名空间为 WingmanInspector，用途是 Inspector/复制粘贴相关编辑器辅助。"
+            },
+            {
+                "_guid": "15a1b02dcc91db745bf120caa6bb59c6",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "日志公共代码",
+                "_desc": "Backbone：当前只有 Common 子目录；现有证据主要命中 Common/Logger 代码和编辑器配置，按通用日志/公共代码来源看待。"
+            },
+            {
+                "_guid": "8c742678bdd3b5f4a895402efb493dd1",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "2D光照",
+                "_desc": "FunkyCode 目录含 SmartLighting2D、SmartUtilities2D、SmartLighting2D 文档和 Demo。用途是 2D 光照/工具相关插件内容。"
+            },
+            {
+                "_guid": "67d42b4720007ea48b32e0b06fa082f1",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "Tilemap生成",
+                "_desc": "InteliMap PRO：含 Examples、Icons、Scripts 和离线文档。用途是 2D tilemap 编辑器工具、AI/运行时地图生成与训练配置。"
+            },
+            {
+                "_guid": "06b4bb15485d7a2478df5f2676c594fa",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "对象预览",
+                "_desc": "Voxel Labs / Ultimate Preview：Read Me 写明支持 URP、Built-in，HDRP 需额外导入 Packages 内 unitypackage；用途是资源/对象预览增强。"
+            },
+            {
+                "_guid": "9ed7faaeecb7be2ed8d22a6083acb0e3",
+                "_isScene": false,
+                "_color": {
+                    "r": 0.0,
+                    "g": 0.0,
+                    "b": 0.0,
+                    "a": 0.8500000238418579
+                },
+                "_recursive": false,
+                "_tag": "自动保存",
+                "_desc": ""
+            }
+        ]
+    }
+}

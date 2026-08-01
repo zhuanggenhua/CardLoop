@@ -1,0 +1,14 @@
+[
+  {
+    "ID": 20001,
+    "Name": "基础攻击命中反馈",
+    "Desc": "基础攻击命中可受伤目标时触发目标角色 GameplayFeedbackSet.HitDamageable",
+    "CueLogic": {
+      "$type": "CuePlayGameCoreFeedback",
+      "Param": {
+        "Kind": 6,
+        "Target": 0
+      }
+    }
+  }
+]

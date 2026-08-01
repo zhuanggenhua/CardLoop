@@ -1,0 +1,47 @@
+[
+  {
+    "ID": 20001,
+    "PrefabGuid": "5b38e7a9c3224e3dbaa98c2b0dd07e05",
+    "PrefabPath": "",
+    "IconGuid": "eff924477cc645b79f2e586fbbfc7a50",
+    "IconPath": "",
+    "AbilityRootMode": 1,
+    "InputTriggerMode": 0,
+    "BufferInput": true,
+    "NewInputExtendsBuffer": true,
+    "MaximumBufferDuration": 0.25,
+    "DelayBeforeUseReleaseInterruption": true,
+    "TimeBetweenUsesReleaseInterruption": true,
+    "UpdateLookAtDirectionOnFire": false
+  },
+  {
+    "ID": 20002,
+    "PrefabGuid": "5b38e7a9c3224e3dbaa98c2b0dd07e05",
+    "PrefabPath": "",
+    "IconGuid": "",
+    "IconPath": "",
+    "AbilityRootMode": 1,
+    "InputTriggerMode": 0,
+    "BufferInput": true,
+    "NewInputExtendsBuffer": true,
+    "MaximumBufferDuration": 0.25,
+    "DelayBeforeUseReleaseInterruption": true,
+    "TimeBetweenUsesReleaseInterruption": true,
+    "UpdateLookAtDirectionOnFire": true
+  },
+  {
+    "ID": 20004,
+    "PrefabGuid": "5b38e7a9c3224e3dbaa98c2b0dd07e05",
+    "PrefabPath": "",
+    "IconGuid": "a146817efeef4e999987241c5ccb6d5b",
+    "IconPath": "",
+    "AbilityRootMode": 1,
+    "InputTriggerMode": 2,
+    "BufferInput": true,
+    "NewInputExtendsBuffer": true,
+    "MaximumBufferDuration": 0.25,
+    "DelayBeforeUseReleaseInterruption": true,
+    "TimeBetweenUsesReleaseInterruption": true,
+    "UpdateLookAtDirectionOnFire": true
+  }
+]

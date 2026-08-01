@@ -1,0 +1,231 @@
+[
+  {
+    "ID": 101,
+    "Name": "普通攻击",
+    "LifeTime": 30,
+    "ManualEndAbility": false,
+    "Tracks": [
+      {
+        "Name": "动画轨道",
+        "TaskClips": [
+          {
+            "StartTime": 2,
+            "EndTime": 24,
+            "Name": "播放攻击动画",
+            "Task": {
+              "$type": "TaskPlayCue",
+              "Param": {
+                "RequiredTags": [
+                  0
+                ],
+                "ImmunityTags": [
+                  0
+                ],
+                "CueLogic": {
+                  "$type": "CuePlayGameCoreAnimator",
+                  "Param": {
+                    "AnimatorNodePath": "",
+                    "AnimationName": "Attack"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "Name": "GE轨道",
+        "TaskClips": [
+          {
+            "StartTime": 1,
+            "EndTime": 1,
+            "Name": "消耗",
+            "Task": {
+              "$type": "TaskDoCost",
+              "Param": {}
+            }
+          },
+          {
+            "StartTime": 8,
+            "EndTime": 8,
+            "Name": "造成伤害",
+            "Task": {
+              "$type": "TaskApplyEffects",
+              "Param": {
+                "IDs": [
+                  2003
+                ],
+                "TargetCatcher": {
+                  "$type": "CatchAreaPolygon2D",
+                  "Param": {
+                    "isWorldSpace": false,
+                    "points": "0.175,-0.25;1.125,-0.25;1.125,0.55;0.175,0.55",
+                    "layer": 128
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "ID": 102,
+    "Name": "变形替换近战",
+    "LifeTime": 30,
+    "ManualEndAbility": false,
+    "Tracks": [
+      {
+        "Name": "动画轨道",
+        "TaskClips": [
+          {
+            "StartTime": 2,
+            "EndTime": 24,
+            "Name": "播放攻击动画",
+            "Task": {
+              "$type": "TaskPlayCue",
+              "Param": {
+                "RequiredTags": [
+                  0
+                ],
+                "ImmunityTags": [
+                  0
+                ],
+                "CueLogic": {
+                  "$type": "CuePlayGameCoreAnimator",
+                  "Param": {
+                    "AnimatorNodePath": "",
+                    "AnimationName": "Attack"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "Name": "GE轨道",
+        "TaskClips": [
+          {
+            "StartTime": 1,
+            "EndTime": 1,
+            "Name": "消耗",
+            "Task": {
+              "$type": "TaskDoCost",
+              "Param": {}
+            }
+          },
+          {
+            "StartTime": 8,
+            "EndTime": 8,
+            "Name": "造成伤害",
+            "Task": {
+              "$type": "TaskApplyEffects",
+              "Param": {
+                "IDs": [
+                  2003
+                ],
+                "TargetCatcher": {
+                  "$type": "CatchAreaBox2D",
+                  "Param": {
+                    "isWorldSpace": false,
+                    "offset": {
+                      "x": 0.65,
+                      "y": 0.15
+                    },
+                    "size": {
+                      "x": 0.95,
+                      "y": 0.8
+                    },
+                    "rotation": 0,
+                    "layer": 128
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "ID": 20004,
+    "Name": "蓄力释放占位",
+    "LifeTime": 36,
+    "ManualEndAbility": false,
+    "Tracks": [
+      {
+        "Name": "动画轨道",
+        "TaskClips": [
+          {
+            "StartTime": 2,
+            "EndTime": 30,
+            "Name": "播放蓄力攻击动画",
+            "Task": {
+              "$type": "TaskPlayCue",
+              "Param": {
+                "RequiredTags": [
+                  0
+                ],
+                "ImmunityTags": [
+                  0
+                ],
+                "CueLogic": {
+                  "$type": "CuePlayGameCoreAnimator",
+                  "Param": {
+                    "AnimatorNodePath": "",
+                    "AnimationName": "ChargedAttack"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "Name": "GE轨道",
+        "TaskClips": [
+          {
+            "StartTime": 1,
+            "EndTime": 1,
+            "Name": "消耗",
+            "Task": {
+              "$type": "TaskDoCost",
+              "Param": {}
+            }
+          },
+          {
+            "StartTime": 12,
+            "EndTime": 12,
+            "Name": "造成蓄力释放伤害",
+            "Task": {
+              "$type": "TaskApplyEffects",
+              "Param": {
+                "IDs": [
+                  2004
+                ],
+                "TargetCatcher": {
+                  "$type": "CatchAreaBox2D",
+                  "Param": {
+                    "isWorldSpace": false,
+                    "offset": {
+                      "x": 0.75,
+                      "y": 0.15
+                    },
+                    "size": {
+                      "x": 1.15,
+                      "y": 0.95
+                    },
+                    "rotation": 0,
+                    "layer": 128
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

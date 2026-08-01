@@ -1,0 +1,89 @@
+[
+  {
+    "ID": 20001,
+    "Name": "Attack",
+    "Desc": "玩家普通攻击",
+    "Cost": 0,
+    "CdEffect": 0,
+    "Cd": 0,
+    "AssetTags": [],
+    "ActivationOwnedTags": [
+      3003
+    ],
+    "ActivationBlockedTags": {
+      "All": [
+        0
+      ],
+      "Any": [
+        0
+      ],
+      "None": [
+        3003
+      ]
+    },
+    "AbilityLogic": {
+      "$type": "ALTimeline",
+      "Param": {
+        "ID": 101
+      }
+    }
+  },
+  {
+    "ID": 20002,
+    "Name": "TransformReplaceSmoke",
+    "Desc": "组合运行时变形替换 smoke 用独立 EX-GAS 近战能力",
+    "Cost": 0,
+    "CdEffect": 0,
+    "Cd": 0,
+    "AssetTags": [],
+    "ActivationOwnedTags": [
+      3003
+    ],
+    "ActivationBlockedTags": {
+      "All": [
+        0
+      ],
+      "Any": [
+        0
+      ],
+      "None": [
+        3003
+      ]
+    },
+    "AbilityLogic": {
+      "$type": "ALTimeline",
+      "Param": {
+        "ID": 102
+      }
+    }
+  },
+  {
+    "ID": 20004,
+    "Name": "ChargedAttackRelease",
+    "Desc": "蓄力释放占位：独立 EX-GAS 近战能力；当前为按下触发释放段，后续接入按住蓄力/松手释放输入协议",
+    "Cost": 0,
+    "CdEffect": 0,
+    "Cd": 0,
+    "AssetTags": [],
+    "ActivationOwnedTags": [
+      3003
+    ],
+    "ActivationBlockedTags": {
+      "All": [
+        0
+      ],
+      "Any": [
+        0
+      ],
+      "None": [
+        3003
+      ]
+    },
+    "AbilityLogic": {
+      "$type": "ALTimeline",
+      "Param": {
+        "ID": 20004
+      }
+    }
+  }
+]

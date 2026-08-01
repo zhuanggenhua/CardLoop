@@ -1,0 +1,134 @@
+using System;
+using System.Collections.Generic;
+
+namespace YokiFrame
+{
+    /// <summary>
+    /// UI 管理工具 - 堆栈管理
+    /// </summary>
+    public partial class UIKit
+    {
+        #region 堆栈
+
+        /// <summary>
+        /// 压入 Panel 到栈中
+        /// </summary>
+        public static void PushPanel<T>(bool hidePreLevel = true) where T : UIPanel
+        {
+            var root = Root;
+            if (root == default) return;
+            
+            var panel = GetPanel<T>();
+            if (panel != default) root.PushToStack(panel, UIRoot.DEFAULT_STACK, hidePreLevel);
+        }
+
+        /// <summary>
+        /// 压入 Panel 到栈中
+        /// </summary>
+        public static void PushPanel(IPanel panel, bool hidePreLevel = true)
+        {
+            var root = Root;
+            if (root == default) return;
+            root.PushToStack(panel, UIRoot.DEFAULT_STACK, hidePreLevel);
+        }
+
+        /// <summary>
+        /// 压入 Panel 到指定命名栈
+        /// </summary>
+        public static void PushPanel(IPanel panel, string stackName, bool hidePreLevel = true)
+        {
+            var root = Root;
+            if (root == default) return;
+            root.PushToStack(panel, stackName, hidePreLevel);
+        }
+
+        /// <summary>
+        /// 打开并压入 Panel 到栈中
+        /// </summary>
+        public static void PushOpenPanel<T>(UILevel level = default,
+            IUIData data = null, bool hidePreLevel = true) where T : UIPanel
+        {
+            var root = Root;
+            if (root == default) return;
+            
+            var panel = OpenPanel<T>(level, data);
+            root.PushToStack(panel, UIRoot.DEFAULT_STACK, hidePreLevel);
+        }
+
+        /// <summary>
+        /// 异步打开并压入 Panel 到栈中
+        /// </summary>
+        public static void PushOpenPanelAsync<T>(Action<IPanel> callback = null,
+            UILevel level = default, IUIData data = null, bool hidePreLevel = true) where T : UIPanel
+        {
+            var root = Root;
+            if (root == default) return;
+            
+            OpenPanelAsync<T>(panel =>
+            {
+                root.PushToStack(panel, UIRoot.DEFAULT_STACK, hidePreLevel);
+                callback?.Invoke(panel);
+            }, level, data);
+        }
+
+        /// <summary>
+        /// 弹出面板
+        /// </summary>
+        public static IPanel PopPanel(bool showPreLevel = true, bool autoClose = true)
+        {
+            var root = Root;
+            if (root == default) return null;
+            return root.PopFromStack(UIRoot.DEFAULT_STACK, showPreLevel, autoClose);
+        }
+
+        /// <summary>
+        /// 从指定命名栈弹出面板
+        /// </summary>
+        public static IPanel PopPanel(string stackName, bool showPreLevel = true, bool autoClose = true)
+        {
+            var root = Root;
+            if (root == default) return null;
+            return root.PopFromStack(stackName, showPreLevel, autoClose);
+        }
+
+        /// <summary>
+        /// 查看栈顶面板
+        /// </summary>
+        public static IPanel PeekPanel(string stackName = UIRoot.DEFAULT_STACK)
+        {
+            var root = Root;
+            if (root == default) return null;
+            return root.PeekStack(stackName);
+        }
+
+        /// <summary>
+        /// 获取栈深度
+        /// </summary>
+        public static int GetStackDepth(string stackName = UIRoot.DEFAULT_STACK)
+        {
+            var root = Root;
+            return root != default ? root.GetStackDepth(stackName) : 0;
+        }
+
+        /// <summary>
+        /// 获取所有栈名称
+        /// </summary>
+        public static IReadOnlyCollection<string> GetAllStackNames()
+        {
+            var root = Root;
+            return root != default ? root.GetAllStackNames() : Array.Empty<string>();
+        }
+
+        /// <summary>
+        /// 清空指定栈
+        /// </summary>
+        public static void ClearStack(string stackName = UIRoot.DEFAULT_STACK, bool closeAll = true)
+        {
+            var root = Root;
+            if (root == default) return;
+            root.ClearStack(stackName, closeAll);
+        }
+
+        #endregion
+    }
+}

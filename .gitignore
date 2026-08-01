@@ -1,0 +1,99 @@
+# Unity generated folders
+.utmp/
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.log
+
+# Local runtime / AI automation artifacts
+/.codexbridge/
+/AIBridgeCache/
+/_ai_preview_*.jpg
+/test-results/
+/.puerts-unity-mcp/
+/.uloop/
+/.dotnet/
+/.unity-env/
+/.learnings/
+/Unity/
+/[Aa]ssets/[Ss]creenshots/
+/[Aa]ssets/[Ss]creenshots.meta
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
+/[Aa]ssets/puerts-unity-mcp/Runtime/Generated/
+/[Aa]ssets/puerts-unity-mcp/Runtime/Generated/Plugins/puerts_il2cpp/
+
+# Legacy recovery staging with extremely long asset paths; keep local-only unless re-reviewed.
+/docs/archive/legacy-recovery/MigrationStaging/
+
+# IDE / editor
+.vs/
+.vscode/
+.idea/
+.consulo/
+
+# OS / tooling
+.DS_Store
+Thumbs.db
+Desktop.ini
+__pycache__/
+*.py[cod]
+
+# Auto-generated project files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.DotSettings.user
+
+# Unity cache/meta artifacts
+sysinfo.txt
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+mono_crash.*
+
+# Build artifacts
+*.apk
+*.aab
+*.unitypackage
+*.unitypackage.meta
+*.app
+*.exe
+*.dmg
+/Bundles/
+
+# Asset Store tools
+Assets/AssetStoreTools*
+
+# Addressables generated content
+/ServerData
+/[Aa]ssets/StreamingAssets/aa*
+/[Aa]ssets/AddressableAssetsData/link.xml*
+/[Aa]ssets/AddressableAssetsData/*/*.bin*
+/[Aa]ssets/Addressables_Temp*
+
+# Visual Scripting generated files
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.db
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.db.meta
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers.meta
+
+# TestRunner generated scenes
+/[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*

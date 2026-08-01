@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 185f6993d5150494d98da50e26cb1c25, type: 3}
+  m_Name: BundleCollectorSetting
+  m_EditorClassIdentifier: YooAsset.Editor::YooAsset.Editor.BundleCollectorSetting
+  ShowPackageView: 0
+  ShowEditorAlias: 0
+  UniqueBundleName: 0
+  Packages:
+  - PackageName: DefaultPackage
+    PackageDesc: "\u9879\u76EE\u9ED8\u8BA4\u52A8\u6001\u8D44\u6E90\u5305"
+    EnableAddressable: 1
+    SupportExtensionless: 1
+    LocationToLower: 0
+    IncludeAssetGUID: 0
+    AutoCollectShaders: 1
+    IgnoreRuleName: NormalIgnoreRule
+    Groups:
+    - GroupName: "\u6B63\u5F0FUI\u9762\u677F"
+      GroupDesc: "UIKit \u6B63\u5F0F\u9762\u677F"
+      AssetTags: ui
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/GameRes/UI/Panels
+        CollectorGUID: 5455818f22e0efb49b0f13ed894b3087
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: ui
+        UserData: 
+    - GroupName: "\u672C\u5730\u5316"
+      GroupDesc: "\u8FD0\u884C\u65F6\u672C\u5730\u5316 JSON"
+      AssetTags: localization
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/GameRes/Localization
+        CollectorGUID: b40c179fc21e5534eb5a699ace95baf0
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: localization
+        UserData: 

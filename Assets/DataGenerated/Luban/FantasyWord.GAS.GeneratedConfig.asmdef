@@ -1,0 +1,17 @@
+{
+    "name": "FantasyWord.GAS.GeneratedConfig",
+    "rootNamespace": "",
+    "references": [
+        "Luban.Runtime",
+        "SimpleJSON"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,20 @@
+{
+    "name": "azixMcAze.SerializableDictionary.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:61fd5600921cbf9498057034da0a8616"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_2019_3_OR_NEWER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,211 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92ac313f50234886a685d9beef80d47d, type: 3}
+  m_Name: DefaultContextSteeringProfile2D
+  m_EditorClassIdentifier:
+  m_sampleCount: 16
+  m_combineMode: 0
+  m_selectionMode: 0
+  m_agentRadius: 0.35
+  m_maxSpeed: 1
+  m_mass: 1
+  m_avoidancePriority: 1
+  m_obstacleProbeRadius: 1
+  m_neighbourRadius: 1
+  m_timeHorizon: 0.75
+  m_maxNeighbours: 12
+  m_contactStiffness: 1
+  m_maxContactCorrection: 0.75
+  m_defaultGroupId: default
+  m_behaviourGroups:
+  - m_stableId: default
+    m_displayName: Default
+    m_behaviours:
+    - rid: 4536545658951696593
+    - rid: 4536545658951696594
+    - rid: 4536545658951696595
+    - rid: 4536545658951696596
+    - rid: 4536545658951696600
+  - m_stableId: transit
+    m_displayName: Transit
+    m_behaviours:
+    - rid: 4536545658951696597
+    - rid: 4536545658951696598
+    - rid: 4536545658951696599
+    - rid: 4536545658951696601
+  - m_stableId: predictive-target
+    m_displayName: Predictive Target
+    m_behaviours:
+    - rid: 4536545658951696602
+    - rid: 4536545658951696603
+    - rid: 4536545658951696604
+    - rid: 4536545658951696605
+    - rid: 4536545658951696606
+  - m_stableId: orbit
+    m_displayName: Orbit
+    m_behaviours:
+    - rid: 4536545658951696607
+    - rid: 4536545658951696608
+    - rid: 4536545658951696609
+    - rid: 4536545658951696610
+  - m_stableId: combat-wander
+    m_displayName: Combat Wander
+    m_behaviours:
+    - rid: 4536545658951696611
+    - rid: 4536545658951696612
+    - rid: 4536545658951696613
+  m_drawDebug: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 4536545658951696593
+      type: {class: SeekSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: seek
+        m_enabled: 1
+        m_weight: 1
+    - rid: 4536545658951696594
+      type: {class: ArriveSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: arrive
+        m_enabled: 1
+        m_weight: 1
+        m_slowRadius: 1.5
+        m_stopRadius: 0.1
+    - rid: 4536545658951696595
+      type: {class: ObstacleAvoidanceSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: obstacle-avoidance
+        m_enabled: 1
+        m_weight: 1
+        m_sidePreference: 0.35
+    - rid: 4536545658951696596
+      type: {class: SeparationSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: separation
+        m_enabled: 1
+        m_weight: 1
+    - rid: 4536545658951696597
+      type: {class: SeekSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: seek
+        m_enabled: 1
+        m_weight: 1
+    - rid: 4536545658951696598
+      type: {class: ObstacleAvoidanceSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: obstacle-avoidance
+        m_enabled: 1
+        m_weight: 1
+        m_sidePreference: 0.35
+    - rid: 4536545658951696599
+      type: {class: SeparationSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: separation
+        m_enabled: 1
+        m_weight: 1
+    - rid: 4536545658951696600
+      type: {class: SideStepSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: side-step
+        m_enabled: 1
+        m_weight: 1
+        m_forwardDotThreshold: 0.15
+    - rid: 4536545658951696601
+      type: {class: SideStepSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: side-step
+        m_enabled: 1
+        m_weight: 1
+        m_forwardDotThreshold: 0.15
+    - rid: 4536545658951696602
+      type: {class: PursuitSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: pursuit
+        m_enabled: 1
+        m_weight: 1
+        m_maxPredictionTime: 0.75
+    - rid: 4536545658951696603
+      type: {class: ArriveSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: arrive
+        m_enabled: 1
+        m_weight: 1
+        m_slowRadius: 1.5
+        m_stopRadius: 0.1
+    - rid: 4536545658951696604
+      type: {class: ObstacleAvoidanceSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: obstacle-avoidance
+        m_enabled: 1
+        m_weight: 1
+        m_sidePreference: 0.35
+    - rid: 4536545658951696605
+      type: {class: SeparationSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: separation
+        m_enabled: 1
+        m_weight: 1
+    - rid: 4536545658951696606
+      type: {class: SideStepSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: side-step
+        m_enabled: 1
+        m_weight: 1
+        m_forwardDotThreshold: 0.15
+    - rid: 4536545658951696607
+      type: {class: OrbitSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: orbit
+        m_enabled: 1
+        m_weight: 1
+        m_desiredRadius: 1.5
+        m_clockwise: 1
+    - rid: 4536545658951696608
+      type: {class: ObstacleAvoidanceSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: obstacle-avoidance
+        m_enabled: 1
+        m_weight: 1
+        m_sidePreference: 0.35
+    - rid: 4536545658951696609
+      type: {class: SeparationSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: separation
+        m_enabled: 1
+        m_weight: 1
+    - rid: 4536545658951696610
+      type: {class: SideStepSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: side-step
+        m_enabled: 1
+        m_weight: 1
+        m_forwardDotThreshold: 0.15
+    - rid: 4536545658951696611
+      type: {class: ObstacleAvoidanceSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: obstacle-avoidance
+        m_enabled: 1
+        m_weight: 1
+        m_sidePreference: 0.35
+    - rid: 4536545658951696612
+      type: {class: CombatWanderSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: combat-wander
+        m_enabled: 1
+        m_weight: 1
+    - rid: 4536545658951696613
+      type: {class: SeparationSteeringBehaviour2D, ns: ContextSteering2D, asm: ContextSteering2D.Runtime}
+      data:
+        m_stableId: separation
+        m_enabled: 1
+        m_weight: 1

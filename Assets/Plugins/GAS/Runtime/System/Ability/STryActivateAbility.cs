@@ -1,0 +1,68 @@
+using Unity.Burst;
+using Unity.Entities;
+
+namespace GAS.Runtime
+{
+    [UpdateInGroup(typeof(SGAbility))]
+    public partial struct STryActivateAbility : ISystem
+    {
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<CAbilityInTryActivate>();
+        }
+
+        //[BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            var ecb = EntityHelper.RegisterEntityCommandBuffer();
+            
+            var globalTimer = SystemAPI.GetSingletonRW<GlobalTimer>();
+            
+            foreach (var (_, basicInfo, ability) in SystemAPI
+                         .Query<RefRO<CAbilityInTryActivate>, RefRO<CAbilityBaseInfo>>().WithEntityAccess())
+            {
+                var abilityLogic = state.EntityManager.GetComponentData<MCAbilityLogic>(ability);
+                var result = AbilityUtil.CanActivateAbility(ability);
+                if (result == AbilityActivationResult.Success)
+                {
+                    var owner = basicInfo.ValueRO.Owner;
+                    if (state.EntityManager.HasComponent<CAbilityActivationOwnedTags>(ability))
+                    {
+                        var abilityActivationOwnedTags =
+                            state.EntityManager.GetComponentData<CAbilityActivationOwnedTags>(ability);
+                        foreach (var tag in abilityActivationOwnedTags.tags)
+                            TagHelper.AddTemporaryTagTo(owner, ability, tag);
+                    }
+
+                    // 添加激活tag
+                    ecb.AddComponent(ability, new CAbilityActive());
+                    // 激活能力【自定义逻辑】
+                    abilityLogic.Logic.CommitPendingActivationContext();
+                    abilityLogic.Logic.ActivateAbility(globalTimer.ValueRO);
+                    
+                    // 激活成功后，根据 CancelAbilityWithTags 取消其他匹配的能力  
+                    AbilityUtil.CancelAbilitiesWithTags(ability);
+                }
+                else
+                {
+                    abilityLogic.Logic.RejectPendingActivationContext();
+                }
+
+                GASEventCenter.InvokeOnActivateResult(ability, result);
+
+                ecb.RemoveComponent<CAbilityInTryActivate>(ability);
+            }
+
+            ecb.Playback(state.EntityManager);
+            EntityHelper.ExecuteDeferredCommands();
+            ecb.Dispose();
+            EntityHelper.UnregisterEntityCommandBuffer();
+        }
+
+        [BurstCompile]
+        public void OnDestroy(ref SystemState state)
+        {
+        }
+    }
+}

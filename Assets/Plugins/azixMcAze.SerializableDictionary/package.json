@@ -1,0 +1,11 @@
+{
+	"name": "com.azixmcaze.serializabledictionary",
+	"displayName": "SerializableDictionary",
+	"author": { "name": "azixMcAze", "url": "https://github.com/azixMcAze" },
+	"version": "1.1.0",
+	"unity": "2021.3",
+	"description": "Serializable HashSet and Dictionary classes for Unity.",
+	"keywords": [ "Serializable", "Dictionary", "HashSet" ],
+	"license": "MIT",
+	"dependencies": {}
+}

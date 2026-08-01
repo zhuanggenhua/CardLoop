@@ -1,0 +1,28 @@
+{
+  "name": "FantasyWord.GameCore.EditModeTests",
+  "rootNamespace": "FantasyWord.GameCore.Tests",
+  "references": [
+    "FantasyWord.GameCore",
+    "FantasyWord.GameCore.Editor",
+    "FantasyWord.GAS.GeneratedRuntime",
+    "ContextSteering2D.Runtime",
+    "com.exhard.exgas.runtime",
+    "Unity.Collections",
+    "Unity.Entities",
+    "MoreMountains.Tools"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
