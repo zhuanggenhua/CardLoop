@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGRemoveEffect))]
     public partial struct SEffectRemoveEnd : ISystem
     {

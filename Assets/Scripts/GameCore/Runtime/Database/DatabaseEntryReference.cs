@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
 #if UNITY_EDITOR
     /// <summary>

@@ -1,9 +1,7 @@
-﻿using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UIMainMenu : MonoBehaviour, ISaveFileEventReceiver
     {
@@ -63,18 +61,7 @@ namespace FantasyWord.GameCore
 
         public void StartNewGameFromDefaultSaveFile(SaveFile saveFile)
         {
-            LoadScenes(() =>
-            {
-                GameManager.SaveSystem.LoadDefaultSaveFile(saveFile);
-            });
-        }
-
-        private void LoadScenes(Action onScenesLoaded)
-        {
-            SceneManager.LoadSceneAsync(Constants.M2DEngineSceneName).completed += (operation) =>
-            {
-                onScenesLoaded();
-            };
+            GameManager.SaveSystem.LoadDefaultSaveFile(saveFile);
         }
 
         private void SelectDefaultButton()
@@ -91,10 +78,7 @@ namespace FantasyWord.GameCore
 
         public void HandleSaveFileClicked(SaveFileActionDesc desc)
         {
-            LoadScenes(() =>
-            {
-                GameManager.SaveSystem.LoadFromFile(desc.filename);
-            });
+            GameManager.SaveSystem.LoadFromFile(desc.filename);
         }
 
         private void StartCancelListeningIfReady()

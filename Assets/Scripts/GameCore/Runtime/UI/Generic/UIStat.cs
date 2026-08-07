@@ -1,7 +1,7 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UIStat : MonoBehaviour
     {

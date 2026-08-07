@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 游戏主菜单中的单个条目，负责在选中时更新焦点表现并在点击时请求对应菜单。
@@ -16,14 +16,8 @@ namespace FantasyWord.GameCore
         public enum EGameMenuAction
         {
             None,
-            OpenInventory,
-            OpenJournal,
             OpenSaveMenu,
-            OpenAbilities,
-            OpenCharacter,
-            OpenCraft,
-            OpenSettings,
-            GoToMainMenu
+            OpenSettings
         }
 
         [Header("设置")]
@@ -48,12 +42,6 @@ namespace FantasyWord.GameCore
             Debug.Assert(m_menu != null, $"{nameof(UIGameMenuEntry)} requires a parent {nameof(UIGameMenu)}.");
             m_button.onClick.AddListener(OnButtonClicked);
             m_text.enabled = false;
-
-            // Disable this menu entry if no "On The Go" CraftingStation has been provided
-            if (m_action == EGameMenuAction.OpenCraft && GameManager.Config.onTheGoCraftingStation == null)
-            {
-                gameObject.SetActive(false);
-            }
         }
 
         private void OnDestroy()
@@ -81,43 +69,12 @@ namespace FantasyWord.GameCore
         {
             switch (m_action)
             {
-                case EGameMenuAction.OpenJournal:
-                    GameRuntimeEvents.RequestMenu(EMenu.Journal);
-                    break;
-
-                case EGameMenuAction.OpenCharacter:
-                    CharacterBase characterMenuActor = GameManager.PlayerSystem.GetCurrentControlledCharacterOrPlayerInstance();
-                    GameRuntimeEvents.RequestCharacterMenu(CharacterMenuContext.ViewCharacter(characterMenuActor));
-                    break;
-
-                case EGameMenuAction.OpenCraft:
-                    Debug.Assert(GameManager.Config.onTheGoCraftingStation != null, "Cannot open the craft menu with a default recipe book defined in the game config!");
-                    CharacterBase craftingActor = GameManager.PlayerSystem.GetCurrentControlledCharacterOrPlayerInstance();
-                    GameRuntimeEvents.RequestCraft(
-                        GameManager.Config.onTheGoCraftingStation,
-                        GameCommandContext.ResolveForActor(craftingActor));
-                    break;
-
                 case EGameMenuAction.OpenSaveMenu:
-                    GameRuntimeEvents.RequestMenu(EMenu.Save);
-                    break;
-
-                case EGameMenuAction.OpenInventory:
-                    CharacterBase inventoryActor = GameManager.PlayerSystem.GetCurrentControlledCharacterOrPlayerInstance();
-                    GameRuntimeEvents.RequestInventory(InventoryMenuContext.ViewCharacter(inventoryActor));
-                    break;
-
-                case EGameMenuAction.OpenAbilities:
-                    CharacterBase abilitiesMenuActor = GameManager.PlayerSystem.GetCurrentControlledCharacterOrPlayerInstance();
-                    GameRuntimeEvents.RequestAbilitiesMenu(CharacterMenuContext.ViewCharacter(abilitiesMenuActor));
+                    _ = GameManager.UISystem.OpenMenuAsync(EMenu.Save);
                     break;
 
                 case EGameMenuAction.OpenSettings:
-                    GameRuntimeEvents.RequestMenu(EMenu.Settings);
-                    break;
-
-                case EGameMenuAction.GoToMainMenu:
-                    GameRuntimeEvents.RequestReturnToMainMenu();
+                    _ = GameManager.UISystem.OpenMenuAsync(EMenu.Settings);
                     break;
             }
         }

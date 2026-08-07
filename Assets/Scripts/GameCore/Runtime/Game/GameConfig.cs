@@ -1,17 +1,14 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_Game + nameof(GameConfig))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Game + nameof(GameConfig))]
     public partial class GameConfig : DatabaseEntry
     {
         [Header("General Settings")]
         [SerializeField, FormerlySerializedAs("databaseRegistry")]
         private DatabaseRegistry m_databaseRegistry = null;
-
-        [SerializeField, FormerlySerializedAs("mainMenuSceneName")]
-        private string m_mainMenuSceneName = "Main Menu";
 
         [Header("Physics Settings")]
         [SerializeField, FormerlySerializedAs("interactionLayer")]
@@ -36,10 +33,6 @@ namespace FantasyWord.GameCore
         [Header("Visual Settings")]
         [SerializeField, FormerlySerializedAs("cameraShakeSources")]
         private ECameraShakeSources m_cameraShakeSources = ECameraShakeSources.None;
-
-        [Header("Gameplay Settings")]
-        [SerializeField, FormerlySerializedAs("onTheGoCraftingStation")]
-        private CraftingStation m_onTheGoCraftingStation = null;
 
         [Header("Combat Settings")]
         [Range(1, Constants.MaxEquipedAbilityCount)]
@@ -74,7 +67,6 @@ namespace FantasyWord.GameCore
         [SerializeField, FormerlySerializedAs("submitSound")]
         private AudioClipResolver m_submitSound = null;
 
-        public string mainMenuSceneName => m_mainMenuSceneName;
         public string interactionLayer => m_interactionLayer;
         public string hitboxLayer => m_hitboxLayer;
         public float maxTeleportDistanceWhenStuckInWall => m_maxTeleportDistanceWhenStuckInWall;
@@ -82,7 +74,6 @@ namespace FantasyWord.GameCore
         public ContactFilter2D visibilityContactFilter => m_visibilityContactFilter;
         public ContactFilter2D steeringNeighbourContactFilter => m_steeringNeighbourContactFilter;
         public ECameraShakeSources cameraShakeSources => m_cameraShakeSources;
-        public CraftingStation onTheGoCraftingStation => m_onTheGoCraftingStation;
         public int maxEquippableAbilities => m_maxEquippableAbilities;
         public bool canCriticalHit => m_canCriticalHit;
         public bool canMissHit => m_canMissHit;

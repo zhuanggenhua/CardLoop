@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [Serializable]
     public class RespawnPlayer : IContextualCommand

@@ -1,0 +1,32 @@
+{
+  "name": "GameCore.EditModeTests",
+  "rootNamespace": "GameCore.Tests",
+  "references": [
+    "GameCore",
+    "GameCore.Editor",
+    "GAS.GeneratedRuntime",
+    "ContextSteering2D.Runtime",
+    "com.exhard.exgas.runtime",
+    "Unity.Collections",
+    "Unity.Entities",
+    "Unity.InputSystem",
+    "UniTask",
+    "YokiFrame",
+    "YokiFrame.SceneKit",
+    "MoreMountains.Tools"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

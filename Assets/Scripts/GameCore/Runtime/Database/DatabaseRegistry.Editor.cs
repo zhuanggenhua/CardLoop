@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using azixMcAze.SerializableDictionary;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
 #if UNITY_EDITOR
     public partial class DatabaseRegistry

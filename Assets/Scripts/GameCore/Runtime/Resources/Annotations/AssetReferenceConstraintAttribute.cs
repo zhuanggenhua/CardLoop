@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 迁自 Chris 的 SoftAssetReference 编辑器约束标记。

@@ -3,7 +3,7 @@ using UnityEngine.Events;
 using Unity.Mathematics;
 using GAS.Runtime;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract partial class CharacterBase
     {
@@ -235,7 +235,10 @@ namespace FantasyWord.GameCore
                 ApplyCurrentHealthLossViaFormalGameplayEffect(damageInput.damage, sourceCharacter);
 
                 characterSheet.feedbacks.PlayDamageTaken(transform.position, this, damageInput, visualFlags);
-                GameRuntimeEvents.RequestAudioPlayback(characterSheet.hitAudio);
+                if (characterSheet.hitAudio)
+                {
+                    YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(characterSheet.hitAudio));
+                }
 
                 if (!dead && !damageInput.silent && invincibleOnHit && !isSelfTargeted)
                 {
@@ -256,21 +259,21 @@ namespace FantasyWord.GameCore
         {
             int appliedValue = math.min(math.max(0, value), GetMissingHealth());
             ModifyCurrentHealth(appliedValue);
-            GameRuntimeEvents.NotifyHealthRecoveredPresentation(new CharacterValuePresentationContext(transform.position, this, appliedValue, visualFlags));
+            YokiFrame.EventKit.Type.Send(new HealthRecoveredPresentationEvent(new CharacterValuePresentationContext(transform.position, this, appliedValue, visualFlags)));
         }
 
         public void RecoverMana(int value, EEffectVisualFlags visualFlags = EEffectVisualFlags.None)
         {
             int appliedValue = math.min(math.max(0, value), GetMissingMana());
             ModifyCurrentMana(appliedValue);
-            GameRuntimeEvents.NotifyManaRecoveredPresentation(new CharacterValuePresentationContext(transform.position, this, appliedValue, visualFlags));
+            YokiFrame.EventKit.Type.Send(new ManaRecoveredPresentationEvent(new CharacterValuePresentationContext(transform.position, this, appliedValue, visualFlags)));
         }
 
         public void ConsumeMana(int value, EEffectVisualFlags visualFlags = EEffectVisualFlags.None)
         {
             int appliedValue = math.min(math.max(0, value), GetCurrentMana());
             ModifyCurrentMana(-appliedValue);
-            GameRuntimeEvents.NotifyManaConsumedPresentation(new CharacterValuePresentationContext(transform.position, this, appliedValue, visualFlags));
+            YokiFrame.EventKit.Type.Send(new ManaConsumedPresentationEvent(new CharacterValuePresentationContext(transform.position, this, appliedValue, visualFlags)));
         }
 
         public virtual void LevelUp(bool silentMode = false)

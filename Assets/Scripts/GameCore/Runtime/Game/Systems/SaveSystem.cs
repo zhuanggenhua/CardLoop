@@ -1,10 +1,10 @@
 using System;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
-    /// RPG 世界存档系统。它仍负责组装和恢复地图、玩家、背包、任务和持久化对象；
+    /// 通用世界存档系统。它负责组装和恢复地图、游戏标记、玩家和持久化对象；
     /// YokiFrame SaveKit 只作为文件槽位、版本和元数据承载层，不能变成世界状态真相源。
     /// </summary>
     public class SaveSystem : AGameSystem, IDataBlockHandler<SaveDataBlock>
@@ -30,8 +30,9 @@ namespace FantasyWord.GameCore
 
             if (saveData != null)
             {
-                LoadDataBlock(saveData);
-                Debug.Log($"Save <b>{saveFileName}</b> loaded successfully!");
+                LoadDataBlock(
+                    saveData,
+                    () => Debug.Log($"Save <b>{saveFileName}</b> loaded successfully!"));
             }
             else
             {
@@ -78,13 +79,7 @@ namespace FantasyWord.GameCore
 
         public string GenerateSavefileHeader()
         {
-            CharacterActor player = GameManager.PlayerSystem.GetPrimaryPlayerCharacter();
-            GameConfig config = GameManager.Config;
-
-            return string.Format("{0} {1}{2}",
-                player.characterSheet.displayName,
-                config.GetTermDefinition("level").shortName,
-                player.level);
+            return $"GameCore Save {DateTime.Now:yyyy-MM-dd HH:mm}";
         }
 
         public SaveDataBlock CreateDataBlock()
@@ -94,8 +89,6 @@ namespace FantasyWord.GameCore
                 header = GenerateSavefileHeader(),
                 map = GameManager.MapSystem.CreateDataBlock(),
                 gameFlags = GameManager.GameFlagSystem.CreateDataBlock(),
-                inventory = GameManager.InventorySystem.CreateDataBlock(),
-                journal = GameManager.JournalSystem.CreateDataBlock(),
                 player = GameManager.PlayerSystem.CreateDataBlock(),
                 persistence = GameManager.PersistenceSystem.CreateDataBlock(),
             };
@@ -103,13 +96,19 @@ namespace FantasyWord.GameCore
 
         public void LoadDataBlock(SaveDataBlock block)
         {
+            LoadDataBlock(block, null);
+        }
+
+        private void LoadDataBlock(SaveDataBlock block, Action onCompletion)
+        {
             GameManager.GameFlagSystem.LoadDataBlock(block.gameFlags);
-            GameManager.InventorySystem.LoadDataBlock(block.inventory);
-            GameManager.JournalSystem.LoadDataBlock(block.journal);
             GameManager.PlayerSystem.LoadDataBlock(block.player);
             GameManager.PersistenceSystem.LoadDataBlock(block.persistence);
-            GameManager.MapSystem.LoadDataBlock(block.map);
-            GameRuntimeEvents.NotifySaveFileLoaded();
+            GameManager.MapSystem.LoadDataBlock(block.map, () =>
+            {
+                YokiFrame.EventKit.Type.Send(new SaveFileLoadedEvent());
+                onCompletion?.Invoke();
+            });
         }
     }
 }

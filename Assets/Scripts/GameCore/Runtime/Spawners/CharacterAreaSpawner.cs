@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [RequireComponent(typeof(Collider2D))]
     public class CharacterAreaSpawner : ACharacterSpawner

@@ -1,0 +1,24 @@
+{
+  "name": "GamePlay.EditModeTests",
+  "rootNamespace": "GamePlay.Tests",
+    "references": [
+        "GamePlay.Runtime",
+        "GameCore",
+        "YokiFrame",
+        "Unity.Mathematics"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

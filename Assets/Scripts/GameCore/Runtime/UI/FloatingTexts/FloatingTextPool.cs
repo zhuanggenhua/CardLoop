@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 浮动文字的排队播放请求。队列存在的原因是同一帧大量战斗事件需要按最小间隔错开发出。

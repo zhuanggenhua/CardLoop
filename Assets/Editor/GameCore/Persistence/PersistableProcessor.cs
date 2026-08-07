@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -6,7 +6,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     // 在编辑期为场景内 Persistable 自动补唯一标识，避免保存系统遇到无标识对象。
     [InitializeOnLoad]

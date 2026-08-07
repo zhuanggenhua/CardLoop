@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomPropertyDrawer(typeof(PersistableReference<>), true)]
     public class PersistableReferencePropertyDrawer : PropertyDrawer

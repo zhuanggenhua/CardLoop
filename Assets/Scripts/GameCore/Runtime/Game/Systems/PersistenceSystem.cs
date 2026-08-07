@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 正式持久化对象系统。
@@ -16,13 +17,25 @@ namespace FantasyWord.GameCore
         private readonly Dictionary<string, Persistable> m_persistables = new();
         private readonly HashSet<Persistable> m_registeredPersistables = new();
 
-        public override void OnMapLoaded()
+        public override void OnSystemStart()
+        {
+            EventKit.Type.Register<MapLoadedEvent>(OnMapLoaded);
+            EventKit.Type.Register<MapUnloadingEvent>(OnMapUnloading);
+        }
+
+        public override void OnSystemStop()
+        {
+            EventKit.Type.UnRegister<MapLoadedEvent>(OnMapLoaded);
+            EventKit.Type.UnRegister<MapUnloadingEvent>(OnMapUnloading);
+        }
+
+        private void OnMapLoaded(MapLoadedEvent _)
         {
             LoadPreInstancedDataBlocks();
             LoadRuntimeInstancedDataBlocks();
         }
 
-        public override void OnMapUnloading()
+        private void OnMapUnloading(MapUnloadingEvent _)
         {
             SnapshotPersistables(true);
         }
@@ -212,7 +225,7 @@ namespace FantasyWord.GameCore
 
         private void LoadRuntimeInstancedDataBlocks()
         {
-            string currentMap = GameManager.MapSystem.GetCurrentMapName();
+            string currentSceneAddress = GameManager.MapSystem.GetCurrentSceneAddress();
             List<string> keysToRemove = new();
 
             foreach (KeyValuePair<string, PersistableDataBlock> kvp in m_runtimeInstanced)
@@ -220,7 +233,7 @@ namespace FantasyWord.GameCore
                 PersistableDataBlock block = kvp.Value;
                 Debug.Assert(block.info is RuntimeInstancedPersistentDataHandler, "Expected a runtime instanced data handler!");
                 RuntimeInstancedPersistentDataHandler handler = (RuntimeInstancedPersistentDataHandler)block.info;
-                if (handler.map == currentMap)
+                if (handler.sceneAddress == currentSceneAddress)
                 {
                     if (handler.prefab == null || string.IsNullOrWhiteSpace(handler.prefab.guid))
                     {

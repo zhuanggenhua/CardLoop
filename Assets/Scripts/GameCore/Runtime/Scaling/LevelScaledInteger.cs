@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using Unity.Mathematics;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [Serializable]
     public class LevelScaledInteger : LevelScaledValue<int>

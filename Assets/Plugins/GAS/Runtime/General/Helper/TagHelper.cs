@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Unity.Collections;
@@ -18,9 +19,20 @@ namespace GAS.Runtime
         /// <param name="tagCode2TagName"></param>
         public static void InitTagMap(Dictionary<int, GameplayTag> tagMap,Dictionary<int, string> tagCode2TagName)
         {
-            _tagMap = tagMap;
-            _tagCode2TagName = tagCode2TagName;
-            
+            if (tagMap == null) throw new ArgumentNullException(nameof(tagMap));
+            if (tagCode2TagName == null) throw new ArgumentNullException(nameof(tagCode2TagName));
+            if (_tagMap != null || _tagCode2TagName != null)
+                throw new InvalidOperationException("GameplayTag 图已经初始化，必须先完整关闭 EX-GAS 才能重新初始化。");
+            if (GASManager.ExWorld is not { IsCreated: true })
+                throw new InvalidOperationException("GameplayTag 图必须在 EX-GAS World 创建后初始化。");
+
+            using (var query = GASManager.EntityManager.CreateEntityQuery(
+                       ComponentType.ReadOnly<SingletonGameplayTagMap>()))
+            {
+                if (!query.IsEmptyIgnoreFilter)
+                    throw new InvalidOperationException("EX-GAS World 中已经存在 GameplayTag 图单例。");
+            }
+
             // ECS专用单例TagMap
             var map = new NativeHashMap<int, ComGameplayTag>(tagMap.Keys.Count, Allocator.Persistent);
             foreach (var p in tagMap)
@@ -32,6 +44,46 @@ namespace GAS.Runtime
                 });
 
             GASManager.EntityManager.CreateSingleton(new SingletonGameplayTagMap { Map = map });
+            _tagMap = tagMap;
+            _tagCode2TagName = tagCode2TagName;
+        }
+
+        /// <summary>
+        /// 释放 GameplayTag 图持有的全部原生内存。只能由 EX-GAS 的正式关闭流程调用。
+        /// </summary>
+        internal static void DisposeTagMap()
+        {
+            if (GASManager.ExWorld is not { IsCreated: true })
+            {
+                if (_tagMap != null || _tagCode2TagName != null)
+                    throw new InvalidOperationException("EX-GAS World 已失效，但 GameplayTag 图仍处于初始化状态。");
+                return;
+            }
+
+            using var query = GASManager.EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<SingletonGameplayTagMap>());
+            bool hasSingleton = !query.IsEmptyIgnoreFilter;
+            bool hasManagedMap = _tagMap != null || _tagCode2TagName != null;
+            if (hasSingleton != hasManagedMap)
+                throw new InvalidOperationException("GameplayTag 的托管表和 ECS 单例生命周期不一致。");
+            if (!hasSingleton)
+                return;
+
+            Entity singletonEntity = query.GetSingletonEntity();
+            SingletonGameplayTagMap singleton =
+                GASManager.EntityManager.GetComponentData<SingletonGameplayTagMap>(singletonEntity);
+            foreach (var pair in singleton.Map)
+            {
+                ComGameplayTag tag = pair.Value;
+                if (tag.Parents.IsCreated) tag.Parents.Dispose();
+                if (tag.Children.IsCreated) tag.Children.Dispose();
+            }
+
+            if (singleton.Map.IsCreated) singleton.Map.Dispose();
+            GASManager.EntityManager.SetComponentData(singletonEntity, default(SingletonGameplayTagMap));
+            GASManager.EntityManager.DestroyEntity(singletonEntity);
+            _tagMap = null;
+            _tagCode2TagName = null;
         }
 
         /// <summary>

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 一个逻辑寻路层的作者来源。

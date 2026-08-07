@@ -4,7 +4,7 @@ using GAS.Runtime;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// GameCore 可由 EX-GAS Cue 触发的反馈事件类型。

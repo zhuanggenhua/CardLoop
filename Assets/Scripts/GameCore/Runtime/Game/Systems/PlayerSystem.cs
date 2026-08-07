@@ -5,7 +5,7 @@ using UnityEngine.Events;
 using UnityEngine.Serialization;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [Serializable]
     public class PlayerDataBlock : DataBlock
@@ -20,6 +20,8 @@ namespace FantasyWord.GameCore
     /// </summary>
     public class PlayerSystem : AGameSystem, IDataBlockHandler<PlayerDataBlock>
     {
+        private static readonly Type[] SystemStartupDependencies = { typeof(PersistenceSystem) };
+
         [Header("Scene References")]
         [FormerlySerializedAs("m_playerInstance")]
         [SerializeField] private CharacterActor m_primaryPlayerCharacter = null;
@@ -33,6 +35,8 @@ namespace FantasyWord.GameCore
         private bool m_hasPendingControlledCharacterRestore = false;
         private bool m_pendingPlayerControlRestore = false;
 
+        public override IReadOnlyCollection<Type> StartupDependencies => SystemStartupDependencies;
+
         public override void OnSystemStart()
         {
             EnsurePlayerInstance();
@@ -40,22 +44,26 @@ namespace FantasyWord.GameCore
             ResetCurrentControlToPlayerInstance();
             m_pendingPlayerControlRestore = m_currentInputTarget == null;
             GameManager.PersistenceSystem.RegisterCustomInstancedPersistable(m_primaryPlayerCharacter, Constants.UniquePlayerIdentifier);
+            EventKit.Type.Register<MapLoadedEvent>(OnMapLoaded);
+            EventKit.Type.Register<SaveFileLoadedEvent>(OnSaveFileLoaded);
         }
 
         public override void OnSystemStop()
         {
+            EventKit.Type.UnRegister<MapLoadedEvent>(OnMapLoaded);
+            EventKit.Type.UnRegister<SaveFileLoadedEvent>(OnSaveFileLoaded);
             BindControlledCharacters(Array.Empty<CharacterBase>());
             ClearPendingControlledCharacterRestore();
             m_pendingPlayerControlRestore = false;
         }
 
-        public override void OnMapLoaded()
+        private void OnMapLoaded(MapLoadedEvent _)
         {
             TryRestorePendingControlledCharacters();
             TryRestorePendingPlayerControl();
         }
 
-        public override void OnSaveFileLoaded()
+        private void OnSaveFileLoaded(SaveFileLoadedEvent _)
         {
             TryRestorePendingControlledCharacters();
             TryRestorePendingPlayerControl();
@@ -65,11 +73,11 @@ namespace FantasyWord.GameCore
         {
             if (character == m_primaryPlayerCharacter)
             {
-                GameManager.DialogueSystem.Interrupt();
-                GameRuntimeEvents.RequestCloseAllMenus();
-                Debug.Assert(GameManager.Config.hasPlayerDeathAction, "No action specified to execute on player death! Specify an action in the GameConfig.");
-                GameManager.Config.ExecutePlayerDeathAction(GameCommandContext.LocalPlayer(character));
-                GameManager.DialogueSystem.Interrupt();
+                GameManager.UISystem.CloseAllMenus();
+                if (GameManager.Config.hasPlayerDeathAction)
+                {
+                    GameManager.Config.ExecutePlayerDeathAction(GameCommandContext.LocalPlayer(character));
+                }
             }
         }
 

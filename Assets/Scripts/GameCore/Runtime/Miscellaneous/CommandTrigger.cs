@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using MackySoft.SerializeReferenceExtensions;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 按生命周期、碰撞、交互或条件变化触发命令的场景组件。

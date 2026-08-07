@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 持久化系统的运行时实例化扩展，集中处理 prefab 实例和持久化标识登记。

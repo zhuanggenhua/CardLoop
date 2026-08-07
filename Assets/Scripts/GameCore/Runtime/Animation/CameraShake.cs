@@ -2,7 +2,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 镜头震动表现入口。

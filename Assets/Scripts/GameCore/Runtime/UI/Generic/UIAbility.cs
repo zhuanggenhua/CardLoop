@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UIAbility : MonoBehaviour
     {

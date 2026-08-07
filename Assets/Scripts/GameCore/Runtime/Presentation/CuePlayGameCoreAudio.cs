@@ -3,7 +3,7 @@ using GAS.Runtime;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// EX-GAS Cue 到 GameCore 音频闭包的唯一桥。
@@ -21,7 +21,7 @@ namespace FantasyWord.GameCore
                 return;
             }
 
-            GameRuntimeEvents.RequestAudioPlayback(audioClipResolver);
+            YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(audioClipResolver));
         }
 
         private AudioClipResolver ResolveAudioClipResolver()

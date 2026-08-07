@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// Mod 内容包描述文件。每个启用的 Mod 必须对应一个独立 YooAsset 资源包。

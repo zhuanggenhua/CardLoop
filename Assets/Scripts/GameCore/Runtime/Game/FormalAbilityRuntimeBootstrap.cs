@@ -2,7 +2,7 @@ using GAS.Runtime;
 using GAS.General;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     internal static class FormalAbilityRuntimeBootstrap
     {
@@ -12,14 +12,13 @@ namespace FantasyWord.GameCore
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetSubsystemState()
         {
+            if (GASManager.ExWorld is { IsCreated: true })
+            {
+                return;
+            }
+
             s_initialized = false;
             s_gameCoreGasExtensionsRegistered = false;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void InitializeBeforeSceneLoad()
-        {
-            EnsureInitialized();
         }
 
         public static void EnsureInitialized()
@@ -43,6 +42,13 @@ namespace FantasyWord.GameCore
             CharacterAbilitySet.EnsureFormalRuleSupportTypesRegistered();
 
             s_initialized = true;
+        }
+
+        public static void Shutdown()
+        {
+            GASManager.Shutdown();
+            s_initialized = false;
+            s_gameCoreGasExtensionsRegistered = false;
         }
 
         private static void EnsureResourceLoaderRegistered()

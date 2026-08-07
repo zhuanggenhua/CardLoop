@@ -1,8 +1,9 @@
-﻿using Unity.Burst;  
-using Unity.Entities;  
+using Unity.Burst;
+using Unity.Entities;
   
 namespace GAS.Runtime  
 {  
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGRemoveEffect))]  
     [UpdateBefore(typeof(SRemoveEffectFromAscBuffList))]  
     public partial struct SRemoveGrantedAbilityOnRemove : ISystem  

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 正式属性定义。

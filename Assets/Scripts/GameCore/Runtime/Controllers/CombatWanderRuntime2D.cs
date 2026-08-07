@@ -1,7 +1,7 @@
 using ContextSteering2D;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 保存单个敌人的游走方向与跟随距离，按参考实现每 1.5 秒重新随机一次。

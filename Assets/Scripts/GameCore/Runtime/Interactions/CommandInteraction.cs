@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [Serializable]
     public class CommandInteraction : IInteraction

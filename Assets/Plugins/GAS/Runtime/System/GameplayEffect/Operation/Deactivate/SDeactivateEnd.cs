@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup( typeof(SGDeactivateEffect))]
     public partial struct SDeactivateEnd : ISystem
     {

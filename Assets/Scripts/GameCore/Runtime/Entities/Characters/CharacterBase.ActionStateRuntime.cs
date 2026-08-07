@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract partial class CharacterBase
     {

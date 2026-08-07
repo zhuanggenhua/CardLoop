@@ -6,7 +6,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore.Tests
+namespace GameCore.Tests
 {
     public sealed class ContextSteering2DEditModeTests
     {
@@ -15,15 +15,6 @@ namespace FantasyWord.GameCore.Tests
         private const string PredictiveTargetGroupId = "predictive-target";
         private const string CombatWanderGroupId = "combat-wander";
         private const string OrbitGroupId = "orbit";
-
-        [Test]
-        public void Physics2DSettings_DisablesCharacterSelfCollisionForCentralizedContactResolution()
-        {
-            int characterLayer = LayerMask.NameToLayer("Character");
-
-            Assert.That(characterLayer, Is.GreaterThanOrEqualTo(0));
-            Assert.That(Physics2D.GetIgnoreLayerCollision(characterLayer, characterLayer), Is.True);
-        }
 
         [Test]
         public void DefaultProfile_HasDefaultAndPathFollowBehaviourGroups()

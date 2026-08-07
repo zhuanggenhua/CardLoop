@@ -65,6 +65,39 @@ namespace GAS.Runtime
             IsRunning = false;
         }
 
+        /// <summary>
+        /// 完整关闭 EX-GAS，释放插件创建的原生内存和自定义 ECS World。
+        /// </summary>
+        public static void Shutdown()
+        {
+            if (!IsInitialized)
+            {
+                if (ExWorld != null || IsRunning)
+                    throw new System.InvalidOperationException("EX-GAS 的初始化状态与 World 生命周期不一致。");
+                return;
+            }
+
+            if (ExWorld is not { IsCreated: true })
+                throw new System.InvalidOperationException("EX-GAS 已标记为初始化，但对应 World 不存在。");
+
+            Stop();
+            EntityManager.CompleteAllTrackedJobs();
+            DisposeBoundAbilitySystemCells();
+            TagHelper.DisposeTagMap();
+            GASEventCenter.Clear();
+            EntityHelper.ClearGameObjectBinding();
+
+            if (ScriptBehaviourUpdateOrder.IsWorldInCurrentPlayerLoop(ExWorld))
+                ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(ExWorld);
+
+            ExWorld.Dispose();
+            ExWorld = null;
+            EntityManager = default;
+            TurnController = null;
+            EntityGlobalTimer = Entity.Null;
+            IsInitialized = false;
+        }
+
         private static void CreateSystems()
         {
             // 创建基础系统组
@@ -139,6 +172,22 @@ namespace GAS.Runtime
             sgApplyEffect.AddSystemToUpdateList(ExWorld.CreateSystem<SPlayCueOnApply>());
             sgApplyEffect.AddSystemToUpdateList(ExWorld.CreateSystem<SRemoveEffectWithTags>());
             sgApplyEffect.AddSystemToUpdateList(ExWorld.CreateSystem<SApplyEnd>());
+
+            // 三级：
+            // Apply：InstantEffect,DurationalEffect
+            var sgInstantEffectApply = ExWorld.CreateSystemManaged<SGInstantEffect>();
+            sgInstantEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SExecuteInstantEffectModifiers>());
+            sgInstantEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SExecuteInstantEffectEnd>());
+            sgInstantEffectApply.SortSystems();
+
+            var sgDurationalEffectApply = ExWorld.CreateSystemManaged<SGDurationalEffect>();
+            sgDurationalEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SAddEffectToAscBuffList>());
+            sgDurationalEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SCheckEffectStacking>());
+            sgDurationalEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SPlayCueOnAdd>());
+            sgDurationalEffectApply.SortSystems();
+
+            sgApplyEffect.AddSystemToUpdateList(sgInstantEffectApply);
+            sgApplyEffect.AddSystemToUpdateList(sgDurationalEffectApply);
             sgApplyEffect.SortSystems();
 
             var sgCheckActivateEffect = ExWorld.CreateSystemManaged<SGCheckActivateEffect>();
@@ -193,23 +242,6 @@ namespace GAS.Runtime
             sgEffectTick.AddSystemToUpdateList(sgRunningEffect);
             sgEffectTick.SortSystems();
 
-            // 三级：
-            // Apply：InstantEffect,DurationalEffect
-            var sgInstantEffectApply = ExWorld.CreateSystemManaged<SGInstantEffect>();
-            sgInstantEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SExecuteInstantEffectModifiers>());
-            sgInstantEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SExecuteInstantEffectEnd>());
-            sgInstantEffectApply.SortSystems();
-
-            var sgDurationalEffectApply = ExWorld.CreateSystemManaged<SGDurationalEffect>();
-            sgDurationalEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SAddEffectToAscBuffList>());
-            sgDurationalEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SCheckEffectStacking>());
-            sgDurationalEffectApply.AddSystemToUpdateList(ExWorld.CreateSystem<SPlayCueOnAdd>());
-            sgDurationalEffectApply.SortSystems();
-
-            sgApplyEffect.AddSystemToUpdateList(sgInstantEffectApply);
-            sgApplyEffect.AddSystemToUpdateList(sgDurationalEffectApply);
-            sgApplyEffect.SortSystems();
-
             #endregion
 
 
@@ -240,6 +272,27 @@ namespace GAS.Runtime
         public static void ClearAscBinding()
         {
             _bindingAsc.Clear();
+        }
+
+        private static void DisposeBoundAbilitySystemCells()
+        {
+            while (_bindingAsc.Count > 0)
+            {
+                using Dictionary<Entity, AbilitySystemCell>.Enumerator enumerator = _bindingAsc.GetEnumerator();
+                if (!enumerator.MoveNext())
+                    throw new System.InvalidOperationException("EX-GAS 角色绑定表状态无效。");
+
+                Entity entity = enumerator.Current.Key;
+                AbilitySystemCell cell = enumerator.Current.Value;
+
+                if (cell == null)
+                {
+                    _bindingAsc.Remove(entity);
+                    continue;
+                }
+
+                cell.Dispose();
+            }
         }
 
         /// <summary>

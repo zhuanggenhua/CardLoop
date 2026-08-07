@@ -8,12 +8,15 @@ namespace GAS.Runtime
     {
         public static void Clear()
         {
-            // 属性事件
             _onBaseValueChangeBefore.Clear();
             _onBaseValueChangeAfter.Clear();
             _onCurrentValueChangeAfter.Clear();
-            // GameplayEffect 事件
             _onGameplayEffectContainerIsDirty.Clear();
+            _onTryChangeGameplayEffectStackCount.Clear();
+            _onActivateResult.Clear();
+            _onEndAbility.Clear();
+            _onCancelAbility.Clear();
+            _onTagIsDirty.Clear();
         }
 
         #region Attribute 事件

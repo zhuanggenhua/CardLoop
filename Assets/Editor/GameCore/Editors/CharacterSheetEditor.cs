@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomEditor(typeof(CharacterSheet))]
     public class CharacterSheetEditor : DatabaseEntryEditor
@@ -29,32 +29,7 @@ namespace FantasyWord.GameCore
             {
                 EditorGUILayout.IntField(attribute.DisplayName, previewStats[attribute.Stat]);
             }
-
-            EditorGUILayout.Space();
-            EditorGUILayout.IntField(
-                "Experience Required",
-                sheet.GetExperienceRequiredAtLevel(m_previewLevel));
-            EditorGUILayout.IntField(
-                "Experience Required Total",
-                GetTotalExperienceRequired(sheet, m_previewLevel));
-            EditorGUILayout.IntField(
-                "Kill Experience Reward",
-                sheet.GetExperienceRewardAtLevel(m_previewLevel));
-            EditorGUILayout.IntField(
-                "Kill Money Reward",
-                sheet.GetMoneyRewardAtLevel(m_previewLevel));
             GUI.enabled = true;
-        }
-
-        private static int GetTotalExperienceRequired(CharacterSheet sheet, int level)
-        {
-            int total = 0;
-            for (int currentLevel = Constants.MinLevel; currentLevel <= level; ++currentLevel)
-            {
-                total += sheet.GetExperienceRequiredAtLevel(currentLevel);
-            }
-
-            return total;
         }
     }
 }

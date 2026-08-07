@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGCheckApplyEffect))]
     [UpdateBefore(typeof(SCheckApplyEnd))]
     public partial struct SCheckImmunityTags : ISystem

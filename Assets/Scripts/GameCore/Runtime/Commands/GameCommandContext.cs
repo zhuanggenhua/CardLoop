@@ -1,6 +1,6 @@
 using System;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 游戏命令的发起方类型，用于权限判断、交互参与者校验和日志归因。

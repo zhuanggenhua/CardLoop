@@ -3,7 +3,7 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public interface IModLoader
     {

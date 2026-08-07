@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using FantasyWord.GameCore;
+using GameCore;
 using UnityEngine;
 
 #if UNITY_EDITOR

@@ -3,7 +3,7 @@ using GAS.Runtime;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 主动能力启动检查结果。

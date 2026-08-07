@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 玩家控制角色的移动输入模式。

@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 当前项目里已经正式登记的状态机动画消息名。

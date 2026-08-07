@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGRemoveEffect))]
     [UpdateBefore(typeof(SEffectRemoveEnd))]
     public partial struct SRemoveEffectFromAscBuffList : ISystem

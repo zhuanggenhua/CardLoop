@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using YokiFrame;
 
-namespace FantasyWord.GameCore.Tests
+namespace GameCore.Tests
 {
     public sealed class PersistenceSystemRegistrationEditModeTests
     {
@@ -15,11 +16,17 @@ namespace FantasyWord.GameCore.Tests
         public void SetUp()
         {
             CreateGameManagerWithPersistenceSystem();
+            m_persistenceSystem.OnSystemStart();
         }
 
         [TearDown]
         public void TearDown()
         {
+            if (m_persistenceSystem != null)
+            {
+                m_persistenceSystem.OnSystemStop();
+            }
+
             SetStaticField(typeof(GameManager), "_instance", null);
 
             for (int i = m_createdObjects.Count - 1; i >= 0; i--)
@@ -62,7 +69,7 @@ namespace FantasyWord.GameCore.Tests
         }
 
         [Test]
-        public void OnMapLoaded_LoadsRegisteredPreInstancedPersistables()
+        public void MapLoadedEvent_LoadsRegisteredPreInstancedPersistables()
         {
             PersistenceProbe probe = CreatePreInstancedProbe("load-registered-pre-instanced", true);
             PersistableDataBlock savedBlock = new()
@@ -78,7 +85,7 @@ namespace FantasyWord.GameCore.Tests
             {
                 objects = new[] { savedBlock }
             });
-            m_persistenceSystem.OnMapLoaded();
+            EventKit.Type.Send(new MapLoadedEvent());
 
             Assert.AreEqual(1, probe.LoadCount, "地图加载应把保存块应用到已登记的预摆对象。");
             Assert.AreSame(savedBlock, probe.LastLoadedBlock);

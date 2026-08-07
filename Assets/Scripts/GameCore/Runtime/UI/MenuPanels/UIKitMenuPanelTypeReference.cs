@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 运行时可序列化的 UIKit 菜单面板类型引用。

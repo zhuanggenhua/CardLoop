@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract partial class CharacterBase
     {

@@ -10,7 +10,7 @@ using YokiFrame;
 using YooAsset;
 using UObject = UnityEngine.Object;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 项目动态资源入口。默认包由 YokiFrame 的 YooInit 初始化，外部 Mod 各自使用独立 YooAsset 包。
@@ -20,10 +20,10 @@ namespace FantasyWord.GameCore
     {
         private const byte AssetLoadOperationType = 0;
         private const byte InstantiateOperationType = 1;
-        private const string LocalizationAddress = "localization";
 
         private static readonly HashSet<ResourceOperationState> ActiveOperations = new();
         private static readonly List<ModPackageEntry> ModPackages = new();
+        private static ResourceSystemSceneLoaderPool s_sceneLoaderPool;
 
         public static bool Initialized => DefaultPackage != null && YooAssets.IsInitialized;
         public static ResourcePackage DefaultPackage { get; private set; }
@@ -46,7 +46,7 @@ namespace FantasyWord.GameCore
         }
 
         /// <summary>
-        /// 初始化默认资源包，并让 UIKit 复用 YokiFrame 自带的 YooAsset 面板加载器。
+        /// 初始化默认资源包，并配置 UIKit 与 SceneKit 使用项目的 YooAsset 后端。
         /// </summary>
         public static async UniTask InitializeAsync(
             YooInitConfig config = null,
@@ -72,7 +72,8 @@ namespace FantasyWord.GameCore
                 throw new InvalidOperationException("YokiFrame.YooInit 未提供默认资源包，请检查 YooInitConfig.PackageNames。");
 
             YooInitUIKitExt.ConfigureUIKit();
-            await InitializeLocalizationAsync(cancellationToken);
+            s_sceneLoaderPool = new ResourceSystemSceneLoaderPool();
+            ResKit.SetSceneLoaderPool(s_sceneLoaderPool);
         }
 
         /// <summary>
@@ -91,15 +92,9 @@ namespace FantasyWord.GameCore
                 return;
             }
 
-            ResourcePackage[] packages = YooAssets.GetPackages().ToArray();
             if (YooInit.Initialized)
             {
                 YooInit.Dispose();
-            }
-
-            foreach (ResourcePackage package in packages)
-            {
-                DestroyAndRemovePackage(package);
             }
 
             YooAssets.Destroy();
@@ -185,6 +180,7 @@ namespace FantasyWord.GameCore
                 return;
             }
 
+            EnsurePackageHasNoLoadedScene(packageName);
             ReleaseOperationsForPackage(packageName);
             ModPackages.Remove(entry);
             await DestroyAndRemovePackageAsync(entry.Package);
@@ -305,6 +301,31 @@ namespace FantasyWord.GameCore
             return resourceHandle;
         }
 
+        /// <summary>
+        /// 从默认包和所有已启用 Mod 包中加载带有指定 YooAsset 资源标签的资产。
+        /// 这里的资源标签只用于构建清单发现，不是 EX-GAS GameplayTag，也不是玩法内容 ID。
+        /// </summary>
+        public static ResourceHandle<IList<T>> LoadAssetsByAssetTagAsync<T>(
+            string assetTag,
+            Action<IList<T>> callback = null)
+            where T : UObject
+        {
+            if (string.IsNullOrWhiteSpace(assetTag))
+            {
+                throw new InvalidResourceRequestException(assetTag, "YooAsset 资源标签不能为空。");
+            }
+
+            ResourcePackage[] packages = GetLoadedPackagesInContentOrder();
+            var state = Register(new TaggedAssetsResourceOperationState<T>(packages, assetTag));
+            var resourceHandle = new ResourceHandle<IList<T>>(state);
+            if (callback != null)
+            {
+                resourceHandle.RegisterCallback(callback);
+            }
+
+            return resourceHandle;
+        }
+
         public static void Release(ResourceHandle handle)
         {
             handle.State?.Release();
@@ -398,6 +419,34 @@ namespace FantasyWord.GameCore
             return DefaultPackage;
         }
 
+        internal static ResourcePackage ResolveScenePackage(string address)
+        {
+            EnsureInitialized();
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                throw new InvalidResourceRequestException(address, "场景地址不能为空。");
+            }
+
+            foreach (ModPackageEntry entry in ModPackages)
+            {
+                AssetInfo modAsset = entry.Package.GetAssetInfo(address);
+                if (IsSceneAsset(modAsset))
+                {
+                    return entry.Package;
+                }
+            }
+
+            AssetInfo defaultAsset = DefaultPackage.GetAssetInfo(address);
+            if (!IsSceneAsset(defaultAsset))
+            {
+                throw new InvalidResourceRequestException(
+                    address,
+                    $"默认资源包中不存在场景地址：{address}。{defaultAsset.Error}");
+            }
+
+            return DefaultPackage;
+        }
+
         private static ResourcePackage GetPackage(string packageName)
         {
             EnsureInitialized();
@@ -407,6 +456,19 @@ namespace FantasyWord.GameCore
             }
 
             return package;
+        }
+
+        private static ResourcePackage[] GetLoadedPackagesInContentOrder()
+        {
+            EnsureInitialized();
+            var packages = new ResourcePackage[ModPackages.Count + 1];
+            packages[0] = DefaultPackage;
+            for (int i = 0; i < ModPackages.Count; i++)
+            {
+                packages[i + 1] = ModPackages[i].Package;
+            }
+
+            return packages;
         }
 
         private static void EnsureLocationExists(Type assetType, string location)
@@ -491,42 +553,9 @@ namespace FantasyWord.GameCore
             }
         }
 
-        private static async UniTask InitializeLocalizationAsync(CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            ResourceHandle<TextAsset> handle = LoadAssetAsync<TextAsset>(LocalizationAddress);
-            try
-            {
-                TextAsset localizationAsset = await handle.ToUniTask();
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var provider = new JsonLocalizationProvider(useResources: false);
-                provider.LoadFromJson(localizationAsset.text);
-                if (provider.GetSupportedLanguages().Count == 0)
-                {
-                    throw new InvalidDataException(
-                        $"YooAsset 地址 {LocalizationAddress} 的本地化 JSON 没有有效语言数据。");
-                }
-
-                LocalizationKit.SetProvider(provider);
-            }
-            finally
-            {
-                handle.Dispose();
-            }
-        }
-
-        private static void DestroyAndRemovePackage(ResourcePackage package)
-        {
-            ReleaseOperationsForPackage(package.PackageName);
-            DestroyPackageOperation destroy = package.DestroyPackageAsync();
-            destroy.WaitForCompletion();
-            EnsureSucceeded(destroy, $"销毁资源包 {package.PackageName}");
-            YooAssets.RemovePackage(package.PackageName);
-        }
-
         private static async UniTask DestroyAndRemovePackageAsync(ResourcePackage package)
         {
+            EnsurePackageHasNoLoadedScene(package.PackageName);
             ReleaseOperationsForPackage(package.PackageName);
             DestroyPackageOperation destroy = package.DestroyPackageAsync();
             await destroy;
@@ -538,7 +567,23 @@ namespace FantasyWord.GameCore
         {
             ActiveOperations.Clear();
             ModPackages.Clear();
+            s_sceneLoaderPool = null;
             DefaultPackage = null;
+        }
+
+        private static bool IsSceneAsset(AssetInfo assetInfo)
+        {
+            return assetInfo.IsValid &&
+                   assetInfo.AssetPath.EndsWith(".unity", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void EnsurePackageHasNoLoadedScene(string packageName)
+        {
+            if (s_sceneLoaderPool?.UsesPackage(packageName) == true)
+            {
+                throw new InvalidOperationException(
+                    $"资源包 {packageName} 仍有 SceneKit 场景正在使用。请先通过 MapSystem 切离该场景，再卸载 Mod 包。");
+            }
         }
 
         private sealed class AssetResourceOperationState<T> : ResourceOperationState where T : UObject
@@ -769,6 +814,172 @@ namespace FantasyWord.GameCore
                     .SelectMany(child => child.Result is IEnumerable<T> assets ? assets : Array.Empty<T>())
                     .Distinct()
                     .ToList();
+            }
+        }
+
+        private sealed class TaggedAssetsResourceOperationState<T> : ResourceOperationState where T : UObject
+        {
+            private readonly string m_assetTag;
+            private readonly string[] m_packageNames;
+            private readonly string[] m_assetPaths;
+            private readonly AssetHandle[] m_handles;
+            private IList<T> m_results;
+
+            public TaggedAssetsResourceOperationState(ResourcePackage[] packages, string assetTag)
+                : base($"YooAssetTag:{assetTag}", AssetLoadOperationType)
+            {
+                m_assetTag = assetTag;
+                var packageNames = new List<string>(packages.Length);
+                var assetPaths = new List<string>();
+                var handles = new List<AssetHandle>();
+
+                for (int packageIndex = 0; packageIndex < packages.Length; packageIndex++)
+                {
+                    ResourcePackage package = packages[packageIndex];
+                    packageNames.Add(package.PackageName);
+
+                    AssetInfo[] assetInfos = package.GetAssetInfos(assetTag);
+                    Array.Sort(
+                        assetInfos,
+                        (left, right) => string.Compare(left.AssetPath, right.AssetPath, StringComparison.Ordinal));
+
+                    for (int assetIndex = 0; assetIndex < assetInfos.Length; assetIndex++)
+                    {
+                        AssetInfo assetInfo = assetInfos[assetIndex];
+                        assetPaths.Add($"{package.PackageName}:{assetInfo.AssetPath}");
+                        handles.Add(package.LoadAssetAsync(assetInfo));
+                    }
+                }
+
+                m_packageNames = packageNames.ToArray();
+                m_assetPaths = assetPaths.ToArray();
+                m_handles = handles.ToArray();
+            }
+
+            public override string PackageName => string.Join(",", m_packageNames);
+
+            public override bool UsesPackage(string packageName)
+            {
+                for (int i = 0; i < m_packageNames.Length; i++)
+                {
+                    if (string.Equals(m_packageNames[i], packageName, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            protected override bool IsOperationValid
+            {
+                get
+                {
+                    for (int i = 0; i < m_handles.Length; i++)
+                    {
+                        if (!m_handles[i].IsValid)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+            }
+
+            protected override bool IsOperationDone
+            {
+                get
+                {
+                    for (int i = 0; i < m_handles.Length; i++)
+                    {
+                        if (!m_handles[i].IsDone)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+            }
+
+            protected override object GetResult()
+            {
+                return IsOperationDone ? BuildResults() : null;
+            }
+
+            protected override void WaitForCompletionCore()
+            {
+                for (int i = 0; i < m_handles.Length; i++)
+                {
+                    m_handles[i].WaitForAsyncComplete();
+                    EnsureHandleSucceeded(m_handles[i], m_assetPaths[i]);
+                }
+
+                BuildResults();
+            }
+
+            protected override async UniTask<object> AwaitResultCore()
+            {
+                for (int i = 0; i < m_handles.Length; i++)
+                {
+                    await m_handles[i];
+                    EnsureHandleSucceeded(m_handles[i], m_assetPaths[i]);
+                }
+
+                return BuildResults();
+            }
+
+            protected override void RegisterCallbackCore(Action<object> callback)
+            {
+                AwaitAndInvoke(callback).Forget();
+            }
+
+            protected override void ReleaseCore()
+            {
+                m_results = null;
+                for (int i = 0; i < m_handles.Length; i++)
+                {
+                    m_handles[i].Release();
+                }
+            }
+
+            private async UniTaskVoid AwaitAndInvoke(Action<object> callback)
+            {
+                try
+                {
+                    callback(await AwaitResultCore());
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                }
+            }
+
+            private IList<T> BuildResults()
+            {
+                if (m_results != null)
+                {
+                    return m_results;
+                }
+
+                var results = new List<T>(m_handles.Length);
+                for (int i = 0; i < m_handles.Length; i++)
+                {
+                    UObject assetObject = m_handles[i].AssetObject;
+                    if (assetObject is not T typedAsset)
+                    {
+                        string actualType = assetObject == null ? "<null>" : assetObject.GetType().FullName;
+                        throw new InvalidResourceRequestException(
+                            m_assetPaths[i],
+                            $"YooAsset 资源标签 {m_assetTag} 包含了不能转换为 {typeof(T).FullName} 的资产：{m_assetPaths[i]}，实际类型：{actualType}。");
+                    }
+
+                    results.Add(typedAsset);
+                }
+
+                m_results = results;
+                return m_results;
             }
         }
 

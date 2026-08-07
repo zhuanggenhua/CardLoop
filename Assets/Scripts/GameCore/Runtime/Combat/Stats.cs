@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 角色正式属性枚举。

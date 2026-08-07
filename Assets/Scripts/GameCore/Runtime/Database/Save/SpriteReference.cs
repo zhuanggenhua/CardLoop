@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_Save + nameof(SpriteReference))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Save + nameof(SpriteReference))]
     public class SpriteReference : DatabaseEntry
     {
         [Header("References")]

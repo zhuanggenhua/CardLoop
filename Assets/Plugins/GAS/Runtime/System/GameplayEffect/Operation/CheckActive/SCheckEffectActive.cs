@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGCheckActivateEffect))]
     public partial struct SCheckEffectActive : ISystem
     {

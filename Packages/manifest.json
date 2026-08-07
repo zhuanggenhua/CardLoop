@@ -4,7 +4,7 @@
     "com.ami.broaudio": "file:com.ami.broaudio",
     "com.besty.unity-skills": "file:com.besty.unity-skills",
     "com.cysharp.unitask": "file:com.cysharp.unitask",
-    "com.cysharp.zlinq": "https://github.com/Cysharp/ZLinq.git?path=src/ZLinq.Unity/Assets/ZLinq.Unity#1.5.6",
+    "com.cysharp.zlinq": "file:com.cysharp.zlinq",
     "com.cysharp.zstring": "file:com.cysharp.zstring",
     "com.liyingsong.foldertag": "file:com.liyingsong.foldertag",
     "com.tencent.puerts.core": "file:../puerts-unity-mcp/third_party/puerts/unity/upms/core",
@@ -25,6 +25,7 @@
     "com.unity.ide.rider": "3.0.38",
     "com.unity.ide.visualstudio": "2.0.26",
     "com.unity.inputsystem": "1.19.0",
+    "com.unity.mathematics": "1.4.0",
     "com.unity.multiplayer.center": "1.0.1",
     "com.unity.nuget.newtonsoft-json": "3.2.2",
     "com.unity.render-pipelines.universal": "17.5.0",
@@ -66,4 +67,9 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0",
-    "puerts-unity-mcp":
+    "puerts-unity-mcp": "file:../puerts-unity-mcp/Packages/puerts-unity-mcp"
+  },
+  "testables": [
+    "com.besty.unity-skills"
+  ]
+}

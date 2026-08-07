@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 正式 EX-GAS 能力根节点模式。

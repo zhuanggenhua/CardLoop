@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using GAS.Runtime;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [RequireComponent(typeof(AbilitySystemComponent))]
     [RequireComponent(typeof(CharacterAbilitySet))]
@@ -43,7 +42,6 @@ namespace FantasyWord.GameCore
         private CharacterBase m_lastEffectiveDamageSource = null;
         private bool m_hasDeathCommandContextOverride = false;
         private GameCommandContext m_deathCommandContextOverride;
-        private TerrainSurfaceDamageSystem m_registeredTerrainSurfaceDamageSystem = null;
         private bool m_pendingDeathAfterFormalCurrentValueMutation = false;
         private bool m_pendingActionInterruptAfterFormalDamage = false;
 
@@ -68,13 +66,11 @@ namespace FantasyWord.GameCore
             base.OnEnable();
             EnsureFormalAbilitySystemInitializedAfterAwake();
             RegisterFormalAttributeEvents();
-            TryRegisterTerrainSurfaceDamageTarget();
         }
         
         protected override void Update()
         {
             EnsureFormalAbilitySystemInitializedAfterAwake();
-            TryRegisterTerrainSurfaceDamageTarget();
             ProcessPendingActionInterruptAfterFormalDamage();
             ProcessPendingDeathAfterFormalCurrentValueMutation();
             if (IsMarkedAsDestroyed())
@@ -119,7 +115,6 @@ namespace FantasyWord.GameCore
         /// </summary>
         protected override void OnDisable()
         {
-            UnregisterTerrainSurfaceDamageTarget();
             UnregisterFormalAttributeEvents();
             CleanupOwnedTransientRuntimeState();
             base.OnDisable();
@@ -164,7 +159,6 @@ namespace FantasyWord.GameCore
             AbilityRuntime.ResetInstances();
 
             base.Revive();
-            TransferCorpseInventoryToOwnedInventory();
             m_isDeadAndDestroyed = false;
             NotifyPlayerSystemAboutRevive();
 
@@ -174,15 +168,8 @@ namespace FantasyWord.GameCore
             }
         }
 
-        public override string GetSpeakerName() => characterSheet.displayName;
-
         public override void OnInteract(CharacterBase sender)
         {
-            if (dead && TryRequestCorpseInventory(sender))
-            {
-                return;
-            }
-
             LookAtTarget(sender.transform);
             base.OnInteract(sender);
         }
@@ -218,7 +205,6 @@ namespace FantasyWord.GameCore
         {
             Stats initial = new();
             initial[EStat.Health] = 1;
-            initial += CreateEquipmentStatContributionSnapshot();
             SetResolvedBaseStats(initial);
         }
 
@@ -258,10 +244,8 @@ namespace FantasyWord.GameCore
 
             m_pendingDeathAfterFormalCurrentValueMutation = false;
             characterSheet.feedbacks.PlayDeath(transform.position);
-            GameRuntimeEvents.NotifyDeathPresentation(new DeathPresentationContext(transform.position, this, m_lastEffectiveDamageSource));
-            TransferOwnedInventoryToCorpseOwner();
+            YokiFrame.EventKit.Type.Send(new DeathPresentationEvent(new DeathPresentationContext(transform.position, this, m_lastEffectiveDamageSource)));
             base.Kill();
-            TransferOwnedEquipmentToCorpseOwner();
             NotifyPlayerSystemAboutDeath();
             AbilityRuntime.InterruptInstances();
         }
@@ -393,74 +377,10 @@ namespace FantasyWord.GameCore
             return true;
         }
 
-        internal Stats CreateEquipmentStatContributionSnapshot()
-        {
-            return TryGetComponent(out CharacterEquipment equipment) && equipment != null
-                ? equipment.CreateStatContributionSnapshot()
-                : new Stats();
-        }
-
-        internal CharacterEquipmentSlotData[] CreateEquipmentSlotDataSnapshot(DatabaseRegistry databaseRegistry)
-        {
-            return TryGetComponent(out CharacterEquipment equipment) && equipment != null
-                ? equipment.CreateSlotDataSnapshot(databaseRegistry)
-                : Array.Empty<CharacterEquipmentSlotData>();
-        }
-
-        internal bool RestoreEquipmentFromSlotData(
-            IEnumerable<CharacterEquipmentSlotData> equipmentSlots,
-            Func<DatabaseEntryReference<Equipment>, Equipment> resolveEquipment)
-        {
-            return TryGetComponent(out CharacterEquipment equipment) &&
-                equipment != null &&
-                equipment.RestoreFromSlotData(equipmentSlots, resolveEquipment);
-        }
-
         internal bool TryGetOwnedAbilitySet(out CharacterAbilitySet abilitySet)
         {
             return TryGetAbilitySet(out abilitySet) &&
                 abilitySet.OwnsAbilityComposition;
-        }
-
-        private void TransferOwnedInventoryToCorpseOwner()
-        {
-            GameManager.InventorySystem.TransferCharacterInventoryToCorpse(this);
-        }
-
-        private void TransferOwnedEquipmentToCorpseOwner()
-        {
-            GameManager.InventorySystem.TransferCharacterEquipmentToCorpse(this);
-        }
-
-        private void TransferCorpseInventoryToOwnedInventory()
-        {
-            GameManager.InventorySystem.TransferCorpseInventoryToCharacter(this);
-        }
-
-        private bool TryRequestCorpseInventory(CharacterBase looter)
-        {
-            if (!GameManager.Exists() || !GameManager.TryGetSystem(out InventorySystem inventorySystem) || looter == null)
-            {
-                return false;
-            }
-
-            InventoryOwnerHandle corpseOwner = inventorySystem.GetCorpseOwner(this);
-            if (inventorySystem.GetBagEntries(corpseOwner).Length == 0)
-            {
-                return false;
-            }
-
-            GameRuntimeEvents.RequestInventory(InventoryMenuContext.TransferToCharacter(
-                ResolveCorpseLootCommandContext(looter),
-                looter,
-                corpseOwner,
-                EItemTransferType.Corpse));
-            return true;
-        }
-
-        private static GameCommandContext ResolveCorpseLootCommandContext(CharacterBase looter)
-        {
-            return GameCommandContext.ResolveForActor(looter);
         }
 
         private void NotifyPlayerSystemAboutDeath()
@@ -471,30 +391,6 @@ namespace FantasyWord.GameCore
         private void NotifyPlayerSystemAboutRevive()
         {
             GameManager.PlayerSystem.NotifyCharacterRevived(this);
-        }
-
-        private void TryRegisterTerrainSurfaceDamageTarget()
-        {
-            if (m_registeredTerrainSurfaceDamageSystem != null ||
-                !GameManager.Exists() ||
-                !GameManager.TryGetSystem(out TerrainSurfaceDamageSystem damageSystem))
-            {
-                return;
-            }
-
-            damageSystem.RegisterTarget(this);
-            m_registeredTerrainSurfaceDamageSystem = damageSystem;
-        }
-
-        private void UnregisterTerrainSurfaceDamageTarget()
-        {
-            if (m_registeredTerrainSurfaceDamageSystem == null)
-            {
-                return;
-            }
-
-            m_registeredTerrainSurfaceDamageSystem.UnregisterTarget(this);
-            m_registeredTerrainSurfaceDamageSystem = null;
         }
 
         private void CloseAttributeBootstrapReadWindow()

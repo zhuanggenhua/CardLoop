@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract class AbilityBase : UnityEngine.MonoBehaviour
     {

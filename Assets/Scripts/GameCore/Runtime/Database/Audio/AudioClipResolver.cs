@@ -1,7 +1,7 @@
 using Ami.BroAudio;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 多个 AudioClip 的选择策略。
@@ -17,7 +17,7 @@ namespace FantasyWord.GameCore
     /// <summary>
     /// 音频解析资产，可同时提供 BroAudio SoundID 和传统 AudioClip 列表兜底。
     /// </summary>
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_Audio + nameof(AudioClipResolver))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Audio + nameof(AudioClipResolver))]
     public class AudioClipResolver : DatabaseEntry
     {
         [InspectorName("音频片段")]

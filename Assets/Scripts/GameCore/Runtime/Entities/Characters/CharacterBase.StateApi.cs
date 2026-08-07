@@ -5,7 +5,7 @@ using GAS.Runtime;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract partial class CharacterBase
     {
@@ -244,38 +244,6 @@ namespace FantasyWord.GameCore
         public bool CanBePlayerControlled()
         {
             return !dead && !HasAlterationPlayerControlLock();
-        }
-
-        public virtual void ApplyAlterationEquipmentEffectSuppressionRule(CharacterAbilitySourceKey source)
-        {
-            if (TryGetComponent(out CharacterEquipment equipmentComponent) && equipmentComponent != null)
-            {
-                equipmentComponent.ApplyAlterationEquipmentEffectSuppressionRule(source);
-            }
-        }
-
-        public virtual void RemoveAlterationEquipmentEffectSuppressionRuleStack(CharacterAbilitySourceKey source)
-        {
-            if (TryGetComponent(out CharacterEquipment equipmentComponent) && equipmentComponent != null)
-            {
-                equipmentComponent.RemoveAlterationEquipmentEffectSuppressionRuleStack(source);
-            }
-        }
-
-        public virtual void RemoveAllAlterationEquipmentEffectSuppressionRules(CharacterAbilitySourceKey source)
-        {
-            if (TryGetComponent(out CharacterEquipment equipmentComponent) && equipmentComponent != null)
-            {
-                equipmentComponent.RemoveAllAlterationEquipmentEffectSuppressionRules(source);
-            }
-        }
-
-        internal virtual void ClearAlterationEquipmentEffectSuppressionRules()
-        {
-            if (TryGetComponent(out CharacterEquipment equipmentComponent) && equipmentComponent != null)
-            {
-                equipmentComponent.ClearAlterationEquipmentEffectSuppressionRules();
-            }
         }
 
         private bool HasAlterationPlayerControlLock()

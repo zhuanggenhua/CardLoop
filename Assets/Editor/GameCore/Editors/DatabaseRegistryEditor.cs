@@ -2,7 +2,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomEditor(typeof(DatabaseRegistry))]
     public class DatabaseRegistryEditor : FancyEditor<DatabaseRegistry>

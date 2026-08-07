@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CreateAssetMenu(
         fileName = "地表动画瓦片-",

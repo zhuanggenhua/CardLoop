@@ -1,9 +1,10 @@
-﻿﻿using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGCheckApplyEffect))]
     [UpdateBefore(typeof(SCheckApplyEnd))]
     public partial struct SCheckApplicationRequiredTags : ISystem

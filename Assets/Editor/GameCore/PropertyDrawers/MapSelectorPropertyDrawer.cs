@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomPropertyDrawer(typeof(MapSelectorAttribute))]
     public class MapSelectorPropertyDrawer : PropertyDrawer
@@ -12,7 +12,7 @@ namespace FantasyWord.GameCore
         {
             if (property.propertyType != SerializedPropertyType.String)
             {
-                EditorGUI.LabelField(position, label.text, "Use SceneSelector with string fields only");
+                EditorGUI.LabelField(position, label.text, "MapSelector 只能用于 YooAsset 场景地址字符串");
                 return;
             }
 
@@ -22,8 +22,8 @@ namespace FantasyWord.GameCore
             position.x -= EditorGUI.indentLevel * 15f;
             position.width += EditorGUI.indentLevel * 15f;
 
-            string[] sceneNames = SceneUtil.CreateBuildSettingsSceneNameSnapshot();
-            string[] options = new string[] { "Current" }.Concat(sceneNames).ToArray();
+            string[] sceneAddresses = SceneUtil.CreateSceneAddressSnapshot();
+            string[] options = new string[] { "Current" }.Concat(sceneAddresses).ToArray();
 
             int currentIndex = Array.IndexOf(options, property.stringValue);
             if (currentIndex < 0) currentIndex = 0;

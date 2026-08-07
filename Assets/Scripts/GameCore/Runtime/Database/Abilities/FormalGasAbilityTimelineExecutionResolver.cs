@@ -1,6 +1,6 @@
 using System;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// Formal GAS 时间轴执行节奏配置，限制使用前延迟和连续使用间隔不得为负数。

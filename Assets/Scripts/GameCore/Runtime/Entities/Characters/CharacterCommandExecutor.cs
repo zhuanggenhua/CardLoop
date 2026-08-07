@@ -1,7 +1,7 @@
 using GAS.Runtime;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterBase))]
@@ -88,7 +88,7 @@ namespace FantasyWord.GameCore
                 return PlayerCommandResult.Failed(request, EPlayerCommandFailureReason.BlockedByState);
             }
 
-            GameRuntimeEvents.RequestMenu(EMenu.Pause);
+            _ = GameManager.UISystem.OpenMenuAsync(EMenu.Pause);
             return PlayerCommandResult.Success(request);
         }
 
@@ -148,7 +148,7 @@ namespace FantasyWord.GameCore
 
             if (fireResult.Result != EAbilityFireCheckResult.Valid)
             {
-                GameRuntimeEvents.NotifyPlayerAbilityFireFailed(fireResult.FormalGasAbilityCode, fireResult.Result);
+                YokiFrame.EventKit.Type.Send(new PlayerAbilityFireFailedEvent(fireResult.FormalGasAbilityCode, fireResult.Result));
                 return PlayerCommandResult.Failed(request, EPlayerCommandFailureReason.AbilityRejected);
             }
 

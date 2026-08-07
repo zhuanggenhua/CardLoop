@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [System.Flags]
     public enum EDamageScreenFlashSources
@@ -15,7 +15,7 @@ namespace FantasyWord.GameCore
 
     /// <summary>
     /// 受击屏幕闪屏表现入口。
-    /// 它只消费 GameRuntimeEvents 派发的正式受击表现事件，不直接读取伤害通知或 TopDown Manager。
+    /// 它只消费 YokiFrame EventKit 派发的正式受击表现事件，不直接读取伤害通知或 TopDown Manager。
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
     [RequireComponent(typeof(Image))]

@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_UI + nameof(NavigationCursorStyle))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.UI + nameof(NavigationCursorStyle))]
     public class NavigationCursorStyle : DatabaseEntry
     {
         [SerializeField, FormerlySerializedAs("sprite")]

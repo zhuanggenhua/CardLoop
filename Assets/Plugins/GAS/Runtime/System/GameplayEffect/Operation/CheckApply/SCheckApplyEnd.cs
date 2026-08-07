@@ -7,6 +7,7 @@ namespace GAS.Runtime
     /// <summary>
     ///  检查施加效果 结束
     /// </summary>
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGCheckApplyEffect))]
     public partial struct SCheckApplyEnd : ISystem
     {

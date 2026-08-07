@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 使用 EX-GAS Timeline 执行主动技能的通用项目侧运行桥。

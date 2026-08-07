@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     internal readonly struct TerrainNavigationRuntimePathDebugSnapshot
     {

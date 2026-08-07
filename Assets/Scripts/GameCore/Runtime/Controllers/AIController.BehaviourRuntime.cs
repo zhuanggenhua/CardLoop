@@ -2,7 +2,7 @@ using System;
 using ContextSteering2D;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public partial class AIController
     {

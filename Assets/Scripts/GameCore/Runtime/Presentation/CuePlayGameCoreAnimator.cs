@@ -1,7 +1,7 @@
 using GAS.Runtime;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// EX-GAS 动画 Cue 只提交动作键。

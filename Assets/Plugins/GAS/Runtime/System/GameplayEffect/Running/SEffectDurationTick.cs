@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGRunningEffect))]
     [UpdateAfter(typeof(SEffectPeriodTick))]
     public partial struct SEffectDurationTick : ISystem

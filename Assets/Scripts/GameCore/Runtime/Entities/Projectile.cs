@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 投射物发射参数，包含基础伤害、飞行速度和可选爆炸范围规则。

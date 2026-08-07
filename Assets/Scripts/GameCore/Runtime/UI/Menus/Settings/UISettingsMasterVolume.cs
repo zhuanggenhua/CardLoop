@@ -1,6 +1,6 @@
 using UnityEngine.Events;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UISettingsMasterVolume : UISettingsVolume
     {

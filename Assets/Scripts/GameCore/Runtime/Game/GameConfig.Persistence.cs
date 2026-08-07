@@ -3,7 +3,7 @@ using MackySoft.SerializeReferenceExtensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public partial class GameConfig
     {

@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [RequireComponent(typeof(CanvasGroup))]
     public class UITipsItem : MonoBehaviour

@@ -2,7 +2,7 @@ using System;
 using MoreMountains.Feedbacks;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 受击反馈触发时，提供给镜头或屏幕表现层的只读上下文。
@@ -66,46 +66,6 @@ namespace FantasyWord.GameCore
             this.position = position;
             this.target = target;
             this.sourceCharacter = sourceCharacter;
-        }
-    }
-
-    /// <summary>
-    /// 掉落表现事件上下文。
-    /// 只服务纯表现层监听者，不承担背包、金钱或掉落表结算。
-    /// </summary>
-    public readonly struct LootPresentationContext
-    {
-        public readonly Vector3 position;
-        public readonly CharacterActor character;
-        public readonly CharacterBase receiver;
-        public readonly bool grantedReward;
-        public readonly int money;
-
-        public LootPresentationContext(Vector3 position, CharacterActor character, CharacterBase receiver, bool grantedReward, int money)
-        {
-            this.position = position;
-            this.character = character;
-            this.receiver = receiver;
-            this.grantedReward = grantedReward;
-            this.money = money;
-        }
-    }
-
-    /// <summary>
-    /// 拾取表现事件上下文。
-    /// 只服务纯表现层监听者，不承载拾取条件和背包真相。
-    /// </summary>
-    public readonly struct PickupPresentationContext
-    {
-        public readonly Vector3 position;
-        public readonly CharacterBase picker;
-        public readonly PickableItem pickableItem;
-
-        public PickupPresentationContext(Vector3 position, CharacterBase picker, PickableItem pickableItem)
-        {
-            this.position = position;
-            this.picker = picker;
-            this.pickableItem = pickableItem;
         }
     }
 
@@ -182,13 +142,7 @@ namespace FantasyWord.GameCore
         [Tooltip("角色死亡时播放。对齐 TopDown Health 的 DeathMMFeedbacks。")]
         [SerializeField] private MMFeedbacks m_deathFeedbacks = null;
 
-        [Header("掉落与交互反馈")]
-        [Tooltip("掉落奖励生成或发放时播放。对齐 TopDown Loot 的 LootFeedback，奖励真相仍归 GameCore 背包/掉落规则。")]
-        [SerializeField] private MMFeedbacks m_lootFeedbacks = null;
-
-        [Tooltip("场景拾取物成功被拾取时播放。对齐 TopDown PickableItem 的 PickedMMFeedbacks。")]
-        [SerializeField] private MMFeedbacks m_pickupFeedbacks = null;
-
+        [Header("交互反馈")]
         [Tooltip("交互成功执行时播放。对齐 TopDown ButtonActivated 的 ActivationFeedback。")]
         [SerializeField] private MMFeedbacks m_interactionActivationFeedbacks = null;
 
@@ -222,12 +176,10 @@ namespace FantasyWord.GameCore
             PlayDamageTaken(position);
 
             damageInput.TryGetSourceCharacter(out CharacterBase sourceCharacter);
-            GameRuntimeEvents.NotifyDamageTakenPresentation(new DamageTakenFeedbackContext(position, target, sourceCharacter, damageInput, visualFlags));
+            YokiFrame.EventKit.Type.Send(new DamageTakenPresentationEvent(new DamageTakenFeedbackContext(position, target, sourceCharacter, damageInput, visualFlags)));
         }
 
         public void PlayDeath(Vector3 position) => Play(m_deathFeedbacks, position);
-        public void PlayLoot(Vector3 position) => Play(m_lootFeedbacks, position);
-        public void PlayPickup(Vector3 position) => Play(m_pickupFeedbacks, position);
         public void PlayInteractionActivation(Vector3 position) => Play(m_interactionActivationFeedbacks, position);
         public void PlayInteractionDenied(Vector3 position) => Play(m_interactionDeniedFeedbacks, position);
 

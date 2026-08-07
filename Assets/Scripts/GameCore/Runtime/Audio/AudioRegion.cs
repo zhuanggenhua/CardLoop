@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class AudioRegion : MonoBehaviour
     {
@@ -34,7 +34,7 @@ namespace FantasyWord.GameCore
             }
 
             m_previousAudio = audioSystem.GetLastPlayedAudioClipResolver(audioClipResolver.targetChannel);
-            GameRuntimeEvents.RequestAudioPlayback(audioClipResolver);
+            YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(audioClipResolver));
         }
 
         private void OnTriggerExit2D(Collider2D collision)
@@ -44,7 +44,11 @@ namespace FantasyWord.GameCore
                 return;
             }
 
-            GameRuntimeEvents.RequestAudioPlayback(m_previousAudio);
+            if (m_previousAudio)
+            {
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(m_previousAudio));
+            }
+
             m_previousAudio = null;
         }
 

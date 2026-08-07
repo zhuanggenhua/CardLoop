@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 游戏全局状态层，用于切换输入映射和暂停语义。
@@ -21,6 +20,8 @@ namespace FantasyWord.GameCore
     /// </summary>
     public class GameStateSystem : AGameSystem
     {
+        private static readonly Type[] SystemStartupDependencies = { typeof(InputSystem) };
+
         [InspectorName("启动状态")]
         [Tooltip("系统启动时压入状态栈的第一层状态。")]
         [SerializeField] private EGameState m_startupState = EGameState.Gameplay;
@@ -31,16 +32,35 @@ namespace FantasyWord.GameCore
         public EGameState currentState => m_stateStack.Count > 0 ? m_stateStack.Peek() : EGameState.None;
 
         private Stack<EGameState> m_stateStack = new();
+        private bool m_isRunning;
+
+        public override IReadOnlyCollection<Type> StartupDependencies => SystemStartupDependencies;
 
         public override void OnSystemStart()
         {
-            EventKit.Type.Register<ReturnToMainMenuRequestedEvent>(OnReturnToMainMenuRequested);
-            AddLayer(m_startupState);
+            if (m_isRunning)
+            {
+                return;
+            }
+
+            m_isRunning = true;
+            try
+            {
+                m_stateStack.Clear();
+                AddLayer(m_startupState);
+            }
+            catch
+            {
+                OnSystemStop();
+                throw;
+            }
         }
 
         public override void OnSystemStop()
         {
-            EventKit.Type.UnRegister<ReturnToMainMenuRequestedEvent>(OnReturnToMainMenuRequested);
+            m_isRunning = false;
+            m_stateStack.Clear();
+            Time.timeScale = 1.0f;
         }
 
         /// <summary>
@@ -119,11 +139,6 @@ namespace FantasyWord.GameCore
         private void OnExitGameplayState() { }
         private void OnExitDialogueState() { }
 
-        private void OnReturnToMainMenuRequested(ReturnToMainMenuRequestedEvent _)
-        {
-            Time.timeScale = 1.0f;
-            SceneManager.LoadScene(GameManager.Config.mainMenuSceneName);
-        }
     }
 }
 

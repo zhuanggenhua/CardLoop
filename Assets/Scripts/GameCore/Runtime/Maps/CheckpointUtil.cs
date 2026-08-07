@@ -1,17 +1,17 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public static class CheckpointUtil
     {
-        public static string GetActualMapName(string map)
+        public static string GetActualSceneAddress(string sceneAddress)
         {
-            if (string.IsNullOrEmpty(map))
+            if (string.IsNullOrEmpty(sceneAddress))
             {
-                return GameManager.MapSystem.GetCurrentMapName();
+                return GameManager.MapSystem.GetCurrentSceneAddress();
             }
 
-            return map;
+            return sceneAddress;
         }
     }
 }

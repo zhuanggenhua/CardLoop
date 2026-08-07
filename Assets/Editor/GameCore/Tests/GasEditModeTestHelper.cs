@@ -7,7 +7,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
-namespace FantasyWord.GameCore.Tests
+namespace GameCore.Tests
 {
     internal static class GasEditModeTestHelper
     {
@@ -18,9 +18,9 @@ namespace FantasyWord.GameCore.Tests
             ShutdownWorld();
 
             Type bootstrapType = typeof(GameManager).Assembly.GetType(
-                "FantasyWord.GameCore.FormalAbilityRuntimeBootstrap",
+                "GameCore.FormalAbilityRuntimeBootstrap",
                 throwOnError: false);
-            Assert.IsNotNull(bootstrapType, "找不到 FantasyWord.GameCore.FormalAbilityRuntimeBootstrap。");
+            Assert.IsNotNull(bootstrapType, "找不到 GameCore.FormalAbilityRuntimeBootstrap。");
 
             MethodInfo ensureInitializedMethod = bootstrapType.GetMethod(
                 "EnsureInitialized",
@@ -34,33 +34,11 @@ namespace FantasyWord.GameCore.Tests
             Type gasManagerType = ResolveType("GAS.Runtime.GASManager");
             Assert.IsNotNull(gasManagerType, "找不到 GAS.Runtime.GASManager。");
 
-            MethodInfo stopMethod = gasManagerType.GetMethod(
-                "Stop",
+            MethodInfo shutdownMethod = gasManagerType.GetMethod(
+                "Shutdown",
                 BindingFlags.Static | BindingFlags.Public);
-            stopMethod?.Invoke(null, null);
-
-            MethodInfo clearAscBindingMethod = gasManagerType.GetMethod(
-                "ClearAscBinding",
-                BindingFlags.Static | BindingFlags.Public);
-            clearAscBindingMethod?.Invoke(null, null);
-
-            PropertyInfo exWorldProperty = gasManagerType.GetProperty(
-                "ExWorld",
-                BindingFlags.Static | BindingFlags.Public);
-            object world = exWorldProperty?.GetValue(null);
-            if (world != null && IsWorldCreated(world))
-            {
-                MethodInfo disposeMethod = world.GetType().GetMethod(
-                    "Dispose",
-                    BindingFlags.Instance | BindingFlags.Public,
-                    null,
-                    Type.EmptyTypes,
-                    null);
-                Assert.IsNotNull(disposeMethod, "找不到 World.Dispose()。");
-                disposeMethod.Invoke(world, null);
-            }
-
-            ResetGasManagerState(gasManagerType);
+            Assert.IsNotNull(shutdownMethod, "找不到 GASManager.Shutdown()。");
+            shutdownMethod.Invoke(null, null);
             ResetFormalAbilityRuntimeBootstrapState();
         }
 
@@ -130,21 +108,12 @@ namespace FantasyWord.GameCore.Tests
             return isCreatedProperty.GetValue(world) is bool isCreated && isCreated;
         }
 
-        private static void ResetGasManagerState(Type gasManagerType)
-        {
-            SetStaticBackingField(gasManagerType, "ExWorld", null);
-            SetStaticBackingField(gasManagerType, "EntityManager", default(Unity.Entities.EntityManager));
-            SetStaticBackingField(gasManagerType, "IsRunning", false);
-            SetStaticBackingField(gasManagerType, "IsInitialized", false);
-            SetStaticBackingField(gasManagerType, "EntityGlobalTimer", Unity.Entities.Entity.Null);
-        }
-
         private static void ResetFormalAbilityRuntimeBootstrapState()
         {
             Type bootstrapType = typeof(GameManager).Assembly.GetType(
-                "FantasyWord.GameCore.FormalAbilityRuntimeBootstrap",
+                "GameCore.FormalAbilityRuntimeBootstrap",
                 throwOnError: false);
-            Assert.IsNotNull(bootstrapType, "找不到 FantasyWord.GameCore.FormalAbilityRuntimeBootstrap。");
+            Assert.IsNotNull(bootstrapType, "找不到 GameCore.FormalAbilityRuntimeBootstrap。");
 
             FieldInfo initializedField = bootstrapType.GetField(
                 "s_initialized",
@@ -155,15 +124,6 @@ namespace FantasyWord.GameCore.Tests
                 "s_gameCoreGasExtensionsRegistered",
                 BindingFlags.Static | BindingFlags.NonPublic);
             extensionsRegisteredField?.SetValue(null, false);
-        }
-
-        private static void SetStaticBackingField(Type type, string propertyName, object value)
-        {
-            FieldInfo field = type.GetField(
-                $"<{propertyName}>k__BackingField",
-                BindingFlags.Static | BindingFlags.NonPublic);
-            Assert.IsNotNull(field, $"找不到 {type.FullName}.{propertyName} 的 backing field。");
-            field.SetValue(null, value);
         }
 
         private static void InvokeLogicGroupUpdate(object world)

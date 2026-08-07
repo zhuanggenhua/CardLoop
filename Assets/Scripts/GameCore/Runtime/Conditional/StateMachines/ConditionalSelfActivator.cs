@@ -1,4 +1,4 @@
-﻿namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class ConditionalSelfActivator : AConditionalActivator
     {

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// UIKit 正式菜单面板基类。

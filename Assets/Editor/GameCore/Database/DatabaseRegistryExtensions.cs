@@ -1,6 +1,6 @@
 using UnityEditor;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public static class DatabaseRegistryExtensions
     {

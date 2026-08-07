@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// EX-GAS 2D 命中范围的运行时调试绘制工具。

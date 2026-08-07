@@ -35,11 +35,16 @@ namespace GAS.Runtime
         private static EntityManager EntityManager => GASManager.EntityManager;
 
         public void Dispose()  
-        {  
-            GASManager.UnbindAscToEntity(Entity);  
-            if (GASManager.ExWorld != null && GASManager.ExWorld.IsCreated)  
-                EntityHelper.DestroyEntity(Entity);  
-            Entity = Entity.Null;  
+        {
+            if (Entity == Entity.Null) return;
+
+            if (GASManager.ExWorld is { IsCreated: true } && EntityManager.Exists(Entity))
+            {
+                _attrSetController.Dispose();
+                GASManager.UnbindAscToEntity(Entity);
+                EntityHelper.DestroyEntity(Entity);
+            }
+            Entity = Entity.Null;
         }
 
         public void Init(IEnumerable<int> baseTags, IEnumerable<AttrSetConfig> attrSets, IEnumerable<AbilityConfig> baseAbilities, int level = 1)

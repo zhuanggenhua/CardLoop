@@ -28,12 +28,12 @@ namespace GAS.Runtime
             CueHelper.RegisterCue(CUE_CuePlayAnimator, CuePlayAnimator, typeof(GAS.Runtime.XParamAnimator));
             var CuePlaySound = typeof(GAS.Runtime.CuePlaySound);
             CueHelper.RegisterCue(CUE_CuePlaySound, CuePlaySound, typeof(GAS.Runtime.XParamPlaySound));
-            var CuePlayGameCoreAnimator = typeof(FantasyWord.GameCore.CuePlayGameCoreAnimator);
+            var CuePlayGameCoreAnimator = typeof(GameCore.CuePlayGameCoreAnimator);
             CueHelper.RegisterCue(CUE_CuePlayGameCoreAnimator, CuePlayGameCoreAnimator, typeof(GAS.Runtime.XParamAnimator));
-            var CuePlayGameCoreAudio = typeof(FantasyWord.GameCore.CuePlayGameCoreAudio);
-            CueHelper.RegisterCue(CUE_CuePlayGameCoreAudio, CuePlayGameCoreAudio, typeof(FantasyWord.GameCore.XParamGameCoreAudio));
-            var CuePlayGameCoreFeedback = typeof(FantasyWord.GameCore.CuePlayGameCoreFeedback);
-            CueHelper.RegisterCue(CUE_CuePlayGameCoreFeedback, CuePlayGameCoreFeedback, typeof(FantasyWord.GameCore.XParamGameCoreFeedback));
+            var CuePlayGameCoreAudio = typeof(GameCore.CuePlayGameCoreAudio);
+            CueHelper.RegisterCue(CUE_CuePlayGameCoreAudio, CuePlayGameCoreAudio, typeof(GameCore.XParamGameCoreAudio));
+            var CuePlayGameCoreFeedback = typeof(GameCore.CuePlayGameCoreFeedback);
+            CueHelper.RegisterCue(CUE_CuePlayGameCoreFeedback, CuePlayGameCoreFeedback, typeof(GameCore.XParamGameCoreFeedback));
         }
     }
 }

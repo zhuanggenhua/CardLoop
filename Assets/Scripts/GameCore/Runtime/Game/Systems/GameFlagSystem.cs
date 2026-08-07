@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 游戏标记系统的存档块，只保存当前为 true 的标记名集合。
@@ -45,7 +45,7 @@ namespace FantasyWord.GameCore
                 m_flags.Remove(variableName);
             }
 
-            GameRuntimeEvents.NotifyGameFlagChanged(variableName, value);
+            YokiFrame.EventKit.Type.Send(new GameFlagChangedEvent(variableName, value));
         }
 
         public void LoadDataBlock(GameFlagsDataBlock block)

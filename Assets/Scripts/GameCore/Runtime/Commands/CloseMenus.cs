@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 请求关闭当前所有菜单的命令。
@@ -16,7 +16,7 @@ namespace FantasyWord.GameCore
 
         public Task Execute(GameCommandContext context)
         {
-            GameRuntimeEvents.RequestCloseAllMenus();
+            GameManager.UISystem.CloseAllMenus();
             return Task.CompletedTask;
         }
     }

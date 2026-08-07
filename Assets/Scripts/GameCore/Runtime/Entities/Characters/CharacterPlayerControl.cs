@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterBase))]

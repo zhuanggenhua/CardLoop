@@ -3,6 +3,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGAbility))]
     [UpdateAfter(typeof(STryEndAbility))]
     public partial struct SAbilityTick : ISystem

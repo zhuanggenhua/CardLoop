@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [Serializable]
     public class IsAbilityUnlocked : ABaseCondition

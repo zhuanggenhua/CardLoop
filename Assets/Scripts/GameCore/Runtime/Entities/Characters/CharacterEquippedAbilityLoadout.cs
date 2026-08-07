@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 角色已装备主动技能槽实现。

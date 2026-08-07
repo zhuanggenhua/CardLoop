@@ -4,9 +4,9 @@ using System.Linq;
 using UnityEngine;
 using azixMcAze.SerializableDictionary;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord + nameof(DatabaseRegistry))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Root + nameof(DatabaseRegistry))]
     public partial class DatabaseRegistry : ScriptableObject
     {
         public bool autoAddNewDatabaseEntries => m_autoAddNewDatabaseEntries;

@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 可刷出的角色及其权重配置。

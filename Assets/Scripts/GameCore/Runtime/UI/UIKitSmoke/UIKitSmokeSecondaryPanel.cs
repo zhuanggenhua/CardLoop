@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 次面板只负责承担 UIKit smoke 的第二层栈位。

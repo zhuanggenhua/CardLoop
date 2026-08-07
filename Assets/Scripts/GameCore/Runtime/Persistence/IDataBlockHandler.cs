@@ -1,4 +1,4 @@
-﻿namespace FantasyWord.GameCore
+namespace GameCore
 {
     public interface IDataBlockHandler<DataBlockType> where DataBlockType : DataBlock
     {

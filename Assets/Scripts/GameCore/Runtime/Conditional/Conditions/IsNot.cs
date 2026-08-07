@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [Serializable]
     public class IsNot : ABaseCondition

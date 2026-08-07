@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.U2D.Animation;
 using azixMcAze.SerializableDictionary;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 统一管理 UI 中的手柄/键盘按键提示图标，并在输入设备变化时刷新已注册按钮。

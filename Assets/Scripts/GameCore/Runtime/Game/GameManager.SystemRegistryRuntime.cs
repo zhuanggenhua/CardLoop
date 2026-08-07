@@ -2,43 +2,87 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public partial class GameManager
     {
+        private readonly List<AGameSystem> m_systemExecutionOrder = new();
+        private readonly List<AGameSystem> m_initializedSystems = new();
+        private readonly List<AGameSystem> m_startedSystems = new();
+
         /// <summary>
         /// 收集并初始化项目级正式系统。
-        /// 这里只处理 AGameSystem 根节点注册，不承担世界、模式或实体层状态所有权。
+        /// 只登记 GameManager 层级中明确装配的系统，避免把其它场景对象误提升为进程级系统。
         /// </summary>
         private void InitializeSystems()
         {
-            foreach (AGameSystem system in m_systems.Values)
+            foreach (AGameSystem system in m_systemExecutionOrder)
             {
-                system.OnSystemInit();
+                try
+                {
+                    system.OnSystemInit();
+                    m_initializedSystems.Add(system);
+                }
+                catch
+                {
+                    ShutdownSystemSafely(system);
+                    ShutdownSystems();
+                    throw;
+                }
             }
         }
 
         private void StartSystems()
         {
-            foreach (AGameSystem system in m_systems.Values)
+            if (m_startedSystems.Count > 0)
             {
-                system.OnSystemStart();
+                return;
+            }
+
+            foreach (AGameSystem system in m_systemExecutionOrder)
+            {
+                try
+                {
+                    system.OnSystemStart();
+                    m_startedSystems.Add(system);
+                }
+                catch
+                {
+                    StopSystemSafely(system);
+                    StopSystems();
+                    throw;
+                }
             }
         }
 
         private void StopSystems()
         {
-            foreach (AGameSystem system in m_systems.Values)
+            for (int i = m_startedSystems.Count - 1; i >= 0; i--)
             {
-                system.OnSystemStop();
+                StopSystemSafely(m_startedSystems[i]);
             }
+
+            m_startedSystems.Clear();
+        }
+
+        private void ShutdownSystems()
+        {
+            StopSystems();
+
+            for (int i = m_initializedSystems.Count - 1; i >= 0; i--)
+            {
+                ShutdownSystemSafely(m_initializedSystems[i]);
+            }
+
+            m_initializedSystems.Clear();
         }
 
         private void FindSystems()
         {
-            AGameSystem[] systems = FindObjectsByType<AGameSystem>(FindObjectsSortMode.InstanceID);
+            AGameSystem[] systems = GetComponentsInChildren<AGameSystem>(includeInactive: false);
 
             m_systems = new Dictionary<Type, AGameSystem>();
+            m_systemExecutionOrder.Clear();
 
             foreach (AGameSystem system in systems)
             {
@@ -50,6 +94,108 @@ namespace FantasyWord.GameCore
                 }
 
                 m_systems[type] = system;
+            }
+
+            ResolveSystemExecutionOrder(systems);
+        }
+
+        private void ResolveSystemExecutionOrder(AGameSystem[] discoveredSystems)
+        {
+            var visiting = new HashSet<Type>();
+            var visited = new HashSet<Type>();
+            var dependencyPath = new List<Type>();
+
+            foreach (AGameSystem system in discoveredSystems)
+            {
+                AddSystemWithDependencies(system, visiting, visited, dependencyPath);
+            }
+        }
+
+        private void AddSystemWithDependencies(
+            AGameSystem system,
+            HashSet<Type> visiting,
+            HashSet<Type> visited,
+            List<Type> dependencyPath)
+        {
+            Type systemType = system.GetType();
+            if (visited.Contains(systemType))
+            {
+                return;
+            }
+
+            if (!visiting.Add(systemType))
+            {
+                dependencyPath.Add(systemType);
+                string cycle = string.Join(" -> ", dependencyPath.ConvertAll(type => type.Name));
+                dependencyPath.RemoveAt(dependencyPath.Count - 1);
+                throw new InvalidOperationException($"Game System startup dependency cycle detected: {cycle}.");
+            }
+
+            dependencyPath.Add(systemType);
+            IReadOnlyCollection<Type> dependencies = system.StartupDependencies ?? Array.Empty<Type>();
+            foreach (Type dependencyType in dependencies)
+            {
+                ValidateDependency(systemType, dependencyType);
+
+                if (!m_systems.TryGetValue(dependencyType, out AGameSystem dependency))
+                {
+                    throw new InvalidOperationException(
+                        $"Game System {systemType.Name} requires {dependencyType.Name}, but no {dependencyType.Name} is configured under the active GameManager.");
+                }
+
+                AddSystemWithDependencies(dependency, visiting, visited, dependencyPath);
+            }
+
+            dependencyPath.RemoveAt(dependencyPath.Count - 1);
+            visiting.Remove(systemType);
+            visited.Add(systemType);
+            m_systemExecutionOrder.Add(system);
+        }
+
+        private static void ValidateDependency(Type systemType, Type dependencyType)
+        {
+            if (dependencyType == null)
+            {
+                throw new InvalidOperationException($"Game System {systemType.Name} declares a null startup dependency.");
+            }
+
+            if (!typeof(AGameSystem).IsAssignableFrom(dependencyType))
+            {
+                throw new InvalidOperationException(
+                    $"Game System {systemType.Name} declares {dependencyType.Name} as a startup dependency, but it is not an {nameof(AGameSystem)}.");
+            }
+
+            if (dependencyType == systemType)
+            {
+                throw new InvalidOperationException($"Game System {systemType.Name} cannot depend on itself.");
+            }
+        }
+
+        private static void StopSystemSafely(AGameSystem system)
+        {
+            try
+            {
+                system.OnSystemStop();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(new InvalidOperationException(
+                    $"Game System {system.GetType().Name} failed while stopping.", exception),
+                    system);
+            }
+        }
+
+        private static void ShutdownSystemSafely(AGameSystem system)
+        {
+            try
+            {
+                system.OnSystemShutdown();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(new InvalidOperationException(
+                    $"Game System {system.GetType().Name} failed while shutting down.", exception),
+                    system);
             }
         }
 

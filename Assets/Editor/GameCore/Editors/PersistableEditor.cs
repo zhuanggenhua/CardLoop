@@ -1,7 +1,7 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomEditor(typeof(Persistable), true), CanEditMultipleObjects]
     public class PersistableEditor : FancyEditor<Persistable>

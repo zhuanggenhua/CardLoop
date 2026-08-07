@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("FantasyWord.GameCore.EditModeTests")]
+[assembly: InternalsVisibleTo("GameCore.EditModeTests")]

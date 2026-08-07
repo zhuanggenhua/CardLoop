@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FantasyWord.GameCore;
+using GameCore;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 让 UIKit 菜单入口直接在 Inspector 里选择正式面板类型，

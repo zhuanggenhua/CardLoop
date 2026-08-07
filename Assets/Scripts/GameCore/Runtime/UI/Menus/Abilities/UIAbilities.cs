@@ -5,7 +5,7 @@ using UnityEngine;
 using azixMcAze.SerializableDictionary;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 能力菜单中的能力分类。
@@ -66,7 +66,7 @@ namespace FantasyWord.GameCore
         private UIAbilityListEntry[] m_entries = System.Array.Empty<UIAbilityListEntry>();
         private UIAbilityListEntry m_abilitySelected = null;
         private CharacterBase m_currentCharacter = null;
-        private CharacterMenuContext m_context = CharacterMenuContext.CurrentControlledCharacter();
+        private bool m_followCurrentControlledCharacter = true;
         private EAbilityType m_selectedCategory = EAbilityType.Active;
         private readonly List<GameObject> m_activeAbilityEntries = new();
         private bool m_currentControlledCharacterListening = false;
@@ -122,12 +122,10 @@ namespace FantasyWord.GameCore
 
         protected override void OnPanelShown(UIKitMenuOpenData openData)
         {
-            m_context = TryResolveCharacterMenuContext(openData, out CharacterMenuContext context)
-                ? context
-                : CharacterMenuContext.CurrentControlledCharacter();
+            m_followCurrentControlledCharacter = !TryResolveTargetCharacter(openData, out CharacterBase targetCharacter);
             m_abilityBar.Init();
             BindCurrentControlledCharacterListenerForContext();
-            BindCharacter(m_context.ResolveActor());
+            BindCharacter(m_followCurrentControlledCharacter ? ResolveCurrentControlledCharacter() : targetCharacter);
             m_abilityBar.UpdateUI();
             SelectCategory(m_selectedCategory);
             UpdateUI();
@@ -315,15 +313,15 @@ namespace FantasyWord.GameCore
 
         private void OnCurrentControlledCharacterChanged(CharacterBase character)
         {
-            if (m_context.FollowsCurrentControlledCharacter)
+            if (m_followCurrentControlledCharacter)
             {
-                BindCharacter(m_context.ResolveActor());
+                BindCharacter(ResolveCurrentControlledCharacter());
             }
         }
 
         private void BindCurrentControlledCharacterListenerForContext()
         {
-            if (m_context.FollowsCurrentControlledCharacter)
+            if (m_followCurrentControlledCharacter)
             {
                 StartCurrentControlledCharacterListeningIfReady();
             }
@@ -383,15 +381,22 @@ namespace FantasyWord.GameCore
             UpdateUI();
         }
 
-        private static bool TryResolveCharacterMenuContext(UIKitMenuOpenData openData, out CharacterMenuContext context)
+        private static bool TryResolveTargetCharacter(UIKitMenuOpenData openData, out CharacterBase character)
         {
-            context = CharacterMenuContext.CurrentControlledCharacter();
+            character = null;
             if (openData == null || openData.ArgumentCount != 1)
             {
                 return false;
             }
 
-            return openData.TryGetArgument(0, out context);
+            return openData.TryGetArgument(0, out character);
+        }
+
+        private static CharacterBase ResolveCurrentControlledCharacter()
+        {
+            return GameManager.TryGetSystem(out PlayerSystem playerSystem)
+                ? playerSystem.GetCurrentControlledCharacterOrPlayerInstance()
+                : null;
         }
 
         private void ConfigureAbilityEntryPool()

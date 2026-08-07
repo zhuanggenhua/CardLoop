@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_Save + nameof(PrefabReference))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Save + nameof(PrefabReference))]
     public class PrefabReference : DatabaseEntry
     {
         [Header("References")]

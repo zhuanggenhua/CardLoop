@@ -5,7 +5,7 @@ using GAS.Runtime;
 using UnityEngine;
 using UEntity = Unity.Entities.Entity;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// Formal 规则专用的 EX-GAS 空逻辑代理，只让 AbilitySpec 能承载成本、冷却和标签规则。

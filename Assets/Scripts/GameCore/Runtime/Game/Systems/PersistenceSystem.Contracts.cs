@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 持久化对象系统的数据块形状。

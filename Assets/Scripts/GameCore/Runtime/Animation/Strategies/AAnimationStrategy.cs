@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [Serializable]
     public abstract class AAnimationStrategy : IAnimationStrategy

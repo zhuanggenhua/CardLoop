@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGInstantEffect))]
     [UpdateAfter(typeof(SExecuteInstantEffectModifiers))]
     public partial struct SExecuteInstantEffectEnd : ISystem

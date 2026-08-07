@@ -1,7 +1,7 @@
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UISettings : UIKitMenuPanelBase
     {

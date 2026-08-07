@@ -1,8 +1,9 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGApplyEffect))]
     [UpdateBefore(typeof(SGInstantEffect))]
     public partial struct SPlayCueOnApply : ISystem

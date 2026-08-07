@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGInstantiateEffect))]
     public partial struct SInstantiateEffect : ISystem
     {

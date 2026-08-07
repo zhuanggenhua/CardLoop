@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 传送门要求的纵向移动方向；None 表示不限制纵向输入。
@@ -64,7 +64,10 @@ namespace FantasyWord.GameCore
 
                 traversalCharacter.InterruptPush();
 
-                GameRuntimeEvents.RequestAudioPlayback(m_activationAudio);
+                if (m_activationAudio)
+                {
+                    YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(m_activationAudio));
+                }
 
                 _teleportationInProgress = true;
 

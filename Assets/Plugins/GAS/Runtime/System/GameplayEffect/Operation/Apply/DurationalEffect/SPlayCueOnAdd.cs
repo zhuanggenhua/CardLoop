@@ -1,8 +1,9 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGDurationalEffect))]
     public partial struct SPlayCueOnAdd : ISystem
     {

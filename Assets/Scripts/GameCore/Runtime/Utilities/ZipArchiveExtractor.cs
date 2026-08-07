@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// Zip 解压工具，职责对应 Chris 的 Mod 包解压能力。

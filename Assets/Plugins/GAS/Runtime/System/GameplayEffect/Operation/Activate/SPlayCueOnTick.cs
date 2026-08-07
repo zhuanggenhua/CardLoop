@@ -3,6 +3,7 @@ using Unity.Entities;
   
 namespace GAS.Runtime  
 {  
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGActivateEffect))]  
     [UpdateBefore(typeof(SActivateEnd))]  
     public partial struct SPlayCueOnTick : ISystem  

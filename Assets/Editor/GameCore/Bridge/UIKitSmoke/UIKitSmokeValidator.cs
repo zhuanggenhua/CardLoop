@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// UIKit 面板栈专项的正式 smoke 入口。

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public partial class GameConfig
     {
@@ -18,7 +18,6 @@ namespace FantasyWord.GameCore
         [SerializeField] private SerializableDictionary<EStat, string> m_statTermsBinding = new();
         [SerializeField] private SerializableDictionary<EStat, string> m_statIncreaseTermsBinding = new();
         [SerializeField] private SerializableDictionary<EStat, string> m_statDecreaseTermsBinding = new();
-        [SerializeField] private SerializableDictionary<EItemCategory, string> m_itemCategoryTermsBinding = new();
         [SerializeField] private SerializableDictionary<EDamageType, string> m_damageTypesBinding = new();
         [SerializeField] private SerializableDictionary<EAbilityType, string> m_abilityTypesBinding = new();
 
@@ -192,16 +191,6 @@ namespace FantasyWord.GameCore
 
             termId = string.Empty;
             return false;
-        }
-
-        public TermDefinition GetTermDefinition(EItemCategory category)
-        {
-            if (m_itemCategoryTermsBinding.ContainsKey(category))
-            {
-                return GetTermDefinition(m_itemCategoryTermsBinding[category]);
-            }
-
-            return m_defaultTermDefinition;
         }
 
         public TermDefinition GetTermDefinition(EDamageType type)

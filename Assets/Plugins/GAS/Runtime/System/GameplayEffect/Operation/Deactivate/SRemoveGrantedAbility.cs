@@ -4,6 +4,7 @@ using Unity.Entities;
   
 namespace GAS.Runtime  
 {  
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGDeactivateEffect))]  
     [UpdateBefore(typeof(SDeactivateEnd))]  
     public partial struct SRemoveGrantedAbility : ISystem  

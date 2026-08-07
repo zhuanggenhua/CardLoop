@@ -1,9 +1,9 @@
-﻿using Unity.Mathematics;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [RequireComponent(typeof(ScrollRect))]
     public class SnapToSelectionScrollRect : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler

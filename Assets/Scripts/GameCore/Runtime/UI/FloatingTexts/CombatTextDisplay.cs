@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 using YokiFrame;
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [RequireComponent(typeof(FloatingTextPool))]
     public class CombatTextDisplay : MonoBehaviour

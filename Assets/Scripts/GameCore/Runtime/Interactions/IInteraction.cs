@@ -1,6 +1,6 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public interface IInteraction
     {

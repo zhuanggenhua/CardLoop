@@ -1,4 +1,4 @@
-﻿namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 效果链中断策略。

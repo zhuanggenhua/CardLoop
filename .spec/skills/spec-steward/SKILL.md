@@ -49,6 +49,6 @@ description: 维护 CardLoop 的 .spec 规范结构、知识落点、skill 合�
 - 新增/删除 `.spec` 文档后，同步 `.spec/knowledge/README.md`。
 - 新增 skill 后确认 frontmatter 只有 `name` 和 `description`。
 - 根 `AGENTS.md` 只能作为指针，不再堆详细 SOP。
-- 同一规范口径只能有一个正式 owner；入口、索引和冲突矩阵只能保留摘要和链接，不能重复承载会漂移的模型配置、命令顺序、参数或验收清单。
+- 同一规范口径只能有一个权威文档；入口、索引和冲突矩阵只能保留摘要和链接，不能重复承载会漂移的模型配置、命令顺序、参数或验收清单。
 - 不作为正式入口保留旧 `.spec/knowledge/features/project` 或既有 skill，除非用户明确要求。
 

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract partial class CharacterBase
     {
@@ -132,7 +132,6 @@ namespace FantasyWord.GameCore
             ClearAlterationActionLockRules();
             ClearAlterationPlayerControlLockRules();
             ClearAlterationAIControlRules();
-            ClearAlterationEquipmentEffectSuppressionRules();
             ClearAlterationAlignmentRules();
             if (activeAlterationRules == null)
             {
@@ -168,7 +167,6 @@ namespace FantasyWord.GameCore
             ClearAlterationActionLockRules();
             ClearAlterationPlayerControlLockRules();
             ClearAlterationAIControlRules();
-            ClearAlterationEquipmentEffectSuppressionRules();
             ClearAlterationAlignmentRules();
             RevalidatePlayerControlEligibility();
         }

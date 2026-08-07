@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 编辑器正式数据缓存只认项目侧正式数据目录，避免每次资源刷新都去全项目暴力扫描。

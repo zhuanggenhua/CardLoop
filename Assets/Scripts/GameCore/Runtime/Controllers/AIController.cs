@@ -2,7 +2,7 @@ using System;
 using ContextSteering2D;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// AI 状态层的身体朝向模式。它只决定角色身体朝向，不替代移动求解、技能目标方向或武器瞄准。

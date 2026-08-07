@@ -4,7 +4,7 @@ using GAS.Runtime;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace FantasyWord.GameCore.Tests
+namespace GameCore.Tests
 {
     public sealed class FormalDamagePipelineEditModeTests
     {

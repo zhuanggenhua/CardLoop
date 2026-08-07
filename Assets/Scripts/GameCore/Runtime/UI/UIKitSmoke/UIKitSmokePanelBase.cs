@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// UIKit 面板栈 smoke 的最小生命周期快照。

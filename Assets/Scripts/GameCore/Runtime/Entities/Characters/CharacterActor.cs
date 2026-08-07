@@ -1,34 +1,15 @@
 using System;
 using UnityEngine;
-using UnityEngine.Events;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
-    /// 装备操作结果。
-    /// 背包、角色动作锁和装备槽规则都通过该结果向 UI 反馈失败原因。
-    /// </summary>
-    public enum EEquipmentOperationResult
-    {
-        Valid,
-        NotEnoughHealth,
-        NotEnoughMana,
-        InvalidTarget,
-        MissingItem,
-        ActionLocked,
-    }
-
-    /// <summary>
     /// 角色 Actor 的持久化数据块。
-    /// 在 CharacterBase 基础上追加经验、自由属性点、装备槽和快捷技能槽。
+    /// 在 CharacterBase 基础上追加快捷技能槽。
     /// </summary>
     [Serializable]
     public class CharacterActorDataBlock : CharacterBaseDataBlock
     {
-        public int usedPoints;
-        public int experience;
-        public Stats customStats;
-        public CharacterEquipmentSlotData[] equipmentSlots;
         public CharacterAbilitySlotData[] quickAbilitySlots;
     }
 
@@ -39,22 +20,7 @@ namespace FantasyWord.GameCore
     [Serializable]
     public class CharacterActorRuntimeStateData : CharacterRuntimeStateData
     {
-        public int usedPoints;
-        public int experience;
-        public Stats customStats;
-        public CharacterEquipmentSlotData[] equipmentSlots;
         public CharacterAbilitySlotData[] quickAbilitySlots;
-    }
-
-    /// <summary>
-    /// 装备槽存档条目。
-    /// slotType 是槽位真相，equipment 是数据库引用，避免保存运行时装备实例。
-    /// </summary>
-    [Serializable]
-    public class CharacterEquipmentSlotData
-    {
-        public EEquipmentType slotType;
-        public DatabaseEntryReference<Equipment> equipment;
     }
 
     /// <summary>
@@ -69,30 +35,16 @@ namespace FantasyWord.GameCore
     }
 
     /// <summary>
-    /// 可成长、可装备、可被队伍/AI 控制的正式角色实体。
-    /// 它在 CharacterBase 基础上增加经验等级、自定义属性点、装备与快捷能力槽恢复。
+    /// 可被队伍/AI 控制的正式角色实体。
+    /// 它在 CharacterBase 基础上增加动画驱动和快捷能力槽恢复。
     /// </summary>
     public partial class CharacterActor : CharacterBase
     {
-        [Header("音频")]
-        [InspectorName("升级音效")]
-        [Tooltip("非静默升级时播放的音频配置。")]
-        [SerializeField] private AudioClipResolver m_levelUpSound;
-
         [Header("表现")]
         [InspectorName("动画驱动组件")]
         [Tooltip("正式统一角色 Prefab 上的动画驱动。为空时回退到旧动画策略。")]
         [SerializeField] private MonoBehaviour m_animationDriverBehaviour;
 
-        public int experience => m_experience;
-        public int nextLevelExperience => GetTotalExpRequirement(m_level + 1);
-        public int availablePoints => GetAvailablePoints(m_level, m_sheet.pointsPerLevel);
-        public Stats customStats => CreateCustomStatsSnapshot();
-        public int usedPoints => m_usedPoints;
-
-        private Stats m_customStats = new();
-        private int m_usedPoints = 0;
-        private int m_experience = 0;
         private bool m_usesFormalDeathAnimation;
 
         public override void Revive()
@@ -120,41 +72,6 @@ namespace FantasyWord.GameCore
             m_animationStrategy?.Resume();
         }
 
-        public int GetTotalExpRequirement(int level)
-        {
-            int total = 0;
-
-            for (int i = 1; i < level; i++)
-            {
-                total += m_sheet.GetExperienceRequiredAtLevel(i);
-            }
-
-            return total;
-        }
-
-        public void AddExperience(int experience, bool silentMode = false)
-        {
-            Debug.Assert(experience > 0, "Cannot add a negative amount of experience.");
-            GameRuntimeEvents.NotifyCharacterExperienceGained(this, experience);
-            m_experience += experience;
-
-            while (m_experience >= GetTotalExpRequirement(m_level + 1))
-            {
-                LevelUp(silentMode);
-            }
-        }
-
-        public void AddCustomStats(Stats customStats)
-        {
-            m_customStats += customStats;
-            RefreshResolvedStats();
-        }
-
-        public void LogUsedPoints(int points)
-        {
-            m_usedPoints += points;
-        }
-
         protected override void InitializeStats()
         {
             RefreshResolvedStats();
@@ -172,21 +89,7 @@ namespace FantasyWord.GameCore
 
         private Stats BuildResolvedStats()
         {
-            return m_sheet.GetStatsAtLevel(m_level)
-                + CreateCustomStatsSnapshot()
-                + CreateEquipmentStatContributionSnapshot();
-        }
-
-        public override void LevelUp(bool silentMode = false)
-        {
-            base.LevelUp(silentMode);
-            RefreshResolvedStats();
-
-            if (!silentMode)
-            {
-                GameRuntimeEvents.NotifyCharacterLevelUp(this, m_level);
-                GameRuntimeEvents.RequestAudioPlayback(m_levelUpSound);
-            }
+            return m_sheet.GetStatsAtLevel(m_level);
         }
 
         internal void SetLevel(int level)
@@ -279,29 +182,12 @@ namespace FantasyWord.GameCore
         {
             base.OnSave(block);
             var actorBlock = block.As<CharacterActorDataBlock>();
-            actorBlock.usedPoints = m_usedPoints;
-            actorBlock.experience = m_experience;
-            actorBlock.customStats = CreateCustomStatsSnapshot();
-            actorBlock.equipmentSlots = CreateEquipmentSlotDataSnapshot(GameManager.Database);
             actorBlock.quickAbilitySlots = CreateEquippedAbilitySlotDataSnapshot(GameManager.Database);
         }
 
         protected override void OnLoad(PersistableDataBlock block)
         {
             var actorBlock = block.As<CharacterActorDataBlock>();
-            m_usedPoints = actorBlock.usedPoints;
-            m_customStats = actorBlock.customStats != null ? actorBlock.customStats.Clone() : new Stats();
-
-            if (actorBlock.experience > 0)
-            {
-                AddExperience(actorBlock.experience, true);
-            }
-
-            RestoreEquipmentFromSlotData(
-                actorBlock.equipmentSlots,
-                reference => GameManager.Database.LoadFromReference(reference));
-
-            RefreshResolvedStats();
             base.OnLoad(block); // CharacterBase 先恢复正式能力实例、等级与当前属性，再由 CharacterAbilitySet 恢复技能槽布局。
             RestoreEquippedAbilitiesFromSlotData(actorBlock.quickAbilitySlots);
         }
@@ -324,10 +210,6 @@ namespace FantasyWord.GameCore
                 abilityRuntimeStates = baseRuntimeState.abilityRuntimeStates,
                 abilitySources = baseRuntimeState.abilitySources,
                 abilitySuppressions = baseRuntimeState.abilitySuppressions,
-                usedPoints = m_usedPoints,
-                experience = m_experience,
-                customStats = CreateCustomStatsSnapshot(),
-                equipmentSlots = CreateEquipmentSlotDataSnapshot(GameManager.Database),
                 quickAbilitySlots = CreateEquippedAbilitySlotDataSnapshot(GameManager.Database)
             };
         }
@@ -339,31 +221,8 @@ namespace FantasyWord.GameCore
                 return;
             }
 
-            m_usedPoints = runtimeState.usedPoints;
-            m_customStats = runtimeState.customStats != null ? runtimeState.customStats.Clone() : new Stats();
-
-            if (runtimeState.experience > 0)
-            {
-                AddExperience(runtimeState.experience, true);
-            }
-
-            RestoreEquipmentFromSlotData(
-                runtimeState.equipmentSlots,
-                reference => GameManager.Database.LoadFromReference(reference));
-
-            RefreshResolvedStats();
             LoadRuntimeState(runtimeState);
             RestoreEquippedAbilitiesFromSlotData(runtimeState.quickAbilitySlots);
-        }
-
-        private Stats CreateCustomStatsSnapshot()
-        {
-            return m_customStats.Clone();
-        }
-
-        private int GetAvailablePoints(int currentLevel, int pointsPerLevel)
-        {
-            return pointsPerLevel * (currentLevel - Constants.MinLevel) - m_usedPoints;
         }
     }
 }

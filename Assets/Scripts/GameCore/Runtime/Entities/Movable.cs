@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 基础四方向枚举。
@@ -306,7 +306,7 @@ namespace FantasyWord.GameCore
 
             if (deathAudio)
             {
-                GameRuntimeEvents.RequestAudioPlayback(deathAudio);
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(deathAudio));
             }
         }
 

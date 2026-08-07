@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.Tilemaps;
 
-namespace FantasyWord.GameCore.Tests
+namespace GameCore.Tests
 {
     public sealed class TerrainNavigationMapEditModeTests
     {
@@ -267,135 +267,6 @@ namespace FantasyWord.GameCore.Tests
         }
 
         [Test]
-        public void RuntimeSurfaceState_DoesNotMutateAuthoredTile()
-        {
-            TerrainNavigationTile grass = CreateTile(0, ETerrainTransitionKind.Ground);
-            Vector3Int cell = new(0, 0);
-            m_tilemap.SetTile(cell, grass);
-            m_navigationMap.RefreshNavigationData();
-            Vector2 world = m_tilemap.GetCellCenterWorld(cell);
-
-            Assert.IsTrue(m_navigationMap.SetRuntimeSurfaceState(
-                world,
-                ETerrainRuntimeSurfaceState.Wet | ETerrainRuntimeSurfaceState.Electrified));
-            Assert.IsTrue(m_navigationMap.TryGetSurfaceSample(world, out TerrainSurfaceSample sample));
-
-            Assert.AreEqual(ETerrainSurfaceKind.Grass, grass.SurfaceKind);
-            Assert.AreEqual(
-                ETerrainRuntimeSurfaceState.Wet | ETerrainRuntimeSurfaceState.Electrified,
-                sample.RuntimeState);
-        }
-
-        [Test]
-        public void CollectAffectedCells_RejectsHighGroundAcrossCliff()
-        {
-            TerrainNavigationTile lowGround = CreateTile(0, ETerrainTransitionKind.Ground);
-            TerrainNavigationTile highGround = CreateTile(1, ETerrainTransitionKind.Ground);
-            Vector3Int originCell = new(0, 0);
-            Vector3Int lowCell = new(1, 0);
-            Vector3Int highCell = new(2, 0);
-            m_tilemap.SetTile(originCell, lowGround);
-            m_tilemap.SetTile(lowCell, lowGround);
-            m_tilemap.SetTile(highCell, highGround);
-            m_navigationMap.RefreshNavigationData();
-            ElementApplication application = new(
-                EWorldElementKind.Fire,
-                1.0f,
-                0.25f,
-                ElementArea.Cone(3.0f, 30.0f),
-                m_tilemap.GetCellCenterWorld(originCell),
-                Vector2.right);
-            System.Collections.Generic.List<Vector3Int> affectedCells = new();
-
-            bool found = m_navigationMap.TryCollectAffectedCells(
-                application,
-                affectedCells);
-
-            Assert.IsTrue(found);
-            CollectionAssert.Contains(affectedCells, originCell);
-            CollectionAssert.Contains(affectedCells, lowCell);
-            CollectionAssert.DoesNotContain(affectedCells, highCell);
-        }
-
-        [Test]
-        public void CollectAffectedCells_ReachesHighGroundThroughRamp()
-        {
-            TerrainNavigationTile lowGround = CreateTile(0, ETerrainTransitionKind.Ground);
-            TerrainNavigationTile lowRamp = CreateTile(
-                0,
-                ETerrainTransitionKind.Ramp,
-                ETerrainRampDirection.NorthEast);
-            TerrainNavigationTile highRamp = CreateTile(
-                1,
-                ETerrainTransitionKind.Ramp,
-                ETerrainRampDirection.NorthEast);
-            TerrainNavigationTile highGround = CreateTile(1, ETerrainTransitionKind.Ground);
-            Vector3Int originCell = new(0, 0);
-            Vector3Int lowRampCell = new(1, 0);
-            Vector3Int highRampCell = new(2, 0);
-            Vector3Int highGroundCell = new(3, 0);
-            m_tilemap.SetTile(originCell, lowGround);
-            m_tilemap.SetTile(lowRampCell, lowRamp);
-            m_tilemap.SetTile(highRampCell, highRamp);
-            m_tilemap.SetTile(highGroundCell, highGround);
-            m_navigationMap.RefreshNavigationData();
-            ElementApplication application = new(
-                EWorldElementKind.Fire,
-                1.0f,
-                0.25f,
-                ElementArea.Cone(4.0f, 30.0f),
-                m_tilemap.GetCellCenterWorld(originCell),
-                Vector2.right);
-            System.Collections.Generic.List<Vector3Int> affectedCells = new();
-
-            bool found = m_navigationMap.TryCollectAffectedCells(
-                application,
-                affectedCells);
-
-            Assert.IsTrue(found);
-            CollectionAssert.Contains(affectedCells, highRampCell);
-            CollectionAssert.Contains(affectedCells, highGroundCell);
-        }
-
-        [Test]
-        public void RuntimeStateCost_RecalculatesFromAuthoredBaseCost()
-        {
-            TerrainNavigationTile grass = CreateTile(0, ETerrainTransitionKind.Ground);
-            Vector3Int cell = new(0, 0);
-            m_tilemap.SetTile(cell, grass);
-            m_navigationMap.RefreshNavigationData();
-            Assert.IsTrue(m_navigationMap.TryGetSurfaceSample(
-                cell,
-                out TerrainSurfaceSample before));
-
-            TerrainCellRuntimeState runtimeState = GetOrCreateRuntimeState(cell);
-            TerrainElementStateSource source = new(null, 101);
-            runtimeState.ApplyOrMergeState(
-                ETerrainElementStateKind.Burning,
-                1.0f,
-                3.0f,
-                source,
-                "fire-grass",
-                ETerrainStateMergePolicy.RefreshDuration);
-            CommitRuntimeState(cell, before, 3.0f);
-            Assert.IsTrue(m_navigationMap.TryGetSurfaceSample(
-                cell,
-                out TerrainSurfaceSample burning));
-
-            Assert.AreEqual(1.0f, burning.BaseTraversalCost);
-            Assert.AreEqual(3.0f, burning.EffectiveTraversalCost);
-
-            runtimeState.RemoveState(ETerrainElementStateKind.Burning);
-            CommitRuntimeState(cell, burning, 1.0f);
-            Assert.IsTrue(m_navigationMap.TryGetSurfaceSample(
-                cell,
-                out TerrainSurfaceSample cleared));
-
-            Assert.AreEqual(1.0f, cleared.BaseTraversalCost);
-            Assert.AreEqual(1.0f, cleared.EffectiveTraversalCost);
-        }
-
-        [Test]
         public void TerrainNodeKey_Default_PreservesCellOnDefaultLayer()
         {
             Vector3Int cell = new(3, -2, 0);
@@ -419,26 +290,7 @@ namespace FantasyWord.GameCore.Tests
         }
 
         [Test]
-        public void RuntimeState_NonDefaultLayer_IsRejectedBySingleLayerMap()
-        {
-            TerrainNavigationTile grass = CreateTile(0, ETerrainTransitionKind.Ground);
-            Vector3Int cell = new(0, 0);
-            TerrainNodeKey unsupportedNode = new(TerrainNodeKey.DefaultLayerId + 1, cell);
-            m_tilemap.SetTile(cell, grass);
-            m_navigationMap.RefreshNavigationData();
-
-            bool created = TryGetOrCreateRuntimeNodeState(
-                unsupportedNode,
-                out TerrainCellRuntimeState runtimeState);
-
-            Assert.IsFalse(created);
-            Assert.IsNull(runtimeState);
-            Assert.IsFalse(m_navigationMap.TryGetSurfaceSample(unsupportedNode, out _));
-            Assert.IsFalse(m_navigationMap.TryGetRuntimeNodeState(unsupportedNode, out _));
-        }
-
-        [Test]
-        public void RuntimeState_NonDefaultLayerWithSource_CanBeCreatedAndSampled()
+        public void SurfaceSample_NonDefaultLayerWithSource_CanBeSampled()
         {
             GameObject bridgeTilemapObject = new("桥面规则", typeof(Tilemap), typeof(TilemapRenderer));
             bridgeTilemapObject.transform.SetParent(m_gridObject.transform);
@@ -464,57 +316,13 @@ namespace FantasyWord.GameCore.Tests
                     out TerrainSurfaceSample sample));
                 Assert.AreEqual(bridgeNode, sample.NodeKey);
                 Assert.AreEqual(1, sample.Elevation);
-                Assert.AreEqual(ETerrainSurfaceKind.Stone, sample.BaseSurface);
-
-                Assert.IsTrue(TryGetOrCreateRuntimeNodeState(
-                    bridgeNode,
-                    out TerrainCellRuntimeState runtimeState));
-                Assert.IsTrue(runtimeState.SetEffectiveSurface(ETerrainSurfaceKind.Dirt));
-                Assert.IsTrue(CommitRuntimeNodeState(bridgeNode, sample, 2.0f));
-
-                Assert.IsTrue(m_navigationMap.TryGetSurfaceSample(
-                    bridgeNode,
-                    out TerrainSurfaceSample scorchedSample));
-                Assert.AreEqual(ETerrainSurfaceKind.Dirt, scorchedSample.EffectiveSurface);
-                Assert.AreEqual(2.0f, scorchedSample.EffectiveTraversalCost);
+                Assert.AreEqual(ETerrainSurfaceKind.Stone, sample.SurfaceKind);
+                Assert.AreEqual(1.0f, sample.TraversalCost);
             }
             finally
             {
                 Object.DestroyImmediate(bridgeTilemapObject);
             }
-        }
-
-        [Test]
-        public void RuntimeState_Vector3IntCompatibility_UsesDefaultLayerState()
-        {
-            TerrainNavigationTile grass = CreateTile(0, ETerrainTransitionKind.Ground);
-            Vector3Int cell = new(0, 0);
-            TerrainNodeKey defaultNode = TerrainNodeKey.Default(cell);
-            m_tilemap.SetTile(cell, grass);
-            m_navigationMap.RefreshNavigationData();
-
-            TerrainCellRuntimeState createdState = GetOrCreateRuntimeState(cell);
-            Assert.IsTrue(createdState.SetEffectiveSurface(ETerrainSurfaceKind.Mud));
-
-            Assert.IsTrue(m_navigationMap.TryGetRuntimeState(
-                cell,
-                out TerrainCellRuntimeState legacyState));
-            Assert.IsTrue(m_navigationMap.TryGetRuntimeNodeState(
-                defaultNode,
-                out TerrainCellRuntimeState nodeState));
-            Assert.AreSame(createdState, legacyState);
-            Assert.AreSame(createdState, nodeState);
-
-            Assert.IsTrue(m_navigationMap.TryGetSurfaceSample(
-                cell,
-                out TerrainSurfaceSample legacySample));
-            Assert.IsTrue(m_navigationMap.TryGetSurfaceSample(
-                defaultNode,
-                out TerrainSurfaceSample nodeSample));
-            Assert.AreEqual(defaultNode, legacySample.NodeKey);
-            Assert.AreEqual(defaultNode, nodeSample.NodeKey);
-            Assert.AreEqual(ETerrainSurfaceKind.Mud, legacySample.EffectiveSurface);
-            Assert.AreEqual(legacySample.EffectiveSurface, nodeSample.EffectiveSurface);
         }
 
         [Test]
@@ -530,7 +338,7 @@ namespace FantasyWord.GameCore.Tests
                 cell,
                 out TerrainSurfaceSample sample));
             Assert.AreEqual(TerrainNodeKey.Default(cell), sample.NodeKey);
-            Assert.AreEqual(ETerrainSurfaceKind.Grass, sample.BaseSurface);
+            Assert.AreEqual(ETerrainSurfaceKind.Grass, sample.SurfaceKind);
         }
 
         [Test]
@@ -557,7 +365,7 @@ namespace FantasyWord.GameCore.Tests
                 Assert.IsTrue(m_navigationMap.TryGetSurfaceSample(
                     cell,
                     out TerrainSurfaceSample sample));
-                Assert.AreEqual(ETerrainSurfaceKind.Stone, sample.BaseSurface);
+                Assert.AreEqual(ETerrainSurfaceKind.Stone, sample.SurfaceKind);
             }
             finally
             {
@@ -1145,69 +953,5 @@ namespace FantasyWord.GameCore.Tests
                 Vector2.zero);
         }
 
-        private TerrainCellRuntimeState GetOrCreateRuntimeState(Vector3Int cell)
-        {
-            MethodInfo method = typeof(TerrainNavigationMap).GetMethod(
-                "TryGetOrCreateRuntimeState",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.IsNotNull(method);
-            object[] arguments = { cell, null };
-            bool result = (bool)method.Invoke(m_navigationMap, arguments);
-            Assert.IsTrue(result);
-            return (TerrainCellRuntimeState)arguments[1];
-        }
-
-        private bool TryGetOrCreateRuntimeNodeState(
-            TerrainNodeKey nodeKey,
-            out TerrainCellRuntimeState runtimeState)
-        {
-            MethodInfo method = typeof(TerrainNavigationMap).GetMethod(
-                "TryGetOrCreateRuntimeNodeState",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.IsNotNull(method);
-            object[] arguments = { nodeKey, null };
-            bool result = (bool)method.Invoke(m_navigationMap, arguments);
-            runtimeState = (TerrainCellRuntimeState)arguments[1];
-            return result;
-        }
-
-        private void CommitRuntimeState(
-            Vector3Int cell,
-            TerrainSurfaceSample previousSample,
-            float traversalCostMultiplier)
-        {
-            MethodInfo method = typeof(TerrainNavigationMap).GetMethod(
-                "CommitRuntimeState",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.IsNotNull(method);
-            object[] arguments =
-            {
-                cell,
-                previousSample,
-                traversalCostMultiplier,
-                EElementPresentationSignal.None
-            };
-            bool result = (bool)method.Invoke(m_navigationMap, arguments);
-            Assert.IsTrue(result);
-        }
-
-        private bool CommitRuntimeNodeState(
-            TerrainNodeKey nodeKey,
-            TerrainSurfaceSample previousSample,
-            float traversalCostMultiplier)
-        {
-            MethodInfo method = typeof(TerrainNavigationMap).GetMethod(
-                "CommitRuntimeNodeState",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.IsNotNull(method);
-            object[] arguments =
-            {
-                nodeKey,
-                previousSample,
-                traversalCostMultiplier,
-                EElementPresentationSignal.None
-            };
-            return (bool)method.Invoke(m_navigationMap, arguments);
-        }
     }
 }

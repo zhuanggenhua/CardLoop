@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 角色玩法层向表现层提交动作键的最小合同。

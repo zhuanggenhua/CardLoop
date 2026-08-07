@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ContextSteering2D;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     internal sealed class CharacterSteeringRuntime2D : IDisposable
     {

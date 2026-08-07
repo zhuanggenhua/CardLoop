@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 角色动作被打断时的正式接收接口。

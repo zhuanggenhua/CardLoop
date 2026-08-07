@@ -1,8 +1,8 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 术语文本显示模式。

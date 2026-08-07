@@ -1,6 +1,6 @@
-﻿using Unity.Mathematics;
+using Unity.Mathematics;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public static class DamageSolver
     {

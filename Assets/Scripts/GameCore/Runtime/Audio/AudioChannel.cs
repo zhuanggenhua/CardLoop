@@ -2,7 +2,7 @@ using System;
 using Ami.BroAudio;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public enum EAudioChannelMode
     {

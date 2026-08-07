@@ -5,7 +5,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using UObject = UnityEngine.Object;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 按地址缓存一组 YooAsset 资源。

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Ami.BroAudio;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public partial class AudioChannel
     {

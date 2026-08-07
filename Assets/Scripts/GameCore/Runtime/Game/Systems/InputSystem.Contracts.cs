@@ -1,6 +1,6 @@
 using UnityEngine.InputSystem;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// Gameplay 动作引用集合。

@@ -1,8 +1,8 @@
-﻿using System.Linq;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomPropertyDrawer(typeof(PersistableCheckpoint))]
     public class PersistableCheckpointPropertyDrawer : PropertyDrawer

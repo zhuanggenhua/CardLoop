@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public partial class Projectile
     {
@@ -9,7 +9,11 @@ namespace FantasyWord.GameCore
         /// </summary>
         private void OnCollision(CharacterBase primaryTarget = null)
         {
-            GameRuntimeEvents.RequestAudioPlayback(m_collisionSound);
+            if (m_collisionSound)
+            {
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(m_collisionSound));
+            }
+
             Terminate(primaryTarget);
         }
 

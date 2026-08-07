@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomEditor(typeof(DatabaseEntry), true)]
     public class DatabaseEntryEditor : FancyEditor<DatabaseEntry>

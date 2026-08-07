@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomEditor(typeof(TerrainNavigationMap))]
     public sealed class TerrainNavigationMapEditor : UnityEditor.Editor

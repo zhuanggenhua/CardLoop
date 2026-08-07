@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 通过全局音频事件播放一个音频解析器。
@@ -21,7 +21,11 @@ namespace FantasyWord.GameCore
 
         public Task Execute(GameCommandContext context)
         {
-            GameRuntimeEvents.RequestAudioPlayback(m_audioClip);
+            if (m_audioClip)
+            {
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(m_audioClip));
+            }
+
             return Task.CompletedTask;
         }
     }

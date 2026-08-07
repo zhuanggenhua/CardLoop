@@ -1,6 +1,6 @@
 using System;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 能力运行时额外恢复状态的正式基类。

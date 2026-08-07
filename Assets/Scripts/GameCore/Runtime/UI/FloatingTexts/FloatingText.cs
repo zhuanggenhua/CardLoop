@@ -1,8 +1,8 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 单条浮动文字。实例由 <see cref="GameObjectPoolService"/> 出租时，动画结束必须归还到统一对象池。

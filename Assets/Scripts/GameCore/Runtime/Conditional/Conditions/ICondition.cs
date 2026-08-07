@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public interface ICondition
     {

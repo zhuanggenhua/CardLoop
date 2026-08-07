@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public sealed partial class UIManager
     {
@@ -68,7 +68,6 @@ namespace FantasyWord.GameCore
 
             poppedPanel.NotifyPoppedFromMenuStack();
             ResolveCloseTask(poppedPanel);
-            GameRuntimeEvents.NotifyItemDetailsClosed();
 
             UIKitMenuPanelBase nextPanel = UIKit.PeekPanel(stackName) as UIKitMenuPanelBase;
             if (nextPanel != null)

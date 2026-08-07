@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 把“按键还没松开时，下一层 UI 不得继续消费同一输入”收成单一正式规则。

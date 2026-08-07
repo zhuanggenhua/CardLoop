@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public sealed partial class UIManager
     {
@@ -21,27 +21,10 @@ namespace FantasyWord.GameCore
             public UILevel Level => m_level;
         }
 
-        [Serializable]
-        private struct ContextPanelBinding
-        {
-            [SerializeField] private UIKitMenuPanelTypeReference m_panelType;
-            [SerializeField] private UILevel m_level;
-
-            public UIKitMenuPanelTypeReference PanelType => m_panelType;
-
-            public UILevel Level => m_level;
-        }
-
         private readonly Dictionary<EMenu, UIKitMenuRegistration> m_menuRegistrations = new();
-        private UIKitMenuRegistration m_shopRegistration;
-        private UIKitMenuRegistration m_craftRegistration;
 
         [Header("Registered Panels")]
         [SerializeField] private MenuPanelBinding[] m_registeredMenuPanels = Array.Empty<MenuPanelBinding>();
-
-        [Header("Context Panels")]
-        [SerializeField] private ContextPanelBinding m_shopPanel;
-        [SerializeField] private ContextPanelBinding m_craftPanel;
 
         [Header("Menu Runtime Settings")]
         [SerializeField] private string m_stackName = DefaultStackName;
@@ -72,25 +55,6 @@ namespace FantasyWord.GameCore
                     Debug.LogError($"[{nameof(UIManager)}] 菜单 {menuPanelBinding.Menu} 被重复登记。", this);
                 }
             }
-
-            m_shopRegistration = ResolveContextRegistration(m_shopPanel, "商店菜单");
-            m_craftRegistration = ResolveContextRegistration(m_craftPanel, "制作菜单");
-        }
-
-        private UIKitMenuRegistration ResolveContextRegistration(ContextPanelBinding contextPanelBinding, string slotName)
-        {
-            UIKitMenuPanelTypeReference typeReference = contextPanelBinding.PanelType;
-            if (typeReference == null || !typeReference.HasValue)
-            {
-                return null;
-            }
-
-            if (TryCreateRegistration(typeReference, contextPanelBinding.Level, slotName, out UIKitMenuRegistration registration))
-            {
-                return registration;
-            }
-
-            return null;
         }
 
         private bool TryCreateRegistration(UIKitMenuPanelTypeReference typeReference, UILevel level, string slotName, out UIKitMenuRegistration registration)

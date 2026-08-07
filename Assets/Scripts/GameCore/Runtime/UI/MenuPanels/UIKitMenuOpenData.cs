@@ -1,7 +1,7 @@
 using System;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// UIKit 菜单入口传给面板的最小打开上下文。

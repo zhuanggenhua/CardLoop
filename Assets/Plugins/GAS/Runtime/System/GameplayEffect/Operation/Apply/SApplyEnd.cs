@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGApplyEffect))]
     [UpdateAfter(typeof(SGInstantEffect))]
     [UpdateAfter(typeof(SGDurationalEffect))]

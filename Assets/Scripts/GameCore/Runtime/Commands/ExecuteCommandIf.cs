@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 条件分支命令，根据条件结果执行 true 或 false 分支。

@@ -1,10 +1,11 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGInstantEffect))]
     public partial struct SExecuteInstantEffectModifiers : ISystem
     {

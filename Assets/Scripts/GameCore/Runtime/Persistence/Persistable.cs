@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class Persistable : MonoBehaviour, IDataBlockHandler<PersistableDataBlock>
     {
@@ -125,7 +125,7 @@ namespace FantasyWord.GameCore
             m_persistenceInfo = new RuntimeInstancedPersistentDataHandler
             {
                 prefab = prefabReference,
-                map = GameManager.MapSystem.GetCurrentMapName(),
+                sceneAddress = GameManager.MapSystem.GetCurrentSceneAddress(),
                 identifier = identifier
             };
 

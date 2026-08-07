@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_Save + nameof(SaveFile))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Save + nameof(SaveFile))]
     public class SaveFile : DatabaseEntry
     {
         [SerializeField] private SaveDataBlock m_content;

@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// Movable 碰撞通知的正式接收接口。

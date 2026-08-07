@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 场景内检查点组件。
@@ -25,7 +25,7 @@ namespace FantasyWord.GameCore
         {
             return new PersistableCheckpoint
             {
-                map = GameManager.MapSystem.GetCurrentMapName(),
+                sceneAddress = GameManager.MapSystem.GetCurrentSceneAddress(),
                 instance = this
             };
         }

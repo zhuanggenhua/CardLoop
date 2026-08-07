@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 存档槽按钮事件接收者，由父级存档菜单处理实际保存或读取动作。

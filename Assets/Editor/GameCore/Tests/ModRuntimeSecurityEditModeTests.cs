@@ -6,7 +6,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace FantasyWord.GameCore.Tests
+namespace GameCore.Tests
 {
     public sealed class ModRuntimeSecurityEditModeTests
     {

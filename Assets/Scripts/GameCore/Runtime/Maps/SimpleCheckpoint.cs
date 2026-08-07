@@ -1,18 +1,21 @@
-﻿using System;
+using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [Serializable]
     public struct SimpleCheckpoint : ICheckpoint
     {
-        [MapSelector] public string map;
+        [FormerlySerializedAs("map"), MapSelector]
+        public string sceneAddress;
         public Vector3 position;
 
-        string ICheckpoint.map => map;
+        string ICheckpoint.sceneAddress => sceneAddress;
         Vector3 ICheckpoint.position => position;
         public bool IsValid() => true;
-        public void UpdateMapName() => map = CheckpointUtil.GetActualMapName(map);
+        public void UpdateSceneAddress() =>
+            sceneAddress = CheckpointUtil.GetActualSceneAddress(sceneAddress);
     }
 }
 

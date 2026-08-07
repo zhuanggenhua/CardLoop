@@ -1,6 +1,6 @@
 using UnityEditor;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     internal static class CharacterSheetFeedbackEditorUtility
     {

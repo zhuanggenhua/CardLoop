@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba2a82d8e1354cacb930b637a3ced24f, type: 3}
+  m_Name: "\u5730\u57FA\u6D4B\u8BD5\u884C\u52A8"
+  m_EditorClassIdentifier: GamePlay.Runtime::GamePlay.GamePlayActionDefinition
+  m_contentId:
+    m_value: test.foundation.action
+  m_displayName: "\u5730\u57FA\u6D4B\u8BD5\u884C\u52A8"
+  m_description: "\u4EC5\u7528\u4E8E\u9A8C\u8BC1\u884C\u52A8\u4F5C\u8005\u6E90\u3001\u53C2\u4E0E\u6761\u4EF6\u3001\u56DE\u5408\u8FDB\u5EA6\u548C\u6743\u5A01\u968F\u673A\u7ED3\u679C\u7ECF\u8FC7
+    YooAsset \u8FDB\u5165\u6B63\u5F0F\u94FE\u8DEF\u3002"
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_tagCodes: 
+  m_turnCost: 2
+  m_participationSlots:
+  - m_key: participant
+    m_displayName: "\u53C2\u4E0E\u8005"
+    m_minimumParticipants: 2
+    m_maximumParticipants: 2
+    m_allowedContentIds:
+    - m_value: test.foundation.card
+    m_requiredAllContentTagCodes: 40420f00
+    m_requiredAnyContentTagCodes: e903000090010000
+    m_requiredNoneContentTagCodes: a20f0000
+    m_requiredAllAbilitySystemTagCodes: da070000
+    m_requiredAnyAbilitySystemTagCodes: 92ab1e00a10f0000
+    m_requiredNoneAbilitySystemTagCodes: a20f0000
+  m_resultIntents:
+  - rid: 7366052965365317632
+  m_resultBranches:
+  - m_key: one-product
+    m_weight: 1
+    m_resultIntents:
+    - rid: 7366052965365317633
+  - m_key: two-products
+    m_weight: 3
+    m_resultIntents:
+    - rid: 7366052965365317634
+  references:
+    version: 2
+    RefIds:
+    - rid: 7366052965365317632
+      type: {class: TabletopCardRemoveResultIntent, ns: GamePlay, asm: GamePlay.Runtime}
+      data:
+        m_slotKey: participant
+    - rid: 7366052965365317633
+      type: {class: TabletopCardCreateResultIntent, ns: GamePlay, asm: GamePlay.Runtime}
+      data:
+        m_contentId:
+          m_value: test.foundation.product
+        m_count: 1
+        m_anchorSlotKey: participant
+    - rid: 7366052965365317634
+      type: {class: TabletopCardCreateResultIntent, ns: GamePlay, asm: GamePlay.Runtime}
+      data:
+        m_contentId:
+          m_value: test.foundation.product
+        m_count: 2
+        m_anchorSlotKey: participant

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 角色阵营语义。
@@ -40,8 +40,6 @@ namespace FantasyWord.GameCore
         Interact = 1 << 1,
         UseAbility = 1 << 2,
         UpdateTargetDirection = 1 << 3,
-        ManageInventory = 1 << 4,
-        ChangeEquipment = 1 << 5,
         [HideInInspector] All = ~None
     }
 
@@ -52,8 +50,6 @@ namespace FantasyWord.GameCore
     public enum ECharacterAbilitySourceKind
     {
         Script,
-        ItemUse,
-        Equipment,
         Summon,
         StatusEffect,
         Transformation,

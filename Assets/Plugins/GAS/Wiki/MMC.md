@@ -1,44 +1,75 @@
-# EX-GAS Wiki -- MMC(Modifier Magnitude Calculation)
-## MMC的作用
-MMC(Modifier Magnitude Calculation)是一个用于计算Modifier的模值的可编辑类，它的作用是根据输入的参数计算Modifier的模值，然后在后续逻辑中将模值赋给对应的属性。
-## MMC的使用
-在EX-GAS中MMC只会在GameplayEffect中使用。
+# EX-GAS MMC（Modifier Magnitude Calculation）
 
-MMC依存于GameplayEffectModifier中，GameplayEffectModifier是包裹MMC的结构体，MMC为GameplayEffectModifier成员之一。
-GameplayEffectModifier为GameplayEffect的成员之一。
+## 用途
 
-**GameplayEffectModifier在EX-GAS中非常重要，它是GAS属性变化的核心，所有的游戏运行时的元素属性变化全部由他操作（除了属性初始化，或者开发人员手动设置属性值的情况）。**
+MMC 负责把 GE Modifier 的基础 `Magnitude` 转换成最终修改量。它只计算数值，不负责选择目标、不负责创建 GE，也不应直接承担技能或标签规则。
 
-GameplayEffectModifier成员组成（所有成员都需要在编辑器中设置）：
-- AttributeName：Modifier作用的属性名称，一个游戏效果对一个元素属性产生影响时，需要表明影响哪个属性
-- ModiferMagnitude：基础模值，这个模值是否使用依赖于MMC的类型。后文MMC的类型中会详细介绍。
-- Operation：Modifier的操作类型，有加法、乘法、赋值（覆写）等
-- MMC：计算Modifier模值的计算类，后文MMC的类型中会详细介绍
+当前真实基类是 `ModMagnitudeCalculationBase` / `ModMagnitudeCalculationBase<TParam>`。旧文档中的 `ModifierMagnitudeCalculation`、`ScalableFloatModCalculation` 和 `AttributeBasedModCalculation` 不是当前类型名；当前内置实现是 `MMCScalableFloat`、`MMCAttributeBased` 和 `MMCNone`。
+
+## 正式入口
+
+- GE Modifier：`ModifierSetting.Magnitude` 和 `ModifierSetting.MMC` 组成 `EffectModifier`。
+- MMC 参数：`MmcParaFloatScale`、`AttributeBasedMmcParam` 等 `XParam`。
+- 创建/注册：`MMCConfig.CreateMmc()` -> `MmcHelper.TryCreateMmc`；生成的 `XMmc.LoadMmcType()` 通过 `MmcHelper.RegisterMmc` 注册类型和参数类型。
+- 自定义 MMC：继承 `ModMagnitudeCalculationBase<TParam>`，实现 `CalculateMagnitude(MmcContext, float)`；如需 Track 依赖监听，覆写 `OnAdded`/`OnRemoved`。
+
+## 生命周期
+
+1. GE 配置加载时，`MCConfModifiers.LoadToGameplayEffectEntity` 为每个 `ModifierSetting` 创建 `MMC` 实例，并调用其参数初始化。
+2. GE 激活或即时结算时，框架通过 `MmcHelper.Calculate` 构造 `MmcContext`，再调用 `EffectModifier.Apply` 和 `CalculateMagnitude`。
+3. 持续 GE 激活 Modifier 时，框架调用 `OnAddMmc`；GE 移除时调用 `OnRemoveMmc`。自定义 MMC 必须在 `OnRemoved` 中注销自己注册的监听。
+
+## 内置计算
+
+- `MMCScalableFloat`：最终值为 `magnitude * k + b`。
+- `MMCAttributeBased`：从 Source 或 Target 的 `AbilitySystemCell` 解析属性，计算 `attributeValue * K + B`。`SnapShot` 第一次计算后缓存，`Track` 每次读取，并在被依赖属性基础值变化时触发目标属性重算。
+- `MMCNone`：返回输入 Magnitude 的基础行为。
+
+## 最小示例
+
+```csharp
+using GAS.Runtime;
+
+public sealed class DoubleMagnitude : ModMagnitudeCalculationBase<MmcParaFloatScale>
+{
+    public override float CalculateMagnitude(MmcContext context, float magnitude)
+    {
+        return magnitude * Parameter.K + Parameter.B;
+    }
+}
+
+var mmc = MmcHelper.TryCreateMmc(
+    typeof(MMCScalableFloat),
+    new MmcParaFloatScale(2f, 1f));
 ```
-例子：伤害效果，对单位造成50点伤害
-GameplayEffectModifier：
-    AttributeName：AS_Fight.Health
-    ModifierMagnitude：50
-    Operation：Add
-    MMC：ScalableFloatModCalculation -> k=-1,b=0 (下文会介绍ScalableFloatModCalculation的k,b含义)
-```
 
-## MMC的类型
-MMC的基类为抽象类ModifierMagnitudeCalculation，它的子类有以下几种：
-- ScalableFloatModCalculation：可缩放浮点数计算
-  - 该类型是根据ModifierMagnitude计算Modifier模值的，计算公式为：`ModifierMagnitude * k + b`
-    实际上就是一个线性函数，k和b为可编辑参数，可以在编辑器中设置。
-- AttributeBasedModCalculation：基于属性的计算
-  - 该类型是根据属性值计算Modifier模值的，计算公式为：`AttributeValue * k + b`
-    计算逻辑与ScalableFloatModCalculation一致。
-  - 重点在于属性值的来源，确定属性值来源的参数有3个：
-    - attributeFromType：属性值从谁身上取？是从游戏效果的来源（创建者），还是目标（拥有者）。
-    - attributeName：属性值的名称，比如战斗属性集里的生命值：AS_Fight.Health
-    - captureType：属性值的捕获类型
-      - Track: 追踪,在Modifier被执行时，当场去取属性值
-      - SnapShot: 快照,在游戏效果被创建时会对来源和目标的属性进行快照。在Modifier被执行时，去取快照的属性值。
-- SetByCallerModCalculation：由调用者设置的计算
-  - 不使用任何值计算模值，而是在执行时由调用者给出Modifier模值。
-- CustomCalculation：自定义计算（必须继承自抽象基类ModifierMagnitudeCalculation）
-  - 上述3种类型显然不够方便且全面的满足游戏开发者的所有需求，所以提供了自定义计算类的功能。
-  - 允许开发者自由发挥给出各种各样的计算逻辑。
+`DoubleMagnitude` 是自定义 MMC 的真实基类和方法签名示例；它还必须被编辑器扫描并通过 `XMmc.LoadMmcType()` 注册，才能从表格的类型字段创建。普通 GE 应优先复用 `MMCScalableFloat` 或 `MMCAttributeBased`，而不是为简单线性计算新建类。
+
+## 常见错误
+
+- 在 MMC 中缓存错误的 Source/Target；应从 `MmcContext.Source`、`MmcContext.Target` 和 `MmcContext.EffectSpec` 读取。
+- 把 `SnapShot` 误认为每帧实时取值，把 `Track` 误认为只在首次应用时取值。
+- 使用 `MMCAttributeBased` 却未提供有效的属性集码和属性码；默认解析器调用 `AbilitySystemCell.GetAttrCurrentValue`。
+- 自定义 MMC 在 `OnAdded` 注册监听却不在 `OnRemoved` 注销，导致移除 GE 后仍保留回调。
+- 把 `MMCConfig.MmcType` 写成未由 `MmcHelper.RegisterMmc` 注册的类型。
+
+## 禁止做法
+
+- 在 GamePlay 重写 Modifier 结算、属性来源解析或 Track 监听协议。
+- 在 MMC 中修改标签、添加/移除 GE 或驱动 Ability 生命周期。
+- 手改 `XMmc.gen.cs` 或 Luban 生成的 MMC 配置代码。
+
+## 源码证据
+
+- `Runtime/Effect/Modifier/ModMagnitudeCalculationBase.cs`
+- `Runtime/Effect/Modifier/MmcContext.cs`
+- `Runtime/Effect/Modifier/MMCConfig.cs`
+- `Runtime/Effect/Modifier/CommonUsage/MMCScalableFloat.cs`
+- `Runtime/Effect/Modifier/CommonUsage/MMCAttributeBased.cs`
+- `Runtime/Effect/Modifier/CommonUsage/MMCNone.cs`
+- `Runtime/Effect/Modifier/MmcParameter/MmcParaFloatScale.cs`
+- `Runtime/Effect/Modifier/MmcParameter/AttributeBasedMmcParam.cs`
+- `Runtime/General/Helper/MmcHelper.cs`
+- `Runtime/Effect/Component/Static/MCModifiers.cs`
+- `Editor/Helper/EditorMmcHelper.cs`
+- `Editor/CodeGen/CodeGenerator.cs`

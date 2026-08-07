@@ -27,9 +27,13 @@ metadata:
 
 | 文档 | 何时查 |
 |------|--------|
-| [`features/gamecore-gas.md`](features/gamecore-gas.md) | 做 GameCore 与 EX-GAS 能力、Timeline、GameplayEffect、Cue、TargetCatcher 或桥接边界时查。 |
+| [`features/gamecore-gas.md`](features/gamecore-gas.md) | 做 GameCore 与 EX-GAS 能力、Timeline、GameplayEffect、Cue、TargetCatcher 或正式集成边界时查。 |
 | [`features/plugin-docs.md`](features/plugin-docs.md) | 接入、审查或清理第三方插件 / 本地 UPM 包时，先查官方文档入口和本项目适配边界。 |
+| [`features/ai-quick/README.md`](features/ai-quick/README.md) | AI 按任务查询第三方插件、项目公共系统和自有工具类的正式入口、生命周期、真实示例和禁止旁路时查。 |
 | [`features/project/card-survival-infinite.md`](features/project/card-survival-infinite.md) | 查看《卡牌生存：无限》的游戏愿景、核心交互、Mod/关卡编辑器扩展边界和视觉参考入口时查。 |
+| [`features/project/stackcraft-template-study.md`](features/project/stackcraft-template-study.md) | 查看 StackCraft 模板导入后的设置恢复结论、框架吸收裁决、保留/不接管边界和后续底座设计约束时查。 |
+| [`features/project/stackcraft-system-reference-matrix.md`](features/project/stackcraft-system-reference-matrix.md) | 查看 StackCraft 架构搬迁顺序、数据定义优先原则、UI 框架吸收、联机约束、可吸收职责和必须排除的旧职责时查。 |
+| [`features/project/gameplay-foundation-proposal.md`](features/project/gameplay-foundation-proposal.md) | 查看 GamePlay 地基提案、YooAsset / 新 Input System 决策、内容定义优先、StackCraft 架构吸收阶段和未来业务边界时查。 |
 
 ## skills（工作流）
 

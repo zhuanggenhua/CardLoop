@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UObject = UnityEngine.Object;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 软资源引用的非泛型基类，保存 YooAsset 地址和编辑器锁定信息。

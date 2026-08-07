@@ -1,7 +1,7 @@
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public static class RuntimeLogOverlay
     {

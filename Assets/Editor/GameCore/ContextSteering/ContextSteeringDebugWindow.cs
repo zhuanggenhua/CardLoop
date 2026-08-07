@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FantasyWord.GameCore.EditorTools
+namespace GameCore.EditorTools
 {
     /// <summary>
     /// Context Steering 独立调试面板。

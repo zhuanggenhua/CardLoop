@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterBase))]
@@ -64,7 +64,11 @@ namespace FantasyWord.GameCore
             }
 
             m_interactedThisFrame = true;
-            GameRuntimeEvents.RequestAudioPlayback(m_interactionSound);
+            if (m_interactionSound)
+            {
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(m_interactionSound));
+            }
+
             return true;
         }
 

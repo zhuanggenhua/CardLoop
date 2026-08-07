@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract class LevelScaledValue<T>
     {

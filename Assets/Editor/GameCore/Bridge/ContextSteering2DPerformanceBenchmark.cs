@@ -8,7 +8,7 @@ using ContextSteering2D;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public static class ContextSteering2DPerformanceBenchmark
     {

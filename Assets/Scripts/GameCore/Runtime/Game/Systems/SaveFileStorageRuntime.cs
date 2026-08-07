@@ -3,7 +3,7 @@ using System.IO;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// SaveSystem 的 SaveKit 文件层实现。

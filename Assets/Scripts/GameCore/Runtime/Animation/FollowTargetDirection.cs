@@ -1,7 +1,7 @@
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     class FollowTargetDirection : MonoBehaviour
     {

@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Reflection;
-using FantasyWord.GameCore;
+using GameCore;
 using GAS.Runtime;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FantasyWord.GameCore.Editor
+namespace GameCore.Editor
 {
     [InitializeOnLoad]
     internal static class GasTimelineHitboxSceneHandle

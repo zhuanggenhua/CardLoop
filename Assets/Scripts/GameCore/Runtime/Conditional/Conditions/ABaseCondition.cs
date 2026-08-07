@@ -1,6 +1,6 @@
 using System;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract class ABaseCondition : ICondition
     {

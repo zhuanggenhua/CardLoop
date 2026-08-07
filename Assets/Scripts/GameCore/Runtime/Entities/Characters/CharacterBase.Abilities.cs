@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityObject = UnityEngine.Object;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract partial class CharacterBase
     {
@@ -19,7 +19,7 @@ namespace FantasyWord.GameCore
             abilitySet.RegisterFormalGasAbilityRule(formalGasAbilityCode);
             ApplyFormalGasAbilitySuppressionState(formalGasAbilityCode);
             abilitySet.TryAutoEquipOwnedFormalGasAbilityCode(formalGasAbilityCode);
-            GameRuntimeEvents.NotifyCharacterFormalGasAbilityAdded(this, formalGasAbilityCode);
+            YokiFrame.EventKit.Type.Send(new CharacterAbilityAddedEvent(this, formalGasAbilityCode));
         }
 
         protected virtual void OnFormalGasAbilityRemoved(int formalGasAbilityCode)
@@ -31,7 +31,7 @@ namespace FantasyWord.GameCore
 
             abilitySet.UnregisterFormalGasAbilityRule(formalGasAbilityCode);
             abilitySet.RemoveEquippedFormalGasAbilityCodeFromAllSlots(formalGasAbilityCode);
-            GameRuntimeEvents.NotifyCharacterFormalGasAbilityRemoved(this, formalGasAbilityCode);
+            YokiFrame.EventKit.Type.Send(new CharacterAbilityRemovedEvent(this, formalGasAbilityCode));
         }
 
         private void InitializeAbilities()

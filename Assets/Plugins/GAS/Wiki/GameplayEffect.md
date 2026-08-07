@@ -1,71 +1,91 @@
-# EX-GAS Wiki -- GameplayEffect
-## GameplayEffect的作用
-GameplayEffect是EX-GAS的核心之一，一切的游戏数值体系交互基于GameplayEffect。
+# EX-GAS GameplayEffect
 
-GameplayEffect掌握了游戏内元素的属性控制权。理论上，只有它可以对游戏内元素的属性进行修改
-（这里指的是修改，数值的初始化不算是修改）。当然，实际情况下，游戏开发人员当然可以手动直接修改属性值。
-但是还是希望游戏开发者尽可能的不要打破EX-GAS的数值体系逻辑，因为过多的额外操作可能会导致游戏的数值体系变得混乱，难以追踪数值变化等等。
+## 用途
 
-另外GameplayEffect还可以触发Cue（游戏提示）完成游戏效果的表现，以及控制获取额外的能力等。
+GameplayEffect（GE）是 EX-GAS 修改属性、授予/移除标签和技能、执行周期子效果、触发 Cue 的正式数据与运行时管线。作者侧组合 `GameplayEffectComponentConfig[]`，运行时由 `GameplayEffectHelper.CreateGameplayEffectEntity` 创建 GE Entity，再通过 Apply 管线进入目标 ASC。
 
----
-> 由于GameplayEffect是被封装好的，程序开发者不会接触它的实现逻辑，所以本文Wiki将跳过对其接口以及代码逻辑的解析。
-> 后续，可能会完善代码接口的介绍。
+属性修改应优先放进 GE 的 Modifier；不要在 GamePlay/GameCore 复制一套 Buff 容器或直接改 CurrentValue。
 
-# GameplayEffect的使用
-![gameplayeffect_editor_durational.png](Image%2Fgameplayeffect_editor_durational.png)
+## 正式入口
 
-GameplayEffect的配置界面如图，接下来逐一解释各个参数的含义。
-- Name：GameplayEffect的名称，纯粹用于显示，不会影响游戏逻辑。方便编辑者区分GameplayEffect。
-- Description：GameplayEffect的描述，纯粹用于显示，不会影响游戏逻辑。方便编辑者阅读理解GameplayEffect。
-- DurationPolicy：GameplayEffect的执行策略，有以下几种：
-  - Instant：即时执行，GameplayEffect被添加时立即执行，执行完毕后销毁自身。
-  - Duration：持续执行，GameplayEffect被添加时立即执行，持续时间结束后移除自身。
-  - Infinite：无限执行，GameplayEffect被添加时立即执行，执行完毕后不会移除，需要手动移除。
-  - None：无效果,这是默认占位符，因为GameplayEffect是结构体，None方便视作GameplayEffect的空值。
-    _**GameplayEffect配置的执行策略禁止使用None！！！**_
-- Duration：持续时间，只有DurationPolicy为Duration时有效。
-- Every(Period)：周期，只有DurationPolicy为Duration或者Infinite时有效。每隔Period时间执行一次PeriodExecution。
-- PeriodExecution：周期执行的GameplayEffect，只有DurationPolicy为Duration或者Infinite，且Period>0时有效。每隔Period时间执行一次PeriodExecution。
-  _**PeriodExecution禁止为空!!**_PeriodExecution原则上只允许是Instant类型的GameplayEffect。但如果根据开发者需求，也可以使用其他类型的GameplayEffect。
-- GrantedAbilities：授予的能力，只有DurationPolicy为Duration或者Infinite时有效。在GameplayEffect生命周期内，GameplayEffect的持有者会被授予这些能力。
-  GameplayEffect被移除时，这些能力也会被移除。
-- Modifiers: 属性修改器。GameplayEffect的核心功能，用于修改GameplayEffect持有者的属性。
-  - Attribute：属性名称，需要填写属性的全名，比如战斗属性集里的生命值：AS_Fight.Health
-  - ModifierMagnitude：基础模值，这个模值是否使用依赖于MMC的类型。在中有Wiki-MMC详细介绍。
-  - Operation：属性修改操作，有加法、乘法、赋值（覆写）等。
-  - MMC：属性修改计算类，用于计算ModifierMagnitude的值。
-    EX-GAS提供了多种ModifierCalculation，开发者也可以自定义ModifierCalculation。
-    ModifierCalculation的类型在Wiki-MMC详细介绍。
-- Tags：标签。Tag具有非常重要的作用，合适的tag可以处理GameplayEffect之间复杂的关系。
-  - 条件型 Tag 组件统一使用 `TagRequirementData`：`all` / `any` / `none` 三模式组合判断。
-    - `ApplicationRequiredTags` / `OngoingRequiredTags` 按 `all` 语义解释
-    - `RemoveGameplayEffectsWithTags` / `ImmunityTags` 按 `any` 语义解释
-  - AssetTags：描述性质的标签，用来描述GameplayEffect的特性表现，比如伤害、治疗、控制等。
-  - GrantedTags：GameplayEffect的持有者会获得这些标签，GameplayEffect被移除时，这些标签也会被移除。
-    Instant类型的GameplayEffect的GrantedTags是无效的。
-  - ApplicationRequiredTags：GameplayEffect的目标单位必须拥有 **【所有】** 这些标签，否则GameplayEffect无法被施加到目标身上。
-  - OngoingRequiredTags：GameplayEffect的目标单位必须拥有 **【所有】** 这些标签，否则GameplayEffect不会被激活（施加和激活是两个概念，
-    如果已经被施加的GameplayEffect持续过程中，目标的tag变化了，不满足，效果就会失活；满足了，就会被激活）。
-    Instant类型的GameplayEffect的OngoingRequiredTags是无效的。
-  - RemoveGameplayEffectsWithTags：GameplayEffect的目标单位当前持有的所有GameplayEffect中，拥有 **【任意】** 这些标签的GameplayEffect会被移除。
-- Cues：GameplayEffect的提示。GameplayEffect可以触发Cue（游戏提示）完成游戏效果的表现，以及控制获取额外的能力等。
-  - DurationPolicy为Instant时
-    - CueOnExecute（Instant）：GameplayEffect执行时触发。
-  - DurationPolicy为Duration或者Infinite时
-    - CueDurational（Durational）：生命周期完全和GameplayEffect同步
-    - CueOnAdd（Instant）：GameplayEffect添加时触发
-    - CueOnRemove（Instant）：GameplayEffect移除时触发
-    - CueOnActivate（Instant）：GameplayEffect激活时触发。
-    - CueOnDeactivate（Instant）：GameplayEffect失活时触发。
+- 作者/生成配置：`GameplayEffectConfig` 和派生的 `GameplayEffectComponentConfig`，包括 `ConfEffectBasicInfo`、`ConfDuration`、`MCConfModifiers`、`ConfAssetTags`、`ConfEffectGrantedTags`、四类标签条件、Cue、Period、Stacking 和 `MCConfGrantedAbility`。
+- 创建：`GameplayEffectConfig.CreateGameplayEffectEntity()` 或 `GameplayEffectHelper.CreateGameplayEffectEntity(config.ComponentConfigs)`。
+- 施加：`GameplayEffectSpec.ApplyTo(target, source)`、`ApplyToSelf(target)`，或 `GameplayEffectHelper.ApplyGameplayEffectTo`。
+- 移除：`GameplayEffectSpec.Remove()`、`AbilitySystemCell.RemoveGameplayEffect`；实际销毁由 ECS 系统延后处理。
+- OOP 读取和运行时改值：`GameplayEffectSpec`。组件增删应在 Apply 前完成；Apply 后只使用明确允许的 Set/运行时状态入口。
 
-## GameplayEffect的施加（Apply）和激活（Activate）
-GameplayEffect的施加（Apply）和激活（Activate）是两个概念，施加是指GameplayEffect被添加到目标身上，激活是指GameplayEffect实际生效。
+## 生命周期
 
-为什么做区分？
+1. 创建原型：组件配置的 `LoadToGameplayEffectEntity` 把静态组件装到 Entity。此时还没有 Source/Target，也不是已应用实例。
+2. Apply：`GameplayEffectHelper.ApplyGameplayEffectTo` 写入 `CEffectInUsage`，加入 `WipInstantiateEffect`，随后进入 `Instantiate -> CheckApply -> Apply`。
+3. CheckApply：检查 `ApplicationRequiredTags`、`ImmunityTags` 和其他应用条件。失败时不会成为目标的有效效果。
+4. Apply：即时 GE 执行 Modifier 后结束；有 `CDuration` 的 GE 加入目标 ASC 的 `BGameplayEffect`，并继续检查激活条件。
+5. Activate/Deactivate：`OngoingRequiredTags` 变化会使持续 GE 失活或重新激活；激活时加入 Modifier、GrantedTags、GrantedAbility 和 Cue，失活时撤销这些运行时作用。
+6. Remove/Destroy：`Remove()` 只标记销毁并触发撤销和 Cue 清理，最终由 `SDestroyEffects` 等系统回收。
 
-举个例子：固有被动技能（Ability）是持续回血，被动技能的逻辑显然是永久激活的状态，而持续回血的效果（GameplayEffect）
-来源于被动技能，那如果单位受到了外部的debuff禁止所有的回血效果，那么是不是被动技能被禁止？显然不是，被动技能还是会持续激活的。
-那应该是移除回血效果吗？显然也不是，被动技能整个过程是不做任何变化，如果移除回血效果，那debuff一旦消失，谁再把回血效果加回来？
-所以，这里需要区分施加和激活，被动技能的持续回血效果被施加到单位身上，而debuff做的是让回血效果失活，而不是移除回血效果，一旦debuff结束，
-回血效果又被激活，而这个激活的操作可以理解为回血效果自己激活的（依赖于Tag系统）。
+## 最小示例
+
+```csharp
+using GAS.Runtime;
+
+var effect = new GameplayEffectConfig(new GameplayEffectComponentConfig[]
+{
+    new ConfEffectBasicInfo { Name = "Damage" },
+    new ConfDuration
+    {
+        duration = 30,
+        timeUnit = TimeUnit.Frame,
+        ResetStartTimeWhenActivated = false,
+        StopTickWhenDeactivated = false
+    }
+});
+
+var spec = new GameplayEffectSpec(effect.ComponentConfigs);
+spec.ApplyTo(targetCell, sourceCell);
+// 结束时：spec.Remove();
+```
+
+实际产生数值变化时，向配置数组加入 `MCConfModifiers`，其中每个 `ModifierSetting` 使用属性集码、属性码、`GEOperation`、基础 Magnitude 和 `MMCConfig`。具体 MMC 规则见 [`MMC.md`](MMC.md)，属性身份见 [`Attribute.md`](Attribute.md)。
+
+## 标签条件语义
+
+`TagRequirementData` 本身同时有 `all`、`any`、`none` 三个槽位，组合结果是 `passAll && passAny && passNone`。编辑器协议的默认映射是：
+
+| GE 组件 | 默认槽位 | 现实用途 |
+|---|---|---|
+| `ApplicationRequiredTags` | `all` | 目标必须包含全部标签才允许施加 |
+| `OngoingRequiredTags` | `all` | 持续期间必须包含全部标签才保持激活 |
+| `RemoveGameplayEffectsWithTags` | `any` | 移除目标当前持有的任一匹配效果 |
+| `ImmunityTags` | `any` | 目标匹配任一免疫标签时阻止应用 |
+
+`AssetTags` 只是描述 GE；`GrantedTags` 是持续 GE 激活期间由 GE 来源提供的动态标签。不要把四种条件标签与描述/授予标签混成同一字段。
+
+## 常见错误
+
+- 把 Apply 和 Activate 当成同一步；持续 GE 可以已施加但因持续需求标签不满足而失活。
+- 以为 `duration = 0` 是无效果；`CDuration` 的源码语义是小于等于 0 表示无限，具体作者协议应以当前表格/编辑器读取逻辑为准。
+- Apply 后动态增删 GE 组件，破坏 ECS 系统查询；组件结构应在 Apply 前完成。
+- 用 `GameplayEffectHelper.ApplyGameplayEffectImmediate` 代替普通 GE 管线。这个接口只适合明确的即时 BaseValue 变更场景，不创建 GE 实例，也不走完整生命周期。
+- 直接修改属性 CurrentValue，导致 Modifier、重算、钳制和事件链失去统一来源。
+
+## 禁止做法
+
+- GamePlay 自建 Buff/Effect 容器、标签条件协议或数值修改器。
+- 直接在业务侧操作 GE Entity 的 ECS 组件，代替 `GameplayEffectSpec`、`AbilitySystemCell` 和 Helper 的正式入口。
+- 把 `GameplayCue` 当作属性或玩法规则执行器；GE 负责结算，Cue 负责表现。
+- 修改生成的 GE/类型映射代码以绕过配置缺失。
+
+## 源码证据
+
+- `Runtime/Effect/GameplayEffectConfig.cs`
+- `Runtime/Effect/GameplayEffectSpec.cs`
+- `Runtime/Effect/GameplayEffectController.cs`
+- `Runtime/Effect/Component/GameplayEffectComponentConfig.cs`
+- `Runtime/General/Helper/GameplayEffectHelper.cs`
+- `Runtime/System/GameplayEffect/Operation/CheckApply/SCheckApplicationRequiredTags.cs`
+- `Runtime/System/GameplayEffect/Operation/CheckApply/SCheckImmunityTags.cs`
+- `Runtime/System/GameplayEffect/Operation/Apply/SRemoveEffectWithTags.cs`
+- `Runtime/System/GameplayEffect/Operation/CheckActive/SCheckEffectActive.cs`
+- `Runtime/System/GameplayEffect/Operation/Activate/SAddModifiers.cs`
+- `Runtime/System/GameplayEffect/Operation/Deactivate/SRemoveModifiers.cs`
+- `Editor/Helper/EditorEffectHelper.cs`

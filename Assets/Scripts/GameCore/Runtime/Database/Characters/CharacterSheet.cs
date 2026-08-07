@@ -6,9 +6,9 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using azixMcAze.SerializableDictionary;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_Characters + nameof(CharacterSheet))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Characters + nameof(CharacterSheet))]
     public sealed class CharacterSheet : DatabaseEntry, INameable
     {
         [Header("Identity")]
@@ -31,17 +31,6 @@ namespace FantasyWord.GameCore
         [SerializeField] private bool m_useLevelScaledStats = false;
         [SerializeField] private LevelScaledStats m_levelScaledStats = new();
 
-        [Header("Progression")]
-        [SerializeField, FormerlySerializedAs("pointsPerLevel")]
-        private int m_pointsPerLevel = 5;
-
-        [SerializeField, FormerlySerializedAs("experience")]
-        private LevelScaledInteger m_experience = new();
-
-        [Header("Kill Rewards")]
-        [SerializeField] private LevelScaledInteger m_killExperience = new();
-        [SerializeField] private LevelScaledInteger m_killMoney = new();
-        [SerializeField] private Loot[] m_potentialLoot = Array.Empty<Loot>();
         [SerializeReference, SubclassSelector] private ICommand m_executeOnDeath;
 
         public EAlignment alignment => m_alignment;
@@ -50,8 +39,6 @@ namespace FantasyWord.GameCore
         public AudioClipResolver deathAudio => m_deathAudio;
         public GameplayFeedbackSet feedbacks => m_feedbacks ??= new GameplayFeedbackSet();
         public Stats baseStats => m_baseStats?.Clone() ?? new Stats();
-        public int pointsPerLevel => m_pointsPerLevel;
-        public int GetExperienceRequiredAtLevel(int level) => (m_experience ??= new LevelScaledInteger())[level];
 
         public Stats GetStatsAtLevel(int level)
         {
@@ -62,15 +49,6 @@ namespace FantasyWord.GameCore
 
             return ((m_levelScaledStats ??= new LevelScaledStats())[level])?.Clone() ?? new Stats();
         }
-
-        public int GetExperienceRewardAtLevel(int level) =>
-            (m_killExperience ??= new LevelScaledInteger())[level];
-
-        public int GetMoneyRewardAtLevel(int level) =>
-            (m_killMoney ??= new LevelScaledInteger())[level];
-
-        public Loot[] GetPotentialLoot() =>
-            m_potentialLoot != null ? (Loot[])m_potentialLoot.Clone() : Array.Empty<Loot>();
 
         public void ExecuteOnDeath(GameCommandContext context)
         {

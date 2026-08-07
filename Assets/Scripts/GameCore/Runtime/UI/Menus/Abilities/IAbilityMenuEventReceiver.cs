@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 能力菜单内部条目与父级菜单之间的正式 UI 合同。

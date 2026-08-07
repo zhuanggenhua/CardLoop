@@ -3,6 +3,7 @@ using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGAbility))]
     public partial struct STryActivateAbility : ISystem
     {

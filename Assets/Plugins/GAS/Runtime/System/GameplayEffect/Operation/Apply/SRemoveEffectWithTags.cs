@@ -1,9 +1,10 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGApplyEffect))]
     [UpdateBefore(typeof(SApplyEnd))]
     public partial struct SRemoveEffectWithTags : ISystem

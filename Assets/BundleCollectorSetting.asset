@@ -25,29 +25,47 @@ MonoBehaviour:
     AutoCollectShaders: 1
     IgnoreRuleName: NormalIgnoreRule
     Groups:
-    - GroupName: "\u6B63\u5F0FUI\u9762\u677F"
-      GroupDesc: "UIKit \u6B63\u5F0F\u9762\u677F"
-      AssetTags: ui
+    - GroupName: "GamePlay\u5185\u5BB9\u5B9A\u4E49"
+      GroupDesc: "\u81EA\u52A8\u6536\u96C6\u6240\u6709\u7EE7\u627F GamePlayContentAsset
+        \u7684\u4F5C\u8005\u8D44\u4EA7"
+      AssetTags: gameplay-content
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/GameRes/UI/Panels
-        CollectorGUID: 5455818f22e0efb49b0f13ed894b3087
+      - CollectPath: Assets
+        CollectorGUID: 7d36e0d45021497b889f9f17ac581392
         CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: ui
+        AddressRuleName: AddressDisable
+        PackRuleName: PackCollector
+        FilterRuleName: CollectGamePlayContentAssets
+        AssetTags: 
         UserData: 
-    - GroupName: "\u672C\u5730\u5316"
-      GroupDesc: "\u8FD0\u884C\u65F6\u672C\u5730\u5316 JSON"
-      AssetTags: localization
+    - GroupName: "GamePlay\u5730\u57FA\u6D4B\u8BD5"
+      GroupDesc: "\u4EC5\u6536\u96C6 GamePlay \u5730\u57FA\u5165\u53E3\u573A\u666F\u548C
+        YooAsset \u9644\u52A0\u5730\u56FE\u6D4B\u8BD5\u573A\u666F"
+      AssetTags: test
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/GameRes/Localization
-        CollectorGUID: b40c179fc21e5534eb5a699ace95baf0
+      - CollectPath: Assets/Scenes
+        CollectorGUID: 4a06dbc99254a6d4794060067cfcb56e
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectGamePlayFoundationScenes
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/GamePlay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u5361\u724C\u89C6\u56FE.prefab"
+        CollectorGUID: 702e6f9aaab7c1a439e286c7f792e07e
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
-        AssetTags: localization
+        AssetTags: test
+        UserData: 
+      - CollectPath: Assets/StackCraft/Sprites/Square.png
+        CollectorGUID: 57fe652483042fb4ba6612b888e7a928
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
         UserData: 

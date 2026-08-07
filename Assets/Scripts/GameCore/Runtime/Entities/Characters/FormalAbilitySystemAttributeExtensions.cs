@@ -2,7 +2,7 @@ using GAS.Runtime;
 using Unity.Entities;
 using UEntity = Unity.Entities.Entity;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// GameCore 对 EX-GAS 2.0 属性写入的项目侧适配。

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 可通过命令系统打开的游戏菜单。
@@ -10,17 +10,13 @@ namespace FantasyWord.GameCore
     public enum EMenu
     {
         Pause,
-        Character,
-        Abilities,
-        Inventory,
-        Journal,
         Save,
         Settings,
         Death
     }
 
     /// <summary>
-    /// 打开指定菜单的命令，会等待菜单系统通过 TaskCompletionSource 回传完成信号。
+    /// 打开指定菜单的命令，并等待正式 UI 系统返回面板关闭结果。
     /// </summary>
     [Serializable]
     public class OpenMenu : IContextualCommand
@@ -36,9 +32,7 @@ namespace FantasyWord.GameCore
 
         public async Task Execute(GameCommandContext context)
         {
-            var taskCompletionSource = new TaskCompletionSource<bool>();
-            GameRuntimeEvents.RequestMenu(m_menuToOpen, taskCompletionSource);
-            await taskCompletionSource.Task;
+            await GameManager.UISystem.OpenMenuAsync(m_menuToOpen);
         }
     }
 }

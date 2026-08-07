@@ -1,6 +1,6 @@
 using System;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// Mod 在本地配置中的启用状态。

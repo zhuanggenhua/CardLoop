@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 控制器存档块基类，具体控制器可扩展自己的运行状态字段。

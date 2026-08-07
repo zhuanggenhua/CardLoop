@@ -1,11 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using YokiFrame;
 using azixMcAze.SerializableDictionary;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UIHUDAbilityMessage : MonoBehaviour
     {

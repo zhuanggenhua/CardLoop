@@ -1,7 +1,7 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomPropertyDrawer(typeof(DatabaseEntryReference<>), true)]
     public class DatabaseEntryReferencePropertyDrawer : PropertyDrawer

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using azixMcAze.SerializableDictionary;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 按目标记录冷却剩余时间的存档块，目标必须能通过持久化引用恢复。

@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Events;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public interface IAnimationStrategy
     {

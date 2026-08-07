@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 诊断正式场景里本应唯一存在的输入节点和音频节点冲突。

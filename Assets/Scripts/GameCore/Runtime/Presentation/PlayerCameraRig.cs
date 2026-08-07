@@ -2,7 +2,7 @@ using Unity.Cinemachine;
 using UnityEngine;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 玩家 3C 相机正式接线点。

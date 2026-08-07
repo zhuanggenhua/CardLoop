@@ -1,0 +1,20 @@
+{
+  "name": "GAS.GeneratedRuntime",
+  "rootNamespace": "",
+  "references": [
+    "GAS.GeneratedConfig",
+    "SimpleJSON",
+    "GUID:2a81c6962524d424a8ef5072bd3b0fa0",
+    "com.exhard.exgas.runtime",
+    "GameCore"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

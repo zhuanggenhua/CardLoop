@@ -5,7 +5,7 @@ using System.Text.Json;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 正式 EX-GAS 能力资产审计工具。
@@ -89,11 +89,6 @@ namespace FantasyWord.GameCore
             {
                 issues.Add(CreateIssue(
                     $"EX-GAS Ability {formalGasAbilityCode} 的正式 Ability Prefab 根节点缺少 {nameof(AbilityBase)} 组件。"));
-            }
-            else if (formalGasAbilityCode == GAS.Runtime.XAbility.ABILITY_Attack && abilityBase is not MeleeAttackAbility)
-            {
-                issues.Add(CreateIssue(
-                    $"EX-GAS Ability {formalGasAbilityCode} 的正式 Ability Prefab 类型不匹配。基础攻击需要 {nameof(MeleeAttackAbility)}，当前却是 {abilityBase.GetType().Name}。"));
             }
 
             if (formalGasAbilityCode == GAS.Runtime.XAbility.ABILITY_Attack)

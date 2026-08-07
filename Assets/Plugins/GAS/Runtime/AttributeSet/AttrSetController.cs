@@ -20,6 +20,28 @@ namespace GAS.Runtime
 
         public EntityManager EntityManager => GASManager.EntityManager;
 
+        /// <summary>
+        /// 释放当前属性集控制器创建的全部原生属性数组。
+        /// </summary>
+        public void Dispose()
+        {
+            if (!GASManager.IsInitialized ||
+                GASManager.ExWorld is not { IsCreated: true } ||
+                !EntityManager.Exists(Entity))
+                return;
+
+            DynamicBuffer<BEAttrSet> attrBuffer = EntityManager.GetBuffer<BEAttrSet>(Entity);
+            for (int i = 0; i < attrBuffer.Length; i++)
+            {
+                BEAttrSet attrSet = attrBuffer[i];
+                if (attrSet.Attributes.IsCreated) attrSet.Attributes.Dispose();
+            }
+
+            attrBuffer.Clear();
+            _attrSetCodeIndexMap.Clear();
+            _attrSetCodeList.Clear();
+        }
+
         private CAttributeData GetAttributeData(int attrSetCode, int attrCode)
         {
             // 若不存在，则直接返回NULL

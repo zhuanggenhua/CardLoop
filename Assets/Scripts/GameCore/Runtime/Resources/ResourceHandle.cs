@@ -2,7 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Assertions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 项目资源句柄的共享状态。结构体句柄被复制后仍指向同一状态，释放操作只会执行一次。

@@ -154,14 +154,14 @@ namespace GAS.Runtime
                     }
                     case cfg.CuePlayGameCoreAudio cData:
                     {
-                        var cp = cueParam as FantasyWord.GameCore.XParamGameCoreAudio;
+                        var cp = cueParam as GameCore.XParamGameCoreAudio;
                         cp?.SetAudioResolverGuid(cData.Param.AudioResolverGuid);
                         cueParam = cp;
                         break;
                     }
                     case cfg.CuePlayGameCoreFeedback cData:
                     {
-                        var cp = cueParam as FantasyWord.GameCore.XParamGameCoreFeedback;
+                        var cp = cueParam as GameCore.XParamGameCoreFeedback;
                         cp?.SetKind(cData.Param.Kind);
                         cp?.SetTarget(cData.Param.Target);
                         cueParam = cp;
@@ -632,7 +632,7 @@ namespace GAS.Runtime
                                         }
                                         case cfg.CatchAreaBox2D pData:
                                         {
-                                            var rp = resolvedParam as FantasyWord.GameCore.XParamCatchAreaBox2D;
+                                            var rp = resolvedParam as GameCore.XParamCatchAreaBox2D;
                                             rp?.SetIsWorldSpace(pData.Param.IsWorldSpace);
                                             rp?.SetOffset(new UnityEngine.Vector2(pData.Param.Offset.X, pData.Param.Offset.Y));
                                             rp?.SetSize(new UnityEngine.Vector2(pData.Param.Size.X, pData.Param.Size.Y));
@@ -643,7 +643,7 @@ namespace GAS.Runtime
                                         }
                                         case cfg.CatchAreaCircle2D pData:
                                         {
-                                            var rp = resolvedParam as FantasyWord.GameCore.XParamCatchAreaCircle2D;
+                                            var rp = resolvedParam as GameCore.XParamCatchAreaCircle2D;
                                             rp?.SetIsWorldSpace(pData.Param.IsWorldSpace);
                                             rp?.SetOffset(new UnityEngine.Vector2(pData.Param.Offset.X, pData.Param.Offset.Y));
                                             rp?.SetRadius(pData.Param.Radius);
@@ -653,7 +653,7 @@ namespace GAS.Runtime
                                         }
                                         case cfg.CatchAreaPolygon2D pData:
                                         {
-                                            var rp = resolvedParam as FantasyWord.GameCore.XParamCatchAreaPolygon2D;
+                                            var rp = resolvedParam as GameCore.XParamCatchAreaPolygon2D;
                                             rp?.SetIsWorldSpace(pData.Param.IsWorldSpace);
                                             rp?.SetPoints(pData.Param.Points);
                                             rp?.SetLayer(pData.Param.Layer);
@@ -777,14 +777,14 @@ namespace GAS.Runtime
                                         }
                                         case cfg.CuePlayGameCoreAudio pData:
                                         {
-                                            var rp = resolvedParam as FantasyWord.GameCore.XParamGameCoreAudio;
+                                            var rp = resolvedParam as GameCore.XParamGameCoreAudio;
                                             rp?.SetAudioResolverGuid(pData.Param.AudioResolverGuid);
                                             resolvedParam = rp;
                                             break;
                                         }
                                         case cfg.CuePlayGameCoreFeedback pData:
                                         {
-                                            var rp = resolvedParam as FantasyWord.GameCore.XParamGameCoreFeedback;
+                                            var rp = resolvedParam as GameCore.XParamGameCoreFeedback;
                                             rp?.SetKind(pData.Param.Kind);
                                             rp?.SetTarget(pData.Param.Target);
                                             resolvedParam = rp;

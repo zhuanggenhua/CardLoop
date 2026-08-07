@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UIGameMenu : UIKitMenuPanelBase
     {
@@ -16,12 +16,18 @@ namespace FantasyWord.GameCore
 
         protected override void OnPushedToMenuStack()
         {
-            GameRuntimeEvents.RequestAudioPlayback(m_pauseSound);
+            if (m_pauseSound)
+            {
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(m_pauseSound));
+            }
         }
 
         protected override void OnPoppedFromMenuStack()
         {
-            GameRuntimeEvents.RequestAudioPlayback(m_resumeSound);
+            if (m_resumeSound)
+            {
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(m_resumeSound));
+            }
         }
 
         protected override void OnPanelShown(UIKitMenuOpenData openData)

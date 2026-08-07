@@ -1,8 +1,8 @@
-﻿using Unity.Mathematics;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [CustomPropertyDrawer(typeof(InfinityFloatAttribute))]
     public class InfinityFloatPropertyDrawer : PropertyDrawer

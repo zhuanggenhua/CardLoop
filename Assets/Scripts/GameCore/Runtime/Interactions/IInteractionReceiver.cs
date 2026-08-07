@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 显式声明“这个组件可以接收玩家交互”的正式合同。

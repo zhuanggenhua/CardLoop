@@ -1,6 +1,7 @@
 using System;
+using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 持久化 handler 的最小合同，只回答“当前对象如何被持久化系统识别”。
@@ -51,7 +52,8 @@ namespace FantasyWord.GameCore
         /// <summary>
         /// 对象所属地图标识，用于把运行时实例恢复到正确地图上下文。
         /// </summary>
-        public string map;
+        [FormerlySerializedAs("map")]
+        public string sceneAddress;
 
         /// <summary>
         /// 运行时实例的稳定标识符。
@@ -65,7 +67,7 @@ namespace FantasyWord.GameCore
             return
                 prefab != null &&
                 !string.IsNullOrWhiteSpace(prefab.guid) &&
-                !string.IsNullOrEmpty(map) &&
+                !string.IsNullOrEmpty(sceneAddress) &&
                 !string.IsNullOrEmpty(identifier);
         }
     }

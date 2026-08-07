@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.U2D.Animation;
 using azixMcAze.SerializableDictionary;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 多方向动画可配置的方向枚举；当前仍保留八向，具体资源可通过 flipSprite 复用。

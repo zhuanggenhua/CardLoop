@@ -2,10 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 地图、检查点和传送的运行时真相源。
@@ -13,13 +15,14 @@ namespace FantasyWord.GameCore
     /// </summary>
     public class MapSystem : AGameSystem, IDataBlockHandler<MapDataBlock>
     {
-        private string m_currentMap = string.Empty;
+        private string m_currentSceneAddress = string.Empty;
         private Stack<ICheckpoint> m_checkpointStack;
         private MapInfo m_activeMapInfo;
         private readonly List<MapInfo> m_registeredMapInfos = new();
         private bool m_hasOrderedCheckpoint;
         private int m_currentCheckpointOrder = int.MinValue;
         private Coroutine m_respawnCoroutine;
+        private bool m_transitionInProgress;
 
         public override void OnSystemInit()
         {
@@ -36,6 +39,14 @@ namespace FantasyWord.GameCore
             StopRespawnCoroutine();
         }
 
+        public override void OnSystemShutdown()
+        {
+            StopRespawnCoroutine();
+            m_transitionInProgress = false;
+            m_currentSceneAddress = string.Empty;
+            m_activeMapInfo = null;
+        }
+
         private void OnDisable()
         {
             StopRespawnCoroutine();
@@ -46,25 +57,19 @@ namespace FantasyWord.GameCore
             StopRespawnCoroutine();
         }
 
-        public override void OnMapLoaded()
+        private void SetActiveScene(string sceneAddress, SceneHandler sceneHandler)
         {
-            RefreshActiveMapInfoFromRegisteredInfos();
-        }
+            if (sceneHandler == null ||
+                !sceneHandler.Scene.IsValid() ||
+                !sceneHandler.Scene.isLoaded ||
+                SceneManager.GetActiveScene() != sceneHandler.Scene ||
+                !string.Equals(sceneHandler.SceneName, sceneAddress, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"[{nameof(MapSystem)}] SceneKit 没有返回有效的活动场景：{sceneAddress}");
+            }
 
-        public override void OnMapUnloaded()
-        {
-            m_activeMapInfo = null;
-        }
-
-        public void SetActiveMap(string map)
-        {
-            SceneManager.SetActiveScene(
-                SceneManager.GetSceneByName(
-                    map
-                )
-            );
-
-            m_currentMap = map ?? string.Empty;
+            m_currentSceneAddress = sceneAddress ?? string.Empty;
             RefreshActiveMapInfoFromRegisteredInfos();
         }
 
@@ -122,28 +127,109 @@ namespace FantasyWord.GameCore
                 return;
             }
 
-            checkpoint.UpdateMapName();
-            Debug.Log($"Saving checkpoint from map '{checkpoint.map}' at position: {checkpoint.position}...");
+            checkpoint.UpdateSceneAddress();
+            Debug.Log($"Saving checkpoint from scene address '{checkpoint.sceneAddress}' at position: {checkpoint.position}...");
             m_checkpointStack.Push(checkpoint);
             m_hasOrderedCheckpoint = true;
             m_currentCheckpointOrder = checkpointOrder;
         }
 
-        public string GetCurrentMapName()
+        public string GetCurrentSceneAddress()
         {
-            return m_currentMap;
+            return m_currentSceneAddress;
         }
 
-        public bool HasCurrentMap()
+        public bool HasCurrentScene()
         {
-            return m_currentMap != string.Empty;
+            return GetCurrentSceneHandler() != null;
         }
 
-        public void RequestTransition(string map, Action onMapUnloaded = null, Action onMapLoaded = null, Action onCompletion = null)
+        public void RequestTransition(
+            string sceneAddress,
+            Action onMapLoaded = null,
+            Action onCompletion = null)
         {
-            GameRuntimeEvents.NotifyMapTransitionStarted();
-            EnsureTransitionSystemReady();
-            DelegateTransition(map, onMapUnloaded, onMapLoaded, onCompletion);
+            RequestTransitionAsync(sceneAddress, onMapLoaded, onCompletion).Forget(
+                exception => Debug.LogException(new InvalidOperationException(
+                    $"[{nameof(MapSystem)}] 场景切换失败：{sceneAddress}", exception), this));
+        }
+
+        public async UniTask RequestTransitionAsync(
+            string sceneAddress,
+            Action onMapLoaded = null,
+            Action onCompletion = null)
+        {
+            TransitionSystem transitionSystem = GetRequiredTransitionSystem();
+            string targetSceneAddress = sceneAddress ?? string.Empty;
+            bool hasCurrentScene = GetCurrentSceneHandler() != null;
+
+            if (m_transitionInProgress)
+            {
+                throw new InvalidOperationException("已有地图切换正在执行，不能并发开始第二次切换。");
+            }
+
+            if (string.IsNullOrEmpty(targetSceneAddress))
+            {
+                RefreshActiveMapInfoFromRegisteredInfos();
+                EventKit.Type.Send(new MapLoadedEvent());
+                onMapLoaded?.Invoke();
+                onCompletion?.Invoke();
+                return;
+            }
+
+            bool isSameScene = hasCurrentScene &&
+                               string.Equals(GetCurrentSceneAddress(), targetSceneAddress, StringComparison.Ordinal);
+            m_transitionInProgress = true;
+            EventKit.Type.Send(new MapTransitionStartedEvent());
+            try
+            {
+                await transitionSystem.FadeOutUniTaskAsync(destroyCancellationToken);
+
+                if (!isSameScene)
+                {
+                    if (hasCurrentScene)
+                    {
+                        EventKit.Type.Send(new MapUnloadingEvent());
+                    }
+
+                    EventKit.Type.Send(new MapLoadingEvent());
+                    SceneHandler loadedScene = await SceneKit.LoadSceneUniTaskAsync(
+                        targetSceneAddress,
+                        SceneLoadMode.Single,
+                        cancellationToken: destroyCancellationToken);
+                    SetActiveScene(targetSceneAddress, loadedScene);
+
+                    if (hasCurrentScene)
+                    {
+                        EventKit.Type.Send(new MapUnloadedEvent());
+                    }
+                }
+                else
+                {
+                    RefreshActiveMapInfoFromRegisteredInfos();
+                }
+
+                EventKit.Type.Send(new MapLoadedEvent());
+                onMapLoaded?.Invoke();
+                await transitionSystem.FadeInUniTaskAsync(destroyCancellationToken);
+            }
+            finally
+            {
+                try
+                {
+                    if (transitionSystem.IsTransitioning)
+                    {
+                        await transitionSystem.FadeInUniTaskAsync(destroyCancellationToken);
+                    }
+                }
+                finally
+                {
+                    m_transitionInProgress = false;
+                    EventKit.Type.Send(new MapTransitionCompletedEvent());
+                }
+            }
+
+            onCompletion?.Invoke();
         }
 
         public void RespawnPlayer()
@@ -200,10 +286,10 @@ namespace FantasyWord.GameCore
                     $"[{nameof(MapSystem)}] Playtest spawn requires a valid playtest checkpoint on the active {nameof(MapInfo)}.");
             }
 
-            if (!string.IsNullOrEmpty(checkpoint.map))
+            if (!string.IsNullOrEmpty(checkpoint.sceneAddress))
             {
                 throw new InvalidOperationException(
-                    $"[{nameof(MapSystem)}] Playtest checkpoint must leave its map empty so the current map can be used.");
+                    $"[{nameof(MapSystem)}] Playtest checkpoint must leave its scene address empty so the current scene can be used.");
             }
 
             return checkpoint;
@@ -251,12 +337,13 @@ namespace FantasyWord.GameCore
 
         private Scene ResolveTrackedScene()
         {
-            if (HasCurrentMap())
+            SceneHandler currentSceneHandler = GetCurrentSceneHandler();
+            if (currentSceneHandler != null)
             {
-                Scene currentMapScene = SceneManager.GetSceneByName(GetCurrentMapName());
-                if (currentMapScene.IsValid())
+                Scene currentScene = currentSceneHandler.Scene;
+                if (currentScene.IsValid())
                 {
-                    return currentMapScene;
+                    return currentScene;
                 }
             }
 
@@ -303,16 +390,16 @@ namespace FantasyWord.GameCore
 
             CharacterActor traversalCharacter = GetRequiredTraversalCharacter(nameof(TeleportTo));
 
-            RequestTransition(checkpoint.map, null, () =>
+            RequestTransition(checkpoint.sceneAddress, () =>
             {
                 traversalCharacter.TeleportTo(checkpoint.position);
                 onMapLoaded?.Invoke();
             }, onCompletion);
         }
 
-        public void TeleportToInitialSpawnPosition(string map, Action onCompletion = null)
+        public void TeleportToInitialSpawnPosition(string sceneAddress, Action onCompletion = null)
         {
-            RequestTransition(map, null, () =>
+            RequestTransition(sceneAddress, () =>
             {
                 ICheckpoint checkpoint = FindRequiredInitialSpawnCheckpoint(nameof(TeleportToInitialSpawnPosition));
                 CharacterActor traversalCharacter = GetRequiredTraversalCharacter(nameof(TeleportToInitialSpawnPosition));
@@ -322,9 +409,9 @@ namespace FantasyWord.GameCore
             }, onCompletion);
         }
 
-        public void TeleportToPlaytestStartPosition(string map, Action onCompletion = null)
+        public void TeleportToPlaytestStartPosition(string sceneAddress, Action onCompletion = null)
         {
-            RequestTransition(map, null, () =>
+            RequestTransition(sceneAddress, () =>
             {
                 ICheckpoint checkpoint = FindPlaytestCheckpoint();
                 CharacterActor traversalCharacter = GetRequiredTraversalCharacter(nameof(TeleportToPlaytestStartPosition));
@@ -338,7 +425,7 @@ namespace FantasyWord.GameCore
         {
             return new MapDataBlock
             {
-                currentMap = m_currentMap,
+                currentSceneAddress = m_currentSceneAddress,
                 checkpoints = m_checkpointStack.ToArray(),
                 hasOrderedCheckpoint = m_hasOrderedCheckpoint,
                 currentCheckpointOrder = m_currentCheckpointOrder,
@@ -346,6 +433,14 @@ namespace FantasyWord.GameCore
         }
 
         public void LoadDataBlock(MapDataBlock block)
+        {
+            LoadDataBlock(block, null);
+        }
+
+        /// <summary>
+        /// 恢复地图快照，并在过场、地图生命周期和落点校验全部完成后通知调用方。
+        /// </summary>
+        internal void LoadDataBlock(MapDataBlock block, Action onCompletion)
         {
             if (block == null)
             {
@@ -357,25 +452,28 @@ namespace FantasyWord.GameCore
             m_checkpointStack = new Stack<ICheckpoint>(checkpoints.Reverse());
             m_hasOrderedCheckpoint = block.hasOrderedCheckpoint;
             m_currentCheckpointOrder = m_hasOrderedCheckpoint ? block.currentCheckpointOrder : int.MinValue;
-            m_currentMap = block.currentMap ?? string.Empty;
+            string savedSceneAddress = block.currentSceneAddress ?? string.Empty;
 
             if (block.playtest)
             {
-                TeleportToPlaytestStartPosition(block.currentMap);
+                TeleportToPlaytestStartPosition(savedSceneAddress, onCompletion);
             }
             else
             {
-                bool isFirstTimePlaying = string.IsNullOrEmpty(block.currentMap);
+                bool isFirstTimePlaying = string.IsNullOrEmpty(savedSceneAddress);
 
                 if (isFirstTimePlaying)
                 {
                     ICheckpoint checkpoint = FindValidCheckpoint();
                     Debug.Assert(checkpoint != null, "No valid checkpoint set in the save file! Did you forget to add one or specify a valid map & identifier?");
-                    TeleportTo(checkpoint);
+                    TeleportTo(checkpoint, onCompletion: onCompletion);
                 }
                 else
                 {
-                    RequestTransition(block.currentMap, null, EnsureTraversalCharacterValidSpawnOnActiveMap);
+                    RequestTransition(
+                        savedSceneAddress,
+                        EnsureTraversalCharacterValidSpawnOnActiveMap,
+                        onCompletion);
                 }
             }
         }
@@ -401,96 +499,23 @@ namespace FantasyWord.GameCore
             }
         }
 
-        private void DelegateTransition(string map, Action onMapUnloaded = null, Action onMapLoaded = null, Action onCompletion = null)
+        private SceneHandler GetCurrentSceneHandler()
         {
-            Action<Action> unloadAction =
-                HasCurrentMap() && GetCurrentMapName() != map && !string.IsNullOrEmpty(map) ?
-                (callback) => UnloadMap(GetCurrentMapName(), callback + onMapUnloaded) :
-                (callback) =>
-                {
-                    callback?.Invoke();
-                    onMapUnloaded?.Invoke();
-                };
-
-            Action<Action> loadAction =
-                !string.IsNullOrEmpty(map) ?
-                (callback) => LoadMap(map, () =>
-                {
-                    callback?.Invoke();
-                    onMapLoaded?.Invoke();
-                }) :
-                (callback) =>
-                {
-                    callback?.Invoke();
-                    onMapLoaded?.Invoke();
-                };
-
-            Action completeAction =
-                () => CompleteTransition(onCompletion);
-
-            GameRuntimeEvents.NotifyMapTransitionDelegationRequested(new MapLoadingDelegationParams
+            if (string.IsNullOrEmpty(m_currentSceneAddress))
             {
-                unloadDelegate = unloadAction,
-                loadDelegate = loadAction,
-                completionDelegate = completeAction
-            });
+                return null;
+            }
+
+            SceneHandler handler = SceneKit.GetSceneHandler(m_currentSceneAddress);
+            return handler != null &&
+                   handler.State == SceneState.Loaded &&
+                   handler.Scene.IsValid() &&
+                   handler.Scene.isLoaded
+                ? handler
+                : null;
         }
 
-        private void UnloadMap(string map, Action onCompletion)
-        {
-            if (!string.IsNullOrEmpty(map) && map == GetCurrentMapName())
-            {
-                Debug.Log($"Unloading Map {map}...");
-
-                GameRuntimeEvents.NotifyMapUnloading();
-
-                AsyncOperation operation = SceneManager.UnloadSceneAsync(map);
-
-                operation.completed += _ =>
-                {
-                    GameRuntimeEvents.NotifyMapUnloaded();
-                    onCompletion?.Invoke();
-                };
-            }
-            else
-            {
-                GameRuntimeEvents.NotifyMapUnloaded();
-                onCompletion?.Invoke();
-            }
-        }
-
-        private void LoadMap(string map, Action onCompletion)
-        {
-            if (!string.IsNullOrEmpty(map) && map != GetCurrentMapName())
-            {
-                Debug.Log($"Loading Map {map}...");
-
-                GameRuntimeEvents.NotifyMapLoading();
-
-                AsyncOperation operation = SceneManager.LoadSceneAsync(map, LoadSceneMode.Additive);
-
-                operation.completed += _ =>
-                {
-                    SetActiveMap(map);
-                    GameRuntimeEvents.NotifyMapLoaded();
-                    onCompletion?.Invoke();
-                };
-            }
-            else
-            {
-                RefreshActiveMapInfoFromRegisteredInfos();
-                GameRuntimeEvents.NotifyMapLoaded();
-                onCompletion?.Invoke();
-            }
-        }
-
-        private void CompleteTransition(Action onCompletion)
-        {
-            GameRuntimeEvents.NotifyMapTransitionCompleted();
-            onCompletion?.Invoke();
-        }
-
-        private void EnsureTransitionSystemReady()
+        private TransitionSystem GetRequiredTransitionSystem()
         {
             TransitionSystem transitionSystem = GameManager.TransitionSystem;
             if (transitionSystem == null || !transitionSystem.isActiveAndEnabled)
@@ -498,6 +523,8 @@ namespace FantasyWord.GameCore
                 throw new InvalidOperationException(
                     $"[{nameof(MapSystem)}] Map transitions require one active {nameof(TransitionSystem)}. The direct transition fallback has been removed.");
             }
+
+            return transitionSystem;
         }
 
         private static void EnsureValidCheckpoint(ICheckpoint checkpoint, string operationName)

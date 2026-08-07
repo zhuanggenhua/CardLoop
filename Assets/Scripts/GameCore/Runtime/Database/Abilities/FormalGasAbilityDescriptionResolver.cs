@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public static class FormalGasAbilityDescriptionResolver
     {

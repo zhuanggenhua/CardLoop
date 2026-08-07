@@ -1,7 +1,7 @@
 using System;
 using GAS.General;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 当前项目对 EX-GAS 2.0 正式标签码的 GameCore 投影。

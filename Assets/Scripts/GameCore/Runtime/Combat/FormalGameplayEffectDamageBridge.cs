@@ -4,7 +4,7 @@ using Unity.Entities;
 using UnityEngine;
 using UEntity = Unity.Entities.Entity;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 正式伤害组件的条件类型。

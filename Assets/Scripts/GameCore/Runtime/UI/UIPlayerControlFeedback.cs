@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UIPlayerControlFeedback : MonoBehaviour
     {

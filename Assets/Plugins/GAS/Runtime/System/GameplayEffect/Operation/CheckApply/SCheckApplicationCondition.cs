@@ -1,8 +1,9 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Entities;
 
 namespace GAS.Runtime
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SGCheckApplyEffect))]
     [UpdateBefore(typeof(SCheckApplyEnd))]
     public partial struct SCheckApplicationCondition : ISystem

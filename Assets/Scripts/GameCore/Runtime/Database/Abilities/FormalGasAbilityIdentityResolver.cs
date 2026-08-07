@@ -1,4 +1,4 @@
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// Formal GAS 技能的展示身份信息，供 UI 和日志从技能编码解析名称与描述。

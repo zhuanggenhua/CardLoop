@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UINavigationTarget : MonoBehaviour, ISelectHandler, ISubmitHandler, IPointerClickHandler
     {
@@ -18,7 +18,7 @@ namespace FantasyWord.GameCore
         {
             if (pointerSelectSound)
             {
-                GameRuntimeEvents.RequestAudioPlayback(pointerSelectSound);
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(pointerSelectSound));
             }
         }
 
@@ -26,7 +26,7 @@ namespace FantasyWord.GameCore
         {
             if (navigationSelectSound)
             {
-                GameRuntimeEvents.RequestAudioPlayback(navigationSelectSound);
+                YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(navigationSelectSound));
             }
         }
 
@@ -52,7 +52,7 @@ namespace FantasyWord.GameCore
 
                 if (selectable != null && selectable.interactable && submitSound)
                 {
-                    GameRuntimeEvents.RequestAudioPlayback(submitSound);
+                    YokiFrame.EventKit.Type.Send(new AudioPlaybackRequestedEvent(submitSound));
                 }
             }
         }

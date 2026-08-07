@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 角色变化规则类型。
@@ -54,7 +54,7 @@ namespace FantasyWord.GameCore
     /// 角色变形、感染或失控状态的规则资产。
     /// 它统一管理临时授予/压制能力、动作锁、AI 接管、装备效果压制和阵营覆盖。
     /// </summary>
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_Characters + nameof(CharacterAlterationRule))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Characters + nameof(CharacterAlterationRule))]
     public class CharacterAlterationRule : DatabaseEntry, INameable
     {
         [Header("UI 设置")]
@@ -113,11 +113,6 @@ namespace FantasyWord.GameCore
         [Tooltip("勾选后，规则生效期间尝试把角色切到同一角色上已配置的 AIController。它会同时锁定玩家直接控制；没有 AIController 时不会伪造第二套 AI。")]
         private bool m_forceAIControl = false;
 
-        [InspectorName("压制装备效果")]
-        [SerializeField]
-        [Tooltip("勾选后，规则生效期间角色身上的装备属性和装备授予能力会暂时失效，但装备物品本身仍留在原槽位。")]
-        private bool m_suppressEquipmentEffects = false;
-
         [InspectorName("覆盖阵营")]
         [SerializeField]
         [Tooltip("勾选后，规则生效期间临时覆盖角色阵营。感染、丧尸化或敌对变形可用它影响 AI 选敌和伤害判定。")]
@@ -137,7 +132,6 @@ namespace FantasyWord.GameCore
         public EActionFlags lockedActions => m_lockedActions;
         public bool locksPlayerControl => m_lockPlayerControl;
         public bool forcesAIControl => m_forceAIControl;
-        public bool suppressesEquipmentEffects => m_suppressEquipmentEffects;
         public bool overridesAlignment => m_overrideAlignment;
         public EAlignment alignmentOverride => m_alignmentOverride;
         public int[] grantedFormalGasAbilityCodes => CreateGrantedFormalGasAbilityCodeSnapshot();
@@ -304,11 +298,6 @@ namespace FantasyWord.GameCore
                 target.ApplyAlterationAIControlRule(source);
             }
 
-            if (m_suppressEquipmentEffects)
-            {
-                target.ApplyAlterationEquipmentEffectSuppressionRule(source);
-            }
-
             if (m_overrideAlignment)
             {
                 target.ApplyAlterationAlignmentRule(source, m_alignmentOverride, m_priority);
@@ -327,7 +316,6 @@ namespace FantasyWord.GameCore
             target.RemoveAllAlterationActionLockRules(source);
             target.RemoveAllAlterationPlayerControlLockRules(source);
             target.RemoveAllAlterationAIControlRules(source);
-            target.RemoveAllAlterationEquipmentEffectSuppressionRules(source);
             target.RemoveAllAlterationAlignmentRules(source);
             return true;
         }
@@ -342,7 +330,6 @@ namespace FantasyWord.GameCore
             target.RemoveAlterationActionLockRuleStack(source);
             target.RemoveAlterationPlayerControlLockRuleStack(source);
             target.RemoveAlterationAIControlRuleStack(source);
-            target.RemoveAlterationEquipmentEffectSuppressionRuleStack(source);
             target.RemoveAlterationAlignmentRuleStack(source);
             return true;
         }

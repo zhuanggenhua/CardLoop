@@ -5,7 +5,7 @@ using GAS.Runtime;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     // CharacterBase 已经正向要求 CharacterAbilitySet；
     // 这里不能反向 Require 抽象 CharacterBase，否则 Unity 自动补组件时会失败。

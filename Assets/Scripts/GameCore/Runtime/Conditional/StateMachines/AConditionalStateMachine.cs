@@ -1,7 +1,7 @@
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 条件状态机当前缓存的条件结果。

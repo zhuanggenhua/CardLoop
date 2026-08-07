@@ -66,7 +66,7 @@
 
 | 来源 | 目标 | 当前状态 | 证据 | 裁决 |
 |------|------|----------|------|------|
-| `Assets/Scripts/GameCore` | `Assets/Scripts/GameCore` | 已进入活跃 `Assets`，但混有旧业务语义；旧本地 `Temporal*Effect` 第二套持续效果系统已按 EX-GAS 官方 owner 删除 | 仍命中 `FantasyWord` 命名空间、Equipment、WorldElement 等迁移语义 | 不删除整包；应继续按职责切片吸收或移到参考区，不能整包当成 CardLoop 正式框架。 |
+| `Assets/Scripts/GameCore` | `Assets/Scripts/GameCore` | 已进入活跃 `Assets`，但混有旧业务语义；旧本地 `Temporal*Effect` 第二套持续效果系统已按 EX-GAS 官方职责归属删除 | 仍命中 `FantasyWord` 命名空间、Equipment、WorldElement 等迁移语义 | 不删除整包；应继续按职责切片吸收或移到参考区，不能整包当成 CardLoop 正式框架。 |
 | `Assets/Editor/GameCore` | `Assets/Editor/GameCore` | 已进入活跃 `Assets`，但包含旧验证器、旧测试和旧业务桥接 | 147 个文件；命中 `FantasyWord` 105 处、`Equipment` 139 处、`WorldElement` 71 处、`旧能力` 59 处 | 不删除；应先隔离旧工程验证器/测试，再抽取通用编辑器工具。 |
 | `Assets/DataGenerated/Luban` | `Assets/DataGenerated/Luban` | 已进入活跃 `Assets`，仍包含 FantasyWord/GAS 生成配置和旧业务 Cue / 表数据风险；旧 `TaskApplyWorldElement` / `Flamethrower` 已按 GAS 表源删除并重新导表 | 生成配置仍需按 CardLoop 语义继续切片，不能直接成为 CardLoop 业务真相 | 不删除整套 GAS/Luban 链路；按官方文档和表源继续裁剪旧业务数据。 |
 | `EX_GAS_Config` | `EX_GAS_Config` | 已复制配置源和 Luban 工具链 | 159 个文件；包含 EX-GAS 表、Luban 工具、生成脚本 | 保留为 GAS 配置源候选；其中具体表数据需确认是否可复用。 |
@@ -96,7 +96,7 @@
 - `Packages/manifest.json` 已补入本地 UPM 插件/框架包、puerts MCP、YooAsset、Addressables、2D Animation、2D Tilemap、Cinemachine、Entities、Editor Coroutines、Newtonsoft Json 等依赖。
 - `Packages` 下的本地 UPM 包不应被视为“旧包整搬”；它们是插件/框架的一种 Unity 分发形式。
 - CardLoop 原有 Unity 包版本未降级，例如 Input System、URP、Test Framework、Timeline、UGUI、Visual Scripting 保持目标项目原版本。
-- `packages-lock.json` 未手工改写；首次打开 Unity 后应由 Package Manager 重新解析生成。
+- `packages-lock.json` 已随 Unity Package Manager 解析更新；本地 UPM 包以 `file:` / embedded 形式锁定，避免打开工程时依赖远程网络。
 
 ## 2026-08-01 插件更新记录
 
@@ -114,8 +114,20 @@
 | `Assets/Plugins/YokiFrame` | `1.8.5` | 已更新 | GitHub latest 为 `v1.8.5`。 |
 | `com.liyingsong.foldertag` | `1.0.2` | 保持 | GitHub releases/latest 返回 404，未找到可确认新版源。 |
 | DOTween | 现有本地版本 | 未自动更新 | 免费版主要来自官网 / Asset Store 分发，不是可直接按 GitHub release 拉取的源码包。 |
+| NuGetForUnity | `4.5.0` | 新增 | 从 `project-revive` 复用包管理器入口，用于管理 Unity 内 NuGet DLL；不替代 UPM / OpenUPM / GitHub release / Asset Store。 |
+| ZLinq | `1.5.6` | 新增 | 按 Cysharp 官方 Unity 接入方式：NuGet `ZLinq` DLL 加 `ZLinq.Unity` UPM 包；`ZLinq.Unity` 已嵌入 `Packages/com.cysharp.zlinq`，避免打开工程时依赖 GitHub 网络。 |
+| System.Runtime.CompilerServices.Unsafe | `6.1.2` | 新增 | ZLinq 在 Unity / netstandard2.1 下需要的 NuGet 依赖；采用稳定版，不采用 preview 包。 |
 
 `C:\Gamedev\Unity\Project\project-revive` 中使用的开源包管理器是 `NuGetForUnity`，路径为 `Assets/ThirdParty/nugetforunity`，本地版本 `4.5.0`。它用于在 Unity Editor 内管理 `.NET/NuGet` 包，不能替代 Unity Package Manager、OpenUPM、GitHub release 或 Asset Store 来统一管理 BroAudio、YooAsset、YokiFrame、UnitySkills 这类插件。
+
+## 2026-08-01 ZLinq 接入与集合查询规范
+
+- 已接入 NuGetForUnity `4.5.0`：`Assets/ThirdParty/nugetforunity`，NuGet 源配置在 `Assets/NuGet.config`，NuGet 包清单在 `Assets/packages.config`。
+- 已接入 NuGet 包 `ZLinq` `1.5.6`：`Assets/Packages/ZLinq.1.5.6`；已接入依赖 `System.Runtime.CompilerServices.Unsafe` `6.1.2`：`Assets/Packages/System.Runtime.CompilerServices.Unsafe.6.1.2`。
+- 已在 `Packages/manifest.json` 加入 `com.cysharp.zlinq`，指向本地嵌入包 `file:com.cysharp.zlinq`，用于 Unity GameObject / Transform / UI Toolkit 查询扩展；本地包来源为已解析成功的 `ZLinq.Unity` `1.5.6`。
+- 集合查询的项目规范归属是 `.spec/knowledge/standards/code-style.md`：运行时代码新增集合查询必须使用 ZLinq；热路径必须使用 ZLinq 或手写无分配循环；不默认启用 DropInGenerator。
+- 当前本地解析证据：`Packages/com.cysharp.zlinq/package.json` 标记 `version` 为 `1.5.6`；`Assets/Packages/ZLinq.1.5.6/ZLinq.nuspec` 标记 NuGet 版本为 `1.5.6`，并声明 `System.Runtime.CompilerServices.Unsafe` `6.1.2` 依赖。
+- 当前 `Packages/packages-lock.json` 已写入 `com.cysharp.zlinq`，来源为本地 embedded 包；不再需要启动时访问 GitHub 拉取 `ZLinq.Unity`。
 
 ## Unity 6000.5 兼容修复记录
 
@@ -136,6 +148,8 @@
 | DOTween / Animation Sequencer | 补入 `DOTween.Modules.asmdef` 这类 DOTween setup 产物，让 Animation Sequencer 能识别 DOTween；Unity 为 Standalone 写入 `DOTWEEN_ENABLED`；同时将其 Unity 6000.5 已过时的 `AdvancedDropdownItem.children` 改为 `childList`。 | 新鲜 batchmode 未再出现 `No DOTween found` warning，也未出现 Animation Sequencer 编译错误。 |
 | YokiFrame UIKit / DOTween UI 扩展 | `YokiFrame.UIKit.asmdef` 增加 `DOTween.Modules` 引用，让 `CanvasGroup.DOFade`、`RectTransform.DOAnchorPos`、`RectTransform.DOSizeDelta` 等 DOTween UI 扩展进入 UIKit 编译输入。 | 当前打开的 Unity Editor 通过 AI Bridge `assets-refresh` 重新编译；`YokiFrame.UIKit.rsp` 已包含 `DOTween.Modules.ref.dll`，刷新后关键错误筛选为空。 |
 | YokiFrame 1.8.5 / GameCore 旧 API 兼容 | 补回 `GameObjectPoolService` / `PooledGameObject` 的 GameObject 预制体池入口、`CoroutineKit` 的等待入口，并给新版 `InputKit` 补回 `SetActionAsset(InputActionAsset)`；这些入口是 GameCore 迁入候选仍在调用的通用框架能力。 | 2026-08-01 09:36 临时新鲜工程 batchmode 编译通过；更新后未再出现 `GameObjectPoolService`、`PooledGameObject`、`CoroutineKit` 或 `SetActionAsset` 缺失错误。 |
+| YokiFrame / YooAsset 软依赖宏 | 给当前 Standalone 平台写入 `YOKIFRAME_YOOASSET_SUPPORT`，让 YokiFrame 的 YooAsset 接口文件和 V3 Provider 实现同时进入编译；`IYooAssetRawFileProvider`、`IYooAssetResProvider`、`IYooAssetSceneProvider` 文件本身存在，不是插件缺文件。 | `ProjectSettings/ProjectSettings.asset` 与 `Library/EditorOnlyScriptingSettings.json` 已包含该宏；`Library/Bee/1900b0aEDbg-inputdata.json` 同时命中 `YOKIFRAME_YOOASSET_SUPPORT` 与 `YOOASSET_3_0_OR_NEWER`；最新成功编译后未再出现这三个接口缺失错误。 |
+| StackCraft URP 后处理 | 将项目侧 `CustomPostProcessFeature` 从旧 `ScriptableRenderPass.Execute(...)` 改为 Unity 6 URP RenderGraph 的 `RecordRenderGraph(...)`；这是项目模板脚本兼容问题，不是 YokiFrame / YooAsset 插件缺失。 | `Assets/StackCraft/Scripts/PostProcess/CustomPostProcessFeature.cs` 已使用 `RecordRenderGraph` / `RenderGraphUtils`；最新成功编译后未再出现 `CS0115`。 |
 
 ## Unity 新鲜验证
 
@@ -168,20 +182,43 @@
 - 关键错误筛选：`error CS`、`Script Compilation Error`、`Scripts have compiler errors`、`Compilation failed`、`Tundra build failed`、`Exception while executing InitializeOnLoad`、`MissingFieldException`、`No DOTween found`、`Package [` 均未命中。
 - 当前已打开的主 Unity Editor 曾出现无响应；本条验证刻意使用临时新鲜工程，不把卡住的 Editor 作为完成证据。
 
+2026-08-01 13:00 针对 ZLinq 接入和集合查询规范做当前打开 Editor 验证：
+
+- 当前打开的 Unity Editor 通过 AI Bridge 触发 `AssetDatabase.Refresh(ForceUpdate | ForceSynchronousImport)` 与 `CompilationPipeline.RequestScriptCompilation()`。
+- 编译证据：`Logs/Editor.log` 最新脚本编译结果出现 `Tundra build success (4.90 seconds), 34 items updated, 2343 evaluated`。
+- 关键错误筛选：从最后一次 `Tundra build success` 之后继续筛 `error CS`、`Script Compilation Error`、`Compilation failed`、`Tundra build failed`、`DirectoryNotFoundException`、`MissingFieldException`、`Exception while executing InitializeOnLoad`、`Package [`，均未命中。
+- 当前 Editor 后续仍可能处于资源导入 / Domain Reload busy 状态；本条只证明脚本编译和 ZLinq 接入没有继续产生关键编译错误，不等于 GameCore/GAS 业务正式启用。
+
+2026-08-01 13:40 针对“打开就闪退”做 ZLinq 包来源修复和新鲜验证：
+
+- 现实症状证据：`Logs/Editor-prev.log` 显示 Unity 在 Package Resolve 阶段因 `com.cysharp.zlinq` GitHub 443 连接失败退出，返回码 1；这是启动阶段依赖远程 Git 包失败，不是 Unity 原生崩溃栈。
+- 修复点：将 `com.cysharp.zlinq` 从远程 Git URL 改为本地嵌入包 `Packages/com.cysharp.zlinq`，`Packages/manifest.json` 和 `Packages/packages-lock.json` 均指向 `file:com.cysharp.zlinq`。
+- 包解析证据：`Library/PackageManager/projectResolution.json` 中 `com.cysharp.zlinq` 的 `resolvedPath` 为 `C:\Gamedev\Unity\Project\CardLoop\Packages\com.cysharp.zlinq`，`source` 为 `embedded`。
+- 验证命令：Unity `6000.5.4f1` batchmode 打开 CardLoop，日志写入 `Logs/OpenCheck-ZLinqLocal-20260801-2.log`。
+- 验证结果：进程退出码 `0`，日志中 `com.cysharp.zlinq@file:C:\Gamedev\Unity\Project\CardLoop\Packages\com.cysharp.zlinq`、`Tundra build success (21.35 seconds)`、`Application will terminate with return code 0` 均命中；关键错误筛选未命中包解析失败、`DirectoryNotFoundException`、脚本编译失败或 `return code 1`。
+
+2026-08-01 针对 YokiFrame / YooAsset Provider 接口缺失报错做当前打开 Editor 验证：
+
+- 现实症状证据：`Logs/Editor.log` 旧编译记录中出现 `IYooAssetRawFileProvider`、`IYooAssetResProvider`、`IYooAssetSceneProvider` 缺失的 `CS0246`。
+- 根因证据：接口文件实际位于 `Assets/Plugins/YokiFrame/Core/Runtime/ResKit/Loader/YooAsset/Internal/`，但接口受 `YOKIFRAME_YOOASSET_SUPPORT` 条件编译控制；V3 Provider 受 `YOOASSET_3_0_OR_NEWER` 控制。当前平台只启用后者时，就会出现“V3 实现参与编译、接口被裁掉”的错配。
+- 修复点：当前 Standalone 平台宏已包含 `YOKIFRAME_YOOASSET_SUPPORT`；这是启用 YokiFrame 对 YooAsset 的软依赖，不是删除或裁剪插件。
+- 追加暴露并修复的项目侧问题：宏修正后继续编译暴露 `Assets/StackCraft/Scripts/PostProcess/CustomPostProcessFeature.cs` 的旧 URP `Execute(...)` 覆写错误，已改为 Unity 6 URP RenderGraph 入口。
+- 验证结果：`Logs/Editor.log` 连续出现 `Tundra build success (4.65 seconds), 9 items updated, 2363 evaluated`、`Tundra build success (4.66 seconds), 5 items updated, 2363 evaluated` 和后续 `Tundra build success (0.94 seconds), 1 items updated, 2363 evaluated`；从最新成功记录之后继续筛 `error CS`、`Script Compilation Error`、`Tundra build failed`、`CS0246`、`CS0115` 和三个 `IYooAsset*Provider` 名称均未命中。
+
 ## 后续业务启用边界
 
-以下事项不阻塞本轮“插件 / 框架 / AI docs/agents 已迁入并可编译”的验收，但会影响后续把 GameCore/GAS 当作 CardLoop 正式业务 owner 使用：
+以下事项不阻塞本轮“插件 / 框架 / AI docs/agents 已迁入并可编译”的验收，但会影响后续把 GameCore/GAS 当作 CardLoop 正式业务职责入口使用：
 
 1. 后续正式启用前，需要收口旧项目混入风险：重点处理 `Assets/Scripts/GameCore`、`Assets/Editor/GameCore`、`Assets/DataGenerated/Luban`、`EX_GAS_Config` 和 `Assets/Settings/Renderer2D.asset`。
 2. 若 GameCore/GAS 需要正式启用，必须先完成 CardLoop 语义切片和旧业务剥离，再处理命名空间、输入资产、菜单路径、资源地址和业务配置。
 3. 当前 `Assets/InputSystem_Actions.inputactions` 没有被 FantasyWord 版本覆盖；如果要启用 GameCore 输入链，需要单独确认是否替换或合并输入动作。
 
-## 2026-08-01 GameCore / EX-GAS 官方 owner 清理
+## 2026-08-01 GameCore / EX-GAS 官方职责清理
 
 - 真相源：`Assets/Plugins/GAS/package.json` 指向的官方仓库、`Assets/Plugins/GAS/SKILL.md`、`Assets/Plugins/GAS/Wiki/GameplayEffect.md`、`GameplayCue.md` 和 `Ability.md`。
 - 已删除旧 `Flamethrower / 持续喷火` 表源与桥接：`TaskApplyWorldElement`、`XParamApplyWorldElement`、`FlamethrowerCueVisual` 及其迁移测试。
 - 已删除 GameCore 本地 `Temporal*Effect` 状态系统：持续伤害、持续治疗、回蓝、属性修正、移速修正、控制、能力授予/压制/替换、`ITemporalEffect`、`ATemporalEffect`、角色本地 Temporal 注册表、Temporal 存档字段、净化道具、效果栏 UI 和 Temporal 浮字事件。
-- 裁决依据：EX-GAS 官方 GameplayEffect 已负责持续时间、周期执行、授予能力、属性修改、标签条件、移除匹配标签效果和 Cue；项目侧本地 Temporal 另做这些职责属于重复 owner，不是通用框架阶段应保留的薄适配。
+- 裁决依据：EX-GAS 官方 GameplayEffect 已负责持续时间、周期执行、授予能力、属性修改、标签条件、移除匹配标签效果和 Cue；项目侧本地 Temporal 另做这些职责属于重复职责入口，不是通用框架阶段应保留的薄适配。
 - 保留边界：地图 / TerrainNavigation / 地表元素反应没有按“未使用”删除；这些需要按地图、地表语义和导航职责单独审查。
 - 静态验证：`FantasyWord.GameCore.rsp`、`FantasyWord.GameCore.Editor.rsp`、`FantasyWord.GameCore.EditModeTests.rsp` 经 Unity `6000.5.4f1` Bee 响应文件过滤已删除源后编译通过，退出码 0、错误数 0；`node .spec/tools/spec-lint.mjs` 通过。
 
@@ -199,3 +236,14 @@
 - 已单独验证官方 2D 相关包：`Unity.2D.Animation.Runtime`、`Unity.2D.Animation.Editor`、`Unity.2D.SpriteShape.Runtime`、`Unity.2D.SpriteShape.Editor`、`Unity.2D.Psdimporter.Editor` 静态编译通过。
 - 2026-08-01 01:03 复查关键程序集：`YokiFrame.UIKit.Editor.rsp`、`AiBridge.Unity.Editor.rsp`、`UnitySkills.Editor.rsp`、`PuertsUnityMcp.Editor.rsp`、`BroAudioEditor.rsp`、`FantasyWord.GAS.GeneratedRuntime.static.rsp`、`FantasyWord.GameCore.Editor.static.rsp`、`FantasyWord.GameCore.EditModeTests.static.rsp` 均静态编译通过。
 - 2026-08-01 02:08 已完成新鲜 Unity batchmode Package Resolve 与脚本编译验证；静态编译结果已被正式 Unity 编译验证覆盖，但不等于 GameCore/GAS 业务正式启用。
+
+## 2026-08-04 GamePlay 地基测试场景与启动验收
+
+- 新增统一测试场景 `Assets/Scenes/GamePlayFoundationTest.unity` 和测试配置 `Assets/Scenes/GamePlayFoundationTestConfig.asset`，并加入 `ProjectSettings/EditorBuildSettings.asset`。场景只验证 GameManager、资源包、ModAPI 和 EX-GAS 启动，不承载原创玩法。
+- 新增编辑器生成入口 `GamePlay/地基/重建测试场景`。生成器保存场景后重新打开并核对 `GameConfig` 引用，避免出现场景文件存在但入口配置为空的假成功。
+- 删除 StackCraft 的 `PlayModeStartScene` 编辑器脚本：该脚本会全局把 Play Mode 场景切到 `Assets/StackCraft/Scenes/Title.unity`，不适合作为 CardLoop 的正式测试入口。
+- 清理 `Assets/BundleCollectorSetting.asset` 中从 FantasyWord 迁入但目标不存在的 `Assets/GameRes/UI/Panels`、`Assets/GameRes/Localization` 收集规则；保留 `DefaultPackage`，当前只收集测试场景以满足 YooAsset `EditorSimulateMode` 的非空资源包要求。
+- `GameCore.ResourceSystem` 不再在资源包初始化阶段硬编码加载 FantasyWord 的 `localization` 地址；本地化业务资源未迁入，当前不以空资源伪造该依赖，后续由正式本地化职责接入。
+- 新鲜编译证据：`Temp/codex-gameplay-foundation-fresh-compile-20260804.log`，Unity `6000.5.4f1` 退出码 `0`。
+- 新鲜运行证据：`Temp/codex-gameplay-foundation-final-clean-playmode-20260804.log`。Play Mode 中活动场景为测试场景，启动状态为 `Ready`，异常为空，`GameManager` 数量为 `1`；资源系统、YooAsset、ModAPI 和 GAS 均完成初始化，退出后资源系统、YooAsset、ModAPI 释放，GAS 停止运行。该日志未命中启动失败、YooAsset 构建失败、资源地址异常或脚本编译错误。
+- 这只是 2.1 基础设施的运行验收；StackCraft `GameDirector` 的新局、读档、存档、场景旅行和单局状态职责仍待后续小模块裁决。

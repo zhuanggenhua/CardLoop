@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [RequireComponent(typeof(AudioSource))]
     public sealed class AudioChannelFallbackPlayer : MonoBehaviour

@@ -1,72 +1,94 @@
-# EX-GAS Wiki -- GameplayCue
->目前EX-GAS的GameplayCue功能还未完善。功能相对简陋。
-## GameplayCue的作用
-GameplayCue是一个用于播放游戏提示的类，它的作用是在游戏运行时播放游戏效果，比如播放一个特效、播放一个音效等。
+# EX-GAS GameplayCue
 
-## GameplayCue的原则
-Cue是游戏提示，他必须遵守以下原则：
-- _**Cue不应该对游戏的数值体系产生影响，比如不应该对游戏的属性进行修改，不应该对游戏的Buff进行修改等。**_
-- _**Cue不应该对游戏玩法产生实际影响，比如即时战斗类的游戏，Cue不应该影响角色的位移、攻击等。**_
+## 用途
 
-第一条原则是所有类型游戏必须遵守的。
+GameplayCue 是表现层能力：播放特效、音效、动画、日志或其他非结算反馈。当前 Runtime 的作者基类是 `GameplayCueBase` / `GameplayCueBase<T>`，不是旧 Wiki 中的 `GameplayCueSpec`、`GameplayCueInstantSpec` 或 `GameplayCueDurationalSpec`。
 
-而第二条原则就见仁见智了，因为游戏类型和玩法决定了cue的影响范围。
-比如即时战斗类游戏，cue对角色位移有操作显然就是干涉了战斗，但如果是回合制游戏，cue对角色位移的操作就可以被当成是动画表现。
-（甚至，即便是即时战斗类游戏，cue对角色位移的操作也可以被当成是动画表现，只要游戏开发人员认为cue的位移操作不影响游戏的战斗结果即可。）
+Cue 不应成为属性、Buff、伤害、位移判定或其他必须影响战斗结果的唯一入口；这些结果应由 Ability/GameplayEffect 负责。
 
-## GameplayCue的类型
-GameplayCue的类型分两大类：
-- GameplayCueInstant：瞬时性的Cue，比如播放动画，伤害UI提示等
-- GameplayCueDurational：持续性的Cue，比如持续性的特效、持续性的音效等
+## 正式入口
 
-GameplayCueInstant和GameplayCueDurational都是抽象类，它们的子类才是真正的可使用Cue类。
-Cue是需要程序开发人员大量实现的，毕竟游戏不同导致游戏提示千变万化。
+- Cue 逻辑：继承 `GameplayCueBase` 或 `GameplayCueBase<TParam>`，实现 `InitParameters`（泛型基类通常已实现）以及 `OnAdd`、`OnRemove`、`OnActivate`、`OnDeactivate`、`OnTick`、`OnDestroy`。
+- Cue 参数：实现 `XParam` 的参数类，例如 `XParamLogging`、`XParamPlaySound`、`XParamAnimator`、`XParamMountPrefab`。
+- 类型注册：生成的 `XCue.LoadCueType()` 调用 `CueHelper.RegisterCue`；运行时使用 `CueHelper.TryCreateCue`，不要自行维护字符串到类型字典。
+- GE 触发：`ConfCueBase`/`GameplayCueConfig` 将 Cue 组件加载到 GE；系统根据 Apply/Add/Activate/Deactivate/Remove/Tick 阶段触发。
+- 独立使用：`GameplayCueUnit` 提供 `Create`、`AddToAsc`、`Play`、`Stop`、`RemoveFromAsc`、`Destroy`。
 
-### 关于Cue的子类实现
-Cue的完整组成为GameplayCue和GameplayCueSpec：
-- GameplayCue< T >（抽象基类,T为对应的Spec类）：Cue的数据实类，是一个可编辑类，开发人员可以在编辑器中设置Cue的各种参数。该类只可以被视作数据类。
-  - 必须实现CreateSpec方法：用于创建对应的Spec类
-- GameplayCueSpec（抽象基类）：Cue的规格类，是Runtime下Cue的真正实例，Cue的具体逻辑在该类中实现。
-  - GameplayCueInstantSpec：瞬时性Cue的规格类
-    - Trigger(): 必须实现的方法，用于触发Cue
-  - GameplayCueDurationalSpec：持续性Cue的规格类
-    - OnAdd(): 必须实现的方法，用于Cue被添加时的逻辑
-    - OnRemove(): 必须实现的方法，用于Cue被移除时的逻辑
-    - OnGameplayEffectActivated(): 必须实现的方法，用于Cue所属的GameplayEffect被激活时的逻辑
-    - OnGameplayEffectDeactivated(): 必须实现的方法，用于Cue所属的GameplayEffect被移除时的逻辑
-    - OnTick(): 必须实现的方法，用于Cue的每帧更新逻辑
+## 生命周期
 
-### 关于Cue的参数传递
-目前EX-GAS的Cue参数传递非常简陋，依赖于结构体GameplayCueParameters，成员如下：
-- GameplayEffectSpec sourceGameplayEffectSpec：Cue所属的GameplayEffect实例（如果是GE触发）
-- AbilitySpec sourceAbilitySpec：Cue所属的Ability实例（如果是Ability触发）
-- object[] customArguments：自定义参数，不同于GameplayCue中的数据。
-customArguments是供程序开发人员在业务逻辑内自由传递参数的载体。
->注意：customArguments是一个object数组，开发人员需要自己保证传递的参数类型正确，否则会导致运行时错误。
-customArguments是最暴力的设计，往后EX-GAS的Cue参数传递设计还会进行优化。
-## GameplayCue的使用
-GameplayCue的使用手段很多，最基础的是在GameplayEffect中使用，Cue最开始的设计基础也是依附于GameplayEffect。Ability也可以对Cue进行操作。
+### GE 来源
 
-除此之外，Cue的使用不限制于EX-GAS的体系内。开发者可以在任何地方使用Cue，只要能获取到GameplayCue的资源实例并且遵守Cue的原则即可。
+`ConfCueBase.CreateCueEntityArray` 为每个配置创建 Cue Entity，设置 `CueSourceType.GameplayEffect` 和来源 GE。播放前会用 `CPlayRequiredTags` 与 `CPlayImmunitedTags` 检查目标 ASC；`CueHelper.TryPlayCueOnAsc` 重置逻辑、绑定目标并播放。
 
-### Cue标签过滤（2026-03）
-Cue 的播放条件底层已统一到 `TagRequirementData` 三模式：`all` / `any` / `none`。  
-当前语义规范：
-- `RequiredTags` 使用 `all` 语义（必须全部满足才播放）。
-- `ImmunityTags` 使用 `none` 语义（命中任一则阻止播放）。
+### 独立 CueUnit
 
-### 在GameplayEffect中使用Cue
-GameplayEffect中使用Cue会根据GameplayEffect执行策略产生变化。
-- 即时执行的GameplayEffect: 提供以下选项
-  - CueOnExecute（Instant）：Cue都会在GameplayEffect执行时触发。
-- 持续执行的GameplayEffect: 提供以下选项
-  - CueDurational（Durational）：生命周期完全和GameplayEffect同步
-  - CueOnAdd（Instant）：GameplayEffect添加时触发
-  - CueOnRemove（Instant）：GameplayEffect移除时触发
-  - CueOnActivate（Instant）：GameplayEffect激活时触发。
-  - CueOnDeactivate（Instant）：GameplayEffect失活时触发。
+调用顺序是 `new GameplayCueUnit(config)` -> `Create()` -> `AddToAsc(cell)` -> `Play()` -> `Stop()` -> `RemoveFromAsc()` -> `Destroy()`。`AddToAsc` 返回 `false` 表示目标标签条件或免疫条件不满足；不能忽略这个结果后假设 Cue 已挂载。
 
-### 在Ability中使用Cue
-AbilityAsset中提供了Instant和Durational两个选项的Cue参数。
-但是Cue的使用完全依赖于Ability自身的业务逻辑，因此程序开发者在AbilitySpec中实现Cue逻辑时一定要保证合理性。
-特别是对于Durational类型的Cue，一定要保证Cue生命周期的合理性，切记不要出现遗漏销毁Cue的情况。
+### 自定义逻辑回调
+
+- `OnAdd`：Cue 加入目标 ASC。
+- `OnActivate` / `OnDeactivate`：所属持续 GE 生效/失活。
+- `OnTick`：Cue 的更新阶段。
+- `OnRemove`：Cue 从目标 ASC 移除。
+- `OnDestroy`：Cue Entity 被销毁前的清理。
+
+## 最小示例
+
+```csharp
+using GAS.Runtime;
+
+public sealed class DamageLogCue : GameplayCueBase<XParamString>
+{
+    public override void OnActivate(float time)
+    {
+        UnityEngine.Debug.Log(Parameter.Value);
+    }
+}
+
+var config = new GameplayCueConfig(
+    typeof(DamageLogCue),
+    new XParamString("damage"),
+    new[] { XTag.State },
+    new[] { XTag.State_Debuff });
+
+var cue = new GameplayCueUnit(config);
+cue.Create();
+if (cue.AddToAsc(targetCell))
+    cue.Play();
+// 结束时：cue.Stop(); cue.RemoveFromAsc(); cue.Destroy();
+```
+
+自定义 Cue 必须通过项目实际生成的 `XCue.LoadCueType()` 注册后才能用字符串配置创建；直接传 `Type` 的 `GameplayCueConfig` 示例仍要求 `CueHelper.TryCreateCue` 能创建该类型。
+
+## 标签条件
+
+`GameplayCueConfig` 支持 `RequiredAllTags`、`RequiredAnyTags`、`RequiredNoneTags` 以及对应的免疫三槽位。空槽位通过；整体仍是 `all && any && none`。旧式构造函数参数 `requiredTags` 映射到 `RequiredAllTags`，`immunityTags` 映射到 `ImmunityNoneTags`。
+
+## 常见错误
+
+- 继续继承旧的 `GameplayCueSpec`、`GameplayCueInstantSpec` 或 `GameplayCueDurationalSpec`，这些类型在当前 Runtime 中不存在。
+- 忘记 `Create()` 就调用 `Play()`；`GameplayCueUnit` 会报 Cue 实例不存在。
+- 忽略 `AddToAsc` 的布尔返回值，导致需求标签不满足时仍认为表现已经播放。
+- 在 `OnRemove` 中只停表现不释放业务资源，或独立 Cue 结束时遗漏 `Destroy()`。
+- 把 `OnTick` 当作属性结算和状态机入口。
+
+## 禁止做法
+
+- 在 GamePlay 自建 Cue 注册表、Cue 参数序列化协议或 Cue 生命周期容器。
+- 用 Cue 修改属性、授予技能、决定命中或替代 GE。
+- 手改 `XCue.gen.cs`；新增 Cue 后应让编辑器扫描派生类并重新生成类型注册。
+
+## 源码证据
+
+- `Runtime/Cue/Base/GameplayCueBase.cs`
+- `Runtime/Cue/Base/GameplayCueParameters.cs`
+- `Runtime/Cue/GameplayCueUnit.cs`
+- `Runtime/Cue/CueConfig.cs`
+- `Runtime/Cue/ConfCueBase.cs`
+- `Runtime/General/Helper/CueHelper.cs`
+- `Runtime/Cue/Component/MCCue.cs`
+- `Runtime/System/Cue/SCueStart.cs`
+- `Runtime/System/Cue/SCueTick.cs`
+- `Runtime/System/Cue/SCueEnd.cs`
+- `Runtime/System/Cue/SCueDestroy.cs`
+- `Editor/CodeGen/CodeGenerator.cs`

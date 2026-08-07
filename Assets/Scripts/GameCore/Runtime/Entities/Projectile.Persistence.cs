@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 投射物完整持久化存档块，保存飞行状态、来源、伤害和爆炸规则。

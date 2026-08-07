@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 双向动画资源默认面朝方向，用于根据移动方向决定是否水平翻转。
@@ -16,7 +16,7 @@ namespace FantasyWord.GameCore
     /// <summary>
     /// 只使用左右两个朝向的动画策略，通过 SpriteRenderer.flipX 派生相反方向。
     /// </summary>
-    [MovedFrom(true, "FantasyWord.GameCore.Strategies", "FantasyWord.GameCore", null)]
+    [MovedFrom(true, "GameCore.Strategies", "GameCore", null)]
     [Serializable]
     public class BidirectionalAnimationStrategy : AAnimationStrategy
     {

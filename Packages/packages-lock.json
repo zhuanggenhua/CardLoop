@@ -27,6 +27,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "com.cysharp.zlinq": {
+      "version": "file:com.cysharp.zlinq",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.cysharp.zstring": {
       "version": "file:com.cysharp.zstring",
       "depth": 0,
@@ -268,7 +274,7 @@
     },
     "com.unity.mathematics": {
       "version": "1.4.0",
-      "depth": 1,
+      "depth": 0,
       "source": "builtin",
       "dependencies": {}
     },

@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public partial class Projectile
     {

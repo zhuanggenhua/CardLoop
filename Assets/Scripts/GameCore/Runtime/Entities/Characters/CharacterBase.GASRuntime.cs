@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using GAS.Runtime;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract partial class CharacterBase
     {

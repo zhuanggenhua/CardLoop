@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using YokiFrame;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     [RequireComponent(typeof(PlayerInput))]
     public class InputSystem : AGameSystem
@@ -22,7 +22,9 @@ namespace FantasyWord.GameCore
         private readonly InputActionReleaseGate m_actionMapReleaseGate = new();
         private GameplayActions m_gameplayActions;
         private UIActions m_uiActions;
+        private readonly List<InputActionSubscription> m_externalActionSubscriptions = new();
         private EActionMap m_currentActionMap = EActionMap.None;
+        private bool m_isInitialized;
         private event System.Action m_controlsChanged;
 
         public override void OnSystemInit()
@@ -32,6 +34,7 @@ namespace FantasyWord.GameCore
             m_gameplayActions = CreateGameplayActions(actionAsset.FindActionMap("Gameplay"));
             m_uiActions = CreateUiActions(actionAsset.FindActionMap("UI"));
             RegisterActionAssetForBindingTools(actionAsset, InputBindingsPersistenceKey);
+            m_isInitialized = true;
         }
 
         public override void OnSystemStart()
@@ -49,6 +52,7 @@ namespace FantasyWord.GameCore
 
         public override void OnSystemStop()
         {
+            ClearExternalInputActionListeners();
             EventKit.Type.UnRegister<MapTransitionStartedEvent>(OnMapTransitionStarted);
             EventKit.Type.UnRegister<MapTransitionCompletedEvent>(OnMapTransitionCompleted);
             m_playerInput.onControlsChanged -= OnControlsChanged;
@@ -57,8 +61,26 @@ namespace FantasyWord.GameCore
             UnregisterGameplayInputCallbacks();
         }
 
+        public override void OnSystemShutdown()
+        {
+            // 初始化中途失败时可能不会进入正常 Stop；记录持有真实 InputAction，可在清空动作字段前兜底解绑。
+            ClearExternalInputActionListeners();
+            m_isInitialized = false;
+            m_currentActionMap = EActionMap.None;
+            m_gameplayActions = default;
+            m_uiActions = default;
+            m_playerInput = null;
+        }
+
         public bool IsPointerActive(EActionMap map)
         {
+            // MonoBehaviour.Update 可能早于 GameManager 的异步系统初始化；未就绪时必须保持无输入，
+            // 不能把 Unity 组件启用时序误当成正式输入系统已经可用。
+            if (!m_isInitialized)
+            {
+                return false;
+            }
+
             return map switch
             {
                 EActionMap.Gameplay => m_gameplayActions.point.activeControl != null,
@@ -73,6 +95,11 @@ namespace FantasyWord.GameCore
         /// </summary>
         public Vector2 ReadPointerScreenPosition(EActionMap map)
         {
+            if (!m_isInitialized)
+            {
+                return Vector2.zero;
+            }
+
             return map switch
             {
                 EActionMap.Gameplay => m_gameplayActions.point.ReadValue<Vector2>(),
@@ -97,22 +124,22 @@ namespace FantasyWord.GameCore
         /// </summary>
         public void AddGameplayActionListener(EGameplayInputAction action, EInputActionPhase phase, System.Action<InputAction.CallbackContext> listener)
         {
-            RegisterInputActionListener(GetGameplayAction(action), phase, listener);
+            AddExternalInputActionListener(GetGameplayAction(action), phase, listener);
         }
 
         public void RemoveGameplayActionListener(EGameplayInputAction action, EInputActionPhase phase, System.Action<InputAction.CallbackContext> listener)
         {
-            UnregisterInputActionListener(GetGameplayAction(action), phase, listener);
+            RemoveExternalInputActionListener(GetGameplayAction(action), phase, listener);
         }
 
         public void AddUIActionListener(EUIInputAction action, EInputActionPhase phase, System.Action<InputAction.CallbackContext> listener)
         {
-            RegisterInputActionListener(GetUIAction(action), phase, listener);
+            AddExternalInputActionListener(GetUIAction(action), phase, listener);
         }
 
         public void RemoveUIActionListener(EUIInputAction action, EInputActionPhase phase, System.Action<InputAction.CallbackContext> listener)
         {
-            UnregisterInputActionListener(GetUIAction(action), phase, listener);
+            RemoveExternalInputActionListener(GetUIAction(action), phase, listener);
         }
 
         /// <summary>
@@ -132,6 +159,15 @@ namespace FantasyWord.GameCore
         public bool IsGameplayActionPressed(EGameplayInputAction action)
         {
             return GetGameplayAction(action).IsInProgress();
+        }
+
+        /// <summary>
+        /// 查询 Gameplay 动作是否仍被切换动作图时的释放门禁阻挡。
+        /// 外部玩法监听必须在处理 started/performed 前检查，避免同一次按压穿透 UI 与 Gameplay。
+        /// </summary>
+        public bool IsGameplayActionBlocked(EGameplayInputAction action)
+        {
+            return IsBlocked(GetGameplayAction(action));
         }
 
         public bool IsUIActionPressed(EUIInputAction action)
@@ -377,7 +413,7 @@ namespace FantasyWord.GameCore
         {
             if (!result.Succeeded)
             {
-                GameRuntimeEvents.NotifyLocalPlayerCommandFailed(result);
+                YokiFrame.EventKit.Type.Send(new LocalPlayerCommandFailedEvent(result));
             }
         }
 
@@ -449,6 +485,70 @@ namespace FantasyWord.GameCore
             }
         }
 
+        private void AddExternalInputActionListener(
+            InputAction action,
+            EInputActionPhase phase,
+            Action<InputAction.CallbackContext> listener)
+        {
+            RegisterInputActionListener(action, phase, listener);
+            m_externalActionSubscriptions.Add(new InputActionSubscription(action, phase, listener));
+        }
+
+        private void RemoveExternalInputActionListener(
+            InputAction action,
+            EInputActionPhase phase,
+            Action<InputAction.CallbackContext> listener)
+        {
+            UnregisterInputActionListener(action, phase, listener);
+            for (int i = m_externalActionSubscriptions.Count - 1; i >= 0; i--)
+            {
+                InputActionSubscription subscription = m_externalActionSubscriptions[i];
+                if (ReferenceEquals(subscription.Action, action) &&
+                    subscription.Phase == phase &&
+                    subscription.Listener == listener)
+                {
+                    m_externalActionSubscriptions.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+
+        private void ClearExternalInputActionListeners()
+        {
+            for (int i = m_externalActionSubscriptions.Count - 1; i >= 0; i--)
+            {
+                InputActionSubscription subscription = m_externalActionSubscriptions[i];
+                UnregisterInputActionListener(
+                    subscription.Action,
+                    subscription.Phase,
+                    subscription.Listener);
+            }
+
+            m_externalActionSubscriptions.Clear();
+        }
+
+        /// <summary>
+        /// 保存外部监听实际订阅的 InputAction，使系统关闭时不依赖场景组件的销毁顺序也能完整解绑。
+        /// </summary>
+        private readonly struct InputActionSubscription
+        {
+            public InputActionSubscription(
+                InputAction action,
+                EInputActionPhase phase,
+                Action<InputAction.CallbackContext> listener)
+            {
+                Action = action;
+                Phase = phase;
+                Listener = listener;
+            }
+
+            public InputAction Action { get; }
+
+            public EInputActionPhase Phase { get; }
+
+            public Action<InputAction.CallbackContext> Listener { get; }
+        }
+
         private void RegisterGameplayInputCallbacks()
         {
             m_gameplayActions.interact.performed += OnInteractPerformed;
@@ -464,7 +564,6 @@ namespace FantasyWord.GameCore
             m_gameplayActions.fireAbility5.canceled += OnFireAbility5Canceled;
             m_gameplayActions.move.performed += OnMovePerformed;
             m_gameplayActions.move.canceled += OnMoveCanceled;
-            m_gameplayActions.click.performed += OnClickPerformed;
             m_gameplayActions.toggleMovementControlMode.performed += OnToggleMovementControlModePerformed;
             m_gameplayActions.openGameMenu.performed += OnOpenGameMenuPerformed;
         }
@@ -484,7 +583,6 @@ namespace FantasyWord.GameCore
             m_gameplayActions.fireAbility5.canceled -= OnFireAbility5Canceled;
             m_gameplayActions.move.performed -= OnMovePerformed;
             m_gameplayActions.move.canceled -= OnMoveCanceled;
-            m_gameplayActions.click.performed -= OnClickPerformed;
             m_gameplayActions.toggleMovementControlMode.performed -= OnToggleMovementControlModePerformed;
             m_gameplayActions.openGameMenu.performed -= OnOpenGameMenuPerformed;
         }
@@ -625,23 +723,6 @@ namespace FantasyWord.GameCore
             ExecuteLocalPlayerCommand(EPlayerCommandKind.StopMove);
         }
 
-        private void OnClickPerformed(InputAction.CallbackContext context)
-        {
-            if (IsBlocked(context.action))
-            {
-                return;
-            }
-
-            if (!TryResolveGameplayPointerWorldPosition(out Vector2 worldPosition))
-            {
-                return;
-            }
-
-            ExecuteLocalPlayerCommand(
-                EPlayerCommandKind.ClickMove,
-                worldPosition: worldPosition);
-        }
-
         private void OnToggleMovementControlModePerformed(InputAction.CallbackContext context)
         {
             ExecuteLocalPlayerCommand(EPlayerCommandKind.ToggleMovementControlMode);
@@ -657,25 +738,6 @@ namespace FantasyWord.GameCore
         private void OnFireAbility3Canceled(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.StopFireAbility, abilityIndex: 2);
         private void OnFireAbility4Canceled(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.StopFireAbility, abilityIndex: 3);
         private void OnFireAbility5Canceled(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.StopFireAbility, abilityIndex: 4);
-
-        private bool TryResolveGameplayPointerWorldPosition(out Vector2 worldPosition)
-        {
-            Camera camera = GameManager.MainCamera;
-            CharacterBase controlledCharacter = GameManager.PlayerSystem.GetCurrentControlledCharacterOrPlayerInstance();
-            Vector2 screenPosition = ReadPointerScreenPosition(EActionMap.Gameplay);
-            if (camera == null ||
-                controlledCharacter == null ||
-                UIPointerUtility.IsPositionOverUI(screenPosition))
-            {
-                worldPosition = default;
-                return false;
-            }
-
-            float distanceToSubjectPlane = controlledCharacter.transform.position.z - camera.transform.position.z;
-            Vector3 screenPoint = new(screenPosition.x, screenPosition.y, distanceToSubjectPlane);
-            worldPosition = camera.ScreenToWorldPoint(screenPoint);
-            return true;
-        }
 
         private void Update()
         {

@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using System;
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
-    [CreateAssetMenu(menuName = AssetMenuIndexer.FantasyWord_Utils + nameof(CommandHandler))]
+    [CreateAssetMenu(menuName = AssetMenuIndexer.Utils + nameof(CommandHandler))]
     public class CommandHandler : DatabaseEntry
     {
         [SerializeReference, SubclassSelector]

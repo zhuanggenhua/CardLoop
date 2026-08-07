@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public class UIAbilityListEntry : MonoBehaviour, IPointerEnterHandler, ISelectHandler
     {

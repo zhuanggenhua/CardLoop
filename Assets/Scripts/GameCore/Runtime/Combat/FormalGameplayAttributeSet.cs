@@ -1,7 +1,7 @@
 using System;
 using GAS.Runtime;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 当前阶段对接 EX-GAS 2.0 的正式属性编码表。

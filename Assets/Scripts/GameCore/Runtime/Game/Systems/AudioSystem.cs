@@ -4,7 +4,7 @@ using UnityEngine;
 using YokiFrame;
 using azixMcAze.SerializableDictionary;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 项目音频通道，用于把音效路由到不同音量控制和播放策略。

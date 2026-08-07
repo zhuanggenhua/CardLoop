@@ -20,7 +20,7 @@ namespace GAS.Runtime
             GAS.Runtime.AbilityHelper.RegisterAbilityLogic(ALDebugLog.Name, ALDebugLog,typeof(GAS.Runtime.XParamString));
             var ALTimeline = typeof(GAS.Runtime.ALTimeline);
             GAS.Runtime.AbilityHelper.RegisterAbilityLogic(ALTimeline.Name, ALTimeline,typeof(GAS.Runtime.XParamALTimelineID));
-            var FormalAbilityRuleProxyLogic = typeof(FantasyWord.GameCore.FormalAbilityRuleProxyLogic);
+            var FormalAbilityRuleProxyLogic = typeof(GameCore.FormalAbilityRuleProxyLogic);
             GAS.Runtime.AbilityHelper.RegisterAbilityLogic(FormalAbilityRuleProxyLogic.Name, FormalAbilityRuleProxyLogic,typeof(GAS.Runtime.XParamNone));
 
             ///  AbilityTask
@@ -44,12 +44,12 @@ namespace GAS.Runtime
             GAS.Runtime.TargetCatcherHelper.RegisterTargetCatcher(CatchSelf.Name, CatchSelf,typeof(GAS.Runtime.XParamNone));
             var CatchTarget = typeof(GAS.Runtime.CatchTarget);
             GAS.Runtime.TargetCatcherHelper.RegisterTargetCatcher(CatchTarget.Name, CatchTarget,typeof(GAS.Runtime.XParamNone));
-            var CatchAreaBox2D = typeof(FantasyWord.GameCore.CatchAreaBox2D);
-            GAS.Runtime.TargetCatcherHelper.RegisterTargetCatcher(CatchAreaBox2D.Name, CatchAreaBox2D,typeof(FantasyWord.GameCore.XParamCatchAreaBox2D));
-            var CatchAreaCircle2D = typeof(FantasyWord.GameCore.CatchAreaCircle2D);
-            GAS.Runtime.TargetCatcherHelper.RegisterTargetCatcher(CatchAreaCircle2D.Name, CatchAreaCircle2D,typeof(FantasyWord.GameCore.XParamCatchAreaCircle2D));
-            var CatchAreaPolygon2D = typeof(FantasyWord.GameCore.CatchAreaPolygon2D);
-            GAS.Runtime.TargetCatcherHelper.RegisterTargetCatcher(CatchAreaPolygon2D.Name, CatchAreaPolygon2D,typeof(FantasyWord.GameCore.XParamCatchAreaPolygon2D));
+            var CatchAreaBox2D = typeof(GameCore.CatchAreaBox2D);
+            GAS.Runtime.TargetCatcherHelper.RegisterTargetCatcher(CatchAreaBox2D.Name, CatchAreaBox2D,typeof(GameCore.XParamCatchAreaBox2D));
+            var CatchAreaCircle2D = typeof(GameCore.CatchAreaCircle2D);
+            GAS.Runtime.TargetCatcherHelper.RegisterTargetCatcher(CatchAreaCircle2D.Name, CatchAreaCircle2D,typeof(GameCore.XParamCatchAreaCircle2D));
+            var CatchAreaPolygon2D = typeof(GameCore.CatchAreaPolygon2D);
+            GAS.Runtime.TargetCatcherHelper.RegisterTargetCatcher(CatchAreaPolygon2D.Name, CatchAreaPolygon2D,typeof(GameCore.XParamCatchAreaPolygon2D));
         }
     }
 }

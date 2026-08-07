@@ -1,7 +1,7 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     public abstract class FancyEditor<T> : UnityEditor.Editor where T : UnityEngine.Object
     {

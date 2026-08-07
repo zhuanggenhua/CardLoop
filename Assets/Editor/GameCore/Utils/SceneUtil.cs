@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 编辑器场景查询工具，统一从 Build Settings 和 AssetDatabase 生成场景快照。
     /// </summary>
     public static class SceneUtil
     {
-        private static readonly string[] SceneSearchRoots = { "Assets/Scenes" };
+        private static readonly string[] SceneSearchRoots = { "Assets" };
 
         /// <summary>
         /// 单个场景资产的编辑器快照，记录路径和是否进入 Build Settings。
@@ -63,6 +63,20 @@ namespace FantasyWord.GameCore
             }
 
             return sceneNames.ToArray();
+        }
+
+        /// <summary>
+        /// 当前 YooAsset 场景作者入口使用的地址快照。
+        /// 正式场景收集规则采用 AddressByFileName，因此这里返回场景文件名而不是 Build Settings 名单。
+        /// </summary>
+        public static string[] CreateSceneAddressSnapshot()
+        {
+            return CreateAssetDatabaseScenePathSnapshot()
+                .Select(System.IO.Path.GetFileNameWithoutExtension)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(name => name, StringComparer.Ordinal)
+                .ToArray();
         }
 
         public static string[] CreateAssetDatabaseScenePathSnapshot()

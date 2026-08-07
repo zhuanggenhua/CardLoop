@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 多个条件的组合方式。

@@ -2,7 +2,7 @@ using System.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace FantasyWord.GameCore
+namespace GameCore
 {
     /// <summary>
     /// 一次 Transform 抖动协程的句柄，保留协程 owner、目标和初始位置以便中断时复位。
