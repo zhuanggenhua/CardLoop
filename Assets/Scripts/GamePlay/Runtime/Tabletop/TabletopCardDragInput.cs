@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using CoreInputSystem = GameCore.InputSystem;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 将项目正式输入系统的主指针动作转换为可堆叠卡牌的点击/拖拽意图。

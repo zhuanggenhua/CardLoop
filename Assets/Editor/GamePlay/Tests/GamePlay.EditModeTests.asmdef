@@ -1,8 +1,8 @@
 {
-  "name": "GamePlay.EditModeTests",
-  "rootNamespace": "GamePlay.Tests",
+  "name": "Gameplay.EditModeTests",
+  "rootNamespace": "Gameplay.Tests",
     "references": [
-        "GamePlay.Runtime",
+        "Gameplay.Runtime",
         "GameCore",
         "YokiFrame",
         "Unity.Mathematics"

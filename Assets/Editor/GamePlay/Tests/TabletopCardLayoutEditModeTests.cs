@@ -1,7 +1,12 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GamePlay.Tests
+using Gameplay.Actions;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
+
+namespace Gameplay.Tests
 {
     /// <summary>
     /// 验证卡牌堆栈从底到顶的表现位置与渲染顺序计算。

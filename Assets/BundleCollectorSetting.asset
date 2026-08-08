@@ -25,9 +25,8 @@ MonoBehaviour:
     AutoCollectShaders: 1
     IgnoreRuleName: NormalIgnoreRule
     Groups:
-    - GroupName: "GamePlay\u5185\u5BB9\u5B9A\u4E49"
-      GroupDesc: "\u81EA\u52A8\u6536\u96C6\u6240\u6709\u7EE7\u627F GamePlayContentAsset
-        \u7684\u4F5C\u8005\u8D44\u4EA7"
+    - GroupName: "Gameplay\u5185\u5BB9\u5B9A\u4E49"
+      GroupDesc: "\u81EA\u52A8\u6536\u96C6\u6240\u6709\u7EE7\u627F ContentAsset \u7684\u4F5C\u8005\u8D44\u4EA7"
       AssetTags: gameplay-content
       ActiveRuleName: EnableGroup
       Collectors:
@@ -36,11 +35,11 @@ MonoBehaviour:
         CollectorType: 0
         AddressRuleName: AddressDisable
         PackRuleName: PackCollector
-        FilterRuleName: CollectGamePlayContentAssets
+        FilterRuleName: ContentAssetFilterRule
         AssetTags: 
         UserData: 
-    - GroupName: "GamePlay\u5730\u57FA\u6D4B\u8BD5"
-      GroupDesc: "\u4EC5\u6536\u96C6 GamePlay \u5730\u57FA\u5165\u53E3\u573A\u666F\u548C
+    - GroupName: "Gameplay\u5730\u57FA\u6D4B\u8BD5"
+      GroupDesc: "\u4EC5\u6536\u96C6 Gameplay \u5730\u57FA\u5165\u53E3\u573A\u666F\u548C
         YooAsset \u9644\u52A0\u5730\u56FE\u6D4B\u8BD5\u573A\u666F"
       AssetTags: test
       ActiveRuleName: EnableGroup
@@ -50,10 +49,10 @@ MonoBehaviour:
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory
-        FilterRuleName: CollectGamePlayFoundationScenes
+        FilterRuleName: FoundationSceneFilterRule
         AssetTags: test
         UserData: 
-      - CollectPath: "Assets/GamePlay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u5361\u724C\u89C6\u56FE.prefab"
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u5361\u724C\u89C6\u56FE.prefab"
         CollectorGUID: 702e6f9aaab7c1a439e286c7f792e07e
         CollectorType: 0
         AddressRuleName: AddressByFileName

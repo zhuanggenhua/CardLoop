@@ -1,7 +1,12 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GamePlay.Tests
+using Gameplay.Actions;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
+
+namespace Gameplay.Tests
 {
     /// <summary>
     /// 验证设备无关的卡牌拖拽会话只产出点击或拖拽意图，不提前修改牌桌状态。

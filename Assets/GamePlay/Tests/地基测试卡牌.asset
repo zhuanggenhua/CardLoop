@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 732affab875846bba73045887651397f, type: 3}
   m_Name: "\u5730\u57FA\u6D4B\u8BD5\u5361\u724C"
-  m_EditorClassIdentifier: GamePlay.Runtime::GamePlay.GamePlayCardDefinition
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
   m_contentId:
     m_value: test.foundation.card
   m_displayName: "\u5730\u57FA\u6D4B\u8BD5\u5361\u724C"

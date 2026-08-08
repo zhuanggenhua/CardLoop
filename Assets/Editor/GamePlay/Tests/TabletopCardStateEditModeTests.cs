@@ -1,7 +1,12 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GamePlay.Tests
+using Gameplay.Actions;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
+
+namespace Gameplay.Tests
 {
     /// <summary>
     /// 验证局内卡牌身份、卡牌堆栈顺序、拆分、合并和位置锁定不变量。
@@ -12,7 +17,7 @@ namespace GamePlay.Tests
         public void CreateCard_SameContentCreatesDifferentRuntimeCards()
         {
             var state = new TabletopCardState();
-            var contentId = new GamePlayContentId("test.wood");
+            var contentId = new ContentId("test.wood");
 
             TabletopCard first = state.CreateCard(contentId, new Vector2(1f, 2f));
             TabletopCard second = state.CreateCard(contentId, new Vector2(3f, 4f));

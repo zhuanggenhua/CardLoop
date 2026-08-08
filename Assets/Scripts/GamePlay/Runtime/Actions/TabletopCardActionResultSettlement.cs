@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Gameplay.Content;
+using Gameplay.Tabletop;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Actions
 {
     /// <summary>
     /// 负责把牌桌卡牌结果意图一次性提交给 <see cref="TabletopCardState"/>。
@@ -12,9 +14,9 @@ namespace GamePlay
     {
         internal static void Commit(
             TabletopCardActionJob job,
-            GamePlayActionDefinition action,
+            ActionDefinition action,
             TabletopCardState state,
-            GamePlayContentIndex contentIndex)
+            ContentIndex contentIndex)
         {
             if (job == null) throw new ArgumentNullException(nameof(job));
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -45,7 +47,7 @@ namespace GamePlay
 
             if (action.ResultBranches.Count > 0)
             {
-                GamePlayActionResultBranch branch = FindBranch(action, job.ResultBranchKey);
+                ActionResultBranchDefinition branch = FindBranch(action, job.ResultBranchKey);
                 for (int i = 0; i < branch.ResultIntents.Count; i++)
                 {
                     AddIntentPlan(
@@ -79,8 +81,8 @@ namespace GamePlay
         private static void AddIntentPlan(
             TabletopCardActionJob job,
             TabletopCardState state,
-            GamePlayContentIndex contentIndex,
-            GamePlayActionResultIntent intent,
+            ContentIndex contentIndex,
+            ActionResultIntent intent,
             List<TabletopCardId> removals,
             HashSet<TabletopCardId> removalSet,
             List<CardCreationPlan> creations,
@@ -104,8 +106,8 @@ namespace GamePlay
             }
         }
 
-        private static GamePlayActionResultBranch FindBranch(
-            GamePlayActionDefinition action,
+        private static ActionResultBranchDefinition FindBranch(
+            ActionDefinition action,
             string branchKey)
         {
             if (string.IsNullOrWhiteSpace(branchKey))
@@ -115,7 +117,7 @@ namespace GamePlay
 
             for (int i = 0; i < action.ResultBranches.Count; i++)
             {
-                GamePlayActionResultBranch branch = action.ResultBranches[i];
+                ActionResultBranchDefinition branch = action.ResultBranches[i];
                 if (branch != null && string.Equals(branch.Key, branchKey, StringComparison.Ordinal))
                 {
                     return branch;
@@ -149,12 +151,12 @@ namespace GamePlay
         private static CardCreationPlan CreateCreationPlan(
             TabletopCardActionJob job,
             TabletopCardState state,
-            GamePlayContentIndex contentIndex,
+            ContentIndex contentIndex,
             TabletopCardCreateResultIntent intent)
         {
             if (!intent.ContentId.IsValid || !contentIndex.TryGet(intent.ContentId, out _))
                 throw new InvalidOperationException(
-                    $"行动 {job.ActionId} 的产物内容 {intent.ContentId} 不在当前 GamePlay 内容索引中。");
+                    $"行动 {job.ActionId} 的产物内容 {intent.ContentId} 不在当前 Gameplay 内容索引中。");
             if (intent.Count <= 0)
                 throw new InvalidOperationException($"行动 {job.ActionId} 的产物生成数量必须大于 0。");
 
@@ -186,14 +188,14 @@ namespace GamePlay
 
         private readonly struct CardCreationPlan
         {
-            internal CardCreationPlan(GamePlayContentId contentId, int count, Vector2 position)
+            internal CardCreationPlan(ContentId contentId, int count, Vector2 position)
             {
                 ContentId = contentId;
                 Count = count;
                 Position = position;
             }
 
-            internal GamePlayContentId ContentId { get; }
+            internal ContentId ContentId { get; }
             internal int Count { get; }
             internal Vector2 Position { get; }
         }

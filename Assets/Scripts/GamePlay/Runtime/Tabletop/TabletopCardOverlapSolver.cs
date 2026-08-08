@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 不依赖场景组件的卡牌二维边界与重叠解算器。

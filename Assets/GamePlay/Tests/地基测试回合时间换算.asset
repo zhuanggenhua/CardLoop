@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45eebfae459c4ac58a344972075485db, type: 3}
   m_Name: "\u5730\u57FA\u6D4B\u8BD5\u56DE\u5408\u65F6\u95F4\u6362\u7B97"
-  m_EditorClassIdentifier: GamePlay.Runtime::GamePlay.GamePlayTurnTimingDefinition
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.TurnTimingDefinition
   m_contentId:
     m_value: test.foundation.turn-timing
   m_displayName: "\u5730\u57FA\u6D4B\u8BD5\u56DE\u5408\u65F6\u95F4\u6362\u7B97"

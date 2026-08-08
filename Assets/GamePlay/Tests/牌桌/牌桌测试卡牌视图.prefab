@@ -127,7 +127,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2eb9f2153cf79eb4eb33d588d8be5eec, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GamePlay.Runtime::GamePlay.TabletopCardView
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Tabletop.TabletopCardView
   m_artworkRenderer: {fileID: 2010019084001656479}
   m_surfaceRenderer: {fileID: 0}
   m_surfaceTextureProperty: 

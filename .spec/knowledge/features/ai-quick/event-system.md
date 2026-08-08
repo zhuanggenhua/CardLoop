@@ -77,7 +77,7 @@ private void OnMapLoaded(MapLoadedEvent _)
 
 private async UniTask RequestMapTransition(MapSystem mapSystem)
 {
-    await mapSystem.RequestTransitionAsync("GamePlayFoundationMapTest");
+    await mapSystem.RequestTransitionAsync("FoundationMapTest");
 }
 ```
 
@@ -92,7 +92,7 @@ private async UniTask RequestMapTransition(MapSystem mapSystem)
 ## 禁止做法
 
 - 不新增 `GameEventBus`、`EventCenter` 或只转发 EventKit 的项目包装层。
-- 不在 GamePlay 重新声明与 `GameCore/Runtime/Events/` 相同语义的事件类型。
+- 不在 Gameplay 重新声明与 `GameCore/Runtime/Events/` 相同语义的事件类型。
 - 不把 YokiFrame 通用示例中的 `PlayerDiedEvent` 等示例类型写成项目正式事件。
 
 ## 源码证据

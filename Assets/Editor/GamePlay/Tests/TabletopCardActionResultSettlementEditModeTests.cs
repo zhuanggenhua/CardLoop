@@ -4,8 +4,14 @@ using NUnit.Framework;
 using MathematicsRandom = Unity.Mathematics.Random;
 using UnityEditor;
 using UnityEngine;
+using YokiFrame;
 
-namespace GamePlay.Tests
+using Gameplay.Actions;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
+
+namespace Gameplay.Tests
 {
     /// <summary>
     /// 验证行动完成后的牌桌结果只在完成点提交，并在作者配置非法时保持牌桌状态不变。
@@ -34,6 +40,36 @@ namespace GamePlay.Tests
         }
 
         [Test]
+        public void StartAction_PublishesCompletionFactAfterSuccessfulResultCommit()
+        {
+            using ResultTestContext context = CreateContext(
+                turnCost: 0,
+                CreateRemoveIntent(),
+                CreateProductIntent(ProductContentId, count: 2));
+            TabletopCardActionCompletedEvent? receivedEvent = null;
+
+            void OnActionCompleted(TabletopCardActionCompletedEvent completedEvent)
+            {
+                AssertSettled(context, expectedProductCount: 2);
+                receivedEvent = completedEvent;
+            }
+
+            EventKit.Type.Register<TabletopCardActionCompletedEvent>(OnActionCompleted);
+            try
+            {
+                context.ActionSystem.StartAction(
+                    TabletopCardActionRequest.FromCandidate(context.Candidate));
+            }
+            finally
+            {
+                EventKit.Type.UnRegister<TabletopCardActionCompletedEvent>(OnActionCompleted);
+            }
+
+            Assert.That(receivedEvent.HasValue, Is.True);
+            Assert.That(receivedEvent.Value.ActionId, Is.EqualTo(context.Action.ContentId));
+        }
+
+        [Test]
         public void ConfirmedWorldTurn_DelayedActionSettlesOnlyAfterRequiredTurnsComplete()
         {
             using ResultTestContext context = CreateContext(
@@ -43,12 +79,12 @@ namespace GamePlay.Tests
 
             TabletopCardActionJob job = context.ActionSystem.StartAction(
                 TabletopCardActionRequest.FromCandidate(context.Candidate));
-            context.WorldTurnSystem.ConfirmTurn();
+            context.ScenarioTurnSystem.ConfirmTurn();
 
             Assert.That(job.State, Is.EqualTo(TabletopCardActionJobState.Running));
             AssertUnchanged(context);
 
-            context.WorldTurnSystem.ConfirmTurn();
+            context.ScenarioTurnSystem.ConfirmTurn();
 
             Assert.That(job.State, Is.EqualTo(TabletopCardActionJobState.Completed));
             Assert.That(context.ActionSystem.ActiveJobs, Is.Empty);
@@ -58,11 +94,11 @@ namespace GamePlay.Tests
         [Test]
         public void ContentIndexBuild_UnknownProductIsRejectedBeforeRuntimeSettlement()
         {
-            GamePlayCardDefinition participant = CreateCardDefinition(ParticipantContentId);
-            GamePlayCardDefinition product = CreateCardDefinition(ProductContentId);
-            GamePlayActionDefinition action = CreateActionDefinition(
+            CardDefinition participant = CreateCardDefinition(ParticipantContentId);
+            CardDefinition product = CreateCardDefinition(ProductContentId);
+            ActionDefinition action = CreateActionDefinition(
                 0,
-                new GamePlayActionResultIntent[]
+                new ActionResultIntent[]
                 {
                 CreateRemoveIntent(),
                     CreateProductIntent("test.result.missing", count: 1)
@@ -72,8 +108,8 @@ namespace GamePlay.Tests
             try
             {
                 InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                    () => GamePlayContentIndex.Build(
-                        new GamePlayContentAsset[] { participant, product, action }));
+                    () => ContentIndex.Build(
+                        new ContentAsset[] { participant, product, action }));
 
                 StringAssert.Contains("ACTION_RESULT_CREATE_CONTENT_UNKNOWN", exception.Message);
             }
@@ -92,12 +128,27 @@ namespace GamePlay.Tests
                 turnCost: 0,
                 CreateRemoveIntent(),
                 CreateRemoveIntent());
+            int completedEventCount = 0;
 
-            Assert.Throws<InvalidOperationException>(
-                () => context.ActionSystem.StartAction(
-                    TabletopCardActionRequest.FromCandidate(context.Candidate)));
+            void OnActionCompleted(TabletopCardActionCompletedEvent _)
+            {
+                completedEventCount++;
+            }
+
+            EventKit.Type.Register<TabletopCardActionCompletedEvent>(OnActionCompleted);
+            try
+            {
+                Assert.Throws<InvalidOperationException>(
+                    () => context.ActionSystem.StartAction(
+                        TabletopCardActionRequest.FromCandidate(context.Candidate)));
+            }
+            finally
+            {
+                EventKit.Type.UnRegister<TabletopCardActionCompletedEvent>(OnActionCompleted);
+            }
 
             AssertUnchanged(context);
+            Assert.That(completedEventCount, Is.Zero);
         }
 
         [Test]
@@ -159,9 +210,9 @@ namespace GamePlay.Tests
         [Test]
         public void ContentIndexBuild_InvalidWeightedResultIsRejectedBeforeRuntimeRandom()
         {
-            GamePlayCardDefinition participant = CreateCardDefinition(ParticipantContentId);
-            GamePlayCardDefinition product = CreateCardDefinition(ProductContentId);
-            GamePlayActionDefinition action = CreateActionDefinition(
+            CardDefinition participant = CreateCardDefinition(ParticipantContentId);
+            CardDefinition product = CreateCardDefinition(ProductContentId);
+            ActionDefinition action = CreateActionDefinition(
                 0,
                 new[] { CreateRemoveIntent() },
                 new[]
@@ -172,8 +223,8 @@ namespace GamePlay.Tests
             try
             {
                 InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                    () => GamePlayContentIndex.Build(
-                        new GamePlayContentAsset[] { participant, product, action }));
+                    () => ContentIndex.Build(
+                        new ContentAsset[] { participant, product, action }));
 
                 StringAssert.Contains("ACTION_RESULT_BRANCH_WEIGHT_INVALID", exception.Message);
             }
@@ -187,7 +238,7 @@ namespace GamePlay.Tests
 
         private static ResultTestContext CreateContext(
             int turnCost,
-            params GamePlayActionResultIntent[] resultIntents)
+            params ActionResultIntent[] resultIntents)
         {
             return CreateContextCore(turnCost, seed: null, resultIntents, Array.Empty<ResultBranchDefinition>());
         }
@@ -206,14 +257,14 @@ namespace GamePlay.Tests
         private static ResultTestContext CreateContextCore(
             int turnCost,
             uint? seed,
-            IReadOnlyList<GamePlayActionResultIntent> resultIntents,
+            IReadOnlyList<ActionResultIntent> resultIntents,
             IReadOnlyList<ResultBranchDefinition> branches)
         {
-            GamePlayCardDefinition participant = CreateCardDefinition(ParticipantContentId);
-            GamePlayCardDefinition product = CreateCardDefinition(ProductContentId);
-            GamePlayActionDefinition action = CreateActionDefinition(turnCost, resultIntents, branches);
-            GamePlayContentIndex contentIndex = GamePlayContentIndex.Build(
-                new GamePlayContentAsset[] { participant, product, action });
+            CardDefinition participant = CreateCardDefinition(ParticipantContentId);
+            CardDefinition product = CreateCardDefinition(ProductContentId);
+            ActionDefinition action = CreateActionDefinition(turnCost, resultIntents, branches);
+            ContentIndex contentIndex = ContentIndex.Build(
+                new ContentAsset[] { participant, product, action });
 
             var state = new TabletopCardState();
             Vector2 sourcePosition = new(-2f, 1f);
@@ -234,9 +285,9 @@ namespace GamePlay.Tests
             Assert.That(candidates[0].IsReady, Is.True);
 
             GameObject systemObject = new("TabletopCardActionResultSettlementTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
-            worldTurnSystem.OnSystemStart();
+            scenarioTurnSystem.OnSystemStart();
             actionSystem.OnSystemStart();
             actionSystem.BindTabletopActionState(state, contentIndex);
             if (seed.HasValue)
@@ -253,25 +304,25 @@ namespace GamePlay.Tests
                 sourcePosition,
                 candidates[0],
                 systemObject,
-                worldTurnSystem,
+                scenarioTurnSystem,
                 actionSystem);
         }
 
-        private static GamePlayCardDefinition CreateCardDefinition(string contentId)
+        private static CardDefinition CreateCardDefinition(string contentId)
         {
-            GamePlayCardDefinition definition = ScriptableObject.CreateInstance<GamePlayCardDefinition>();
+            CardDefinition definition = ScriptableObject.CreateInstance<CardDefinition>();
             var serializedDefinition = new SerializedObject(definition);
             serializedDefinition.FindProperty("m_contentId").FindPropertyRelative("m_value").stringValue = contentId;
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return definition;
         }
 
-        private static GamePlayActionDefinition CreateActionDefinition(
+        private static ActionDefinition CreateActionDefinition(
             int turnCost,
-            IReadOnlyList<GamePlayActionResultIntent> resultIntents,
+            IReadOnlyList<ActionResultIntent> resultIntents,
             IReadOnlyList<ResultBranchDefinition> branches = null)
         {
-            GamePlayActionDefinition action = ScriptableObject.CreateInstance<GamePlayActionDefinition>();
+            ActionDefinition action = ScriptableObject.CreateInstance<ActionDefinition>();
             JsonUtility.FromJsonOverwrite(
                 "{" +
                 $"\"m_contentId\":{{\"m_value\":\"{ActionContentId}\"}}," +
@@ -319,7 +370,7 @@ namespace GamePlay.Tests
         private static ResultBranchDefinition CreateBranch(
             string key,
             int weight,
-            params GamePlayActionResultIntent[] intents)
+            params ActionResultIntent[] intents)
         {
             return new ResultBranchDefinition(key, weight, intents);
         }
@@ -377,16 +428,16 @@ namespace GamePlay.Tests
         private sealed class ResultTestContext : IDisposable
         {
             internal ResultTestContext(
-                GamePlayCardDefinition participant,
-                GamePlayCardDefinition product,
-                GamePlayActionDefinition action,
+                CardDefinition participant,
+                CardDefinition product,
+                ActionDefinition action,
                 TabletopCardState state,
                 TabletopCard source,
                 TabletopCard target,
                 Vector2 sourcePosition,
                 TabletopCardActionCandidate candidate,
                 GameObject systemObject,
-                GamePlayWorldTurnSystem worldTurnSystem,
+                ScenarioTurnSystem scenarioTurnSystem,
                 TabletopCardActionSystem actionSystem)
             {
                 Participant = participant;
@@ -398,26 +449,26 @@ namespace GamePlay.Tests
                 SourcePosition = sourcePosition;
                 Candidate = candidate;
                 SystemObject = systemObject;
-                WorldTurnSystem = worldTurnSystem;
+                ScenarioTurnSystem = scenarioTurnSystem;
                 ActionSystem = actionSystem;
             }
 
-            internal GamePlayCardDefinition Participant { get; }
-            internal GamePlayCardDefinition Product { get; }
-            internal GamePlayActionDefinition Action { get; }
+            internal CardDefinition Participant { get; }
+            internal CardDefinition Product { get; }
+            internal ActionDefinition Action { get; }
             internal TabletopCardState State { get; }
             internal TabletopCard Source { get; }
             internal TabletopCard Target { get; }
             internal Vector2 SourcePosition { get; }
             internal TabletopCardActionCandidate Candidate { get; }
             internal GameObject SystemObject { get; }
-            internal GamePlayWorldTurnSystem WorldTurnSystem { get; }
+            internal ScenarioTurnSystem ScenarioTurnSystem { get; }
             internal TabletopCardActionSystem ActionSystem { get; }
 
             public void Dispose()
             {
                 ActionSystem.OnSystemStop();
-                WorldTurnSystem.OnSystemStop();
+                ScenarioTurnSystem.OnSystemStop();
                 UnityEngine.Object.DestroyImmediate(SystemObject);
                 UnityEngine.Object.DestroyImmediate(Participant);
                 UnityEngine.Object.DestroyImmediate(Product);
@@ -430,7 +481,7 @@ namespace GamePlay.Tests
             internal ResultBranchDefinition(
                 string key,
                 int weight,
-                IReadOnlyList<GamePlayActionResultIntent> intents)
+                IReadOnlyList<ActionResultIntent> intents)
             {
                 Key = key;
                 Weight = weight;
@@ -439,7 +490,7 @@ namespace GamePlay.Tests
 
             internal string Key { get; }
             internal int Weight { get; }
-            internal IReadOnlyList<GamePlayActionResultIntent> Intents { get; }
+            internal IReadOnlyList<ActionResultIntent> Intents { get; }
         }
     }
 }

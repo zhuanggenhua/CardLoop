@@ -1,9 +1,9 @@
 {
-  "name": "GamePlay.Foundation.PlayModeTests",
-  "rootNamespace": "GamePlay.Tests",
+  "name": "Gameplay.Foundation.PlayModeTests",
+  "rootNamespace": "Gameplay.Tests",
   "references": [
     "GameCore",
-    "GamePlay.Runtime",
+    "Gameplay.Runtime",
     "GAS.GeneratedRuntime",
     "com.exhard.exgas.runtime",
     "UniTask",

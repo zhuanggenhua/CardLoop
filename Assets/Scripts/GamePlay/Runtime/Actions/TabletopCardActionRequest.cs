@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Gameplay.Content;
+using Gameplay.Tabletop;
 
-namespace GamePlay
+namespace Gameplay.Actions
 {
     /// <summary>
     /// 一次由 UI、AI、联机客户端或回放系统提交的牌桌行动请求。
@@ -14,7 +16,7 @@ namespace GamePlay
         private readonly ReadOnlyCollection<TabletopCardActionRequestBinding> m_bindings;
 
         public TabletopCardActionRequest(
-            GamePlayContentId actionId,
+            ContentId actionId,
             IReadOnlyList<TabletopCardActionRequestBinding> bindings)
         {
             if (!actionId.IsValid)
@@ -40,7 +42,7 @@ namespace GamePlay
         }
 
         /// <summary>玩家显式选择的行动内容 ID。</summary>
-        public GamePlayContentId ActionId { get; }
+        public ContentId ActionId { get; }
 
         /// <summary>按行动作者槽位键提交的局内卡牌绑定。</summary>
         public IReadOnlyList<TabletopCardActionRequestBinding> Bindings => m_bindings;
@@ -75,7 +77,7 @@ namespace GamePlay
 
         public TabletopCardActionRequestBinding(string slotKey, IReadOnlyList<TabletopCardId> cardIds)
         {
-            if (!GamePlayContentKeyUtility.IsValidKey(slotKey))
+            if (!ContentIdRules.IsValidKey(slotKey))
             {
                 throw new ArgumentException($"行动请求槽位键无效：{slotKey}。", nameof(slotKey));
             }

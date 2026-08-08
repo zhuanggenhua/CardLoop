@@ -16,7 +16,7 @@ metadata:
 
 发现 Mod 目录内容，读取描述文件，检查 API 版本和状态，按启用状态加载独立 YooAsset 资源包，并向 UI 提供 Mod 清单和刷新通知。
 
-Mod 系统是 CardLoop 自有运行时能力，不是 YooAsset 或 EX-GAS 的官方能力；它不直接接管 GamePlay、EX-GAS、存档或数据库作者源。
+Mod 系统是 CardLoop 自有运行时能力，不是 YooAsset 或 EX-GAS 的官方能力；它不直接接管 Gameplay、EX-GAS、存档或数据库作者源。
 
 ## 官方资料入口
 
@@ -83,7 +83,7 @@ private void SetEnabled(ModInfo modInfo, bool enabled)
 
 ## 禁止做法
 
-- 不在 GamePlay 侧新建另一套 Mod 扫描器、配置路径、启停状态或资源包注册表。
+- 不在 Gameplay 侧新建另一套 Mod 扫描器、配置路径、启停状态或资源包注册表。
 - 不在 Mod 侧动态合并 EX-GAS GameplayTag 表、Ability 表或生成代码。
 - 不把 `ModInfo.metaData` 当成无需定义作者源、版本和兼容性的任意业务数据库。
 - 不把独立资源包加载扩大描述成“Mod 可以覆盖所有运行时系统”。
@@ -93,7 +93,7 @@ private void SetEnabled(ModInfo modInfo, bool enabled)
 - 当前只确认 Mod 能初始化独立 YooAsset 包，未确认能运行时合并 EX-GAS GameplayTag 作者表、生成标签码或更新 `XTag` 常量。
 - `ModAPI.Initialize` 没有取消令牌和中途回滚协议。
 - 启停状态变化与已加载包之间没有自动热切换链路。
-- Mod 内容如何映射到 GamePlay 稳定 ID、关卡作者源、存档依赖和联机校验仍未形成完整契约。
+- Mod 内容如何映射到 Gameplay 稳定 ID、关卡作者源、存档依赖和联机校验仍未形成完整契约。
 
 ## 源码证据
 

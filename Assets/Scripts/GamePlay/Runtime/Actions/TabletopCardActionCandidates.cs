@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using GAS.Runtime;
+using Gameplay.Content;
+using Gameplay.Tabletop;
 
-namespace GamePlay
+namespace Gameplay.Actions
 {
     /// <summary>
     /// 一条行动槽位与本次牌桌候选卡牌的不可变绑定。
@@ -14,7 +16,7 @@ namespace GamePlay
         private readonly ReadOnlyCollection<TabletopCardId> m_cardIds;
 
         internal TabletopCardActionSlotBinding(
-            GamePlayActionSlotDefinition slot,
+            ActionSlotDefinition slot,
             IReadOnlyList<TabletopCardId> cardIds)
         {
             Slot = slot ?? throw new ArgumentNullException(nameof(slot));
@@ -22,7 +24,7 @@ namespace GamePlay
         }
 
         /// <summary>本次绑定对应的行动槽位作者声明。</summary>
-        public GamePlayActionSlotDefinition Slot { get; }
+        public ActionSlotDefinition Slot { get; }
 
         /// <summary>按输入事实顺序绑定到该槽位的局内卡牌身份。</summary>
         public IReadOnlyList<TabletopCardId> CardIds => m_cardIds;
@@ -37,7 +39,7 @@ namespace GamePlay
         private readonly ReadOnlyCollection<TabletopCardActionSlotBinding> m_bindings;
 
         internal TabletopCardActionCandidate(
-            GamePlayActionDefinition action,
+            ActionDefinition action,
             IReadOnlyList<TabletopCardActionSlotBinding> bindings,
             int missingParticipantCount)
         {
@@ -48,7 +50,7 @@ namespace GamePlay
         }
 
         /// <summary>本候选引用的唯一行动作者源。</summary>
-        public GamePlayActionDefinition Action { get; }
+        public ActionDefinition Action { get; }
 
         /// <summary>按行动作者槽位顺序保存的卡牌绑定，包含尚未填入卡牌的空槽位。</summary>
         public IReadOnlyList<TabletopCardActionSlotBinding> Bindings => m_bindings;
@@ -74,8 +76,8 @@ namespace GamePlay
         public static TabletopCardActionCandidate[] FindCandidates(
             TabletopCardPointerReleaseIntent intent,
             TabletopCardState state,
-            GamePlayContentIndex contentIndex,
-            IReadOnlyList<GamePlayActionDefinition> availableActions)
+            ContentIndex contentIndex,
+            IReadOnlyList<ActionDefinition> availableActions)
         {
             return FindCandidatesInternal(
                 intent,
@@ -92,8 +94,8 @@ namespace GamePlay
         public static TabletopCardActionCandidate[] FindCandidatesWithAbilitySystem(
             TabletopCardPointerReleaseIntent intent,
             TabletopCardState state,
-            GamePlayContentIndex contentIndex,
-            IReadOnlyList<GamePlayActionDefinition> availableActions,
+            ContentIndex contentIndex,
+            IReadOnlyList<ActionDefinition> availableActions,
             Func<TabletopCardId, AbilitySystemCell> abilitySystemCellResolver)
         {
             if (abilitySystemCellResolver == null)
@@ -112,8 +114,8 @@ namespace GamePlay
         private static TabletopCardActionCandidate[] FindCandidatesInternal(
             TabletopCardPointerReleaseIntent intent,
             TabletopCardState state,
-            GamePlayContentIndex contentIndex,
-            IReadOnlyList<GamePlayActionDefinition> availableActions,
+            ContentIndex contentIndex,
+            IReadOnlyList<ActionDefinition> availableActions,
             Func<TabletopCardId, AbilitySystemCell> abilitySystemCellResolver)
         {
             if (state == null)
@@ -159,10 +161,10 @@ namespace GamePlay
             }
 
             var candidates = new List<TabletopCardActionCandidate>();
-            var seenActionIds = new HashSet<GamePlayContentId>();
+            var seenActionIds = new HashSet<ContentId>();
             for (int actionIndex = 0; actionIndex < availableActions.Count; actionIndex++)
             {
-                GamePlayActionDefinition action = availableActions[actionIndex];
+                ActionDefinition action = availableActions[actionIndex];
                 if (action == null || !action.ContentId.IsValid || !seenActionIds.Add(action.ContentId))
                 {
                     continue;
@@ -180,13 +182,13 @@ namespace GamePlay
         private static bool TryCreateParticipant(
             TabletopCardId cardId,
             TabletopCardState state,
-            GamePlayContentIndex contentIndex,
+            ContentIndex contentIndex,
             Func<TabletopCardId, AbilitySystemCell> abilitySystemCellResolver,
             out CandidateParticipant participant)
         {
             if (!cardId.IsValid ||
                 !state.TryGetCard(cardId, out TabletopCard card) ||
-                !contentIndex.TryGet(card.ContentId, out GamePlayContentAsset contentAsset))
+                !contentIndex.TryGet(card.ContentId, out ContentAsset contentAsset))
             {
                 participant = default;
                 return false;
@@ -200,11 +202,11 @@ namespace GamePlay
         }
 
         private static bool TryCreateCandidate(
-            GamePlayActionDefinition action,
+            ActionDefinition action,
             IReadOnlyList<CandidateParticipant> participants,
             out TabletopCardActionCandidate candidate)
         {
-            IReadOnlyList<GamePlayActionSlotDefinition> slots = action.ParticipationSlots;
+            IReadOnlyList<ActionSlotDefinition> slots = action.ParticipationSlots;
             if (!AreSlotsUsable(slots))
             {
                 candidate = null;
@@ -243,7 +245,7 @@ namespace GamePlay
         private static void SearchAssignments(
             int participantIndex,
             IReadOnlyList<CandidateParticipant> participants,
-            IReadOnlyList<GamePlayActionSlotDefinition> slots,
+            IReadOnlyList<ActionSlotDefinition> slots,
             List<TabletopCardId>[] working,
             ref SearchResult best)
         {
@@ -261,9 +263,9 @@ namespace GamePlay
             CandidateParticipant participant = participants[participantIndex];
             for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)
             {
-                GamePlayActionSlotDefinition slot = slots[slotIndex];
+                ActionSlotDefinition slot = slots[slotIndex];
                 if ((slot.MaximumParticipants > 0 && working[slotIndex].Count >= slot.MaximumParticipants) ||
-                    !GamePlayActionParticipationEvaluator.MatchesParticipant(
+                    !ActionParticipationEvaluator.MatchesParticipant(
                         slot,
                         participant.ContentAsset,
                         participant.AbilitySystemCell))
@@ -282,7 +284,7 @@ namespace GamePlay
             }
         }
 
-        private static bool AreSlotsUsable(IReadOnlyList<GamePlayActionSlotDefinition> slots)
+        private static bool AreSlotsUsable(IReadOnlyList<ActionSlotDefinition> slots)
         {
             if (slots == null || slots.Count == 0)
             {
@@ -291,7 +293,7 @@ namespace GamePlay
 
             for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)
             {
-                GamePlayActionSlotDefinition slot = slots[slotIndex];
+                ActionSlotDefinition slot = slots[slotIndex];
                 if (slot == null ||
                     slot.MinimumParticipants < 0 ||
                     slot.MaximumParticipants < 0 ||
@@ -305,7 +307,7 @@ namespace GamePlay
         }
 
         private static int CalculateMissingParticipantCount(
-            IReadOnlyList<GamePlayActionSlotDefinition> slots,
+            IReadOnlyList<ActionSlotDefinition> slots,
             IReadOnlyList<List<TabletopCardId>> cardIdsBySlot)
         {
             int missing = 0;
@@ -321,7 +323,7 @@ namespace GamePlay
         {
             internal CandidateParticipant(
                 TabletopCardId cardId,
-                GamePlayContentAsset contentAsset,
+                ContentAsset contentAsset,
                 AbilitySystemCell abilitySystemCell)
             {
                 CardId = cardId;
@@ -330,7 +332,7 @@ namespace GamePlay
             }
 
             internal TabletopCardId CardId { get; }
-            internal GamePlayContentAsset ContentAsset { get; }
+            internal ContentAsset ContentAsset { get; }
             internal AbilitySystemCell AbilitySystemCell { get; }
         }
 
@@ -356,14 +358,14 @@ namespace GamePlay
     /// 把玩家提交的行动唯一内容 ID 解析回本次候选快照。
     /// 本入口不提供“第一个候选就是默认项”的隐式规则，也不执行选中的行动。
     /// </summary>
-    public static class TabletopCardActionCandidateSelection
+    public static class TabletopCardActionCandidateSelector
     {
         /// <summary>
         /// 只允许选择本次候选集合中实际存在的行动。候选为空、行动 ID 无效或未命中时返回 false。
         /// </summary>
         public static bool TrySelect(
             IReadOnlyList<TabletopCardActionCandidate> candidates,
-            GamePlayContentId selectedActionId,
+            ContentId selectedActionId,
             out TabletopCardActionCandidate selectedCandidate)
         {
             if (candidates != null && selectedActionId.IsValid)

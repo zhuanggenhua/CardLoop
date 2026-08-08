@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 一次主指针按下到释放产生的卡牌意图。

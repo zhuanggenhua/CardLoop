@@ -1,18 +1,18 @@
 using GameCore;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 牌桌表现层的项目配置。
     /// 它是视图预制体和布局参数的作者源，不登记玩法内容，也不保存任何牌桌运行时状态。
     /// </summary>
-    [CreateAssetMenu(menuName = "GamePlay/牌桌/表现设置", fileName = "牌桌表现设置")]
+    [CreateAssetMenu(menuName = "Gameplay/牌桌/表现设置", fileName = "牌桌表现设置")]
     public sealed class TabletopCardPresentationSettings : ScriptableObject
     {
         [Header("视图资源")]
         [SerializeField, InspectorName("卡牌视图预制体")]
-        [Tooltip("由 ResourceSystem 按该地址实例化的 GamePlay 视图预制体。预制体根对象必须包含 TabletopCardView。")]
+        [Tooltip("由 ResourceSystem 按该地址实例化的 Gameplay 视图预制体。预制体根对象必须包含 TabletopCardView。")]
         private SoftAssetReference<GameObject> m_cardViewPrefab = new();
 
         [Header("堆栈布局")]

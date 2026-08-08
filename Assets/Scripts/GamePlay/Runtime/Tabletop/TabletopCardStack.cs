@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 按“底部到顶部”顺序保存牌桌卡牌的运行时堆栈。

@@ -1,7 +1,12 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GamePlay.Tests
+using Gameplay.Actions;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
+
+namespace Gameplay.Tests
 {
     /// <summary>
     /// 验证卡牌占地在牌桌边界、禁放区和重叠情况下的确定性解算结果。

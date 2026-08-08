@@ -1,6 +1,7 @@
+using Gameplay.Content;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 一张可堆叠牌桌卡牌的纯表现投影。
@@ -39,7 +40,7 @@ namespace GamePlay
         /// <summary>
         /// 当前视图对应的唯一内容身份。未绑定前无效。
         /// </summary>
-        public GamePlayContentId ContentId { get; private set; }
+        public ContentId ContentId { get; private set; }
 
         /// <summary>
         /// 当前是否正在显示空间候选高亮。该状态只代表表现反馈，不代表规则接受目标。
@@ -50,7 +51,7 @@ namespace GamePlay
         /// 将视图绑定到一张局内卡牌和对应卡牌作者源。
         /// 绑定不会修改卡牌状态，也不会执行任何行动或规则。
         /// </summary>
-        public void Bind(TabletopCard tabletopCard, GamePlayCardDefinition contentAsset)
+        public void Bind(TabletopCard tabletopCard, CardDefinition contentAsset)
         {
             if (tabletopCard == null)
             {

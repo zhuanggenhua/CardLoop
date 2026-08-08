@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using GAS.Runtime;
 using GameCore;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
 using MathematicsRandom = Unity.Mathematics.Random;
 using UnityEngine;
 using YokiFrame;
 
-namespace GamePlay
+namespace Gameplay.Actions
 {
     /// <summary>
     /// 持有并推进当前牌桌中的普通行动作业。
@@ -17,12 +20,12 @@ namespace GamePlay
     public sealed class TabletopCardActionSystem : AGameSystem
     {
         private static readonly Type[] WorldTurnStartupDependencies =
-            { typeof(GamePlayWorldTurnSystem) };
+            { typeof(ScenarioTurnSystem) };
         private readonly List<TabletopCardActionJob> m_activeJobs = new();
         private bool m_isRunning;
-        private GamePlayTurnTimingDefinition m_realTimeTiming;
+        private TurnTimingDefinition m_realTimeTiming;
         private TabletopCardState m_tabletopCardState;
-        private GamePlayContentIndex m_contentIndex;
+        private ContentIndex m_contentIndex;
         private Func<TabletopCardId, AbilitySystemCell> m_abilitySystemCellResolver;
         private MathematicsRandom m_authoritativeRandom;
         private bool m_hasAuthoritativeRandom;
@@ -61,7 +64,7 @@ namespace GamePlay
             m_contentIndex = null;
             m_abilitySystemCellResolver = null;
             m_hasAuthoritativeRandom = false;
-            EventKit.Type.Register<GamePlayWorldTurnConfirmedEvent>(OnWorldTurnConfirmed);
+            EventKit.Type.Register<ScenarioTurnConfirmedEvent>(OnScenarioTurnConfirmed);
             enabled = true;
         }
 
@@ -69,7 +72,7 @@ namespace GamePlay
         public override void OnSystemStop()
         {
             enabled = false;
-            EventKit.Type.UnRegister<GamePlayWorldTurnConfirmedEvent>(OnWorldTurnConfirmed);
+            EventKit.Type.UnRegister<ScenarioTurnConfirmedEvent>(OnScenarioTurnConfirmed);
             m_isRunning = false;
             ProgressionMode = TabletopCardActionProgressionMode.TurnBased;
             m_realTimeTiming = null;
@@ -121,7 +124,7 @@ namespace GamePlay
         /// </summary>
         public void BindTabletopActionState(
             TabletopCardState state,
-            GamePlayContentIndex contentIndex)
+            ContentIndex contentIndex)
         {
             BindTabletopActionStateInternal(state, contentIndex, abilitySystemCellResolver: null);
         }
@@ -132,7 +135,7 @@ namespace GamePlay
         /// </summary>
         public void BindTabletopActionStateWithAbilitySystem(
             TabletopCardState state,
-            GamePlayContentIndex contentIndex,
+            ContentIndex contentIndex,
             Func<TabletopCardId, AbilitySystemCell> abilitySystemCellResolver)
         {
             if (abilitySystemCellResolver == null)
@@ -145,7 +148,7 @@ namespace GamePlay
 
         private void BindTabletopActionStateInternal(
             TabletopCardState state,
-            GamePlayContentIndex contentIndex,
+            ContentIndex contentIndex,
             Func<TabletopCardId, AbilitySystemCell> abilitySystemCellResolver)
         {
             RequireRunningSystem();
@@ -189,7 +192,7 @@ namespace GamePlay
         /// 把普通行动切换为即时推进。行动作者数据和现有作业进度仍保持回合单位，
         /// 每帧只使用所选回合规则换算增量。
         /// </summary>
-        public void UseRealTimeProgression(GamePlayTurnTimingDefinition timingDefinition)
+        public void UseRealTimeProgression(TurnTimingDefinition timingDefinition)
         {
             RequireRunningSystem();
             ValidateTimingDefinition(timingDefinition);
@@ -249,7 +252,7 @@ namespace GamePlay
         /// 直接消费世界回合系统发布的确认事实。
         /// 普通行动切到即时制后仍保留同一世界回合事实，但自身只由游戏秒数换算推进。
         /// </summary>
-        private void OnWorldTurnConfirmed(GamePlayWorldTurnConfirmedEvent _)
+        private void OnScenarioTurnConfirmed(ScenarioTurnConfirmedEvent _)
         {
             if (ProgressionMode == TabletopCardActionProgressionMode.TurnBased)
             {
@@ -280,20 +283,20 @@ namespace GamePlay
 
         private void CommitCompletedJob(TabletopCardActionJob job)
         {
-            if (!job.RequiresResultSettlement)
+            if (job.RequiresResultSettlement)
             {
-                return;
+                if (m_tabletopCardState == null || m_contentIndex == null)
+                    throw new InvalidOperationException($"行动 {job.ActionId} 完成时缺少牌桌结果结算状态。");
+                if (!m_contentIndex.TryGet(job.ActionId, out ActionDefinition action))
+                    throw new InvalidOperationException($"行动 {job.ActionId} 完成时无法从当前内容索引解析作者源。");
+
+                TabletopCardActionResultSettlement.Commit(job, action, m_tabletopCardState, m_contentIndex);
             }
 
-            if (m_tabletopCardState == null || m_contentIndex == null)
-                throw new InvalidOperationException($"行动 {job.ActionId} 完成时缺少牌桌结果结算状态。");
-            if (!m_contentIndex.TryGet(job.ActionId, out GamePlayActionDefinition action))
-                throw new InvalidOperationException($"行动 {job.ActionId} 完成时无法从当前内容索引解析作者源。");
-
-            TabletopCardActionResultSettlement.Commit(job, action, m_tabletopCardState, m_contentIndex);
+            EventKit.Type.Send(new TabletopCardActionCompletedEvent(job.ActionId));
         }
 
-        private string SelectResultBranch(GamePlayActionDefinition action)
+        private string SelectResultBranch(ActionDefinition action)
         {
             if (action.ResultBranches.Count == 0)
             {
@@ -309,7 +312,7 @@ namespace GamePlay
             uint totalWeight = 0;
             for (int i = 0; i < action.ResultBranches.Count; i++)
             {
-                GamePlayActionResultBranch branch = action.ResultBranches[i];
+                ActionResultBranchDefinition branch = action.ResultBranches[i];
                 if (branch == null)
                 {
                     throw new InvalidOperationException($"行动 {action.ContentId} 包含空的随机结果分支。");
@@ -328,7 +331,7 @@ namespace GamePlay
 
                 for (int previousIndex = 0; previousIndex < i; previousIndex++)
                 {
-                    GamePlayActionResultBranch previousBranch = action.ResultBranches[previousIndex];
+                    ActionResultBranchDefinition previousBranch = action.ResultBranches[previousIndex];
                     if (previousBranch != null &&
                         string.Equals(previousBranch.Key, branch.Key, StringComparison.Ordinal))
                     {
@@ -343,7 +346,7 @@ namespace GamePlay
             uint roll = m_authoritativeRandom.NextUInt(totalWeight);
             for (int i = 0; i < action.ResultBranches.Count; i++)
             {
-                GamePlayActionResultBranch branch = action.ResultBranches[i];
+                ActionResultBranchDefinition branch = action.ResultBranches[i];
                 uint branchWeight = (uint)branch.Weight;
                 if (roll < branchWeight)
                 {
@@ -364,7 +367,7 @@ namespace GamePlay
             }
         }
 
-        private static float ValidateTimingDefinition(GamePlayTurnTimingDefinition timingDefinition)
+        private static float ValidateTimingDefinition(TurnTimingDefinition timingDefinition)
         {
             if (timingDefinition == null)
             {
@@ -397,7 +400,7 @@ namespace GamePlay
 
         private bool AreJobParticipantsValid(TabletopCardActionJob job)
         {
-            if (!m_contentIndex.TryGet(job.ActionId, out GamePlayActionDefinition action))
+            if (!m_contentIndex.TryGet(job.ActionId, out ActionDefinition action))
             {
                 throw new InvalidOperationException($"行动作业 {job.ActionId} 无法从当前内容索引解析作者源。");
             }
@@ -415,7 +418,7 @@ namespace GamePlay
         {
             if (!m_contentIndex.TryGet(
                     selectedCandidate.Action.ContentId,
-                    out GamePlayActionDefinition currentAction))
+                    out ActionDefinition currentAction))
             {
                 throw new InvalidOperationException(
                     $"行动 {selectedCandidate.Action.ContentId} 不在当前内容索引中。请重新查询行动候选。");
@@ -446,7 +449,7 @@ namespace GamePlay
                 throw new InvalidOperationException("牌桌行动系统尚未绑定牌桌状态和内容索引，不能解析行动请求。");
             }
 
-            if (!m_contentIndex.TryGet(request.ActionId, out GamePlayActionDefinition action))
+            if (!m_contentIndex.TryGet(request.ActionId, out ActionDefinition action))
             {
                 throw new InvalidOperationException($"行动请求引用的行动 {request.ActionId} 不在当前内容索引中。");
             }
@@ -480,7 +483,7 @@ namespace GamePlay
             var bindings = new List<TabletopCardActionSlotBinding>(action.ParticipationSlots.Count);
             for (int slotIndex = 0; slotIndex < action.ParticipationSlots.Count; slotIndex++)
             {
-                GamePlayActionSlotDefinition slot = action.ParticipationSlots[slotIndex];
+                ActionSlotDefinition slot = action.ParticipationSlots[slotIndex];
                 if (!requestBindings.Remove(slot.Key, out TabletopCardActionRequestBinding requestBinding))
                 {
                     throw new InvalidOperationException($"行动请求 {request.ActionId} 缺少参与槽位 {slot.Key}。");
@@ -539,7 +542,7 @@ namespace GamePlay
         }
 
         private bool ValidateBindings(
-            GamePlayActionDefinition action,
+            ActionDefinition action,
             IReadOnlyList<TabletopCardActionSlotBinding> bindings)
         {
             if (bindings.Count != action.ParticipationSlots.Count)
@@ -551,14 +554,14 @@ namespace GamePlay
             for (int bindingIndex = 0; bindingIndex < bindings.Count; bindingIndex++)
             {
                 TabletopCardActionSlotBinding binding = bindings[bindingIndex];
-                GamePlayActionSlotDefinition currentSlot = action.ParticipationSlots[bindingIndex];
+                ActionSlotDefinition currentSlot = action.ParticipationSlots[bindingIndex];
                 if (!ReferenceEquals(binding.Slot, currentSlot))
                 {
                     throw new InvalidOperationException(
                         $"行动 {action.ContentId} 的候选槽位 {binding.Slot.Key} 已不是当前作者槽位。请重新查询行动候选。");
                 }
 
-                if (!GamePlayActionParticipationEvaluator.IsParticipantCountSatisfied(
+                if (!ActionParticipationEvaluator.IsParticipantCountSatisfied(
                         currentSlot,
                         binding.CardIds.Count))
                 {
@@ -569,13 +572,13 @@ namespace GamePlay
                 {
                     TabletopCardId cardId = binding.CardIds[cardIndex];
                     if (!m_tabletopCardState.TryGetCard(cardId, out TabletopCard card) ||
-                        !m_contentIndex.TryGet(card.ContentId, out GamePlayContentAsset contentAsset))
+                        !m_contentIndex.TryGet(card.ContentId, out ContentAsset contentAsset))
                     {
                         return false;
                     }
 
                     AbilitySystemCell abilitySystemCell = m_abilitySystemCellResolver?.Invoke(cardId);
-                    if (!GamePlayActionParticipationEvaluator.MatchesParticipant(
+                    if (!ActionParticipationEvaluator.MatchesParticipant(
                             currentSlot,
                             contentAsset,
                             abilitySystemCell))

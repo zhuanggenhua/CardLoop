@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Gameplay.Content;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 一局可堆叠卡牌实例、堆栈成员关系和位置的唯一可写状态。
@@ -50,13 +51,13 @@ namespace GamePlay
         /// 局内卡牌 ID 由本状态自动分配；内容 ID 无效或 ID 空间耗尽时抛出异常。
         /// </summary>
         public TabletopCard CreateCard(
-            GamePlayContentId contentId,
+            ContentId contentId,
             Vector2 position,
             bool isPlacementLocked = false)
         {
             if (!contentId.IsValid)
             {
-                throw new ArgumentException("牌桌卡牌必须引用有效的 GamePlay 内容 ID。", nameof(contentId));
+                throw new ArgumentException("牌桌卡牌必须引用有效的 Gameplay 内容 ID。", nameof(contentId));
             }
 
             if (m_nextCardId == ulong.MaxValue)

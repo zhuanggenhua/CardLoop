@@ -46,8 +46,8 @@ Mod 包卸载前必须先切离由该包提供的活动场景；`ResourceSystem`
 
 ## 禁止旁路
 
-- 不恢复 `SceneResourceHandle`、第二个场景注册表或 GamePlay 场景包装。
-- 不在 GameCore / GamePlay 正式运行时代码直接调用 `SceneManager.LoadScene*` 或 `UnloadSceneAsync`。
+- 不恢复 `SceneResourceHandle`、第二个场景注册表或 Gameplay 场景包装。
+- 不在 GameCore / Gameplay 正式运行时代码直接调用 `SceneManager.LoadScene*` 或 `UnloadSceneAsync`。
 - 不让 `TransitionSystem` 保存当前地图、资源包或场景句柄。
 - 不用自动 `UnloadUnusedAssets` 的 fire-and-forget 钩子替代明确资源生命周期；该钩子会与资源系统关闭并发。
 
@@ -56,4 +56,4 @@ Mod 包卸载前必须先切离由该包提供的活动场景；`ResourceSystem`
 - YokiFrame owner：[`SceneKit.cs`](../../../../Assets/Plugins/YokiFrame/Tools/SceneKit/Runtime/Public/SceneKit.cs)、[`SceneKit.Load.cs`](../../../../Assets/Plugins/YokiFrame/Tools/SceneKit/Runtime/Public/SceneKit.Load.cs)、[`ISceneResLoader.cs`](../../../../Assets/Plugins/YokiFrame/Core/Runtime/ResKit/Loader/Interface/ISceneResLoader.cs)。
 - 项目接入：[`ResourceSystemSceneLoaderPool.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/ResourceSystemSceneLoaderPool.cs)、[`ResourceSystem.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/ResourceSystem.cs)。
 - 地图与过场：[`MapSystem.cs`](../../../../Assets/Scripts/GameCore/Runtime/Game/Systems/MapSystem.cs)、[`TransitionSystem.cs`](../../../../Assets/Scripts/GameCore/Runtime/Game/Systems/TransitionSystem.cs)。
-- PlayMode 验证：[`GamePlayContentLoadingPlayModeTests.cs`](../../../../Assets/Tests/PlayMode/GamePlayContentLoadingPlayModeTests.cs)。
+- PlayMode 验证：[`ContentRegistryPlayModeTests.cs`](../../../../Assets/Tests/PlayMode/ContentRegistryPlayModeTests.cs)。

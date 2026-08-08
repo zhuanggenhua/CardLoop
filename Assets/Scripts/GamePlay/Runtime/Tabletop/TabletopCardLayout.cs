@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 单张牌在牌桌视图中的局部姿态。

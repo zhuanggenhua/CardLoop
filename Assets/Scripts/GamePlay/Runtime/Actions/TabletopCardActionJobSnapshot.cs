@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Gameplay.Content;
+using Gameplay.Tabletop;
 
-namespace GamePlay
+namespace Gameplay.Actions
 {
     /// <summary>
     /// 牌桌行动作业的只读事实快照。它用于存档、断线恢复或调试记录的边界说明，
@@ -13,7 +15,7 @@ namespace GamePlay
         private readonly ReadOnlyCollection<TabletopCardActionJobBindingSnapshot> m_bindings;
 
         internal TabletopCardActionJobSnapshot(
-            GamePlayContentId actionId,
+            ContentId actionId,
             int turnCost,
             float progressedTurns,
             TabletopCardActionJobState state,
@@ -31,7 +33,7 @@ namespace GamePlay
                 bindings ?? throw new ArgumentNullException(nameof(bindings))).AsReadOnly();
         }
 
-        public GamePlayContentId ActionId { get; }
+        public ContentId ActionId { get; }
         public int TurnCost { get; }
         public float ProgressedTurns { get; }
         public TabletopCardActionJobState State { get; }
@@ -51,7 +53,7 @@ namespace GamePlay
             string slotKey,
             IReadOnlyList<TabletopCardId> cardIds)
         {
-            if (!GamePlayContentKeyUtility.IsValidKey(slotKey))
+            if (!ContentIdRules.IsValidKey(slotKey))
             {
                 throw new ArgumentException($"行动作业快照槽位键无效：{slotKey}。", nameof(slotKey));
             }

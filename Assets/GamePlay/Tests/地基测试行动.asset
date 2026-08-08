@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ba2a82d8e1354cacb930b637a3ced24f, type: 3}
   m_Name: "\u5730\u57FA\u6D4B\u8BD5\u884C\u52A8"
-  m_EditorClassIdentifier: GamePlay.Runtime::GamePlay.GamePlayActionDefinition
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.ActionDefinition
   m_contentId:
     m_value: test.foundation.action
   m_displayName: "\u5730\u57FA\u6D4B\u8BD5\u884C\u52A8"
@@ -37,32 +37,32 @@ MonoBehaviour:
     m_requiredAnyAbilitySystemTagCodes: 92ab1e00a10f0000
     m_requiredNoneAbilitySystemTagCodes: a20f0000
   m_resultIntents:
-  - rid: 7366052965365317632
+  - rid: 7366052988195962880
   m_resultBranches:
   - m_key: one-product
     m_weight: 1
     m_resultIntents:
-    - rid: 7366052965365317633
+    - rid: 7366052988195962881
   - m_key: two-products
     m_weight: 3
     m_resultIntents:
-    - rid: 7366052965365317634
+    - rid: 7366052988195962882
   references:
     version: 2
     RefIds:
-    - rid: 7366052965365317632
-      type: {class: TabletopCardRemoveResultIntent, ns: GamePlay, asm: GamePlay.Runtime}
+    - rid: 7366052988195962880
+      type: {class: TabletopCardRemoveResultIntent, ns: Gameplay.Actions, asm: Gameplay.Runtime}
       data:
         m_slotKey: participant
-    - rid: 7366052965365317633
-      type: {class: TabletopCardCreateResultIntent, ns: GamePlay, asm: GamePlay.Runtime}
+    - rid: 7366052988195962881
+      type: {class: TabletopCardCreateResultIntent, ns: Gameplay.Actions, asm: Gameplay.Runtime}
       data:
         m_contentId:
           m_value: test.foundation.product
         m_count: 1
         m_anchorSlotKey: participant
-    - rid: 7366052965365317634
-      type: {class: TabletopCardCreateResultIntent, ns: GamePlay, asm: GamePlay.Runtime}
+    - rid: 7366052988195962882
+      type: {class: TabletopCardCreateResultIntent, ns: Gameplay.Actions, asm: Gameplay.Runtime}
       data:
         m_contentId:
           m_value: test.foundation.product

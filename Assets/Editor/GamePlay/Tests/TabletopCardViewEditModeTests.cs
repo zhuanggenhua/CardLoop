@@ -1,7 +1,12 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GamePlay.Tests
+using Gameplay.Actions;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
+
+namespace Gameplay.Tests
 {
     /// <summary>
     /// 验证卡牌视图只绑定身份一致的局内卡牌与卡牌作者源。
@@ -13,7 +18,7 @@ namespace GamePlay.Tests
         {
             var state = new TabletopCardState();
             TabletopCard tabletopCard = state.CreateCard("test.card", Vector2.zero);
-            GamePlayCardDefinition content = CreateContent("test.card");
+            CardDefinition content = CreateContent("test.card");
             GameObject viewObject = new("TabletopCardViewTest");
 
             try
@@ -36,7 +41,7 @@ namespace GamePlay.Tests
         {
             var state = new TabletopCardState();
             TabletopCard tabletopCard = state.CreateCard("test.card", Vector2.zero);
-            GamePlayCardDefinition content = CreateContent("test.other-card");
+            CardDefinition content = CreateContent("test.other-card");
             GameObject viewObject = new("TabletopCardViewTest");
 
             try
@@ -53,9 +58,9 @@ namespace GamePlay.Tests
             }
         }
 
-        private static GamePlayCardDefinition CreateContent(string contentId)
+        private static CardDefinition CreateContent(string contentId)
         {
-            GamePlayCardDefinition content = ScriptableObject.CreateInstance<GamePlayCardDefinition>();
+            CardDefinition content = ScriptableObject.CreateInstance<CardDefinition>();
             var serializedContent = new UnityEditor.SerializedObject(content);
             serializedContent.FindProperty("m_contentId").FindPropertyRelative("m_value").stringValue = contentId;
             serializedContent.ApplyModifiedPropertiesWithoutUndo();

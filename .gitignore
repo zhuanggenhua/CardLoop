@@ -16,6 +16,7 @@
 /AIBridgeCache/
 /_ai_preview_*.jpg
 /test-results/
+/TestResults*.xml
 /.puerts-unity-mcp/
 /.uloop/
 /.dotnet/

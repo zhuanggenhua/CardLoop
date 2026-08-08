@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a555819e0c41430cbaf70c9f3a093d6d, type: 3}
+  m_Name: FoundationTestConfig
+  m_EditorClassIdentifier: GameCore::GameCore.GameConfig
+  m_playtestSaveFile: {fileID: 0}
+  m_toExecuteOnPlayerDeath:
+    rid: -2
+  m_persistentIdentifierMappings:
+    m_keys: []
+    m_values: []
+  m_gameTerms:
+    m_keys: []
+    m_values: []
+  m_statTermsBinding:
+    m_keys: 
+    m_values: []
+  m_statIncreaseTermsBinding:
+    m_keys: 
+    m_values: []
+  m_statDecreaseTermsBinding:
+    m_keys: 
+    m_values: []
+  m_damageTypesBinding:
+    m_keys: 
+    m_values: []
+  m_abilityTypesBinding:
+    m_keys: 
+    m_values: []
+  m_databaseRegistry: {fileID: 0}
+  m_interactionLayer: Interaction
+  m_hitboxLayer: Hitbox
+  m_maxTeleportDistanceWhenStuckInWall: 5
+  m_collisionContactFilter:
+    useTriggers: 0
+    useLayerMask: 0
+    useDepth: 0
+    useOutsideDepth: 0
+    useNormalAngle: 0
+    useOutsideNormalAngle: 0
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    minDepth: 0
+    maxDepth: 0
+    minNormalAngle: 0
+    maxNormalAngle: 0
+  m_visibilityContactFilter:
+    useTriggers: 0
+    useLayerMask: 0
+    useDepth: 0
+    useOutsideDepth: 0
+    useNormalAngle: 0
+    useOutsideNormalAngle: 0
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    minDepth: 0
+    maxDepth: 0
+    minNormalAngle: 0
+    maxNormalAngle: 0
+  m_steeringNeighbourContactFilter:
+    useTriggers: 0
+    useLayerMask: 0
+    useDepth: 0
+    useOutsideDepth: 0
+    useNormalAngle: 0
+    useOutsideNormalAngle: 0
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    minDepth: 0
+    maxDepth: 0
+    minNormalAngle: 0
+    maxNormalAngle: 0
+  m_cameraShakeSources: 0
+  m_maxEquippableAbilities: 5
+  m_canCriticalHit: 1
+  m_canMissHit: 1
+  m_allowPushOnRegularHit: 1
+  m_allowPushOnCriticalHit: 1
+  m_allowPushOnMissedHit: 1
+  m_allowPushOnSilentHit: 0
+  m_navigationSelectSound: {fileID: 0}
+  m_pointerSelectSound: {fileID: 0}
+  m_submitSound: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

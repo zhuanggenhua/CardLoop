@@ -1,6 +1,7 @@
 using System;
+using Gameplay.Content;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 一局可堆叠卡牌状态中的卡牌引用。它由权威卡牌状态自动分配，不是作者维护的内容 ID。
@@ -38,7 +39,7 @@ namespace GamePlay
         /// <summary>
         /// 由卡牌状态创建最小局内卡牌。内容 ID 只说明它引用哪份作者数据，不包含运行时规则状态。
         /// </summary>
-        internal TabletopCard(TabletopCardId id, GamePlayContentId contentId)
+        internal TabletopCard(TabletopCardId id, ContentId contentId)
         {
             Id = id;
             ContentId = contentId;
@@ -48,6 +49,6 @@ namespace GamePlay
         public TabletopCardId Id { get; }
 
         /// <summary>该卡牌实例引用的作者内容身份；多张局内卡牌可以共享同一内容 ID。</summary>
-        public GamePlayContentId ContentId { get; }
+        public ContentId ContentId { get; }
     }
 }

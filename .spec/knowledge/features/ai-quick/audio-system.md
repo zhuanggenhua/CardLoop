@@ -76,7 +76,7 @@ private void PlayAt(
 
 ## 常见错误
 
-- 直接在 GamePlay 调 `BroAudio.Play`，绕过项目通道、音量、暂停和 fallback 策略。
+- 直接在 Gameplay 调 `BroAudio.Play`，绕过项目通道、音量、暂停和 fallback 策略。
 - `SoundID` 无效且没有可用的 `AudioClip` 兜底。
 - `AudioClipResolver.targetChannel` 没有绑定到 `AudioSystem` 的通道字典。
 - `AudioChannel` 缺少必需的 `AudioSource`。

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 可堆叠卡牌的放置边界和禁放区域。全部坐标使用牌桌二维坐标，不依赖场景 Transform。

@@ -2,7 +2,12 @@ using System;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GamePlay.Tests
+using Gameplay.Actions;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
+
+namespace Gameplay.Tests
 {
     /// <summary>
     /// 验证牌桌释放事实只产生可选择的行动候选，不自动修改卡牌状态或执行行动。
@@ -12,14 +17,14 @@ namespace GamePlay.Tests
         [Test]
         public void FindCandidates_ReturnsZeroOneOrManyAndRequiresExplicitSelection()
         {
-            GamePlayCardDefinition cardDefinition = CreateCardDefinition("test.card");
-            GamePlayActionDefinition firstAction = CreateActionDefinition("test.action.first", "test.card");
-            GamePlayActionDefinition secondAction = CreateActionDefinition("test.action.second", "test.card");
-            GamePlayActionDefinition blockedAction = CreateActionDefinition("test.action.blocked", "test.other-card");
+            CardDefinition cardDefinition = CreateCardDefinition("test.card");
+            ActionDefinition firstAction = CreateActionDefinition("test.action.first", "test.card");
+            ActionDefinition secondAction = CreateActionDefinition("test.action.second", "test.card");
+            ActionDefinition blockedAction = CreateActionDefinition("test.action.blocked", "test.other-card");
 
             try
             {
-                GamePlayContentIndex contentIndex = GamePlayContentIndex.Build(new[] { cardDefinition });
+                ContentIndex contentIndex = ContentIndex.Build(new[] { cardDefinition });
                 var state = new TabletopCardState();
                 TabletopCard source = state.CreateCard("test.card", Vector2.zero);
                 TabletopCard target = state.CreateCard("test.card", Vector2.one);
@@ -77,14 +82,14 @@ namespace GamePlay.Tests
                 CollectionAssert.AreEqual(new[] { source.Id }, partial[0].Bindings[0].CardIds);
 
                 Assert.That(
-                    TabletopCardActionCandidateSelection.TrySelect(
+                    TabletopCardActionCandidateSelector.TrySelect(
                         many,
                         secondAction.ContentId,
                         out TabletopCardActionCandidate selected),
                     Is.True);
                 Assert.That(selected.Action, Is.SameAs(secondAction));
                 Assert.That(
-                    TabletopCardActionCandidateSelection.TrySelect(
+                    TabletopCardActionCandidateSelector.TrySelect(
                         many,
                         blockedAction.ContentId,
                         out _),
@@ -106,12 +111,12 @@ namespace GamePlay.Tests
         [Test]
         public void FindCandidates_UsesPointerOrderAsTheDeterministicTieBreakForEquivalentSlots()
         {
-            GamePlayCardDefinition cardDefinition = CreateCardDefinition("test.card");
-            GamePlayActionDefinition action = CreateTwoSlotActionDefinition("test.action.directional", "test.card");
+            CardDefinition cardDefinition = CreateCardDefinition("test.card");
+            ActionDefinition action = CreateTwoSlotActionDefinition("test.action.directional", "test.card");
 
             try
             {
-                GamePlayContentIndex contentIndex = GamePlayContentIndex.Build(new[] { cardDefinition });
+                ContentIndex contentIndex = ContentIndex.Build(new[] { cardDefinition });
                 var state = new TabletopCardState();
                 TabletopCard source = state.CreateCard("test.card", Vector2.zero);
                 TabletopCard target = state.CreateCard("test.card", Vector2.one);
@@ -143,20 +148,20 @@ namespace GamePlay.Tests
             }
         }
 
-        private static GamePlayCardDefinition CreateCardDefinition(string contentId)
+        private static CardDefinition CreateCardDefinition(string contentId)
         {
-            GamePlayCardDefinition definition = ScriptableObject.CreateInstance<GamePlayCardDefinition>();
+            CardDefinition definition = ScriptableObject.CreateInstance<CardDefinition>();
             JsonUtility.FromJsonOverwrite(
                 $"{{\"m_contentId\":{{\"m_value\":\"{contentId}\"}}}}",
                 definition);
             return definition;
         }
 
-        private static GamePlayActionDefinition CreateActionDefinition(
+        private static ActionDefinition CreateActionDefinition(
             string actionId,
             string allowedContentId)
         {
-            GamePlayActionDefinition definition = ScriptableObject.CreateInstance<GamePlayActionDefinition>();
+            ActionDefinition definition = ScriptableObject.CreateInstance<ActionDefinition>();
             JsonUtility.FromJsonOverwrite(
                 "{" +
                 $"\"m_contentId\":{{\"m_value\":\"{actionId}\"}}," +
@@ -170,11 +175,11 @@ namespace GamePlay.Tests
             return definition;
         }
 
-        private static GamePlayActionDefinition CreateTwoSlotActionDefinition(
+        private static ActionDefinition CreateTwoSlotActionDefinition(
             string actionId,
             string allowedContentId)
         {
-            GamePlayActionDefinition definition = ScriptableObject.CreateInstance<GamePlayActionDefinition>();
+            ActionDefinition definition = ScriptableObject.CreateInstance<ActionDefinition>();
             string allowed = $"\"m_allowedContentIds\":[{{\"m_value\":\"{allowedContentId}\"}}]";
             JsonUtility.FromJsonOverwrite(
                 "{" +

@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 32b49405fd2e19e49af1e10fc2c5e2fe, type: 3}
   m_Name: "\u724C\u684C\u6D4B\u8BD5\u8868\u73B0\u8BBE\u7F6E"
-  m_EditorClassIdentifier: GamePlay.Runtime::GamePlay.TabletopCardPresentationSettings
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Tabletop.TabletopCardPresentationSettings
   m_cardViewPrefab:
     Address: "\u724C\u684C\u6D4B\u8BD5\u5361\u724C\u89C6\u56FE"
     Guid: 702e6f9aaab7c1a439e286c7f792e07e

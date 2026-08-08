@@ -30,7 +30,7 @@ YooAsset 官方文档负责解释 `ResourcePackage`、资产句柄和包生命�
 
 ## 项目正式入口
 
-业务代码使用 `GameCore.ResourceSystem`、`ResourceHandle<T>`、`ResourceCache<TAsset>` 和 `SoftAssetReference<T>`。项目没有要求 GamePlay 直接调用 `YooAssets.LoadAssetAsync`。
+业务代码使用 `GameCore.ResourceSystem`、`ResourceHandle<T>`、`ResourceCache<TAsset>` 和 `SoftAssetReference<T>`。项目没有要求 Gameplay 直接调用 `YooAssets.LoadAssetAsync`。
 
 | 现实需求 | 项目入口 | 项目特有规则 |
 |---|---|---|
@@ -47,7 +47,7 @@ YooAsset 官方文档负责解释 `ResourcePackage`、资产句柄和包生命�
 
 `LoadAssetsAsync` 只支持明确地址集合。当前项目没有 Addressables 标签交集语义；`MergeMode.Intersection` 会抛出 `NotSupportedException`。
 
-`LoadAssetsByAssetTagAsync` 是项目对 YooAsset `ResourcePackage.GetAssetInfos(tag)` 的正式复用入口。它会为标签命中的每个资源建立并持有句柄，调用方负责释放返回的合并句柄。GamePlay 内容由 `GamePlayContentSystem` 持有该句柄并交给 `GamePlayContentIndex`，不由 `ResourceSystem` 保存玩法索引。
+`LoadAssetsByAssetTagAsync` 是项目对 YooAsset `ResourcePackage.GetAssetInfos(tag)` 的正式复用入口。它会为标签命中的每个资源建立并持有句柄，调用方负责释放返回的合并句柄。Gameplay 内容由 `ContentRegistrySystem` 持有该句柄并交给 `ContentIndex`，不由 `ResourceSystem` 保存玩法索引。
 
 ## 生命周期
 
@@ -106,11 +106,11 @@ private async UniTask UseInstanceAsync(string address, Transform parent)
 - 使用 `ResourceHandle` 得到结果后忘记释放，或在仍使用结果时提前释放。
 - 把 Unity GUID、文件路径、资源名和 YooAsset 地址并列当成同一个内容的多个稳定 ID。
 - 把整数、标签对象或 Addressables 标签传给只接受字符串地址的项目入口。
-- 让 GamePlay 自己维护默认包、Mod 包选择或第二套资源地址表。
+- 让 Gameplay 自己维护默认包、Mod 包选择或第二套资源地址表。
 
 ## 禁止做法
 
-- 不在 GamePlay / GameCore 新建第二套 YooAsset 加载器、包注册表或地址引用。
+- 不在 Gameplay / GameCore 新建第二套 YooAsset 加载器、包注册表或地址引用。
 - 不恢复 `SceneResourceHandle` 或 `ResourceSystem.LoadSceneAsync`；场景生命周期直接归 SceneKit。
 - 不把 `ResourceCache<TAsset>` 当成数据库内容索引；它只管理资源加载缓存。
 - 不在场景切换时直接调用 `YooAssets.Destroy()`；完整销毁只由 `ResourceSystem.Shutdown()` 负责。

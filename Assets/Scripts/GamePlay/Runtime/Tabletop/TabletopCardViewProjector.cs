@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using GameCore;
+using Gameplay.Content;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Tabletop
 {
     /// <summary>
     /// 把可堆叠卡牌状态投影为 Unity 卡牌视图的表现组件。
@@ -13,7 +14,7 @@ namespace GamePlay
     {
         [Header("表现配置")]
         [SerializeField, InspectorName("表现设置")]
-        [Tooltip("提供卡牌视图预制体地址和堆栈布局参数的 GamePlay 表现配置。")]
+        [Tooltip("提供卡牌视图预制体地址和堆栈布局参数的 Gameplay 表现配置。")]
         private TabletopCardPresentationSettings m_settings;
 
         [SerializeField, InspectorName("视图根节点")]
@@ -21,10 +22,10 @@ namespace GamePlay
         private Transform m_viewRoot;
 
         private readonly Dictionary<TabletopCardId, ViewEntry> m_views = new();
-        private readonly Dictionary<GamePlayContentId, ResourceHandle<Sprite>> m_artHandles = new();
+        private readonly Dictionary<ContentId, ResourceHandle<Sprite>> m_artHandles = new();
 
         private TabletopCardState m_state;
-        private GamePlayContentIndex m_contentIndex;
+        private ContentIndex m_contentIndex;
         private TabletopCardId m_dragPreviewCardId;
         private TabletopCardId m_highlightedTargetCardId;
         private Vector2 m_dragPreviewPosition;
@@ -39,7 +40,7 @@ namespace GamePlay
         /// 绑定一局可堆叠卡牌状态和对应内容索引，并立即刷新现有投影。
         /// 绑定只建立表现关系；卡牌与堆栈修改仍必须经过 TabletopCardState。
         /// </summary>
-        public void Bind(TabletopCardState state, GamePlayContentIndex contentIndex)
+        public void Bind(TabletopCardState state, ContentIndex contentIndex)
         {
             if (state == null)
             {
@@ -89,7 +90,7 @@ namespace GamePlay
 
                     if (!m_views.TryGetValue(tabletopCard.Id, out ViewEntry entry))
                     {
-                        GamePlayCardDefinition contentAsset = GetRequiredCardDefinition(tabletopCard);
+                        CardDefinition contentAsset = GetRequiredCardDefinition(tabletopCard);
                         RequestView(tabletopCard, contentAsset);
 
                         continue;
@@ -209,7 +210,7 @@ namespace GamePlay
             m_contentIndex = null;
         }
 
-        private void RequestView(TabletopCard tabletopCard, GamePlayCardDefinition contentAsset)
+        private void RequestView(TabletopCard tabletopCard, CardDefinition contentAsset)
         {
             Transform root = m_viewRoot == null ? transform : m_viewRoot;
             ResourceHandle<GameObject> handle = ResourceSystem.InstantiateAsync<GameObject>(
@@ -356,7 +357,7 @@ namespace GamePlay
             }
         }
 
-        private void EnsureArtwork(GamePlayCardDefinition contentAsset)
+        private void EnsureArtwork(CardDefinition contentAsset)
         {
             SoftAssetReference<Sprite> artReference = contentAsset.Artwork;
             if (artReference == null || !artReference.IsValid() || m_artHandles.ContainsKey(contentAsset.ContentId))
@@ -379,7 +380,7 @@ namespace GamePlay
             }
         }
 
-        private void ApplyArtwork(GamePlayContentId contentId, Sprite artwork)
+        private void ApplyArtwork(ContentId contentId, Sprite artwork)
         {
             foreach (ViewEntry entry in m_views.Values)
             {
@@ -412,7 +413,7 @@ namespace GamePlay
         {
             internal ViewEntry(
                 TabletopCard tabletopCard,
-                GamePlayCardDefinition contentAsset,
+                CardDefinition contentAsset,
                 ResourceHandle<GameObject> instanceHandle)
             {
                 TabletopCard = tabletopCard;
@@ -421,14 +422,14 @@ namespace GamePlay
             }
 
             internal TabletopCard TabletopCard { get; }
-            internal GamePlayCardDefinition ContentAsset { get; }
+            internal CardDefinition ContentAsset { get; }
             internal ResourceHandle<GameObject> InstanceHandle { get; }
             internal TabletopCardView View { get; set; }
         }
 
-        private GamePlayCardDefinition GetRequiredCardDefinition(TabletopCard tabletopCard)
+        private CardDefinition GetRequiredCardDefinition(TabletopCard tabletopCard)
         {
-            if (m_contentIndex.TryGet(tabletopCard.ContentId, out GamePlayCardDefinition cardDefinition))
+            if (m_contentIndex.TryGet(tabletopCard.ContentId, out CardDefinition cardDefinition))
             {
                 return cardDefinition;
             }

@@ -43,7 +43,7 @@ metadata:
 
 数据库资产必须先登记，才能创建稳定引用。对象删除、GUID 转换和缺失引用清理由注册表编辑器入口维护，业务不能随意写另一份字典。
 
-`CharacterSheet` 用 `SerializableDictionary<int, int>` 保存“正式 EX-GAS 能力编号 → 解锁等级”，通过 `GetAvailableFormalGasAbilitiesAtLevel` 和 `GetFormalGasAbilitiesUnlockedAtLevel` 返回能力码。GamePlay 不应另建能力名称表或技能实例表。
+`CharacterSheet` 用 `SerializableDictionary<int, int>` 保存“正式 EX-GAS 能力编号 → 解锁等级”，通过 `GetAvailableFormalGasAbilitiesAtLevel` 和 `GetFormalGasAbilitiesUnlockedAtLevel` 返回能力码。Gameplay 不应另建能力名称表或技能实例表。
 
 `PerTargetCooldown<TTarget>` 只保存目标到剩余秒数的临时映射。持有者调用 `Update` 推进时间，存档时调用 `CreateDataBlock`，读档时调用 `LoadDataBlock`；存档使用 `PersistableReference<TTarget>`，不是直接保存 Unity 对象引用。
 
@@ -86,7 +86,7 @@ PerTargetCooldownDataBlock<CharacterActor> saved = cooldown.CreateDataBlock();
 ## 禁止做法
 
 - 不为同一内容再建 string name、整数 ID 或 Mod key 作为作者手工维护的第二身份。
-- 不在 GamePlay 侧自建 EX-GAS Ability、Attribute、GameplayTag 表来复制正式入口。
+- 不在 Gameplay 侧自建 EX-GAS Ability、Attribute、GameplayTag 表来复制正式入口。
 - 不把只为 Inspector 方便的对象引用当成运行时持久化真相。
 - 不让序列化容器反过来拥有内容注册、资源加载或生成代码职责。
 

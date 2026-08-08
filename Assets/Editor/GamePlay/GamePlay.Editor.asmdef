@@ -1,8 +1,8 @@
 {
-  "name": "GamePlay.Editor",
-  "rootNamespace": "GamePlay.Editor",
+  "name": "Gameplay.Editor",
+  "rootNamespace": "Gameplay.Editor",
   "references": [
-    "GamePlay.Runtime",
+    "Gameplay.Runtime",
     "GameCore",
     "GAS.GeneratedRuntime",
     "Unity.InputSystem",

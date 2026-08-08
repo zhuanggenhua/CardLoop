@@ -33,7 +33,7 @@ metadata:
 | [`features/project/card-survival-infinite.md`](features/project/card-survival-infinite.md) | 查看《卡牌生存：无限》的游戏愿景、核心交互、Mod/关卡编辑器扩展边界和视觉参考入口时查。 |
 | [`features/project/stackcraft-template-study.md`](features/project/stackcraft-template-study.md) | 查看 StackCraft 模板导入后的设置恢复结论、框架吸收裁决、保留/不接管边界和后续底座设计约束时查。 |
 | [`features/project/stackcraft-system-reference-matrix.md`](features/project/stackcraft-system-reference-matrix.md) | 查看 StackCraft 架构搬迁顺序、数据定义优先原则、UI 框架吸收、联机约束、可吸收职责和必须排除的旧职责时查。 |
-| [`features/project/gameplay-foundation-proposal.md`](features/project/gameplay-foundation-proposal.md) | 查看 GamePlay 地基提案、YooAsset / 新 Input System 决策、内容定义优先、StackCraft 架构吸收阶段和未来业务边界时查。 |
+| [`features/project/gameplay-foundation-proposal.md`](features/project/gameplay-foundation-proposal.md) | 查看 Gameplay 地基提案、YooAsset / 新 Input System 决策、内容定义优先、StackCraft 架构吸收阶段和未来业务边界时查。 |
 
 ## skills（工作流）
 

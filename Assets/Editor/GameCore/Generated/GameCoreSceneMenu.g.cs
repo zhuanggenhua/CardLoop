@@ -6,494 +6,488 @@ namespace GameCore
 {
     internal static class GameCoreSceneMenu
     {
-        [MenuItem("Scenes/InitTestScene66c79448-1b0c-49ea-8d37-80b5aacf1dc7", priority = 1000)]
-        private static void OpenScene_000_InitTestScene66c79448_1b0c_49ea_8d37_80b5aacf1dc7()
-        {
-            SceneMenuRegistry.OpenScene("Assets/InitTestScene66c79448-1b0c-49ea-8d37-80b5aacf1dc7.unity");
-        }
-
-        [MenuItem("Scenes/Plugins/AStar 2D Grid Pathfinding/AStar/Example 1/Scene/AntsDemo", priority = 1001)]
-        private static void OpenScene_001_Plugins_AStar_2D_Grid_Pathfinding_AStar_Example_1_Scene_AntsDemo()
+        [MenuItem("Scenes/Plugins/AStar 2D Grid Pathfinding/AStar/Example 1/Scene/AntsDemo", priority = 1000)]
+        private static void OpenScene_000_Plugins_AStar_2D_Grid_Pathfinding_AStar_Example_1_Scene_AntsDemo()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/AStar 2D Grid Pathfinding/AStar/Example 1/Scene/AntsDemo.unity");
         }
 
-        [MenuItem("Scenes/Plugins/AStar 2D Grid Pathfinding/AStar/Example 2/Scene/Click to Pathfind", priority = 1002)]
-        private static void OpenScene_002_Plugins_AStar_2D_Grid_Pathfinding_AStar_Example_2_Scene_Click_to_Pathfind()
+        [MenuItem("Scenes/Plugins/AStar 2D Grid Pathfinding/AStar/Example 2/Scene/Click to Pathfind", priority = 1001)]
+        private static void OpenScene_001_Plugins_AStar_2D_Grid_Pathfinding_AStar_Example_2_Scene_Click_to_Pathfind()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/AStar 2D Grid Pathfinding/AStar/Example 2/Scene/Click to Pathfind.unity");
         }
 
-        [MenuItem("Scenes/Plugins/AStar 2D Grid Pathfinding/AStar/Example 3/Scenes/Minimal Example", priority = 1003)]
-        private static void OpenScene_003_Plugins_AStar_2D_Grid_Pathfinding_AStar_Example_3_Scenes_Minimal_Example()
+        [MenuItem("Scenes/Plugins/AStar 2D Grid Pathfinding/AStar/Example 3/Scenes/Minimal Example", priority = 1002)]
+        private static void OpenScene_002_Plugins_AStar_2D_Grid_Pathfinding_AStar_Example_3_Scenes_Minimal_Example()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/AStar 2D Grid Pathfinding/AStar/Example 3/Scenes/Minimal Example.unity");
         }
 
-        [MenuItem("Scenes/Plugins/Backbone/Common/Logger/Sample Scene/SampleLoggerScene", priority = 1004)]
-        private static void OpenScene_004_Plugins_Backbone_Common_Logger_Sample_Scene_SampleLoggerScene()
+        [MenuItem("Scenes/Plugins/Backbone/Common/Logger/Sample Scene/SampleLoggerScene", priority = 1003)]
+        private static void OpenScene_003_Plugins_Backbone_Common_Logger_Sample_Scene_SampleLoggerScene()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/Backbone/Common/Logger/Sample Scene/SampleLoggerScene.unity");
         }
 
-        [MenuItem("Scenes/Plugins/Easy Transition/Demo/Scenes/EasyTransition_DemoScene", priority = 1005)]
-        private static void OpenScene_005_Plugins_Easy_Transition_Demo_Scenes_EasyTransition_DemoScene()
+        [MenuItem("Scenes/Plugins/Easy Transition/Demo/Scenes/EasyTransition_DemoScene", priority = 1004)]
+        private static void OpenScene_004_Plugins_Easy_Transition_Demo_Scenes_EasyTransition_DemoScene()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/Easy Transition/Demo/Scenes/EasyTransition_DemoScene.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/1 - Basic Setup/Basic 1 - Basic Setup", priority = 1006)]
-        private static void OpenScene_006_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__1___Basic_Setup_Basic_1___Basic_Setup()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/1 - Basic Setup/Basic 1 - Basic Setup", priority = 1005)]
+        private static void OpenScene_005_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__1___Basic_Setup_Basic_1___Basic_Setup()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/1 - Basic Setup/Basic 1 - Basic Setup.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/10 - Light Layers/Space", priority = 1007)]
-        private static void OpenScene_007_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__10___Light_Layers_Space()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/10 - Light Layers/Space", priority = 1006)]
+        private static void OpenScene_006_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__10___Light_Layers_Space()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/10 - Light Layers/Space.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/11 - Occlusion/Basic 11  - Occlussion", priority = 1008)]
-        private static void OpenScene_008_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__11___Occlusion_Basic_11____Occlussion()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/11 - Occlusion/Basic 11  - Occlussion", priority = 1007)]
+        private static void OpenScene_007_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__11___Occlusion_Basic_11____Occlussion()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/11 - Occlusion/Basic 11  - Occlussion.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/13 - Sprite Projection/Sprite Projection", priority = 1009)]
-        private static void OpenScene_009_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__13___Sprite_Projection_Sprite_Projection()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/13 - Sprite Projection/Sprite Projection", priority = 1008)]
+        private static void OpenScene_008_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__13___Sprite_Projection_Sprite_Projection()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/13 - Sprite Projection/Sprite Projection.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/14 - Rectangle Tilemap/Rectangle Tilemap", priority = 1010)]
-        private static void OpenScene_010_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__14___Rectangle_Tilemap_Rectangle_Tilemap()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/14 - Rectangle Tilemap/Rectangle Tilemap", priority = 1009)]
+        private static void OpenScene_009_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__14___Rectangle_Tilemap_Rectangle_Tilemap()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/14 - Rectangle Tilemap/Rectangle Tilemap.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/15 - Rooms/Basic 15 - Rooms", priority = 1011)]
-        private static void OpenScene_011_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__15___Rooms_Basic_15___Rooms()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/15 - Rooms/Basic 15 - Rooms", priority = 1010)]
+        private static void OpenScene_010_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__15___Rooms_Basic_15___Rooms()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/15 - Rooms/Basic 15 - Rooms.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/2 - Custom Physics Shape/Basic 2 - Custom Physics Shape", priority = 1012)]
-        private static void OpenScene_012_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__2___Custom_Physics_Shape_Basic_2___Custom_Physics_Shape()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/2 - Custom Physics Shape/Basic 2 - Custom Physics Shape", priority = 1011)]
+        private static void OpenScene_011_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__2___Custom_Physics_Shape_Basic_2___Custom_Physics_Shape()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/2 - Custom Physics Shape/Basic 2 - Custom Physics Shape.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/3 - Free Form Light/Basic 3 - Free Form Light", priority = 1013)]
-        private static void OpenScene_013_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__3___Free_Form_Light_Basic_3___Free_Form_Light()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/3 - Free Form Light/Basic 3 - Free Form Light", priority = 1012)]
+        private static void OpenScene_012_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__3___Free_Form_Light_Basic_3___Free_Form_Light()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/3 - Free Form Light/Basic 3 - Free Form Light.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/4 - Day Lighting/Day Lighting", priority = 1014)]
-        private static void OpenScene_014_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__4___Day_Lighting_Day_Lighting()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/4 - Day Lighting/Day Lighting", priority = 1013)]
+        private static void OpenScene_013_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__4___Day_Lighting_Day_Lighting()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/4 - Day Lighting/Day Lighting.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/5 - Particles/Basic 5 - Particles", priority = 1015)]
-        private static void OpenScene_015_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__5___Particles_Basic_5___Particles()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/5 - Particles/Basic 5 - Particles", priority = 1014)]
+        private static void OpenScene_014_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__5___Particles_Basic_5___Particles()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/5 - Particles/Basic 5 - Particles.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/6 - Light Sprite/Basic 6 - Light Sprite", priority = 1016)]
-        private static void OpenScene_016_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__6___Light_Sprite_Basic_6___Light_Sprite()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/6 - Light Sprite/Basic 6 - Light Sprite", priority = 1015)]
+        private static void OpenScene_015_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__6___Light_Sprite_Basic_6___Light_Sprite()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/6 - Light Sprite/Basic 6 - Light Sprite.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/7 - Perpendicular Collision/Perpendicular Demo", priority = 1017)]
-        private static void OpenScene_017_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__7___Perpendicular_Collision_Perpendicular_Demo()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/7 - Perpendicular Collision/Perpendicular Demo", priority = 1016)]
+        private static void OpenScene_016_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__7___Perpendicular_Collision_Perpendicular_Demo()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/7 - Perpendicular Collision/Perpendicular Demo.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XY", priority = 1018)]
-        private static void OpenScene_018_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__8___Axis_Projections_XY()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XY", priority = 1017)]
+        private static void OpenScene_017_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__8___Axis_Projections_XY()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XY.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XY Flipped", priority = 1019)]
-        private static void OpenScene_019_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__8___Axis_Projections_XY_Flipped()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XY Flipped", priority = 1018)]
+        private static void OpenScene_018_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__8___Axis_Projections_XY_Flipped()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XY Flipped.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XZ", priority = 1020)]
-        private static void OpenScene_020_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__8___Axis_Projections_XZ()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XZ", priority = 1019)]
+        private static void OpenScene_019_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__8___Axis_Projections_XZ()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XZ.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XZ Flipped", priority = 1021)]
-        private static void OpenScene_021_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__8___Axis_Projections_XZ_Flipped()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XZ Flipped", priority = 1020)]
+        private static void OpenScene_020_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__8___Axis_Projections_XZ_Flipped()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/8 - Axis Projections/XZ Flipped.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/9 - Tilemap/Basic Tilemap", priority = 1022)]
-        private static void OpenScene_022_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__9___Tilemap_Basic_Tilemap()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/9 - Tilemap/Basic Tilemap", priority = 1021)]
+        private static void OpenScene_021_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Basics__Overlay__9___Tilemap_Basic_Tilemap()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Basics (Overlay)/9 - Tilemap/Basic Tilemap.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/1 - Demo Dungeon/Demo 1 - Dungeon Tilemap", priority = 1023)]
-        private static void OpenScene_023_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_1___Demo_Dungeon_Demo_1___Dungeon_Tilemap()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/1 - Demo Dungeon/Demo 1 - Dungeon Tilemap", priority = 1022)]
+        private static void OpenScene_022_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_1___Demo_Dungeon_Demo_1___Dungeon_Tilemap()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/1 - Demo Dungeon/Demo 1 - Dungeon Tilemap.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/10 - Demo Isometric/Demo Isometric", priority = 1024)]
-        private static void OpenScene_024_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_10___Demo_Isometric_Demo_Isometric()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/10 - Demo Isometric/Demo Isometric", priority = 1023)]
+        private static void OpenScene_023_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_10___Demo_Isometric_Demo_Isometric()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/10 - Demo Isometric/Demo Isometric.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/11 - Isometric Tilemap/Isometric Tilemap Test", priority = 1025)]
-        private static void OpenScene_025_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_11___Isometric_Tilemap_Isometric_Tilemap_Test()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/11 - Isometric Tilemap/Isometric Tilemap Test", priority = 1024)]
+        private static void OpenScene_024_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_11___Isometric_Tilemap_Isometric_Tilemap_Test()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/11 - Isometric Tilemap/Isometric Tilemap Test.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/2 - Normal Mapping/Demo 2 - Normal Mapping", priority = 1026)]
-        private static void OpenScene_026_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_2___Normal_Mapping_Demo_2___Normal_Mapping()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/2 - Normal Mapping/Demo 2 - Normal Mapping", priority = 1025)]
+        private static void OpenScene_025_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_2___Normal_Mapping_Demo_2___Normal_Mapping()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/2 - Normal Mapping/Demo 2 - Normal Mapping.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/3 - Day Lighting/Demo 3 - Day Lighting Normals", priority = 1027)]
-        private static void OpenScene_027_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_3___Day_Lighting_Demo_3___Day_Lighting_Normals()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/3 - Day Lighting/Demo 3 - Day Lighting Normals", priority = 1026)]
+        private static void OpenScene_026_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_3___Day_Lighting_Demo_3___Day_Lighting_Normals()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/3 - Day Lighting/Demo 3 - Day Lighting Normals.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/4 - Fog of War/Fog of War", priority = 1028)]
-        private static void OpenScene_028_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_4___Fog_of_War_Fog_of_War()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/4 - Fog of War/Fog of War", priority = 1027)]
+        private static void OpenScene_027_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_4___Fog_of_War_Fog_of_War()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/4 - Fog of War/Fog of War.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/5 - Race/Demo 5 - Race Demo", priority = 1029)]
-        private static void OpenScene_029_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_5___Race_Demo_5___Race_Demo()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/5 - Race/Demo 5 - Race Demo", priority = 1028)]
+        private static void OpenScene_028_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_5___Race_Demo_5___Race_Demo()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/5 - Race/Demo 5 - Race Demo.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/6 - Event Handling/Demo 6 - Event Handling", priority = 1030)]
-        private static void OpenScene_030_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_6___Event_Handling_Demo_6___Event_Handling()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/6 - Event Handling/Demo 6 - Event Handling", priority = 1029)]
+        private static void OpenScene_029_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_6___Event_Handling_Demo_6___Event_Handling()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/6 - Event Handling/Demo 6 - Event Handling.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/7 - Hex Tilemap/Hex", priority = 1031)]
-        private static void OpenScene_031_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_7___Hex_Tilemap_Hex()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/7 - Hex Tilemap/Hex", priority = 1030)]
+        private static void OpenScene_030_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_7___Hex_Tilemap_Hex()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/7 - Hex Tilemap/Hex.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/8 - Fog Of War Light/Fog Of War Light", priority = 1032)]
-        private static void OpenScene_032_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_8___Fog_Of_War_Light_Fog_Of_War_Light()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/8 - Fog Of War Light/Fog Of War Light", priority = 1031)]
+        private static void OpenScene_031_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_8___Fog_Of_War_Light_Fog_Of_War_Light()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/8 - Fog Of War Light/Fog Of War Light.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/9 - Day Lighting Tilemap/Day lighting tilemap", priority = 1033)]
-        private static void OpenScene_033_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_9___Day_Lighting_Tilemap_Day_lighting_tilemap()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/9 - Day Lighting Tilemap/Day lighting tilemap", priority = 1032)]
+        private static void OpenScene_032_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Intermediate_9___Day_Lighting_Tilemap_Day_lighting_tilemap()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Intermediate/9 - Day Lighting Tilemap/Day lighting tilemap.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/1 -  Lit Material/1 - Lit Material", priority = 1034)]
-        private static void OpenScene_034_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_1____Lit_Material_1___Lit_Material()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/1 -  Lit Material/1 - Lit Material", priority = 1033)]
+        private static void OpenScene_033_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_1____Lit_Material_1___Lit_Material()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/1 -  Lit Material/1 - Lit Material.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/2 - Bump Material/Bump Material", priority = 1035)]
-        private static void OpenScene_035_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_2___Bump_Material_Bump_Material()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/2 - Bump Material/Bump Material", priority = 1034)]
+        private static void OpenScene_034_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_2___Bump_Material_Bump_Material()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/2 - Bump Material/Bump Material.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/3 - Mask Material/Mask Material", priority = 1036)]
-        private static void OpenScene_036_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_3___Mask_Material_Mask_Material()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/3 - Mask Material/Mask Material", priority = 1035)]
+        private static void OpenScene_035_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_3___Mask_Material_Mask_Material()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/3 - Mask Material/Mask Material.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/4 - Lit Occlusion/Lit Occlusion", priority = 1037)]
-        private static void OpenScene_037_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_4___Lit_Occlusion_Lit_Occlusion()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/4 - Lit Occlusion/Lit Occlusion", priority = 1036)]
+        private static void OpenScene_036_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_4___Lit_Occlusion_Lit_Occlusion()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/4 - Lit Occlusion/Lit Occlusion.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/5 - Depth Map/Depth Map", priority = 1038)]
-        private static void OpenScene_038_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_5___Depth_Map_Depth_Map()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/5 - Depth Map/Depth Map", priority = 1037)]
+        private static void OpenScene_037_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_5___Depth_Map_Depth_Map()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/5 - Depth Map/Depth Map.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/6 - Multi-Layer Setup/Multi-Layer Setup", priority = 1039)]
-        private static void OpenScene_039_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_6___Multi_Layer_Setup_Multi_Layer_Setup()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/6 - Multi-Layer Setup/Multi-Layer Setup", priority = 1038)]
+        private static void OpenScene_038_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_6___Multi_Layer_Setup_Multi_Layer_Setup()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/6 - Multi-Layer Setup/Multi-Layer Setup.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/7 - Light Translucency/Light Translucency", priority = 1040)]
-        private static void OpenScene_040_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_7___Light_Translucency_Light_Translucency()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/7 - Light Translucency/Light Translucency", priority = 1039)]
+        private static void OpenScene_039_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_7___Light_Translucency_Light_Translucency()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/7 - Light Translucency/Light Translucency.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/8 - Fast Shader/Fast Shader", priority = 1041)]
-        private static void OpenScene_041_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_8___Fast_Shader_Fast_Shader()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/8 - Fast Shader/Fast Shader", priority = 1040)]
+        private static void OpenScene_040_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_8___Fast_Shader_Fast_Shader()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/8 - Fast Shader/Fast Shader.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/Multiple Cameras/Multiple Cameras", priority = 1042)]
-        private static void OpenScene_042_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_Multiple_Cameras_Multiple_Cameras()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/Multiple Cameras/Multiple Cameras", priority = 1041)]
+        private static void OpenScene_041_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Materials_Multiple_Cameras_Multiple_Cameras()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Materials/Multiple Cameras/Multiple Cameras.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Perspective/3D Perspective/3D Perspective", priority = 1043)]
-        private static void OpenScene_043_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Perspective_3D_Perspective_3D_Perspective()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Perspective/3D Perspective/3D Perspective", priority = 1042)]
+        private static void OpenScene_042_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Perspective_3D_Perspective_3D_Perspective()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Perspective/3D Perspective/3D Perspective.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Perspective/3D Scene/New Scene", priority = 1044)]
-        private static void OpenScene_044_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Perspective_3D_Scene_New_Scene()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Perspective/3D Scene/New Scene", priority = 1043)]
+        private static void OpenScene_043_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Perspective_3D_Scene_New_Scene()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Perspective/3D Scene/New Scene.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Scriptable/Demo 1 - Light Sprite/Scriptable Scene", priority = 1045)]
-        private static void OpenScene_045_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Scriptable_Demo_1___Light_Sprite_Scriptable_Scene()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Scriptable/Demo 1 - Light Sprite/Scriptable Scene", priority = 1044)]
+        private static void OpenScene_044_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Scriptable_Demo_1___Light_Sprite_Scriptable_Scene()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Scriptable/Demo 1 - Light Sprite/Scriptable Scene.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 1 - SL2D Subshader/Demo 1 - SL2D Subshader", priority = 1046)]
-        private static void OpenScene_046_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_1___SL2D_Subshader_Demo_1___SL2D_Subshader()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 1 - SL2D Subshader/Demo 1 - SL2D Subshader", priority = 1045)]
+        private static void OpenScene_045_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_1___SL2D_Subshader_Demo_1___SL2D_Subshader()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 1 - SL2D Subshader/Demo 1 - SL2D Subshader.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 2 - Fog Of War/Demo 2 - Fog of War", priority = 1047)]
-        private static void OpenScene_047_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_2___Fog_Of_War_Demo_2___Fog_of_War()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 2 - Fog Of War/Demo 2 - Fog of War", priority = 1046)]
+        private static void OpenScene_046_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_2___Fog_Of_War_Demo_2___Fog_of_War()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 2 - Fog Of War/Demo 2 - Fog of War.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 3 - Without Sub Shader/Demo 3 - Without Sub Shader", priority = 1048)]
-        private static void OpenScene_048_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_3___Without_Sub_Shader_Demo_3___Without_Sub_Shader()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 3 - Without Sub Shader/Demo 3 - Without Sub Shader", priority = 1047)]
+        private static void OpenScene_047_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_3___Without_Sub_Shader_Demo_3___Without_Sub_Shader()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 3 - Without Sub Shader/Demo 3 - Without Sub Shader.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 5 -All In One/All In One", priority = 1049)]
-        private static void OpenScene_049_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_5__All_In_One_All_In_One()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 5 -All In One/All In One", priority = 1048)]
+        private static void OpenScene_048_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_5__All_In_One_All_In_One()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 5 -All In One/All In One.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 6 - All In One Sub/All In One Subgraph", priority = 1050)]
-        private static void OpenScene_050_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_6___All_In_One_Sub_All_In_One_Subgraph()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 6 - All In One Sub/All In One Subgraph", priority = 1049)]
+        private static void OpenScene_049_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_6___All_In_One_Sub_All_In_One_Subgraph()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 6 - All In One Sub/All In One Subgraph.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 7 - Depth/Depth", priority = 1051)]
-        private static void OpenScene_051_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_7___Depth_Depth()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 7 - Depth/Depth", priority = 1050)]
+        private static void OpenScene_050_Plugins_FunkyCode_Demos___SmartLighting2D_Demos___Shader_Graph_Demo_7___Depth_Depth()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Demos - Shader Graph/Demo 7 - Depth/Depth.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Export Demo/Main Demo", priority = 1052)]
-        private static void OpenScene_052_Plugins_FunkyCode_Demos___SmartLighting2D_Export_Demo_Main_Demo()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Export Demo/Main Demo", priority = 1051)]
+        private static void OpenScene_051_Plugins_FunkyCode_Demos___SmartLighting2D_Export_Demo_Main_Demo()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Export Demo/Main Demo.unity");
         }
 
-        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Export Demo/Performance Comparison", priority = 1053)]
-        private static void OpenScene_053_Plugins_FunkyCode_Demos___SmartLighting2D_Export_Demo_Performance_Comparison()
+        [MenuItem("Scenes/Plugins/FunkyCode/Demos - SmartLighting2D/Export Demo/Performance Comparison", priority = 1052)]
+        private static void OpenScene_052_Plugins_FunkyCode_Demos___SmartLighting2D_Export_Demo_Performance_Comparison()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/FunkyCode/Demos - SmartLighting2D/Export Demo/Performance Comparison.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/Common/ScriptsInputSystem/MinimalScene3D_InputSystem", priority = 1054)]
-        private static void OpenScene_054_Plugins_TopDownEngine_Common_ScriptsInputSystem_MinimalScene3D_InputSystem()
+        [MenuItem("Scenes/Plugins/TopDownEngine/Common/ScriptsInputSystem/MinimalScene3D_InputSystem", priority = 1053)]
+        private static void OpenScene_053_Plugins_TopDownEngine_Common_ScriptsInputSystem_MinimalScene3D_InputSystem()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/Common/ScriptsInputSystem/MinimalScene3D_InputSystem.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/Common/ScriptsInputSystem/MinimalScene3D_InputSystem_Multiplayer", priority = 1055)]
-        private static void OpenScene_055_Plugins_TopDownEngine_Common_ScriptsInputSystem_MinimalScene3D_InputSystem_Multiplayer()
+        [MenuItem("Scenes/Plugins/TopDownEngine/Common/ScriptsInputSystem/MinimalScene3D_InputSystem_Multiplayer", priority = 1054)]
+        private static void OpenScene_054_Plugins_TopDownEngine_Common_ScriptsInputSystem_MinimalScene3D_InputSystem_Multiplayer()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/Common/ScriptsInputSystem/MinimalScene3D_InputSystem_Multiplayer.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaCinemachineZones", priority = 1056)]
-        private static void OpenScene_056_Plugins_TopDownEngine_Demos_Koala2D_KoalaCinemachineZones()
+        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaCinemachineZones", priority = 1055)]
+        private static void OpenScene_055_Plugins_TopDownEngine_Demos_Koala2D_KoalaCinemachineZones()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/Demos/Koala2D/KoalaCinemachineZones.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaDungeon", priority = 1057)]
-        private static void OpenScene_057_Plugins_TopDownEngine_Demos_Koala2D_KoalaDungeon()
+        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaDungeon", priority = 1056)]
+        private static void OpenScene_056_Plugins_TopDownEngine_Demos_Koala2D_KoalaDungeon()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/Demos/Koala2D/KoalaDungeon.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaHealth", priority = 1058)]
-        private static void OpenScene_058_Plugins_TopDownEngine_Demos_Koala2D_KoalaHealth()
+        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaHealth", priority = 1057)]
+        private static void OpenScene_057_Plugins_TopDownEngine_Demos_Koala2D_KoalaHealth()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/Demos/Koala2D/KoalaHealth.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaProceduralTilemap", priority = 1059)]
-        private static void OpenScene_059_Plugins_TopDownEngine_Demos_Koala2D_KoalaProceduralTilemap()
+        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaProceduralTilemap", priority = 1058)]
+        private static void OpenScene_058_Plugins_TopDownEngine_Demos_Koala2D_KoalaProceduralTilemap()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/Demos/Koala2D/KoalaProceduralTilemap.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaRooms", priority = 1060)]
-        private static void OpenScene_060_Plugins_TopDownEngine_Demos_Koala2D_KoalaRooms()
+        [MenuItem("Scenes/Plugins/TopDownEngine/Demos/Koala2D/KoalaRooms", priority = 1059)]
+        private static void OpenScene_059_Plugins_TopDownEngine_Demos_Koala2D_KoalaRooms()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/Demos/Koala2D/KoalaRooms.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/1-StyleguideIntro", priority = 1061)]
-        private static void OpenScene_061_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_1_StyleguideIntro()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/1-StyleguideIntro", priority = 1060)]
+        private static void OpenScene_060_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_1_StyleguideIntro()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/1-StyleguideIntro.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/2-StyleguideButtons", priority = 1062)]
-        private static void OpenScene_062_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_2_StyleguideButtons()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/2-StyleguideButtons", priority = 1061)]
+        private static void OpenScene_061_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_2_StyleguideButtons()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/2-StyleguideButtons.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/3-StyleguideButtonsAnimations", priority = 1063)]
-        private static void OpenScene_063_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_3_StyleguideButtonsAnimations()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/3-StyleguideButtonsAnimations", priority = 1062)]
+        private static void OpenScene_062_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_3_StyleguideButtonsAnimations()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/3-StyleguideButtonsAnimations.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/4-StyleguideForms", priority = 1064)]
-        private static void OpenScene_064_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_4_StyleguideForms()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/4-StyleguideForms", priority = 1063)]
+        private static void OpenScene_063_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_4_StyleguideForms()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/4-StyleguideForms.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/5-StyleguideDark", priority = 1065)]
-        private static void OpenScene_065_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_5_StyleguideDark()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/5-StyleguideDark", priority = 1064)]
+        private static void OpenScene_064_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_5_StyleguideDark()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/5-StyleguideDark.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/AllButtons", priority = 1066)]
-        private static void OpenScene_066_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_AllButtons()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/AllButtons", priority = 1065)]
+        private static void OpenScene_065_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_AllButtons()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/AllButtons.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/Carousel", priority = 1067)]
-        private static void OpenScene_067_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_Carousel()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/Carousel", priority = 1066)]
+        private static void OpenScene_066_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMInterface_Styles_Mini_Carousel()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMInterface/Styles/Mini/Carousel.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSaveLoad/MMSaveLoadTestScene", priority = 1068)]
-        private static void OpenScene_068_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSaveLoad_MMSaveLoadTestScene()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSaveLoad/MMSaveLoadTestScene", priority = 1067)]
+        private static void OpenScene_067_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSaveLoad_MMSaveLoadTestScene()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSaveLoad/MMSaveLoadTestScene.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/LoadingScreen", priority = 1069)]
-        private static void OpenScene_069_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_LoadingScreen()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/LoadingScreen", priority = 1068)]
+        private static void OpenScene_068_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_LoadingScreen()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/LoadingScreen.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreen", priority = 1070)]
-        private static void OpenScene_070_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_MMAdditiveLoadingScreen()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreen", priority = 1069)]
+        private static void OpenScene_069_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_MMAdditiveLoadingScreen()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreen.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenBigText", priority = 1071)]
-        private static void OpenScene_071_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_MMAdditiveLoadingScreenBigText()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenBigText", priority = 1070)]
+        private static void OpenScene_070_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_MMAdditiveLoadingScreenBigText()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenBigText.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenFastFade", priority = 1072)]
-        private static void OpenScene_072_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_MMAdditiveLoadingScreenFastFade()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenFastFade", priority = 1071)]
+        private static void OpenScene_071_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_MMAdditiveLoadingScreenFastFade()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenFastFade.unity");
         }
 
-        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenSimple", priority = 1073)]
-        private static void OpenScene_073_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_MMAdditiveLoadingScreenSimple()
+        [MenuItem("Scenes/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenSimple", priority = 1072)]
+        private static void OpenScene_072_Plugins_TopDownEngine_ThirdParty_MoreMountains_MMTools_Core_MMSceneLoading_LoadingScreens_MMAdditiveLoadingScreenSimple()
         {
             SceneMenuRegistry.OpenScene("Assets/Plugins/TopDownEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenSimple.unity");
         }
 
-        [MenuItem("Scenes/Scenes/GamePlayFoundationMapTest", priority = 1074)]
-        private static void OpenScene_074_Scenes_GamePlayFoundationMapTest()
+        [MenuItem("Scenes/Scenes/FoundationMapTest", priority = 1073)]
+        private static void OpenScene_073_Scenes_FoundationMapTest()
         {
-            SceneMenuRegistry.OpenScene("Assets/Scenes/GamePlayFoundationMapTest.unity");
+            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationMapTest.unity");
         }
 
-        [MenuItem("Scenes/Scenes/GamePlayFoundationSecondMapTest", priority = 1075)]
-        private static void OpenScene_075_Scenes_GamePlayFoundationSecondMapTest()
+        [MenuItem("Scenes/Scenes/FoundationSecondMapTest", priority = 1074)]
+        private static void OpenScene_074_Scenes_FoundationSecondMapTest()
         {
-            SceneMenuRegistry.OpenScene("Assets/Scenes/GamePlayFoundationSecondMapTest.unity");
+            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationSecondMapTest.unity");
         }
 
-        [MenuItem("Scenes/Scenes/GamePlayFoundationTest", priority = 1076)]
-        private static void OpenScene_076_Scenes_GamePlayFoundationTest()
+        [MenuItem("Scenes/Scenes/FoundationTest", priority = 1075)]
+        private static void OpenScene_075_Scenes_FoundationTest()
         {
-            SceneMenuRegistry.OpenScene("Assets/Scenes/GamePlayFoundationTest.unity");
+            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationTest.unity");
         }
 
-        [MenuItem("Scenes/Scenes/SampleScene", priority = 1077)]
-        private static void OpenScene_077_Scenes_SampleScene()
+        [MenuItem("Scenes/Scenes/SampleScene", priority = 1076)]
+        private static void OpenScene_076_Scenes_SampleScene()
         {
             SceneMenuRegistry.OpenScene("Assets/Scenes/SampleScene.unity");
         }
 
-        [MenuItem("Scenes/Settings/Scenes/URP2DSceneTemplate", priority = 1078)]
-        private static void OpenScene_078_Settings_Scenes_URP2DSceneTemplate()
+        [MenuItem("Scenes/Settings/Scenes/URP2DSceneTemplate", priority = 1077)]
+        private static void OpenScene_077_Settings_Scenes_URP2DSceneTemplate()
         {
             SceneMenuRegistry.OpenScene("Assets/Settings/Scenes/URP2DSceneTemplate.unity");
         }
 
-        [MenuItem("Scenes/StackCraft/Scenes/Island", priority = 1079)]
-        private static void OpenScene_079_StackCraft_Scenes_Island()
+        [MenuItem("Scenes/StackCraft/Scenes/Island", priority = 1078)]
+        private static void OpenScene_078_StackCraft_Scenes_Island()
         {
             SceneMenuRegistry.OpenScene("Assets/StackCraft/Scenes/Island.unity");
         }
 
-        [MenuItem("Scenes/StackCraft/Scenes/Main", priority = 1080)]
-        private static void OpenScene_080_StackCraft_Scenes_Main()
+        [MenuItem("Scenes/StackCraft/Scenes/Main", priority = 1079)]
+        private static void OpenScene_079_StackCraft_Scenes_Main()
         {
             SceneMenuRegistry.OpenScene("Assets/StackCraft/Scenes/Main.unity");
         }
 
-        [MenuItem("Scenes/StackCraft/Scenes/Title", priority = 1081)]
-        private static void OpenScene_081_StackCraft_Scenes_Title()
+        [MenuItem("Scenes/StackCraft/Scenes/Title", priority = 1080)]
+        private static void OpenScene_080_StackCraft_Scenes_Title()
         {
             SceneMenuRegistry.OpenScene("Assets/StackCraft/Scenes/Title.unity");
         }

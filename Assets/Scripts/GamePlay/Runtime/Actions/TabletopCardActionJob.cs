@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Gameplay.Content;
+using Gameplay.Tabletop;
 using UnityEngine;
 
-namespace GamePlay
+namespace Gameplay.Actions
 {
     /// <summary>
     /// 牌桌行动作业的封闭生命周期。
@@ -62,7 +64,7 @@ namespace GamePlay
         }
 
         /// <summary>本次作业引用的唯一行动内容身份。</summary>
-        public GamePlayContentId ActionId { get; }
+        public ContentId ActionId { get; }
 
         /// <summary>
         /// 行动开始时由权威随机流选定的结果分支键；没有随机分支时为空。

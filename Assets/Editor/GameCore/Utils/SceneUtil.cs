@@ -82,7 +82,18 @@ namespace GameCore
         public static string[] CreateAssetDatabaseScenePathSnapshot()
         {
             string[] guids = AssetDatabase.FindAssets("t:scene", SceneSearchRoots);
-            return guids.Select(guid => AssetDatabase.GUIDToAssetPath(guid)).ToArray();
+            return guids
+                .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
+                .Where(path => !IsUnityTestRunnerScene(path))
+                .ToArray();
+        }
+
+        private static bool IsUnityTestRunnerScene(string scenePath)
+        {
+            string normalizedPath = scenePath?.Replace('\\', '/');
+            return normalizedPath != null &&
+                normalizedPath.StartsWith("Assets/InitTestScene", StringComparison.OrdinalIgnoreCase) &&
+                normalizedPath.EndsWith(".unity", StringComparison.OrdinalIgnoreCase);
         }
 
         public static SceneEntry[] CreateSceneEntrySnapshot()

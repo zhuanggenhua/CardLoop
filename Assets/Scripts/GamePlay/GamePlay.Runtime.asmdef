@@ -1,6 +1,6 @@
 {
-  "name": "GamePlay.Runtime",
-  "rootNamespace": "GamePlay",
+  "name": "Gameplay.Runtime",
+  "rootNamespace": "Gameplay",
     "references": [
         "GameCore",
         "com.exhard.exgas.runtime",

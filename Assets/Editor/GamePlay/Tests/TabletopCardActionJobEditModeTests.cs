@@ -3,7 +3,12 @@ using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace GamePlay.Tests
+using Gameplay.Actions;
+using Gameplay.Content;
+using Gameplay.Scenarios;
+using Gameplay.Tabletop;
+
+namespace Gameplay.Tests
 {
     /// <summary>
     /// 验证玩家显式选择牌桌行动后，作业只以行动回合消耗作为进度真相。
@@ -15,12 +20,12 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
 
@@ -45,7 +50,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -56,12 +61,12 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
                 TabletopCardActionJob job = actionSystem.StartAction(
@@ -83,7 +88,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -94,19 +99,19 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
                 TabletopCardActionJob job = actionSystem.StartAction(
                     TabletopCardActionRequest.FromCandidate(context.Candidate));
 
                 context.State.RemoveCard(context.Target.Id);
-                worldTurnSystem.ConfirmTurn();
+                scenarioTurnSystem.ConfirmTurn();
 
                 Assert.That(job.State, Is.EqualTo(TabletopCardActionJobState.Cancelled));
                 Assert.That(
@@ -118,7 +123,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -129,12 +134,12 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
                 TabletopCardActionJob job = actionSystem.StartAction(
@@ -151,7 +156,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -162,23 +167,23 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
                 TabletopCardActionJob job = actionSystem.StartAction(
                     TabletopCardActionRequest.FromCandidate(context.Candidate));
 
-                worldTurnSystem.ConfirmTurn();
+                scenarioTurnSystem.ConfirmTurn();
                 Assert.That(job.State, Is.EqualTo(TabletopCardActionJobState.Running));
                 Assert.That(job.ProgressedTurns, Is.EqualTo(1f));
                 Assert.That(job.Progress, Is.EqualTo(0.5f));
 
-                worldTurnSystem.ConfirmTurn();
+                scenarioTurnSystem.ConfirmTurn();
                 Assert.That(job.State, Is.EqualTo(TabletopCardActionJobState.Completed));
                 Assert.That(job.ProgressedTurns, Is.EqualTo(2f));
                 Assert.That(job.Progress, Is.EqualTo(1f));
@@ -187,7 +192,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -198,12 +203,12 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 0);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
 
@@ -218,7 +223,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -229,12 +234,12 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
                 TabletopCardActionRequest request = TabletopCardActionRequest.FromCandidate(context.Candidate);
@@ -246,7 +251,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -257,12 +262,12 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
                 TabletopCardActionRequest request = TabletopCardActionRequest.FromCandidate(context.Candidate);
@@ -281,7 +286,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -292,12 +297,12 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
                 var request = new TabletopCardActionRequest(
@@ -315,7 +320,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -326,18 +331,18 @@ namespace GamePlay.Tests
         {
             TestActionContext context = CreateReadyCandidate(turnCost: 2);
             GameObject systemObject = new("TabletopCardActionSystemTests");
-            GamePlayWorldTurnSystem worldTurnSystem = systemObject.AddComponent<GamePlayWorldTurnSystem>();
+            ScenarioTurnSystem scenarioTurnSystem = systemObject.AddComponent<ScenarioTurnSystem>();
             TabletopCardActionSystem actionSystem = systemObject.AddComponent<TabletopCardActionSystem>();
 
             try
             {
-                worldTurnSystem.OnSystemStart();
+                scenarioTurnSystem.OnSystemStart();
                 actionSystem.OnSystemStart();
                 actionSystem.BindTabletopActionState(context.State, context.ContentIndex);
                 TabletopCardActionJob job = actionSystem.StartAction(
                     TabletopCardActionRequest.FromCandidate(context.Candidate));
 
-                worldTurnSystem.ConfirmTurn();
+                scenarioTurnSystem.ConfirmTurn();
                 TabletopCardActionJobSnapshot[] snapshots = actionSystem.CreateActiveJobSnapshots();
 
                 Assert.That(snapshots, Has.Length.EqualTo(1));
@@ -355,7 +360,7 @@ namespace GamePlay.Tests
             finally
             {
                 actionSystem.OnSystemStop();
-                worldTurnSystem.OnSystemStop();
+                scenarioTurnSystem.OnSystemStop();
                 Object.DestroyImmediate(systemObject);
                 context.Dispose();
             }
@@ -363,12 +368,12 @@ namespace GamePlay.Tests
 
         private static TestActionContext CreateReadyCandidate(int turnCost)
         {
-            GamePlayCardDefinition card = ScriptableObject.CreateInstance<GamePlayCardDefinition>();
+            CardDefinition card = ScriptableObject.CreateInstance<CardDefinition>();
             JsonUtility.FromJsonOverwrite(
                 "{\"m_contentId\":{\"m_value\":\"test.card\"}}",
                 card);
 
-            GamePlayActionDefinition action = ScriptableObject.CreateInstance<GamePlayActionDefinition>();
+            ActionDefinition action = ScriptableObject.CreateInstance<ActionDefinition>();
             JsonUtility.FromJsonOverwrite(
                 "{" +
                 "\"m_contentId\":{\"m_value\":\"test.action\"}," +
@@ -381,8 +386,8 @@ namespace GamePlay.Tests
                 "}]}" ,
                 action);
 
-            GamePlayContentIndex contentIndex = GamePlayContentIndex.Build(
-                new GamePlayContentAsset[] { card, action });
+            ContentIndex contentIndex = ContentIndex.Build(
+                new ContentAsset[] { card, action });
             var state = new TabletopCardState();
             TabletopCard source = state.CreateCard(card.ContentId, Vector2.zero);
             TabletopCard target = state.CreateCard(card.ContentId, Vector2.one);
@@ -406,12 +411,12 @@ namespace GamePlay.Tests
         private sealed class TestActionContext : System.IDisposable
         {
             internal TestActionContext(
-                GamePlayCardDefinition card,
-                GamePlayActionDefinition action,
+                CardDefinition card,
+                ActionDefinition action,
                 TabletopCardState state,
                 TabletopCard source,
                 TabletopCard target,
-                GamePlayContentIndex contentIndex,
+                ContentIndex contentIndex,
                 TabletopCardActionCandidate candidate)
             {
                 Card = card;
@@ -423,12 +428,12 @@ namespace GamePlay.Tests
                 Candidate = candidate;
             }
 
-            internal GamePlayCardDefinition Card { get; }
-            internal GamePlayActionDefinition Action { get; }
+            internal CardDefinition Card { get; }
+            internal ActionDefinition Action { get; }
             internal TabletopCardState State { get; }
             internal TabletopCard Source { get; }
             internal TabletopCard Target { get; }
-            internal GamePlayContentIndex ContentIndex { get; }
+            internal ContentIndex ContentIndex { get; }
             internal TabletopCardActionCandidate Candidate { get; }
 
             public void Dispose()

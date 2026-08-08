@@ -237,10 +237,10 @@
 - 2026-08-01 01:03 复查关键程序集：`YokiFrame.UIKit.Editor.rsp`、`AiBridge.Unity.Editor.rsp`、`UnitySkills.Editor.rsp`、`PuertsUnityMcp.Editor.rsp`、`BroAudioEditor.rsp`、`FantasyWord.GAS.GeneratedRuntime.static.rsp`、`FantasyWord.GameCore.Editor.static.rsp`、`FantasyWord.GameCore.EditModeTests.static.rsp` 均静态编译通过。
 - 2026-08-01 02:08 已完成新鲜 Unity batchmode Package Resolve 与脚本编译验证；静态编译结果已被正式 Unity 编译验证覆盖，但不等于 GameCore/GAS 业务正式启用。
 
-## 2026-08-04 GamePlay 地基测试场景与启动验收
+## 2026-08-04 Gameplay 地基测试场景与启动验收
 
-- 新增统一测试场景 `Assets/Scenes/GamePlayFoundationTest.unity` 和测试配置 `Assets/Scenes/GamePlayFoundationTestConfig.asset`，并加入 `ProjectSettings/EditorBuildSettings.asset`。场景只验证 GameManager、资源包、ModAPI 和 EX-GAS 启动，不承载原创玩法。
-- 新增编辑器生成入口 `GamePlay/地基/重建测试场景`。生成器保存场景后重新打开并核对 `GameConfig` 引用，避免出现场景文件存在但入口配置为空的假成功。
+- 新增统一测试场景 `Assets/Scenes/FoundationTest.unity` 和测试配置 `Assets/Scenes/FoundationTestConfig.asset`，并加入 `ProjectSettings/EditorBuildSettings.asset`。场景只验证 GameManager、资源包、ModAPI 和 EX-GAS 启动，不承载原创玩法。
+- 新增编辑器生成入口 `Gameplay/地基/重建测试场景`。生成器保存场景后重新打开并核对 `GameConfig` 引用，避免出现场景文件存在但入口配置为空的假成功。
 - 删除 StackCraft 的 `PlayModeStartScene` 编辑器脚本：该脚本会全局把 Play Mode 场景切到 `Assets/StackCraft/Scenes/Title.unity`，不适合作为 CardLoop 的正式测试入口。
 - 清理 `Assets/BundleCollectorSetting.asset` 中从 FantasyWord 迁入但目标不存在的 `Assets/GameRes/UI/Panels`、`Assets/GameRes/Localization` 收集规则；保留 `DefaultPackage`，当前只收集测试场景以满足 YooAsset `EditorSimulateMode` 的非空资源包要求。
 - `GameCore.ResourceSystem` 不再在资源包初始化阶段硬编码加载 FantasyWord 的 `localization` 地址；本地化业务资源未迁入，当前不以空资源伪造该依赖，后续由正式本地化职责接入。
