@@ -44,20 +44,20 @@ namespace GameCore
             ResetCurrentControlToPlayerInstance();
             m_pendingPlayerControlRestore = m_currentInputTarget == null;
             GameManager.PersistenceSystem.RegisterCustomInstancedPersistable(m_primaryPlayerCharacter, Constants.UniquePlayerIdentifier);
-            EventKit.Type.Register<MapLoadedEvent>(OnMapLoaded);
+            EventKit.Type.Register<SceneLoadedEvent>(OnSceneLoaded);
             EventKit.Type.Register<SaveFileLoadedEvent>(OnSaveFileLoaded);
         }
 
         public override void OnSystemStop()
         {
-            EventKit.Type.UnRegister<MapLoadedEvent>(OnMapLoaded);
+            EventKit.Type.UnRegister<SceneLoadedEvent>(OnSceneLoaded);
             EventKit.Type.UnRegister<SaveFileLoadedEvent>(OnSaveFileLoaded);
             BindControlledCharacters(Array.Empty<CharacterBase>());
             ClearPendingControlledCharacterRestore();
             m_pendingPlayerControlRestore = false;
         }
 
-        private void OnMapLoaded(MapLoadedEvent _)
+        private void OnSceneLoaded(SceneLoadedEvent _)
         {
             TryRestorePendingControlledCharacters();
             TryRestorePendingPlayerControl();

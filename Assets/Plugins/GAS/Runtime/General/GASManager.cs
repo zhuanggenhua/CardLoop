@@ -84,6 +84,7 @@ namespace GAS.Runtime
             EntityManager.CompleteAllTrackedJobs();
             DisposeBoundAbilitySystemCells();
             TagHelper.DisposeTagMap();
+            NativeContainerCleanup.DisposeAll(EntityManager);
             GASEventCenter.Clear();
             EntityHelper.ClearGameObjectBinding();
 

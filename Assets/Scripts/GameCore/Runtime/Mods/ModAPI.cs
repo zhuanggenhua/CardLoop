@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace GameCore
 
         private static readonly List<ModInfo> ModInfos = new();
         private static ModConfig s_config;
+        private static CancellationTokenSource s_initializationCancellation;
         private static event Action s_refreshed;
 
         public static bool Initialized { get; private set; }
@@ -44,33 +46,75 @@ namespace GameCore
             }
         }
 
-        public static async UniTask Initialize(ModConfig modConfig = null, IModLoader modLoader = null)
+        public static async UniTask Initialize(
+            ModConfig modConfig = null,
+            IModLoader modLoader = null,
+            CancellationToken cancellationToken = default)
         {
             if (Initialized)
             {
-                Debug.LogError("[ModAPI] Mod api is already initialized.");
-                return;
+                throw new InvalidOperationException(
+                    "ModAPI 已经初始化，重复初始化违反进程级唯一启动入口。");
             }
 
-            s_config = modConfig ?? ModConfig.LoadOrCreate();
-            modLoader ??= new ModLoader(s_config, new APIValidator(s_config.ApiVersion));
-
-            ModInfos.Clear();
-            if (await modLoader.LoadAllModsAsync(ModInfos))
+            if (s_initializationCancellation != null)
             {
-                for (int i = s_config.States.Count - 1; i >= 0; i--)
+                throw new InvalidOperationException(
+                    "ModAPI 正在初始化，不能并发进入第二个进程级 Mod 启动入口。");
+            }
+
+            CancellationTokenSource initializationCancellation =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            s_initializationCancellation = initializationCancellation;
+
+            try
+            {
+                initializationCancellation.Token.ThrowIfCancellationRequested();
+
+                ModConfig config = modConfig ?? ModConfig.LoadOrCreate();
+                modLoader ??= new ModLoader(config, new APIValidator(config.ApiVersion));
+                var loadedModInfos = new List<ModInfo>();
+
+                if (!await modLoader.LoadAllModsAsync(loadedModInfos))
                 {
-                    ModState state = s_config.States[i];
-                    if (ModInfos.All(info => info.FullName != state.fullName))
+                    throw new InvalidOperationException(
+                        "Mod 内容扫描或加载失败，ModAPI 未进入已初始化状态。");
+                }
+
+                initializationCancellation.Token.ThrowIfCancellationRequested();
+
+                for (int i = config.States.Count - 1; i >= 0; i--)
+                {
+                    ModState state = config.States[i];
+                    if (loadedModInfos.All(info => info.FullName != state.fullName))
                     {
                         Debug.LogWarning($"[ModAPI] Missing mod {state.fullName}.");
-                        s_config.States.RemoveAt(i);
+                        config.States.RemoveAt(i);
                     }
                 }
 
-                s_config.Save();
+                config.Save();
+                initializationCancellation.Token.ThrowIfCancellationRequested();
+
+                ModInfos.Clear();
+                ModInfos.AddRange(loadedModInfos);
+                s_config = config;
                 Initialized = true;
                 NotifyRefreshed();
+            }
+            catch
+            {
+                ResetRuntimeState();
+                throw;
+            }
+            finally
+            {
+                if (ReferenceEquals(s_initializationCancellation, initializationCancellation))
+                {
+                    s_initializationCancellation = null;
+                }
+
+                initializationCancellation.Dispose();
             }
         }
 
@@ -79,10 +123,9 @@ namespace GameCore
         /// </summary>
         public static void Shutdown()
         {
-            ModInfos.Clear();
-            s_config = null;
+            s_initializationCancellation?.Cancel();
+            ResetRuntimeState();
             s_refreshed = null;
-            Initialized = false;
         }
 
         public static void DeleteMod(ModInfo modInfo)
@@ -231,6 +274,13 @@ namespace GameCore
             {
                 throw new InvalidOperationException("ModAPI is not initialized.");
             }
+        }
+
+        private static void ResetRuntimeState()
+        {
+            ModInfos.Clear();
+            s_config = null;
+            Initialized = false;
         }
 
         private static void NotifyRefreshed()

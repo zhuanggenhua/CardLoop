@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -21,12 +22,12 @@ namespace GameCore
     [Serializable]
     public class SequentialInteraction : IInteraction
     {
-        [InspectorName("交互列表")]
+        [LabelText("交互列表")]
         [Tooltip("按顺序尝试执行的交互。每个交互都会接收同一来源和目标。")]
         [SerializeReference, SubclassSelector]
         private IInteraction[] m_interactions;
 
-        [InspectorName("中断策略")]
+        [LabelText("中断策略")]
         [Tooltip("控制子交互成功或失败后是否提前停止后续交互。")]
         [SerializeField] private ESequenceInterruptionPolicy m_interruptionPolicy = ESequenceInterruptionPolicy.OnSuccess;
 

@@ -1,6 +1,8 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GAS.Runtime;
 using MackySoft.SerializeReferenceExtensions;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -24,12 +26,11 @@ namespace GameCore
         [Header("Feedbacks")]
         [SerializeField] private GameplayFeedbackSet m_feedbacks = new();
 
-        [Header("Stats")]
-        [SerializeField, FormerlySerializedAs("baseStats")]
-        private Stats m_baseStats = new();
-
-        [SerializeField] private bool m_useLevelScaledStats = false;
-        [SerializeField] private LevelScaledStats m_levelScaledStats = new();
+        [Header("属性")]
+        [LabelText("角色基础值覆盖")]
+        [Tooltip("只填写该角色不同于 EX-GAS FightUnit 默认值的属性；属性身份和钳制规则仍由 EX-GAS 表维护。")]
+        [SerializeField] private CharacterAttributeOverride[] m_attributeOverrides =
+            Array.Empty<CharacterAttributeOverride>();
 
         [SerializeReference, SubclassSelector] private ICommand m_executeOnDeath;
 
@@ -38,16 +39,14 @@ namespace GameCore
         public AudioClipResolver hitAudio => m_hitAudio;
         public AudioClipResolver deathAudio => m_deathAudio;
         public GameplayFeedbackSet feedbacks => m_feedbacks ??= new GameplayFeedbackSet();
-        public Stats baseStats => m_baseStats?.Clone() ?? new Stats();
 
-        public Stats GetStatsAtLevel(int level)
+        /// <summary>
+        /// 创建该角色正式使用的 EX-GAS 属性集配置。
+        /// 返回值继承表格默认值和钳制规则，仅应用当前角色的差异覆盖。
+        /// </summary>
+        public AttrSetConfig CreateAttributeSetConfig()
         {
-            if (!m_useLevelScaledStats)
-            {
-                return baseStats;
-            }
-
-            return ((m_levelScaledStats ??= new LevelScaledStats())[level])?.Clone() ?? new Stats();
+            return CharacterAttributes.CreateConfig(m_attributeOverrides);
         }
 
         public void ExecuteOnDeath(GameCommandContext context)

@@ -16,30 +16,12 @@ namespace GameCore.Tests
         public static void ResetWorld()
         {
             ShutdownWorld();
-
-            Type bootstrapType = typeof(GameManager).Assembly.GetType(
-                "GameCore.FormalAbilityRuntimeBootstrap",
-                throwOnError: false);
-            Assert.IsNotNull(bootstrapType, "找不到 GameCore.FormalAbilityRuntimeBootstrap。");
-
-            MethodInfo ensureInitializedMethod = bootstrapType.GetMethod(
-                "EnsureInitialized",
-                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-            Assert.IsNotNull(ensureInitializedMethod, "找不到 FormalAbilityRuntimeBootstrap.EnsureInitialized。");
-            ensureInitializedMethod.Invoke(null, null);
+            InvokeFormalGasBootstrap("EnsureInitialized");
         }
 
         public static void ShutdownWorld()
         {
-            Type gasManagerType = ResolveType("GAS.Runtime.GASManager");
-            Assert.IsNotNull(gasManagerType, "找不到 GAS.Runtime.GASManager。");
-
-            MethodInfo shutdownMethod = gasManagerType.GetMethod(
-                "Shutdown",
-                BindingFlags.Static | BindingFlags.Public);
-            Assert.IsNotNull(shutdownMethod, "找不到 GASManager.Shutdown()。");
-            shutdownMethod.Invoke(null, null);
-            ResetFormalAbilityRuntimeBootstrapState();
+            InvokeFormalGasBootstrap("Shutdown");
         }
 
         public static void AdvanceWorld(int ticks = 1)
@@ -108,22 +90,18 @@ namespace GameCore.Tests
             return isCreatedProperty.GetValue(world) is bool isCreated && isCreated;
         }
 
-        private static void ResetFormalAbilityRuntimeBootstrapState()
+        private static void InvokeFormalGasBootstrap(string methodName)
         {
             Type bootstrapType = typeof(GameManager).Assembly.GetType(
                 "GameCore.FormalAbilityRuntimeBootstrap",
                 throwOnError: false);
             Assert.IsNotNull(bootstrapType, "找不到 GameCore.FormalAbilityRuntimeBootstrap。");
 
-            FieldInfo initializedField = bootstrapType.GetField(
-                "s_initialized",
-                BindingFlags.Static | BindingFlags.NonPublic);
-            initializedField?.SetValue(null, false);
-
-            FieldInfo extensionsRegisteredField = bootstrapType.GetField(
-                "s_gameCoreGasExtensionsRegistered",
-                BindingFlags.Static | BindingFlags.NonPublic);
-            extensionsRegisteredField?.SetValue(null, false);
+            MethodInfo method = bootstrapType.GetMethod(
+                methodName,
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.IsNotNull(method, $"找不到 FormalAbilityRuntimeBootstrap.{methodName}。");
+            method.Invoke(null, null);
         }
 
         private static void InvokeLogicGroupUpdate(object world)

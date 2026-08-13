@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using Ami.BroAudio;
 using UnityEngine;
 
@@ -20,19 +21,19 @@ namespace GameCore
     [CreateAssetMenu(menuName = AssetMenuIndexer.Audio + nameof(AudioClipResolver))]
     public class AudioClipResolver : DatabaseEntry
     {
-        [InspectorName("音频片段")]
+        [LabelText("音频片段")]
         [Tooltip("传统 AudioClip 播放入口使用的候选片段列表。")]
         [SerializeField] private AudioClip[] m_audioClips = null;
 
-        [InspectorName("BroAudio 声音 ID")]
+        [LabelText("BroAudio 声音 ID")]
         [Tooltip("BroAudio 播放入口使用的 SoundID；有效时优先交给音频系统解析。")]
         [SerializeField] private SoundID m_soundId;
 
-        [InspectorName("目标音频通道")]
+        [LabelText("目标音频通道")]
         [Tooltip("播放该音频时希望进入的项目音频通道。")]
         [SerializeField] private EAudioChannel m_targetChannel;
 
-        [InspectorName("片段选择策略")]
+        [LabelText("片段选择策略")]
         [Tooltip("当使用 AudioClip 列表播放时，决定每次取哪一个片段。")]
         [SerializeField] private EAudioClipResolvingAlgorithm m_resolvingAlgorithm;
 

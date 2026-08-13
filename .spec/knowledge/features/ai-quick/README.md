@@ -25,7 +25,7 @@ metadata:
 
 | 现实任务 | 官方能力入口 | CardLoop 项目入口 | 项目卡状态 |
 |---|---|---|---|
-| GameplayTag、Ability、Effect、Attribute、Cue、ASC、Timeline、MMC、生成器 | [`EX-GAS SKILL`](../../../../Assets/Plugins/GAS/SKILL.md) → [`EX-GAS 总导航`](../../../../Assets/Plugins/GAS/Wiki/EX-GAS.md) | EX-GAS Runtime / Editor / 生成链 | 已有插件专项文档 |
+| GameplayTag、Ability、Effect、Attribute、Cue、ASC、Timeline、MMC、生成器 | [`EX-GAS SKILL`](../../../../Assets/Plugins/GAS/SKILL.md) → [`EX-GAS 总导航`](../../../../Assets/Plugins/GAS/Wiki/EX-GAS.md) | [`ex-gas-runtime.md`](ex-gas-runtime.md)：本地 2.0.4 项目校准 | 已按官方 2.0 README 与本地源码校准 |
 | 资源地址加载、Prefab 实例化、句柄释放、Mod 资源包 | [YooAsset 官方入口](../../../../Packages/com.tuyoogame.yooasset/README.md) | [`resource-system.md`](resource-system.md)：`GameCore.ResourceSystem` | 已补项目事实 |
 | 场景加载、地图切换、活动场景、过场表现 | [YokiFrame SceneKit 官方入口](../../../../Assets/Plugins/YokiFrame/Tools/SceneKit/Editor/Documentation/SceneKitDocData.cs) | [`scene-system.md`](scene-system.md)：`SceneKit` + `MapSystem` + `TransitionSystem` | 已补项目事实 |
 | Unity 异步、取消、帧等待、并发解压 | [UniTask 官方入口](../../../../Packages/com.besty.unity-skills/unity-skills~/skills/unitask-design/SKILL.md) | [`async-runtime.md`](async-runtime.md)：当前项目实际调用 | 已补项目事实 |

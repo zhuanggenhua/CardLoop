@@ -6,7 +6,7 @@ metadata:
   role: project-reference
   source: official-entry + project-source
   status: 已交付
-  verified_at: 2026-08-04
+  verified_at: 2026-08-11
   update_triggers: unitask-version-change, cancellation-policy-change, async-entry-change
 ---
 
@@ -35,16 +35,18 @@ UniTask 的通用 API、PlayerLoop、取消、组合和线程切换直接复用�
 |---|---|
 | 资源启动 | `ResourceSystem.InitializeAsync(..., CancellationToken)` |
 | 资源句柄等待 | `ResourceHandle<T>.ToUniTask()` |
-| Mod 启动 | `ModAPI.Initialize()`、`ModLoader.LoadAllModsAsync`、`LoadModAsync` |
+| Mod 启动 | `ModAPI.Initialize(..., CancellationToken)`、`ModLoader.LoadAllModsAsync`、`LoadModAsync` |
 | 压缩包并行解压 | `ModAPI.UnZipAllAsync` 中的 `UniTask.RunOnThreadPool`、`UniTask.WhenAll` |
-| Unity 对象销毁取消 | `GameManager.Start` 将 `destroyCancellationToken` 传给资源启动 |
+| Unity 对象销毁取消 | `GameManager.Start` 将 `destroyCancellationToken` 传给资源和 Mod 启动 |
 | 命令延时 | `Wait` 命令使用 `UniTask.WaitForSeconds` |
 
 ## 生命周期
 
 资源句柄的拥有者必须在 `finally` 中释放。`ResourceSystem.Shutdown` 会释放活动资源操作，但不能替代业务对象自己的句柄管理。
 
-`ModAPI.Initialize` 当前没有 `CancellationToken` 参数，也没有中途取消并回滚已加载 Mod 包的源码入口。不要自行增加一个不存在的取消重载。
+`ResourceSystem.InitializeAsync` 的取消只撤销本次项目资源启动结果。YokiFrame 的底层初始化没有完整的中途回滚入口，因此项目入口会等待它收敛到可释放状态，再统一回滚，不能把“中断等待”误说成“第三方资源已立即清理”。
+
+`ModAPI.Initialize` 接受 `CancellationToken`，并在提交 Mod 清单、配置和初始化状态前检查取消。当前 `IModLoader` 没有可中断扫描参数，因此取消不能保证立即停止目录扫描或资源包操作；它保证扫描结束后不会把迟到结果提交为已初始化状态。资源包的最终释放仍由 `ResourceSystem` 统一负责。
 
 使用 `UniTaskVoid` 或 `.Forget()` 时，必须沿用项目已有的异常观察方式；不能让异步异常无人等待、无人记录。
 
@@ -81,7 +83,7 @@ private async UniTask LogTextAsync(
 - 把 UniTask 通用 API 复制到项目卡，造成与官方资料的第二份真相。
 - 创建资源句柄却不等待、不释放，或异常路径没有释放。
 - 在线程池任务中访问 UnityEngine 对象；当前项目线程池调用只用于明确的压缩包文件处理。
-- 认为 `ModAPI.Initialize` 支持取消，或把 `ModAPI.Shutdown` 当作资源包回收。
+- 把 Mod 取消令牌理解成能立即中断 `IModLoader` 的所有文件和资源包操作，或把 `ModAPI.Shutdown` 当作资源包回收。
 - 使用 `.Forget()` 却没有异常记录。
 - 混合 Task、协程和 UniTask，却没有说明线程、帧时序和取消边界。
 

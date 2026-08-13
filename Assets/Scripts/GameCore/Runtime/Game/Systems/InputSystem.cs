@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using YokiFrame;
 
@@ -39,26 +40,21 @@ namespace GameCore
 
         public override void OnSystemStart()
         {
-            EventKit.Type.Register<MapTransitionStartedEvent>(OnMapTransitionStarted);
-            EventKit.Type.Register<MapTransitionCompletedEvent>(OnMapTransitionCompleted);
+            EventKit.Type.Register<SceneTransitionStartedEvent>(OnSceneTransitionStarted);
+            EventKit.Type.Register<SceneTransitionEndedEvent>(OnSceneTransitionEnded);
             m_playerInput.onControlsChanged += OnControlsChanged;
 
-            RegisterGameplayInputCallbacks();
             RegisterSharedReleaseCallbacks();
-
-            // 输入系统先验唯一节点检查，避免正式场景继续靠后续 UI 激活才暴露第二真相。
-            FormalSceneSingletonConflictDiagnostics.ReportFormalSceneSingletonConflicts($"{nameof(InputSystem)}.{nameof(OnSystemStart)}");
         }
 
         public override void OnSystemStop()
         {
             ClearExternalInputActionListeners();
-            EventKit.Type.UnRegister<MapTransitionStartedEvent>(OnMapTransitionStarted);
-            EventKit.Type.UnRegister<MapTransitionCompletedEvent>(OnMapTransitionCompleted);
+            EventKit.Type.UnRegister<SceneTransitionStartedEvent>(OnSceneTransitionStarted);
+            EventKit.Type.UnRegister<SceneTransitionEndedEvent>(OnSceneTransitionEnded);
             m_playerInput.onControlsChanged -= OnControlsChanged;
 
             UnregisterSharedReleaseCallbacks();
-            UnregisterGameplayInputCallbacks();
         }
 
         public override void OnSystemShutdown()
@@ -221,7 +217,7 @@ namespace GameCore
             m_currentActionMap = actionMap;
             m_playerInput.SwitchCurrentActionMap(actionMap.ToString());
             ArmActionMapReleaseGate(actionMap);
-            UpdateEventSystemUiModuleGate();
+            UpdateEventSystemUiModuleGate(resetActionsForMapSwitch: true);
         }
 
         /// <summary>
@@ -359,64 +355,6 @@ namespace GameCore
             return tokens.Any(identity.Contains);
         }
 
-        private bool TryResolveLocalPlayerCommandContext(out GameCommandContext commandContext)
-        {
-            if (!GameManager.PlayerSystem.TryGetCurrentInputTarget(out IPlayerInputTarget inputTarget))
-            {
-                commandContext = GameCommandContext.LocalPlayer(null);
-                return false;
-            }
-
-            inputTarget.TryGetControlledCharacter(out CharacterBase controlledCharacter);
-            commandContext = GameCommandContext.LocalPlayer(controlledCharacter);
-            return true;
-        }
-
-        private PlayerCommandResult ExecuteLocalPlayerCommand(
-            EPlayerCommandKind kind,
-            Vector2 direction = default,
-            Vector2? worldPosition = null,
-            int abilityIndex = -1,
-            CharacterBase targetCharacter = null,
-            GameObject interactionTarget = null)
-        {
-            if (!TryResolveLocalPlayerCommandContext(out GameCommandContext commandContext))
-            {
-                PlayerCommandResult missingTargetResult = PlayerCommandResult.Failed(
-                    new PlayerCommandRequest(
-                        GameCommandContext.LocalPlayer(null),
-                        kind,
-                        direction,
-                        worldPosition,
-                        abilityIndex,
-                        targetCharacter,
-                        interactionTarget),
-                    EPlayerCommandFailureReason.MissingInputTarget);
-                NotifyLocalPlayerCommandResult(missingTargetResult);
-                return missingTargetResult;
-            }
-
-            PlayerCommandResult result = GameManager.PlayerSystem.SubmitPlayerCommand(
-                new PlayerCommandRequest(
-                    commandContext,
-                    kind,
-                    direction,
-                    worldPosition,
-                    abilityIndex,
-                    targetCharacter,
-                    interactionTarget));
-            NotifyLocalPlayerCommandResult(result);
-            return result;
-        }
-
-        private static void NotifyLocalPlayerCommandResult(PlayerCommandResult result)
-        {
-            if (!result.Succeeded)
-            {
-                YokiFrame.EventKit.Type.Send(new LocalPlayerCommandFailedEvent(result));
-            }
-        }
-
         private InputAction GetGameplayAction(EGameplayInputAction action)
         {
             return action switch
@@ -549,44 +487,6 @@ namespace GameCore
             public Action<InputAction.CallbackContext> Listener { get; }
         }
 
-        private void RegisterGameplayInputCallbacks()
-        {
-            m_gameplayActions.interact.performed += OnInteractPerformed;
-            m_gameplayActions.fireAbility1.performed += OnFireAbility1Performed;
-            m_gameplayActions.fireAbility2.performed += OnFireAbility2Performed;
-            m_gameplayActions.fireAbility3.performed += OnFireAbility3Performed;
-            m_gameplayActions.fireAbility4.performed += OnFireAbility4Performed;
-            m_gameplayActions.fireAbility5.performed += OnFireAbility5Performed;
-            m_gameplayActions.fireAbility1.canceled += OnFireAbility1Canceled;
-            m_gameplayActions.fireAbility2.canceled += OnFireAbility2Canceled;
-            m_gameplayActions.fireAbility3.canceled += OnFireAbility3Canceled;
-            m_gameplayActions.fireAbility4.canceled += OnFireAbility4Canceled;
-            m_gameplayActions.fireAbility5.canceled += OnFireAbility5Canceled;
-            m_gameplayActions.move.performed += OnMovePerformed;
-            m_gameplayActions.move.canceled += OnMoveCanceled;
-            m_gameplayActions.toggleMovementControlMode.performed += OnToggleMovementControlModePerformed;
-            m_gameplayActions.openGameMenu.performed += OnOpenGameMenuPerformed;
-        }
-
-        private void UnregisterGameplayInputCallbacks()
-        {
-            m_gameplayActions.interact.performed -= OnInteractPerformed;
-            m_gameplayActions.fireAbility1.performed -= OnFireAbility1Performed;
-            m_gameplayActions.fireAbility2.performed -= OnFireAbility2Performed;
-            m_gameplayActions.fireAbility3.performed -= OnFireAbility3Performed;
-            m_gameplayActions.fireAbility4.performed -= OnFireAbility4Performed;
-            m_gameplayActions.fireAbility5.performed -= OnFireAbility5Performed;
-            m_gameplayActions.fireAbility1.canceled -= OnFireAbility1Canceled;
-            m_gameplayActions.fireAbility2.canceled -= OnFireAbility2Canceled;
-            m_gameplayActions.fireAbility3.canceled -= OnFireAbility3Canceled;
-            m_gameplayActions.fireAbility4.canceled -= OnFireAbility4Canceled;
-            m_gameplayActions.fireAbility5.canceled -= OnFireAbility5Canceled;
-            m_gameplayActions.move.performed -= OnMovePerformed;
-            m_gameplayActions.move.canceled -= OnMoveCanceled;
-            m_gameplayActions.toggleMovementControlMode.performed -= OnToggleMovementControlModePerformed;
-            m_gameplayActions.openGameMenu.performed -= OnOpenGameMenuPerformed;
-        }
-
         private void RegisterSharedReleaseCallbacks()
         {
             m_gameplayActions.move.canceled += OnSharedActionReleased;
@@ -642,37 +542,79 @@ namespace GameCore
             }
         }
 
-        private void UpdateEventSystemUiModuleGate()
+        private void UpdateEventSystemUiModuleGate(bool resetActionsForMapSwitch = false)
         {
-            if (GameManager.EventSystem == null)
+            EventSystem eventSystem = GameManager.EventSystem;
+            if (eventSystem == null)
             {
                 return;
             }
 
-            BaseInputModule inputModule = GameManager.EventSystem.GetComponent<BaseInputModule>();
-            if (inputModule == null)
-            {
-                return;
-            }
+            InputSystemUIInputModule inputModule = GetRequiredEventSystemUiInputModule(eventSystem);
 
-            if (m_currentActionMap != EActionMap.UI)
+            if (m_currentActionMap is not (EActionMap.Gameplay or EActionMap.UI))
             {
-                GameManager.EventSystem.sendNavigationEvents = false;
+                eventSystem.sendNavigationEvents = false;
                 inputModule.enabled = false;
                 return;
             }
 
             bool canProcessUiInputs = !m_actionMapReleaseGate.HasBlockedActions;
-            GameManager.EventSystem.sendNavigationEvents = canProcessUiInputs;
-            inputModule.enabled = canProcessUiInputs;
+            eventSystem.sendNavigationEvents =
+                m_currentActionMap == EActionMap.UI && canProcessUiInputs;
+            if (!canProcessUiInputs)
+            {
+                inputModule.enabled = false;
+                return;
+            }
+
+            // PlayerInput 切图会停用前一张图的 UI 动作；常驻 HUD 仍需要同一资产的鼠标动作。
+            // 只在明确切换图时重启模块，避免鼠标抬起回调中重置正在处理的 UI 点击。
+            if (resetActionsForMapSwitch && inputModule.enabled)
+            {
+                inputModule.enabled = false;
+            }
+
+            inputModule.enabled = true;
         }
 
-        private void OnMapTransitionStarted(MapTransitionStartedEvent _)
+        /// <summary>
+        /// 把 UIKit 创建的唯一 UI 输入模块接回当前玩家的正式动作资产。
+        /// UIKit 负责创建 EventSystem，本系统负责保证它不会留下第二份默认输入资产。
+        /// </summary>
+        private InputSystemUIInputModule GetRequiredEventSystemUiInputModule(EventSystem eventSystem)
+        {
+            if (m_playerInput == null || m_playerInput.actions == null)
+            {
+                throw new InvalidOperationException("正式输入系统尚未拥有 PlayerInput 动作资产，不能启用 UI 输入。");
+            }
+
+            InputSystemUIInputModule inputModule =
+                eventSystem.GetComponent<InputSystemUIInputModule>();
+            if (inputModule == null)
+            {
+                throw new InvalidOperationException(
+                    "正式 EventSystem 缺少 InputSystemUIInputModule；新输入系统项目不能回退到旧输入模块。");
+            }
+
+            if (m_playerInput.uiInputModule != inputModule)
+            {
+                m_playerInput.uiInputModule = inputModule;
+            }
+            if (inputModule.actionsAsset != m_playerInput.actions)
+            {
+                inputModule.actionsAsset = m_playerInput.actions;
+            }
+
+            return inputModule;
+        }
+
+        private void OnSceneTransitionStarted(SceneTransitionStartedEvent _)
         {
             m_playerInput.DeactivateInput();
         }
 
-        private void OnMapTransitionCompleted(MapTransitionCompletedEvent _)
+        private void OnSceneTransitionEnded(SceneTransitionEndedEvent _)
         {
             m_playerInput.ActivateInput();
         }
@@ -687,57 +629,6 @@ namespace GameCore
             m_actionMapReleaseGate.NotifyReleased(context.action);
             UpdateEventSystemUiModuleGate();
         }
-
-        private void OnInteractPerformed(InputAction.CallbackContext context)
-        {
-            if (IsBlocked(context.action))
-            {
-                return;
-            }
-
-            ExecuteLocalPlayerCommand(EPlayerCommandKind.Interact);
-        }
-
-        private void OnOpenGameMenuPerformed(InputAction.CallbackContext context)
-        {
-            if (IsBlocked(context.action))
-            {
-                return;
-            }
-
-            ExecuteLocalPlayerCommand(EPlayerCommandKind.OpenGameMenu);
-        }
-
-        private void OnMovePerformed(InputAction.CallbackContext context)
-        {
-            if (IsBlocked(context.action))
-            {
-                return;
-            }
-
-            ExecuteLocalPlayerCommand(EPlayerCommandKind.Move, direction: context.ReadValue<Vector2>());
-        }
-
-        private void OnMoveCanceled(InputAction.CallbackContext context)
-        {
-            ExecuteLocalPlayerCommand(EPlayerCommandKind.StopMove);
-        }
-
-        private void OnToggleMovementControlModePerformed(InputAction.CallbackContext context)
-        {
-            ExecuteLocalPlayerCommand(EPlayerCommandKind.ToggleMovementControlMode);
-        }
-
-        private void OnFireAbility1Performed(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.FireAbility, abilityIndex: 0);
-        private void OnFireAbility2Performed(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.FireAbility, abilityIndex: 1);
-        private void OnFireAbility3Performed(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.FireAbility, abilityIndex: 2);
-        private void OnFireAbility4Performed(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.FireAbility, abilityIndex: 3);
-        private void OnFireAbility5Performed(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.FireAbility, abilityIndex: 4);
-        private void OnFireAbility1Canceled(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.StopFireAbility, abilityIndex: 0);
-        private void OnFireAbility2Canceled(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.StopFireAbility, abilityIndex: 1);
-        private void OnFireAbility3Canceled(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.StopFireAbility, abilityIndex: 2);
-        private void OnFireAbility4Canceled(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.StopFireAbility, abilityIndex: 3);
-        private void OnFireAbility5Canceled(InputAction.CallbackContext context) => ExecuteLocalPlayerCommand(EPlayerCommandKind.StopFireAbility, abilityIndex: 4);
 
         private void Update()
         {

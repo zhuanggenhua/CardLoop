@@ -23,7 +23,7 @@ namespace GameCore
 
         public void HandleSaveFileClicked(SaveFileActionDesc desc)
         {
-            GameManager.SaveSystem.SaveToFile(desc.filename);
+            GameManager.SaveSystem.SaveToFile(desc.slotId);
             UpdateUI();
         }
     }

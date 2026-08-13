@@ -1,6 +1,8 @@
+using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using YokiFrame;
 
 namespace GameCore
 {
@@ -28,7 +30,7 @@ namespace GameCore
     public struct SaveFileActionDesc
     {
         public SaveFileActionType action;
-        public string filename;
+        public int slotId;
     }
 
     /// <summary>
@@ -37,20 +39,21 @@ namespace GameCore
     public class UISaveFile : MonoBehaviour
     {
         [Header("设置")]
-        [InspectorName("动作")]
+        [LabelText("动作")]
         [Tooltip("点击该槽位时执行保存还是读取。")]
         [SerializeField] private SaveFileActionType m_action = SaveFileActionType.Load;
 
-        [InspectorName("存档文件名")]
-        [Tooltip("该槽位对应的存档文件名。")]
-        [SerializeField] private string m_saveFileName = null;
+        [LabelText("槽位编号")]
+        [Tooltip("SaveKit 槽位编号，从 0 开始。槽位不通过文件名或字符串哈希推导。")]
+        [Min(0)]
+        [SerializeField] private int m_slotId;
 
         [Header("引用")]
-        [InspectorName("详情文本")]
+        [LabelText("详情文本")]
         [Tooltip("显示存档摘要或 Empty 的文本控件。")]
         [SerializeField] private TextMeshProUGUI m_details = null;
 
-        [InspectorName("按钮")]
+        [LabelText("按钮")]
         [Tooltip("触发存档槽动作的按钮。")]
         [SerializeField] private Button m_button = null;
 
@@ -76,12 +79,15 @@ namespace GameCore
         /// </summary>
         public void UpdateUI()
         {
-            SaveDataBlock saveData = SaveSystem.ExtractSaveDataFromFile(m_saveFileName);
+            SaveMeta metadata = SaveSystem.GetSaveMetadata(m_slotId);
 
-            if (saveData != null)
+            if (metadata.Version > 0)
             {
-                m_details.text = saveData.header;
+                m_details.text = string.IsNullOrWhiteSpace(metadata.DisplayName)
+                    ? $"Slot {metadata.SlotId + 1:D3}"
+                    : metadata.DisplayName;
                 m_isEmpty = false;
+                m_button.interactable = true;
             }
             else
             {
@@ -105,7 +111,10 @@ namespace GameCore
         /// </summary>
         public void EraseSaveData()
         {
-            SaveSystem.EraseSaveData(m_saveFileName);
+            if (SaveSystem.DeleteSaveData(m_slotId))
+            {
+                UpdateUI();
+            }
         }
 
         /// <summary>
@@ -116,7 +125,7 @@ namespace GameCore
             m_receiver.HandleSaveFileClicked(new SaveFileActionDesc
             {
                 action = m_action,
-                filename = m_saveFileName
+                slotId = m_slotId
 
             });
         }

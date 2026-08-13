@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace GameCore
     [Serializable]
     public class PlayAudioClip : IContextualCommand
     {
-        [InspectorName("音频")]
+        [LabelText("音频")]
         [Tooltip("要播放的音频解析器。")]
         [SerializeField] private AudioClipResolver m_audioClip = null;
 

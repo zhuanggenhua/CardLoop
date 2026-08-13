@@ -15,14 +15,12 @@ namespace GameCore
     /// </summary>
     public class MapSystem : AGameSystem, IDataBlockHandler<MapDataBlock>
     {
-        private string m_currentSceneAddress = string.Empty;
         private Stack<ICheckpoint> m_checkpointStack;
         private MapInfo m_activeMapInfo;
         private readonly List<MapInfo> m_registeredMapInfos = new();
         private bool m_hasOrderedCheckpoint;
         private int m_currentCheckpointOrder = int.MinValue;
         private Coroutine m_respawnCoroutine;
-        private bool m_transitionInProgress;
 
         public override void OnSystemInit()
         {
@@ -31,19 +29,19 @@ namespace GameCore
 
         public override void OnSystemStart()
         {
+            EventKit.Type.Register<SceneLoadedEvent>(OnSceneLoaded);
             RefreshActiveMapInfoFromRegisteredInfos();
         }
 
         public override void OnSystemStop()
         {
+            EventKit.Type.UnRegister<SceneLoadedEvent>(OnSceneLoaded);
             StopRespawnCoroutine();
         }
 
         public override void OnSystemShutdown()
         {
             StopRespawnCoroutine();
-            m_transitionInProgress = false;
-            m_currentSceneAddress = string.Empty;
             m_activeMapInfo = null;
         }
 
@@ -57,19 +55,8 @@ namespace GameCore
             StopRespawnCoroutine();
         }
 
-        private void SetActiveScene(string sceneAddress, SceneHandler sceneHandler)
+        private void OnSceneLoaded(SceneLoadedEvent _)
         {
-            if (sceneHandler == null ||
-                !sceneHandler.Scene.IsValid() ||
-                !sceneHandler.Scene.isLoaded ||
-                SceneManager.GetActiveScene() != sceneHandler.Scene ||
-                !string.Equals(sceneHandler.SceneName, sceneAddress, StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException(
-                    $"[{nameof(MapSystem)}] SceneKit 没有返回有效的活动场景：{sceneAddress}");
-            }
-
-            m_currentSceneAddress = sceneAddress ?? string.Empty;
             RefreshActiveMapInfoFromRegisteredInfos();
         }
 
@@ -132,104 +119,6 @@ namespace GameCore
             m_checkpointStack.Push(checkpoint);
             m_hasOrderedCheckpoint = true;
             m_currentCheckpointOrder = checkpointOrder;
-        }
-
-        public string GetCurrentSceneAddress()
-        {
-            return m_currentSceneAddress;
-        }
-
-        public bool HasCurrentScene()
-        {
-            return GetCurrentSceneHandler() != null;
-        }
-
-        public void RequestTransition(
-            string sceneAddress,
-            Action onMapLoaded = null,
-            Action onCompletion = null)
-        {
-            RequestTransitionAsync(sceneAddress, onMapLoaded, onCompletion).Forget(
-                exception => Debug.LogException(new InvalidOperationException(
-                    $"[{nameof(MapSystem)}] 场景切换失败：{sceneAddress}", exception), this));
-        }
-
-        public async UniTask RequestTransitionAsync(
-            string sceneAddress,
-            Action onMapLoaded = null,
-            Action onCompletion = null)
-        {
-            TransitionSystem transitionSystem = GetRequiredTransitionSystem();
-            string targetSceneAddress = sceneAddress ?? string.Empty;
-            bool hasCurrentScene = GetCurrentSceneHandler() != null;
-
-            if (m_transitionInProgress)
-            {
-                throw new InvalidOperationException("已有地图切换正在执行，不能并发开始第二次切换。");
-            }
-
-            if (string.IsNullOrEmpty(targetSceneAddress))
-            {
-                RefreshActiveMapInfoFromRegisteredInfos();
-                EventKit.Type.Send(new MapLoadedEvent());
-                onMapLoaded?.Invoke();
-                onCompletion?.Invoke();
-                return;
-            }
-
-            bool isSameScene = hasCurrentScene &&
-                               string.Equals(GetCurrentSceneAddress(), targetSceneAddress, StringComparison.Ordinal);
-            m_transitionInProgress = true;
-            EventKit.Type.Send(new MapTransitionStartedEvent());
-            try
-            {
-                await transitionSystem.FadeOutUniTaskAsync(destroyCancellationToken);
-
-                if (!isSameScene)
-                {
-                    if (hasCurrentScene)
-                    {
-                        EventKit.Type.Send(new MapUnloadingEvent());
-                    }
-
-                    EventKit.Type.Send(new MapLoadingEvent());
-                    SceneHandler loadedScene = await SceneKit.LoadSceneUniTaskAsync(
-                        targetSceneAddress,
-                        SceneLoadMode.Single,
-                        cancellationToken: destroyCancellationToken);
-                    SetActiveScene(targetSceneAddress, loadedScene);
-
-                    if (hasCurrentScene)
-                    {
-                        EventKit.Type.Send(new MapUnloadedEvent());
-                    }
-                }
-                else
-                {
-                    RefreshActiveMapInfoFromRegisteredInfos();
-                }
-
-                EventKit.Type.Send(new MapLoadedEvent());
-                onMapLoaded?.Invoke();
-                await transitionSystem.FadeInUniTaskAsync(destroyCancellationToken);
-            }
-            finally
-            {
-                try
-                {
-                    if (transitionSystem.IsTransitioning)
-                    {
-                        await transitionSystem.FadeInUniTaskAsync(destroyCancellationToken);
-                    }
-                }
-                finally
-                {
-                    m_transitionInProgress = false;
-                    EventKit.Type.Send(new MapTransitionCompletedEvent());
-                }
-            }
-
-            onCompletion?.Invoke();
         }
 
         public void RespawnPlayer()
@@ -337,11 +226,11 @@ namespace GameCore
 
         private Scene ResolveTrackedScene()
         {
-            SceneHandler currentSceneHandler = GetCurrentSceneHandler();
+            SceneHandler currentSceneHandler = SceneKit.GetActiveSceneHandler();
             if (currentSceneHandler != null)
             {
                 Scene currentScene = currentSceneHandler.Scene;
-                if (currentScene.IsValid())
+                if (currentScene.IsValid() && currentScene.isLoaded)
                 {
                     return currentScene;
                 }
@@ -390,7 +279,7 @@ namespace GameCore
 
             CharacterActor traversalCharacter = GetRequiredTraversalCharacter(nameof(TeleportTo));
 
-            RequestTransition(checkpoint.sceneAddress, () =>
+            GetRequiredSceneSystem().TransitionTo(checkpoint.sceneAddress, () =>
             {
                 traversalCharacter.TeleportTo(checkpoint.position);
                 onMapLoaded?.Invoke();
@@ -399,7 +288,7 @@ namespace GameCore
 
         public void TeleportToInitialSpawnPosition(string sceneAddress, Action onCompletion = null)
         {
-            RequestTransition(sceneAddress, () =>
+            GetRequiredSceneSystem().TransitionTo(sceneAddress, () =>
             {
                 ICheckpoint checkpoint = FindRequiredInitialSpawnCheckpoint(nameof(TeleportToInitialSpawnPosition));
                 CharacterActor traversalCharacter = GetRequiredTraversalCharacter(nameof(TeleportToInitialSpawnPosition));
@@ -411,7 +300,7 @@ namespace GameCore
 
         public void TeleportToPlaytestStartPosition(string sceneAddress, Action onCompletion = null)
         {
-            RequestTransition(sceneAddress, () =>
+            GetRequiredSceneSystem().TransitionTo(sceneAddress, () =>
             {
                 ICheckpoint checkpoint = FindPlaytestCheckpoint();
                 CharacterActor traversalCharacter = GetRequiredTraversalCharacter(nameof(TeleportToPlaytestStartPosition));
@@ -425,7 +314,7 @@ namespace GameCore
         {
             return new MapDataBlock
             {
-                currentSceneAddress = m_currentSceneAddress,
+                currentSceneAddress = GameManager.SceneSystem.CurrentSceneAddress,
                 checkpoints = m_checkpointStack.ToArray(),
                 hasOrderedCheckpoint = m_hasOrderedCheckpoint,
                 currentCheckpointOrder = m_currentCheckpointOrder,
@@ -470,7 +359,7 @@ namespace GameCore
                 }
                 else
                 {
-                    RequestTransition(
+                    GetRequiredSceneSystem().TransitionTo(
                         savedSceneAddress,
                         EnsureTraversalCharacterValidSpawnOnActiveMap,
                         onCompletion);
@@ -499,32 +388,16 @@ namespace GameCore
             }
         }
 
-        private SceneHandler GetCurrentSceneHandler()
+        private static SceneSystem GetRequiredSceneSystem()
         {
-            if (string.IsNullOrEmpty(m_currentSceneAddress))
-            {
-                return null;
-            }
-
-            SceneHandler handler = SceneKit.GetSceneHandler(m_currentSceneAddress);
-            return handler != null &&
-                   handler.State == SceneState.Loaded &&
-                   handler.Scene.IsValid() &&
-                   handler.Scene.isLoaded
-                ? handler
-                : null;
-        }
-
-        private TransitionSystem GetRequiredTransitionSystem()
-        {
-            TransitionSystem transitionSystem = GameManager.TransitionSystem;
-            if (transitionSystem == null || !transitionSystem.isActiveAndEnabled)
+            SceneSystem sceneSystem = GameManager.SceneSystem;
+            if (sceneSystem == null || !sceneSystem.isActiveAndEnabled)
             {
                 throw new InvalidOperationException(
-                    $"[{nameof(MapSystem)}] Map transitions require one active {nameof(TransitionSystem)}. The direct transition fallback has been removed.");
+                    $"[{nameof(MapSystem)}] 跨场景地图操作需要一个启用的 {nameof(SceneSystem)}。");
             }
 
-            return transitionSystem;
+            return sceneSystem;
         }
 
         private static void EnsureValidCheckpoint(ICheckpoint checkpoint, string operationName)

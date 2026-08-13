@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,24 +20,24 @@ namespace GameCore
     public class UITerm : MonoBehaviour
     {
         [Header("设置")]
-        [InspectorName("术语 ID")]
+        [LabelText("术语 ID")]
         [Tooltip("GameConfig 中的术语标识。")]
         [SerializeField] private string m_termID = null;
 
-        [InspectorName("文本格式")]
+        [LabelText("文本格式")]
         [Tooltip("用于包装术语名称的格式字符串，{0} 会替换成术语全称或简称。")]
         [SerializeField] private string m_textFormat = "{0}";
 
-        [InspectorName("显示模式")]
+        [LabelText("显示模式")]
         [Tooltip("选择显示术语全称还是简称。")]
         [SerializeField] private ETermDisplayMode m_displayMode = ETermDisplayMode.FullName;
 
         [Header("引用")]
-        [InspectorName("可选图标")]
+        [LabelText("可选图标")]
         [Tooltip("存在时会显示术语图标。")]
         [SerializeField] private Image m_optionalIcon = null;
 
-        [InspectorName("可选文本")]
+        [LabelText("可选文本")]
         [Tooltip("存在时会显示格式化后的术语名称。")]
         [SerializeField] private TextMeshProUGUI m_optionalLabel = null;
 

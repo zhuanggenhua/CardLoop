@@ -16,6 +16,12 @@ namespace GameCore
         /// </summary>
         private void InitializeSystems()
         {
+            if (m_initializedSystems.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "GameManager 已经完成系统初始化，不能重复初始化。请先关闭当前进程级运行时。");
+            }
+
             foreach (AGameSystem system in m_systemExecutionOrder)
             {
                 try
@@ -36,7 +42,8 @@ namespace GameCore
         {
             if (m_startedSystems.Count > 0)
             {
-                return;
+                throw new InvalidOperationException(
+                    "GameManager 已经启动系统，不能重复启动。请先停止当前进程级运行时。");
             }
 
             foreach (AGameSystem system in m_systemExecutionOrder)

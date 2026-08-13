@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 
@@ -33,11 +34,11 @@ namespace GameCore
         /// </summary>
         public string guid => m_guid;
 
-        [InspectorName("数据库资产")]
+        [LabelText("数据库资产")]
         [Tooltip("仅编辑器配置使用；序列化时会同步为 GUID，运行时不依赖该对象引用。")]
         [SerializeField] private T m_instance;
 
-        [InspectorName("GUID")]
+        [LabelText("GUID")]
         [Tooltip("数据库资产的稳定 GUID，运行时用它从 DatabaseRegistry 找回目标资产。")]
         [SerializeField] private string m_guid = string.Empty;
 

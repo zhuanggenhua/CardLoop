@@ -23,7 +23,7 @@ metadata:
 
 | 插件 / 包 | 本地官方文档入口 | 官方仓库 / 文档入口 |
 |-----------|------------------|----------------------|
-| EX-GAS | `Assets/Plugins/GAS/SKILL.md`、`Assets/Plugins/GAS/Wiki/*.md`、`Assets/Plugins/GAS/package.json` | `Assets/Plugins/GAS/package.json` 的 `documentationUrl` / `repository.url`。 |
+| EX-GAS | `Assets/Plugins/GAS/SKILL.md`、`Assets/Plugins/GAS/Wiki/*.md`、`Assets/Plugins/GAS/package.json` | 官方 `EX-GAS-2.0` 分支 README：`https://github.com/No78Vino/gameplay-ability-system-for-unity/blob/EX-GAS-2.0/README.md`；本地 2.0.4 的项目校准见 [`ai-quick/ex-gas-runtime.md`](ai-quick/ex-gas-runtime.md)。默认分支 1.x README 不适用于当前版本。 |
 | YokiFrame | `Assets/Plugins/YokiFrame/README.md`、`Assets/Plugins/YokiFrame/Core/Editor/AI_NAVIGATION.md`、`Assets/Plugins/YokiFrame/Core/Editor/Skills/*/SKILL.md` | `Assets/Plugins/YokiFrame/package.json` 的 `repository.url`。 |
 | YooAsset | `Packages/com.tuyoogame.yooasset/README.md`、`Packages/com.tuyoogame.yooasset/CHANGELOG.md`、`Packages/com.besty.unity-skills/unity-skills~/skills/yooasset-design/*.md` | `Packages/com.tuyoogame.yooasset/package.json` 的 `repository.url`。 |
 | UniTask | `Packages/com.cysharp.unitask/package.json`、`Packages/com.besty.unity-skills/unity-skills~/skills/unitask-design/*.md` | 官方仓库为 `https://github.com/Cysharp/UniTask`；当前项目包版本见本地 `package.json`。 |
@@ -33,6 +33,7 @@ metadata:
 | Unity Cinemachine | `Packages/manifest.json` 中的 `com.unity.cinemachine` | Unity 官方包文档：`https://docs.unity3d.com/Packages/com.unity.cinemachine@3.1/manual/index.html`；当前项目专项卡待补。 |
 | Unity Timeline | `Packages/manifest.json` 中的 `com.unity.timeline`、EX-GAS Timeline 专项文档 | Unity 官方包文档：`https://docs.unity3d.com/Packages/com.unity.timeline@1.8/manual/index.html`；EX-GAS 时间轴先读插件文档。 |
 | AIBridge Unity | `Packages/com.aibridge.unity/README.md`、`Packages/com.aibridge.unity/package.json` | `Packages/com.aibridge.unity/package.json` 的 `repository.url`。 |
+| Odin Inspector | `Assets/Plugins/Sirenix/Odin Inspector/`、`Assets/Plugins/Sirenix/Assemblies/Sirenix.OdinInspector.Attributes.dll` | 官方属性文档为 `https://odininspector.com/attributes/label-text-attribute`；当前项目的 ScriptableObject 实际由 `OdinEditor` 绘制，普通字段中文标签统一使用 `[LabelText]`，不修改插件源码。 |
 | UnitySkills | `Packages/com.besty.unity-skills/unity-skills~/SKILL.md`、`Packages/com.besty.unity-skills/unity-skills~/skills/*/SKILL.md`、`references/*.md` | 以包内 skill / references 为本地官方入口。 |
 | NuGetForUnity | `Assets/ThirdParty/nugetforunity/package.json`、`Assets/ThirdParty/nugetforunity/README.pdf`、`Assets/NuGet.config`、`Assets/packages.config` | `package.json` 的 `documentationUrl` / `changelogUrl` 指向 NuGetForUnity 官方仓库；本项目用它管理 Unity 内的 NuGet DLL。 |
 | ZLinq / ZLinq.Unity | `Assets/Packages/ZLinq.1.5.6/README.md`、`Assets/Packages/ZLinq.1.5.6/ZLinq.nuspec`、`Packages/com.cysharp.zlinq/package.json` | 官方仓库为 `ZLinq.nuspec` 的 `projectUrl`；Unity 集成按官方建议由 NuGet `ZLinq` 加 `ZLinq.Unity` UPM 包组成，本项目将 `ZLinq.Unity` 嵌入到 `Packages/com.cysharp.zlinq`，避免打开工程时依赖 GitHub 网络。 |

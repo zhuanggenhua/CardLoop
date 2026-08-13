@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -13,71 +14,71 @@ namespace GameCore
     public sealed class TerrainNavigationMap : MonoBehaviour
     {
         [Header("寻路规则层")]
-        [InspectorName("兼容默认寻路规则 Tilemap")]
+        [LabelText("兼容默认寻路规则 Tilemap")]
         [Tooltip("旧单层地图的兼容入口。它是寻路真相源，不是视觉层，也不是 Unity 物理碰撞层。多层地图应改用下方规则层来源列表。")]
         [SerializeField] private Tilemap m_ruleTilemap = null;
 
-        [InspectorName("寻路规则层来源")]
+        [LabelText("寻路规则层来源")]
         [Tooltip("同一个地形导航入口管理的多个逻辑寻路层。为空时自动使用兼容默认寻路规则 Tilemap。")]
         [SerializeField] private TerrainNavigationLayerSource[] m_layerSources = Array.Empty<TerrainNavigationLayerSource>();
 
-        [InspectorName("跨层连接")]
+        [LabelText("跨层连接")]
         [Tooltip("显式连接两个地形节点的坡道、楼梯、梯子或落差入口。同格不同层不会自动连通。")]
         [SerializeField] private TerrainTransitionLink[] m_transitionLinks = Array.Empty<TerrainTransitionLink>();
 
         [Header("路径设置")]
-        [InspectorName("最近可行走格搜索半径")]
+        [LabelText("最近可行走格搜索半径")]
         [Min(0)]
         [Tooltip("点击点落在阻挡边缘时，允许在该格半径内寻找最近合法目标。找不到时命令明确失败。")]
         [SerializeField] private int m_nearestWalkableSearchRadius = 2;
 
         [Header("编辑器调试")]
-        [InspectorName("绘制最近导航路径")]
+        [LabelText("绘制最近导航路径")]
         [Tooltip("在 Scene 视图中绘制最近一次点击寻路的起点、目标和实际路径。需要开启 Scene 视图的 Gizmos。")]
         [SerializeField] private bool m_drawLastNavigationPath = true;
 
-        [InspectorName("路径标记半径")]
+        [LabelText("路径标记半径")]
         [Min(0.01f)]
         [SerializeField] private float m_debugMarkerRadius = 0.26f;
 
-        [InspectorName("成功路径颜色")]
+        [LabelText("成功路径颜色")]
         [SerializeField] private Color m_debugPathColor = new(1.0f, 0.88f, 0.05f, 1.0f);
 
-        [InspectorName("失败目标颜色")]
+        [LabelText("失败目标颜色")]
         [SerializeField] private Color m_debugFailureColor = new(1.0f, 0.25f, 0.2f, 1.0f);
 
-        [InspectorName("吸附目标颜色")]
+        [LabelText("吸附目标颜色")]
         [SerializeField] private Color m_debugResolvedGoalColor = new(0.15f, 0.75f, 1.0f, 1.0f);
 
         [Header("编辑器路径预览")]
-        [InspectorName("启用编辑器路径预览")]
+        [LabelText("启用编辑器路径预览")]
         [Tooltip("选中本组件时，可在 Scene 视图拖动起点和点击点并直接查看真实导航路径。")]
         [SerializeField] private bool m_showEditorNavigationPreview = true;
 
-        [InspectorName("预览起点")]
+        [LabelText("预览起点")]
         [SerializeField] private Vector2 m_editorPreviewStart = new(0.75f, -3.1f);
 
-        [InspectorName("预览点击点")]
+        [LabelText("预览点击点")]
         [SerializeField] private Vector2 m_editorPreviewDestination = new(5.2f, -3.1f);
 
         [Header("运行时路径提示")]
-        [InspectorName("显示运行时路径提示")]
+        [LabelText("显示运行时路径提示")]
         [Tooltip("在 Game 视图中显示最近一次点击移动的一条可走路线、目标点或失败红叉。")]
         [SerializeField] private bool m_showRuntimeNavigationPath = true;
 
-        [InspectorName("显示运行时调试细节")]
+        [LabelText("显示运行时调试细节")]
         [Tooltip("开启后叠加起点、点击点、吸附格、辅助线和路径点圈；默认关闭，避免玩家视图混入内部寻路细节。")]
         [SerializeField] private bool m_showRuntimeNavigationDebugDetails;
 
-        [InspectorName("路径线宽")]
+        [LabelText("路径线宽")]
         [Min(0.01f)]
         [SerializeField] private float m_runtimePathLineWidth = 0.18f;
 
-        [InspectorName("路径点半径")]
+        [LabelText("路径点半径")]
         [Min(0.01f)]
         [SerializeField] private float m_runtimeWaypointRadius = 0.11f;
 
-        [InspectorName("目标圆环分段")]
+        [LabelText("目标圆环分段")]
         [Range(12, 96)]
         [SerializeField] private int m_runtimeMarkerSegments = 40;
 

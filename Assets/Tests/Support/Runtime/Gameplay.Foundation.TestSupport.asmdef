@@ -1,0 +1,23 @@
+{
+  "name": "Gameplay.Foundation.TestSupport",
+  "rootNamespace": "Gameplay.Tests.Support",
+  "references": [
+    "GameCore",
+    "Gameplay.Runtime",
+    "com.exhard.exgas.runtime",
+    "UniTask",
+    "YokiFrame",
+    "YokiFrame.UIKit"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

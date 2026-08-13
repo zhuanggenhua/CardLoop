@@ -1,0 +1,26 @@
+{
+  "name": "Gameplay.Runtime",
+  "rootNamespace": "Gameplay",
+    "references": [
+    "GameCore",
+    "com.exhard.exgas.general",
+    "com.exhard.exgas.runtime",
+    "GAS.GeneratedRuntime",
+    "YokiFrame",
+    "YokiFrame.SaveKit",
+    "YokiFrame.UIKit",
+    "Unity.TextMeshPro",
+    "Unity.InputSystem",
+    "Unity.Mathematics",
+    "UniTask"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

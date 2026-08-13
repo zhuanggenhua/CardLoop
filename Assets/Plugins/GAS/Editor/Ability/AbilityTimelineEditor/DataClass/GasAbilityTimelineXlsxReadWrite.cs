@@ -151,13 +151,18 @@ namespace GAS.Editor
                 // 复用原有第一个 sheet（里面头几行已有 luban 的定义）
                 var worksheet = package.Workbook.Worksheets[1];
 
-                // 清除旧数据：从第 6 行开始都是数据区
+                // 清空数据区而不删除整行。删除行会强制 EPPlus 重定位表头批注，
+                // 而由 Excel 或其他表格工具保存的合法工作簿不一定包含 EPPlus 依赖的 VML Anchor。
                 const int dataStartRow = 6;
                 if (worksheet.Dimension != null && worksheet.Dimension.End.Row >= dataStartRow)
                 {
-                    var delCount = worksheet.Dimension.End.Row - dataStartRow + 1;
-                    if (delCount > 0)
-                        worksheet.DeleteRow(dataStartRow, delCount);
+                    const int dataStartColumn = 2;
+                    const int dataEndColumn = 20;
+                    worksheet.Cells[
+                        dataStartRow,
+                        dataStartColumn,
+                        worksheet.Dimension.End.Row,
+                        dataEndColumn].Value = null;
                 }
 
                 var row = dataStartRow;

@@ -4,7 +4,7 @@ namespace GameCore
     {
         public static bool IsJudiciousTarget(CharacterBase attacker, CharacterBase defender) => CanTarget(attacker, defender) && AreEnemies(attacker, defender);
 
-        public static bool CanTarget(DamageOutputDescriptor damageOutput, CharacterBase defender)
+        internal static bool CanTarget(DamageOutputDescriptor damageOutput, CharacterBase defender)
         {
             if (damageOutput.TryGetSourceCharacter(out CharacterBase attacker))
             {

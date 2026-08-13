@@ -84,8 +84,8 @@ MonoBehaviour:
     maxNormalAngle: 0
   m_cameraShakeSources: 0
   m_maxEquippableAbilities: 5
-  m_canCriticalHit: 1
-  m_canMissHit: 1
+  m_canCriticalHit: 0
+  m_canMissHit: 0
   m_allowPushOnRegularHit: 1
   m_allowPushOnCriticalHit: 1
   m_allowPushOnMissedHit: 1

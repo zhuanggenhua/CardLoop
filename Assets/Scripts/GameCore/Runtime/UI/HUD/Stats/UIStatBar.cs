@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
@@ -8,14 +9,21 @@ namespace GameCore
     public class UIStatBar : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private TextMeshProUGUI m_label = null;
         [SerializeField] private Slider m_slider = null;
         [SerializeField] private TextMeshProUGUI m_sliderText = null;
         [Tooltip("留空时跟随当前控制角色；只有明确指定时，才固定显示某个角色的数值。")]
         [SerializeField] private CharacterBase m_target = null;
 
-        [Header("General Settings")]
-        [SerializeField] private EStat m_stat;
+        [Header("属性")]
+        [LabelText("当前值属性")]
+        [Tooltip("选择作为进度条当前值的 EX-GAS FightUnit 属性，例如 Health。")]
+        [CharacterAttributeCode]
+        [SerializeField] private int m_currentAttributeCode;
+
+        [LabelText("上限属性")]
+        [Tooltip("选择作为进度条上限的 EX-GAS FightUnit 属性，例如 MaxHealth。")]
+        [CharacterAttributeCode]
+        [SerializeField] private int m_maximumAttributeCode;
 
         [Header("Visual Settings")]
         [SerializeField] private bool m_shakeOnDecrease = false;
@@ -106,7 +114,7 @@ namespace GameCore
             }
         }
 
-        private void OnStatsChanged(Stats previous)
+        private void OnAttributeValueChanged(CharacterAttributeValueChange change)
         {
             UpdateUI();
         }
@@ -124,20 +132,17 @@ namespace GameCore
                 m_slider.maxValue = 0;
                 m_slider.value = 0;
                 m_sliderText.text = string.Empty;
-                m_label.text = GameManager.Config.GetTermDefinition(m_stat).shortName;
                 m_hasDisplayedBoundValue = false;
                 return;
             }
 
-            m_label.text = GameManager.Config.GetTermDefinition(m_stat).shortName;
-
-            int current = m_target.GetCurrentStatValue(m_stat);
-            int max = m_target.GetStatValue(m_stat);
+            float current = m_target.GetAttributeCurrentValue(m_currentAttributeCode);
+            float maximum = m_target.GetAttributeBaseValue(m_maximumAttributeCode);
 
             float previousSliderValue = m_slider.value;
 
             m_slider.minValue = 0;
-            m_slider.maxValue = max;
+            m_slider.maxValue = maximum;
             m_slider.value = current;
 
             if (m_hasDisplayedBoundValue && m_slider.value < previousSliderValue && m_shakeOnDecrease)
@@ -145,7 +150,10 @@ namespace GameCore
                 Shake();
             }
 
-            m_sliderText.text = StringFormatter.Format("{0}/{1}", current, max);
+            m_sliderText.text = StringFormatter.Format(
+                "{0}/{1}",
+                current.ToString("0.##"),
+                maximum.ToString("0.##"));
             m_hasDisplayedBoundValue = true;
         }
 
@@ -193,8 +201,8 @@ namespace GameCore
                 return;
             }
 
-            m_target.AddStatsChangedListener(OnStatsChanged);
-            m_target.AddCurrentStatsChangedListener(OnStatsChanged);
+            m_target.AddAttributeBaseValueChangedListener(OnAttributeValueChanged);
+            m_target.AddAttributeCurrentValueChangedListener(OnAttributeValueChanged);
             UpdateUI();
         }
 
@@ -202,8 +210,8 @@ namespace GameCore
         {
             if (m_target != null)
             {
-                m_target.RemoveStatsChangedListener(OnStatsChanged);
-                m_target.RemoveCurrentStatsChangedListener(OnStatsChanged);
+                m_target.RemoveAttributeBaseValueChangedListener(OnAttributeValueChanged);
+                m_target.RemoveAttributeCurrentValueChangedListener(OnAttributeValueChanged);
             }
 
             m_target = null;

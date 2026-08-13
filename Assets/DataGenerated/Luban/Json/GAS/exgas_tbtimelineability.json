@@ -60,7 +60,7 @@
                   "Param": {
                     "isWorldSpace": false,
                     "points": "0.175,-0.25;1.125,-0.25;1.125,0.55;0.175,0.55",
-                    "layer": 128
+                    "layer": -1
                   }
                 }
               }
@@ -139,7 +139,7 @@
                       "y": 0.8
                     },
                     "rotation": 0,
-                    "layer": 128
+                    "layer": -1
                   }
                 }
               }
@@ -218,8 +218,38 @@
                       "y": 0.95
                     },
                     "rotation": 0,
-                    "layer": 128
+                    "layer": -1
                   }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "ID": 20005,
+    "Name": "Tabletop Basic Attack",
+    "LifeTime": 2,
+    "ManualEndAbility": false,
+    "Tracks": [
+      {
+        "Name": "GameplayEffect",
+        "TaskClips": [
+          {
+            "StartTime": 1,
+            "EndTime": 1,
+            "Name": "Apply tabletop attack damage",
+            "Task": {
+              "$type": "TaskApplyEffects",
+              "Param": {
+                "IDs": [
+                  2003
+                ],
+                "TargetCatcher": {
+                  "$type": "CatchTarget",
+                  "Param": {}
                 }
               }
             }

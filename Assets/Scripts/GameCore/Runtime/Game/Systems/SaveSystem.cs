@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using YokiFrame;
 
 namespace GameCore
 {
@@ -14,57 +16,70 @@ namespace GameCore
             LoadDataBlock(saveFile.CreateContentSnapshot());
         }
 
-        public static void EraseSaveData(string saveFileName)
+        public static bool DeleteSaveData(int slotId)
         {
-            SaveFileStorageRuntime.EraseSaveData(saveFileName);
+            return SaveFileStorageRuntime.DeleteSaveData(slotId);
         }
 
-        public static SaveDataBlock ExtractSaveDataFromFile(string saveFileName)
+        public static IReadOnlyList<SaveMeta> GetAllSaveMetadata()
         {
-            return SaveFileStorageRuntime.ExtractSaveDataFromFile(saveFileName);
+            return SaveFileStorageRuntime.GetAllSaveMetadata();
         }
 
-        public void LoadFromFile(string saveFileName)
+        public static int DeleteAllSaveData()
         {
-            SaveDataBlock saveData = ExtractSaveDataFromFile(saveFileName);
+            return SaveFileStorageRuntime.DeleteAllSaveData();
+        }
+
+        public static SaveData ExtractSaveContainerFromFile(int slotId)
+        {
+            return SaveFileStorageRuntime.ExtractSaveContainerFromFile(slotId);
+        }
+
+        public static SaveData CreateSaveContainer()
+        {
+            return SaveFileStorageRuntime.CreateSaveContainer();
+        }
+
+        public static SaveMeta GetSaveMetadata(int slotId)
+        {
+            return SaveFileStorageRuntime.GetSaveMetadata(slotId);
+        }
+
+        public void LoadFromFile(int slotId)
+        {
+            SaveData container = ExtractSaveContainerFromFile(slotId);
+            SaveDataBlock saveData = container?.GetModule<SaveDataBlock>();
 
             if (saveData != null)
             {
                 LoadDataBlock(
                     saveData,
-                    () => Debug.Log($"Save <b>{saveFileName}</b> loaded successfully!"));
+                    () => Debug.Log($"Save slot <b>{slotId}</b> loaded successfully!"));
             }
             else
             {
-                Debug.LogError($"Save <b>{saveFileName}</b> failed to load!");
+                Debug.LogError($"Save slot <b>{slotId}</b> does not contain the GameCore world module.");
             }
         }
 
-        public void SaveToFile(string saveFileName)
+        public void SaveToFile(int slotId)
         {
-            try
+            SaveDataBlock saveFile = CreateDataBlock();
+            SaveData container = CreateSaveContainer();
+            container.RegisterModule(saveFile);
+            if (StoreSaveDataToFile(slotId, container, saveFile.header))
             {
-                SaveDataBlock saveFile = CreateDataBlock();
-                if (StoreSaveDataToFile(saveFileName, saveFile))
-                {
-                    int slotId = GetSlotId(saveFileName);
-                    Debug.Log($"Saved <b>{saveFileName}</b> to SaveKit slot {slotId}.");
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to save {saveFileName} through SaveKit: {e.Message}");
+                Debug.Log($"Saved GameCore world module to SaveKit slot {slotId}.");
             }
         }
 
-        internal static bool StoreSaveDataToFile(string saveFileName, SaveDataBlock block)
+        public static bool StoreSaveDataToFile(
+            int slotId,
+            SaveData container,
+            string displayName)
         {
-            return SaveFileStorageRuntime.StoreSaveDataToFile(saveFileName, block);
-        }
-
-        internal static int GetSlotId(string saveFileName)
-        {
-            return SaveFileStorageRuntime.GetSlotId(saveFileName);
+            return SaveFileStorageRuntime.StoreSaveContainer(slotId, container, displayName);
         }
 
         internal static void ConfigureSaveKit(string saveDirectory = null)

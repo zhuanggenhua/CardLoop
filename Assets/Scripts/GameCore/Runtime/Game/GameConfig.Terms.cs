@@ -15,9 +15,6 @@ namespace GameCore
         [SerializeField] private SerializableDictionary<string, TermDefinition> m_gameTerms = new();
 
         [Header("Game Terms Bindings (Advanced Settings)")]
-        [SerializeField] private SerializableDictionary<EStat, string> m_statTermsBinding = new();
-        [SerializeField] private SerializableDictionary<EStat, string> m_statIncreaseTermsBinding = new();
-        [SerializeField] private SerializableDictionary<EStat, string> m_statDecreaseTermsBinding = new();
         [SerializeField] private SerializableDictionary<EDamageType, string> m_damageTypesBinding = new();
         [SerializeField] private SerializableDictionary<EAbilityType, string> m_abilityTypesBinding = new();
 
@@ -125,72 +122,6 @@ namespace GameCore
             }
 
             return m_defaultTermDefinition;
-        }
-
-        public TermDefinition GetTermDefinition(EStat stat)
-        {
-            if (m_statTermsBinding.ContainsKey(stat))
-            {
-                return GetTermDefinition(m_statTermsBinding[stat]);
-            }
-
-            return m_defaultTermDefinition;
-        }
-
-        public bool TryGetTermId(EStat stat, out string termId)
-        {
-            if (m_statTermsBinding.TryGetValue(stat, out termId) &&
-                !string.IsNullOrWhiteSpace(termId))
-            {
-                return true;
-            }
-
-            termId = string.Empty;
-            return false;
-        }
-
-        public TermDefinition GetStatIncreaseTermDefinition(EStat stat)
-        {
-            if (m_statIncreaseTermsBinding.ContainsKey(stat))
-            {
-                return GetTermDefinition(m_statIncreaseTermsBinding[stat]);
-            }
-
-            return m_defaultTermDefinition;
-        }
-
-        public bool TryGetStatIncreaseTermId(EStat stat, out string termId)
-        {
-            if (m_statIncreaseTermsBinding.TryGetValue(stat, out termId) &&
-                !string.IsNullOrWhiteSpace(termId))
-            {
-                return true;
-            }
-
-            termId = string.Empty;
-            return false;
-        }
-
-        public TermDefinition GetStatDecreaseTermDefinition(EStat stat)
-        {
-            if (m_statDecreaseTermsBinding.ContainsKey(stat))
-            {
-                return GetTermDefinition(m_statDecreaseTermsBinding[stat]);
-            }
-
-            return m_defaultTermDefinition;
-        }
-
-        public bool TryGetStatDecreaseTermId(EStat stat, out string termId)
-        {
-            if (m_statDecreaseTermsBinding.TryGetValue(stat, out termId) &&
-                !string.IsNullOrWhiteSpace(termId))
-            {
-                return true;
-            }
-
-            termId = string.Empty;
-            return false;
         }
 
         public TermDefinition GetTermDefinition(EDamageType type)

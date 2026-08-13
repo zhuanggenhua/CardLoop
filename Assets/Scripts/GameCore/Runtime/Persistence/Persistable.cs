@@ -125,7 +125,7 @@ namespace GameCore
             m_persistenceInfo = new RuntimeInstancedPersistentDataHandler
             {
                 prefab = prefabReference,
-                sceneAddress = GameManager.MapSystem.GetCurrentSceneAddress(),
+                sceneAddress = GameManager.SceneSystem.CurrentSceneAddress,
                 identifier = identifier
             };
 

@@ -12,6 +12,7 @@ metadata:
 
 | 文档 | 何时查 |
 |------|--------|
+| [standards/gameplay-architecture.md](standards/gameplay-architecture.md) | 做 Gameplay 地基、StackCraft/2DRPGEngine 参考吸收、对象模型、系统边界、Mod/联机扩展裁决时查。 |
 | [`standards/workflow.md`](standards/workflow.md) | 做开发流程、验证、知识沉淀、规范维护时查。 |
 | [`standards/testing.md`](standards/testing.md) | 做测试、验收、bug 修复、TDD 策略和验证证据时查。 |
 | [`standards/code-style.md`](standards/code-style.md) | 写代码、写注释、建文档、命名和生成物处理时查。 |
@@ -34,6 +35,7 @@ metadata:
 | [`features/project/stackcraft-template-study.md`](features/project/stackcraft-template-study.md) | 查看 StackCraft 模板导入后的设置恢复结论、框架吸收裁决、保留/不接管边界和后续底座设计约束时查。 |
 | [`features/project/stackcraft-system-reference-matrix.md`](features/project/stackcraft-system-reference-matrix.md) | 查看 StackCraft 架构搬迁顺序、数据定义优先原则、UI 框架吸收、联机约束、可吸收职责和必须排除的旧职责时查。 |
 | [`features/project/gameplay-foundation-proposal.md`](features/project/gameplay-foundation-proposal.md) | 查看 Gameplay 地基提案、YooAsset / 新 Input System 决策、内容定义优先、StackCraft 架构吸收阶段和未来业务边界时查。 |
+| [`features/project/gameplay-foundation-reaudit.md`](features/project/gameplay-foundation-reaudit.md) | 对前面 Gameplay 地基模块进行 OOP、生命周期、作者源、参考等价和 Mod/联机扩展的全量重审时查。 |
 
 ## skills（工作流）
 

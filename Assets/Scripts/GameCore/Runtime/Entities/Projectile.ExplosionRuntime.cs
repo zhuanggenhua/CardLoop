@@ -22,7 +22,7 @@ namespace GameCore
                 .ToArray();
         }
 
-        private void ApplyExplosionBaseDamage(Vector2 explosionOrigin, CharacterBase[] targets)
+        private void ApplyExplosionImpactEffect(Vector2 explosionOrigin, CharacterBase[] targets)
         {
             if (targets == null || targets.Length == 0)
             {
@@ -36,15 +36,10 @@ namespace GameCore
                     continue;
                 }
 
-                FormalGameplayEffectDamageHelper.TryApplyDamage(
-                    m_source,
+                ApplyImpactGameplayEffect(
                     target,
-                    new FormalDamageEffectPayload(
-                        m_baseDamage.damageDescriptor,
-                        m_baseDamage.visualFlags,
-                        default,
-                        EEffectImpactDataType.Velocity,
-                        (Vector2)target.transform.position - explosionOrigin));
+                    EEffectImpactDataType.Velocity,
+                    (Vector2)target.transform.position - explosionOrigin);
             }
         }
 
@@ -67,11 +62,11 @@ namespace GameCore
                 .Distinct()
                 .ToArray();
 
-            if (m_explosionApplyBaseDamage && m_baseDamage.isConfigured)
+            if (m_explosionApplyImpactEffect)
             {
-                ApplyExplosionBaseDamage(
+                ApplyExplosionImpactEffect(
                     explosionOrigin,
-                    CreateExplosionTargetSnapshot(characters, primaryTarget, m_explosionBaseDamageIgnorePrimaryTarget));
+                    CreateExplosionTargetSnapshot(characters, primaryTarget, m_explosionImpactEffectIgnorePrimaryTarget));
             }
         }
     }

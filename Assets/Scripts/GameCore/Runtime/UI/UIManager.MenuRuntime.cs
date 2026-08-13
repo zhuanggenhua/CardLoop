@@ -8,7 +8,7 @@ namespace GameCore
     /// </summary>
     public sealed partial class UIManager
     {
-        private const string DefaultStackName = "fw_menu";
+        private const string DefaultStackName = "game-menu";
         private bool m_menuRuntimeStarted;
 
         private void StartMenuRuntime()

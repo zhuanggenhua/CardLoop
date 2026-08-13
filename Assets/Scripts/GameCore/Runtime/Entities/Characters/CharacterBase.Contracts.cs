@@ -301,9 +301,9 @@ namespace GameCore
     {
         public int level;
         /// <summary>
-        /// 当前值快照只用于正式属性恢复和迁移兜底，不作为另一套运行时真相源。
+        /// ASC 基础值快照只用于存档恢复，不参与运行时属性查询或效果重算。
         /// </summary>
-        [SerializeReference, SubclassSelector] public Stats currentStats;
+        public CharacterAttributeSnapshot attributes;
         public DatabaseEntryReference<CharacterAlterationRule>[] activeAlterationRules;
         public CharacterAbilityRuntimeStateData[] abilityRuntimeStates;
         public CharacterAbilitySourceData[] abilitySources;
@@ -325,7 +325,7 @@ namespace GameCore
         public Vector2 lookAtDirection;
         [SerializeReference, SubclassSelector] public IControllerDataBlock controllerData;
         public int level;
-        [SerializeReference, SubclassSelector] public Stats currentStats;
+        public CharacterAttributeSnapshot attributes;
         public DatabaseEntryReference<CharacterAlterationRule>[] activeAlterationRules;
         public CharacterAbilityRuntimeStateData[] abilityRuntimeStates;
         public CharacterAbilitySourceData[] abilitySources;

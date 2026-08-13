@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
@@ -18,7 +19,7 @@ namespace GameCore
     /// </summary>
     public abstract class AConditionalStateMachine : MonoBehaviour
     {
-        [InspectorName("驱动条件")]
+        [LabelText("驱动条件")]
         [Tooltip("用于决定状态机进入满足或不满足分支的条件。为空时按满足处理。")]
         [SerializeReference, SubclassSelector] private ICondition m_condition = null;
 

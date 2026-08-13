@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bb965c0c6b04c70bbf238fd797bcc1b, type: 3}
+  m_Name: "\u5730\u57FA\u7B2C\u4E8C\u573A\u666F\u6D4B\u8BD5\u5730\u533A"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Scenarios.ScenarioRegionDefinition
+  m_contentId:
+    m_value: test.foundation.region.scene.second
+  m_tagCodes:
+  m_displayName: "\u5730\u57FA\u7B2C\u4E8C\u573A\u666F\u6D4B\u8BD5\u5730\u533A"
+  m_description: "\u573A\u666F\u65C5\u884C\u6D4B\u8BD5\u4F7F\u7528\u7684\u7B2C\u4E8C\u5730\u533A\u3002"
+  m_icon:
+    Address:
+    Guid:
+    Locked: 1
+  m_sceneAddress: FoundationSecondMapTest
+  m_tabletopPlacement:
+    m_bounds:
+      serializedVersion: 2
+      x: -5
+      y: -3
+      width: 10
+      height: 6
+    m_restrictedAreas: []
+    m_cardSize: {x: 1.4, y: 2}
+    m_stackStep: {x: 0.35, y: 0.22}
+  m_arrivalPosition: {x: 0, y: 0}

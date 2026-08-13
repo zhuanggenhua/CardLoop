@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 using UObject = UnityEngine.Object;
@@ -10,7 +11,7 @@ namespace GameCore
     [Serializable]
     public class SoftAssetReferenceBase
     {
-        [InspectorName("资源地址")]
+        [LabelText("资源地址")]
         [Tooltip("YooAsset 资源地址。为空时该引用无效。")]
         public string Address;
 

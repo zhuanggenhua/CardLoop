@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -10,11 +11,11 @@ namespace GameCore
     [Serializable]
     public class AddOrRemoveAbility : IContextualCommand
     {
-        [InspectorName("动作")]
+        [LabelText("动作")]
         [Tooltip("决定添加还是移除该技能。")]
         [SerializeField] private EAction m_action = EAction.Add;
 
-        [InspectorName("Formal GAS 技能编码")]
+        [LabelText("Formal GAS 技能编码")]
         [Tooltip("要添加或移除的 Formal GAS 技能编码；必须大于 0。")]
         [SerializeField] private int m_formalGasAbilityCode = 0;
 

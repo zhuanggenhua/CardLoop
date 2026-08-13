@@ -8,7 +8,7 @@ namespace GameCore
     /// 受击反馈触发时，提供给镜头或屏幕表现层的只读上下文。
     /// 这让相机表现继续走正式反馈闭包，而不是直接从全局通知系统里自行推断业务语义。
     /// </summary>
-    public readonly struct DamageTakenFeedbackContext
+    internal readonly struct DamageTakenFeedbackContext
     {
         public readonly Vector3 position;
         public readonly CharacterBase target;
@@ -16,7 +16,7 @@ namespace GameCore
         public readonly DamageInputDescriptor damageInput;
         public readonly EEffectVisualFlags visualFlags;
 
-        public DamageTakenFeedbackContext(
+        internal DamageTakenFeedbackContext(
             Vector3 position,
             CharacterBase target,
             CharacterBase sourceCharacter,
@@ -91,7 +91,7 @@ namespace GameCore
 
     /// <summary>
     /// 能力和本地输入门控层的表现反馈闭包。
-    /// 这里是 GameCore 允许直接持有 MMFeedbacks 的边界；业务规则仍由 RPG Ability/Effect/Stats 结算，不能让 TopDown 的生命、输入或 Manager 接管真相。
+    /// 这里是 GameCore 允许直接持有 MMFeedbacks 的边界；业务规则仍由 EX-GAS Ability、GameplayEffect 和角色 ASC 结算，不能让 TopDown 的生命、输入或 Manager 接管真相。
     /// </summary>
     [Serializable]
     public sealed class GameplayFeedbackSet
@@ -167,7 +167,7 @@ namespace GameCore
         /// 播放受击反馈，并把只读受击上下文广播给纯表现监听者。
         /// 这样相机震动之类的表现可以沿正式反馈闭包收口，而不是直接监听全局伤害通知。
         /// </summary>
-        public void PlayDamageTaken(
+        internal void PlayDamageTaken(
             Vector3 position,
             CharacterBase target,
             DamageInputDescriptor damageInput,

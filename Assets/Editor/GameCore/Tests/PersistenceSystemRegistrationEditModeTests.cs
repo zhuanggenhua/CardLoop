@@ -69,7 +69,7 @@ namespace GameCore.Tests
         }
 
         [Test]
-        public void MapLoadedEvent_LoadsRegisteredPreInstancedPersistables()
+        public void SceneLoadedEvent_LoadsRegisteredPreInstancedPersistables()
         {
             PersistenceProbe probe = CreatePreInstancedProbe("load-registered-pre-instanced", true);
             PersistableDataBlock savedBlock = new()
@@ -85,7 +85,7 @@ namespace GameCore.Tests
             {
                 objects = new[] { savedBlock }
             });
-            EventKit.Type.Send(new MapLoadedEvent());
+            EventKit.Type.Send(new SceneLoadedEvent());
 
             Assert.AreEqual(1, probe.LoadCount, "地图加载应把保存块应用到已登记的预摆对象。");
             Assert.AreSame(savedBlock, probe.LastLoadedBlock);

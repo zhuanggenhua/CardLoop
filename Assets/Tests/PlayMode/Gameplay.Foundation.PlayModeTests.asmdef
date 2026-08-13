@@ -1,0 +1,36 @@
+{
+  "name": "Gameplay.Foundation.PlayModeTests",
+  "rootNamespace": "Gameplay.Tests",
+  "references": [
+    "GameCore",
+    "Gameplay.Runtime",
+    "Gameplay.Foundation.TestSupport",
+    "GAS.GeneratedRuntime",
+    "com.exhard.exgas.runtime",
+    "Unity.Collections",
+    "Unity.Entities",
+    "UniTask",
+    "YokiFrame",
+    "YokiFrame.SaveKit",
+    "YokiFrame.UIKit",
+    "YokiFrame.SceneKit",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework",
+    "Unity.TextMeshPro",
+    "UnityEngine.TestRunner",
+    "YooAsset"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

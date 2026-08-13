@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 
@@ -9,7 +10,7 @@ namespace GameCore
     [Serializable]
     public class MoveCharacter : MoveCharacterBase
     {
-        [InspectorName("目标角色")]
+        [LabelText("目标角色")]
         [Tooltip("要移动的角色。")]
         [SerializeField] private CharacterBase m_toMove = null;
 

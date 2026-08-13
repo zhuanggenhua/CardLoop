@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -58,67 +59,67 @@ namespace GameCore
     public class CharacterAlterationRule : DatabaseEntry, INameable
     {
         [Header("UI 设置")]
-        [InspectorName("显示名称")]
+        [LabelText("显示名称")]
         [Tooltip("规则在 UI 或调试输出中的中文名称。为空时使用数据库条目名称兜底。")]
         [SerializeField] private string m_displayName = string.Empty;
-        [InspectorName("描述")]
+        [LabelText("描述")]
         [Tooltip("说明该变化状态对玩家或角色造成的影响。")]
         [SerializeField] private string m_description = string.Empty;
 
         [Header("规则身份")]
-        [InspectorName("规则类型")]
+        [LabelText("规则类型")]
         [SerializeField]
         [Tooltip("规则类型决定来源键归入变形还是感染。丧尸化当前按感染类规则处理，后续如需要独立来源类型再单独裁决。")]
         private ECharacterAlterationRuleKind m_ruleKind = ECharacterAlterationRuleKind.Transformation;
 
-        [InspectorName("叠加策略")]
+        [LabelText("叠加策略")]
         [SerializeField]
         [Tooltip("唯一规则同一角色只能激活一次；可叠层规则每次激活都会增加一层能力授予/压制来源。")]
         private ECharacterAlterationStackingPolicy m_stackingPolicy = ECharacterAlterationStackingPolicy.Unique;
 
-        [InspectorName("互斥组 ID")]
+        [LabelText("互斥组 ID")]
         [SerializeField]
         [Tooltip("非空时，同组规则会按优先级互斥。用于狼人形态、丧尸阶段等同一身体状态只能保留一个胜出规则的场景。")]
         private string m_exclusiveGroupId = string.Empty;
 
-        [InspectorName("优先级")]
+        [LabelText("优先级")]
         [SerializeField]
         [Tooltip("同一互斥组内，高优先级规则会保留；低优先级规则不能覆盖高优先级规则。")]
         private int m_priority;
 
         [Header("能力变化")]
-        [InspectorName("授予能力编号")]
+        [LabelText("授予能力编号")]
         [SerializeField]
         [Tooltip("规则生效期间临时授予角色的 EX-GAS Ability Code。正式技能必须填这里。")]
         private int[] m_grantedFormalGasAbilityCodes = Array.Empty<int>();
 
-        [InspectorName("压制能力编号")]
+        [LabelText("压制能力编号")]
         [SerializeField]
         [Tooltip("规则生效期间临时压制的 EX-GAS Ability Code。正式技能必须填这里。")]
         private int[] m_suppressedFormalGasAbilityCodes = Array.Empty<int>();
 
         [Header("控制变化")]
-        [InspectorName("锁定动作")]
+        [LabelText("锁定动作")]
         [SerializeField]
         [Tooltip("规则生效期间锁定的角色动作。会影响玩家输入、AI 移动、能力权限、装备变更和主动背包操作。")]
         private EActionFlags m_lockedActions = EActionFlags.None;
 
-        [InspectorName("锁定玩家控制")]
+        [LabelText("锁定玩家控制")]
         [SerializeField]
         [Tooltip("勾选后，规则生效期间角色不能作为玩家当前控制对象。适用于丧尸化、失控变形或被精神控制等会夺走直接操控权的状态。")]
         private bool m_lockPlayerControl = false;
 
-        [InspectorName("强制 AI 控制")]
+        [LabelText("强制 AI 控制")]
         [SerializeField]
         [Tooltip("勾选后，规则生效期间尝试把角色切到同一角色上已配置的 AIController。它会同时锁定玩家直接控制；没有 AIController 时不会伪造第二套 AI。")]
         private bool m_forceAIControl = false;
 
-        [InspectorName("覆盖阵营")]
+        [LabelText("覆盖阵营")]
         [SerializeField]
         [Tooltip("勾选后，规则生效期间临时覆盖角色阵营。感染、丧尸化或敌对变形可用它影响 AI 选敌和伤害判定。")]
         private bool m_overrideAlignment = false;
 
-        [InspectorName("阵营覆盖值")]
+        [LabelText("阵营覆盖值")]
         [SerializeField]
         [Tooltip("规则生效期间覆盖到的阵营。多条规则同时覆盖时按规则优先级裁决。")]
         private EAlignment m_alignmentOverride = EAlignment.Default;

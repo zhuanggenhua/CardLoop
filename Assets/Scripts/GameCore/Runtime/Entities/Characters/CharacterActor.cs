@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 
@@ -41,7 +42,7 @@ namespace GameCore
     public partial class CharacterActor : CharacterBase
     {
         [Header("表现")]
-        [InspectorName("动画驱动组件")]
+        [LabelText("动画驱动组件")]
         [Tooltip("正式统一角色 Prefab 上的动画驱动。为空时回退到旧动画策略。")]
         [SerializeField] private MonoBehaviour m_animationDriverBehaviour;
 
@@ -72,33 +73,12 @@ namespace GameCore
             m_animationStrategy?.Resume();
         }
 
-        protected override void InitializeStats()
-        {
-            RefreshResolvedStats();
-        }
-
-        internal void RefreshResolvedStats()
-        {
-            SetResolvedBaseStats(BuildResolvedStats());
-        }
-
-        internal override void RefreshResolvedStatsForEquipmentRuntime()
-        {
-            RefreshResolvedStats();
-        }
-
-        private Stats BuildResolvedStats()
-        {
-            return m_sheet.GetStatsAtLevel(m_level);
-        }
-
         internal void SetLevel(int level)
         {
             int targetLevel = Mathf.Clamp(level, Constants.MinLevel, Constants.MaxLevel);
             if (targetLevel < m_level)
             {
                 m_level = targetLevel;
-                RefreshResolvedStats();
                 return;
             }
 
@@ -107,7 +87,6 @@ namespace GameCore
                 LevelUp(silentMode: true);
             }
 
-            RefreshResolvedStats();
         }
 
         protected override void OnDeath()
@@ -205,7 +184,7 @@ namespace GameCore
                 lookAtDirection = baseRuntimeState.lookAtDirection,
                 controllerData = baseRuntimeState.controllerData,
                 level = baseRuntimeState.level,
-                currentStats = baseRuntimeState.currentStats,
+                attributes = baseRuntimeState.attributes,
                 activeAlterationRules = baseRuntimeState.activeAlterationRules,
                 abilityRuntimeStates = baseRuntimeState.abilityRuntimeStates,
                 abilitySources = baseRuntimeState.abilitySources,

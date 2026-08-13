@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -20,15 +21,15 @@ namespace GameCore
     [Serializable]
     public class ExecuteCommandList : IContextualCommand
     {
-        [InspectorName("执行模式")]
+        [LabelText("执行模式")]
         [Tooltip("顺序模式会等待每个命令完成后再执行下一个；并行模式会同时启动所有命令并等待全部完成。")]
         [SerializeField] private ECommandListExecutionMode m_executionMode = ECommandListExecutionMode.Sequential;
 
-        [InspectorName("执行期间禁用动作")]
+        [LabelText("执行期间禁用动作")]
         [Tooltip("命令列表执行期间临时禁用的角色动作，完成或异常后都会恢复。")]
         [SerializeField] private EActionFlags m_disabledActions = EActionFlags.None;
 
-        [InspectorName("子命令列表")]
+        [LabelText("子命令列表")]
         [Tooltip("要执行的命令序列；支持实现 IContextualCommand 的命令接收同一上下文。")]
         [SerializeReference, SubclassSelector] private ICommand[] m_commands = null;
 

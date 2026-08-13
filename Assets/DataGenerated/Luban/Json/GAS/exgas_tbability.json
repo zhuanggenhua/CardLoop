@@ -85,5 +85,34 @@
         "ID": 20004
       }
     }
+  },
+  {
+    "ID": 20005,
+    "Name": "TabletopBasicAttack",
+    "Desc": "Targeted basic attack for tabletop character cards.",
+    "Cost": 0,
+    "CdEffect": 0,
+    "Cd": 0,
+    "AssetTags": [],
+    "ActivationOwnedTags": [
+      3003
+    ],
+    "ActivationBlockedTags": {
+      "All": [
+        0
+      ],
+      "Any": [
+        0
+      ],
+      "None": [
+        3003
+      ]
+    },
+    "AbilityLogic": {
+      "$type": "ALTimeline",
+      "Param": {
+        "ID": 20005
+      }
+    }
   }
 ]

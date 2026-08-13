@@ -25,7 +25,7 @@ namespace GameCore
         {
             return new PersistableCheckpoint
             {
-                sceneAddress = GameManager.MapSystem.GetCurrentSceneAddress(),
+                sceneAddress = GameManager.SceneSystem.CurrentSceneAddress,
                 instance = this
             };
         }

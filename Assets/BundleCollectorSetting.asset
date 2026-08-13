@@ -37,7 +37,21 @@ MonoBehaviour:
         PackRuleName: PackCollector
         FilterRuleName: ContentAssetFilterRule
         AssetTags: 
-        UserData: 
+        UserData:
+    - GroupName: "EX-GAS\u8FD0\u884C\u65F6\u914D\u7F6E"
+      GroupDesc: "\u6536\u96C6 EX-GAS Luban \u751F\u6210\u8868\uFF0C\u4F9B\u6B63\u5F0F
+        GAS \u542F\u52A8\u94FE\u4F7F\u7528 YooAsset \u52A0\u8F7D"
+      AssetTags: gas-config
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/DataGenerated/Luban/Json/GAS
+        CollectorGUID: 0b36ffad600057f46ada41e03ee886fd
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: gas-config
+        UserData:
     - GroupName: "Gameplay\u5730\u57FA\u6D4B\u8BD5"
       GroupDesc: "\u4EC5\u6536\u96C6 Gameplay \u5730\u57FA\u5165\u53E3\u573A\u666F\u548C
         YooAsset \u9644\u52A0\u5730\u56FE\u6D4B\u8BD5\u573A\u666F"
@@ -51,17 +65,57 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: FoundationSceneFilterRule
         AssetTags: test
-        UserData: 
+        UserData:
       - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u5361\u724C\u89C6\u56FE.prefab"
-        CollectorGUID: 702e6f9aaab7c1a439e286c7f792e07e
+        CollectorGUID: e0e5e302108a1f74989be97f0f65e7de
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: test
-        UserData: 
+        UserData:
       - CollectPath: Assets/StackCraft/Sprites/Square.png
         CollectorGUID: 57fe652483042fb4ba6612b888e7a928
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData:
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u884C\u52A8\u8FDB\u5EA6.prefab"
+        CollectorGUID: c6a4453a163925b4fa0a3ec2d7e35a81
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData:
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/TabletopActionChoicePanel.prefab"
+        CollectorGUID: ae9ec7c0bd044a14aa08d32076abc9e0
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData:
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/ScenarioTurnPanel.prefab"
+        CollectorGUID: d604ef4e464d47948b862ca7ea8549e6
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData:
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/TabletopCardInfoPanel.prefab"
+        CollectorGUID: f9f7e4abf6776784a8a93aae8e39b83a
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData:
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/TabletopActionPlanPanel.prefab"
+        CollectorGUID: 85f0afcb7902ed74492f214047f17592
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory

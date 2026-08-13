@@ -31,10 +31,7 @@ namespace GameCore
             || (m_animationStrategy?.IsInvincibleAnimationPlaying() ?? false);
 
         private readonly CharacterActionStateRuntime m_actionRuntime = new();
-        private readonly AttributeBootstrapBuffer m_attributeBootstrapBuffer = new();
-
         private EAlignment? m_alignmentOverride = null;
-        private bool m_isAttributeBootstrapReadWindowOpen = true;
         private bool m_isDeadAndDestroyed = false;
         private float m_temporaryInvincibilityTimer = 0.0f;
 
@@ -49,16 +46,8 @@ namespace GameCore
         {
             base.Awake();
 
-            InitializeStats();
             InitializeAbilities();
-            try
-            {
-                InitializeFormalAbilitySystemFromCurrentAttributes();
-            }
-            finally
-            {
-                CloseAttributeBootstrapReadWindow();
-            }
+            InitializeFormalAbilitySystemFromCharacterSheet();
         }
 
         protected override void OnEnable()
@@ -70,7 +59,6 @@ namespace GameCore
         
         protected override void Update()
         {
-            EnsureFormalAbilitySystemInitializedAfterAwake();
             ProcessPendingActionInterruptAfterFormalDamage();
             ProcessPendingDeathAfterFormalCurrentValueMutation();
             if (IsMarkedAsDestroyed())
@@ -103,10 +91,7 @@ namespace GameCore
                 return;
             }
 
-            m_isAttributeBootstrapReadWindowOpen = true;
-            InitializeStats();
-            InitializeFormalAbilitySystemFromCurrentAttributes();
-            CloseAttributeBootstrapReadWindow();
+            InitializeFormalAbilitySystemFromCharacterSheet();
         }
 
         /// <summary>
@@ -199,40 +184,6 @@ namespace GameCore
             }
 
             return speed;
-        }
-
-        protected virtual void InitializeStats()
-        {
-            Stats initial = new();
-            initial[EStat.Health] = 1;
-            SetResolvedBaseStats(initial);
-        }
-
-        internal virtual void RefreshResolvedStatsForEquipmentRuntime()
-        {
-            InitializeStats();
-        }
-
-        /// <summary>
-        /// 当前基础属性真相只允许由角色拥有者整体写回。
-        /// CharacterActor 可以重建整份属性，但不再直接持有旧属性观察器细节。
-        /// </summary>
-        protected void SetResolvedBaseStats(Stats stats)
-        {
-            Stats previousBaseStats = CreateStatsSnapshot();
-            Stats previousCurrentStats = CreateCurrentStatsSnapshot();
-
-            if (!TryGetInitializedFormalAttributes(out _))
-            {
-                m_attributeBootstrapBuffer.ReplaceBaseStats(stats);
-            }
-
-            ApplyResolvedBaseStatsToFormalAbilitySystem(stats, previousBaseStats, previousCurrentStats);
-
-            if (!TryGetInitializedFormalAttributes(out _))
-            {
-                PublishStatChanges(previousBaseStats, previousCurrentStats);
-            }
         }
 
         public override void Kill()
@@ -391,12 +342,6 @@ namespace GameCore
         private void NotifyPlayerSystemAboutRevive()
         {
             GameManager.PlayerSystem.NotifyCharacterRevived(this);
-        }
-
-        private void CloseAttributeBootstrapReadWindow()
-        {
-            m_isAttributeBootstrapReadWindowOpen = false;
-            m_attributeBootstrapBuffer.Clear();
         }
 
         /// <summary>

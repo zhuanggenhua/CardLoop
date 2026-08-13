@@ -10,8 +10,8 @@ namespace GameCore
     public abstract partial class CharacterBase
     {
         private readonly UnityEvent<CharacterBase> m_provoked = new();
-        private readonly UnityEvent<Stats> m_statsChanged = new();
-        private readonly UnityEvent<Stats> m_currentStatsChanged = new();
+        private readonly UnityEvent<CharacterAttributeValueChange> m_attributeBaseValueChanged = new();
+        private readonly UnityEvent<CharacterAttributeValueChange> m_attributeCurrentValueChanged = new();
         private readonly UnityEvent<int> m_levelUpped = new();
         private readonly Dictionary<CharacterAbilitySourceKey, CharacterAlignmentOverrideRuntimeEntry> m_alterationAlignmentOverrides = new();
         private readonly Dictionary<CharacterAbilitySourceKey, int> m_alterationPlayerControlLocks = new();
@@ -41,6 +41,26 @@ namespace GameCore
             m_provoked.RemoveListener(listener);
         }
 
+        public void AddAttributeBaseValueChangedListener(UnityAction<CharacterAttributeValueChange> listener)
+        {
+            m_attributeBaseValueChanged.AddListener(listener);
+        }
+
+        public void RemoveAttributeBaseValueChangedListener(UnityAction<CharacterAttributeValueChange> listener)
+        {
+            m_attributeBaseValueChanged.RemoveListener(listener);
+        }
+
+        public void AddAttributeCurrentValueChangedListener(UnityAction<CharacterAttributeValueChange> listener)
+        {
+            m_attributeCurrentValueChanged.AddListener(listener);
+        }
+
+        public void RemoveAttributeCurrentValueChangedListener(UnityAction<CharacterAttributeValueChange> listener)
+        {
+            m_attributeCurrentValueChanged.RemoveListener(listener);
+        }
+
         public void AddLevelUppedListener(UnityAction<int> listener)
         {
             m_levelUpped.AddListener(listener);
@@ -49,70 +69,6 @@ namespace GameCore
         public void RemoveLevelUppedListener(UnityAction<int> listener)
         {
             m_levelUpped.RemoveListener(listener);
-        }
-
-        /// <summary>
-        /// 当前阶段把基础属性/当前属性通知重新收回角色正式拥有者。
-        /// UI 和死亡链只允许订阅 CharacterBase，不再把属性启动缓冲当现役通知真相。
-        /// </summary>
-        private void NotifyBaseStatsChanged(Stats previousStats)
-        {
-            m_statsChanged.Invoke(previousStats ?? new Stats());
-        }
-
-        private void NotifyCurrentStatsChanged(Stats previousStats)
-        {
-            Stats safePreviousStats = previousStats ?? new Stats();
-            m_currentStatsChanged.Invoke(safePreviousStats);
-
-            if (DidReachZeroHealth(safePreviousStats))
-            {
-                RequestDeathAfterFormalCurrentValueMutation();
-            }
-        }
-
-        private void PublishStatChanges(Stats previousBaseStats, Stats previousCurrentStats)
-        {
-            Stats safePreviousBaseStats = previousBaseStats ?? new Stats();
-            Stats safePreviousCurrentStats = previousCurrentStats ?? new Stats();
-
-            if (!AreStatsEqual(safePreviousBaseStats, CreateStatsSnapshot()))
-            {
-                NotifyBaseStatsChanged(safePreviousBaseStats);
-            }
-
-            if (!AreStatsEqual(safePreviousCurrentStats, CreateCurrentStatsSnapshot()))
-            {
-                NotifyCurrentStatsChanged(safePreviousCurrentStats);
-            }
-        }
-
-        private bool DidReachZeroHealth(Stats previousStats)
-        {
-            return previousStats != null && previousStats[EStat.Health] > 0 && GetCurrentHealth() == 0;
-        }
-
-        private static bool AreStatsEqual(Stats a, Stats b)
-        {
-            if (ReferenceEquals(a, b))
-            {
-                return true;
-            }
-
-            if (a == null || b == null)
-            {
-                return false;
-            }
-
-            foreach (FormalAttributeDefinition definition in FormalAttributeCatalog.Definitions)
-            {
-                if (a[definition.Stat] != b[definition.Stat])
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         public string ApplyMoveSpeedFactor(float factor)

@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,7 +23,7 @@ namespace GameCore
     {
         private static readonly Type[] SystemStartupDependencies = { typeof(InputSystem) };
 
-        [InspectorName("启动状态")]
+        [LabelText("启动状态")]
         [Tooltip("系统启动时压入状态栈的第一层状态。")]
         [SerializeField] private EGameState m_startupState = EGameState.Gameplay;
 
@@ -40,7 +41,7 @@ namespace GameCore
         {
             if (m_isRunning)
             {
-                return;
+                throw new InvalidOperationException("游戏状态系统已经启动，不能重复启动。");
             }
 
             m_isRunning = true;

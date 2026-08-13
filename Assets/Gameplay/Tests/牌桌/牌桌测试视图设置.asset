@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32b49405fd2e19e49af1e10fc2c5e2fe, type: 3}
+  m_Name: "\u724C\u684C\u6D4B\u8BD5\u89C6\u56FE\u8BBE\u7F6E"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Tabletop.TabletopViewSettings
+  m_cardViewPrefab:
+    Address: "\u724C\u684C\u6D4B\u8BD5\u5361\u724C\u89C6\u56FE"
+    Guid: e0e5e302108a1f74989be97f0f65e7de
+    Locked: 1
+  m_actionProgressViewPrefab:
+    Address: "\u724C\u684C\u6D4B\u8BD5\u884C\u52A8\u8FDB\u5EA6"
+    Guid: c6a4453a163925b4fa0a3ec2d7e35a81
+    Locked: 1
+  m_stackDepthStep: -0.05
+  m_baseSortingOrder: 10
+  m_battleBaseSortingOrder: 100
+  m_dragFollowSharpness: 12

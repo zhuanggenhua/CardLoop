@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -11,24 +12,24 @@ namespace GameCore
     [Serializable]
     public sealed class TerrainNavigationLayerSource
     {
-        [InspectorName("地形层 ID")]
+        [LabelText("地形层 ID")]
         [Tooltip("逻辑地形层稳定 ID。0 是旧地图兼容的默认层。")]
         [SerializeField] private int m_layerId = TerrainNodeKey.DefaultLayerId;
 
-        [InspectorName("寻路规则 Tilemap")]
+        [LabelText("寻路规则 Tilemap")]
         [Tooltip("该逻辑层的可行走、基础地表、高低差、坡道和通行代价作者数据。不是 Unity 物理碰撞层。")]
         [SerializeField] private Tilemap m_ruleTilemap = null;
 
-        [InspectorName("玩法高度")]
+        [LabelText("玩法高度")]
         [Tooltip("该层相对玩法高度，用于多层调试和过渡校验。")]
         [SerializeField] private int m_elevation = 0;
 
-        [InspectorName("物理碰撞带")]
+        [LabelText("物理碰撞带")]
         [Tooltip("少量可复用物理碰撞分组编号。当前只登记语义，真实 Collider 仍挂在墙体、水体、悬崖等 Tilemap 上。")]
         [Min(0)]
         [SerializeField] private int m_collisionBand = 0;
 
-        [InspectorName("表现排序带")]
+        [LabelText("表现排序带")]
         [Tooltip("该层实体渲染排序基带。首期只登记数据，不直接改表现入口。")]
         [SerializeField] private int m_presentationBand = 0;
 

@@ -1,52 +1,72 @@
 [
   {
     "ID": 1,
-    "Name": "Hp",
-    "Desc": "血量"
+    "Name": "Health",
+    "Desc": "当前生命值"
   },
   {
     "ID": 2,
-    "Name": "Mp",
-    "Desc": "蓝量"
+    "Name": "Mana",
+    "Desc": "当前法力值"
   },
   {
     "ID": 3,
-    "Name": "Spd",
-    "Desc": "速度"
+    "Name": "MoveSpeed",
+    "Desc": "移动速度"
   },
   {
     "ID": 4,
-    "Name": "Atk",
+    "Name": "Attack",
     "Desc": "攻击力"
   },
   {
     "ID": 5,
-    "Name": "Def",
+    "Name": "Defense",
     "Desc": "防御力"
   },
   {
     "ID": 6,
-    "Name": "Sp",
-    "Desc": "耐力"
+    "Name": "Stamina",
+    "Desc": "当前耐力值"
   },
   {
     "ID": 7,
-    "Name": "HpMax",
-    "Desc": "血上限"
+    "Name": "MaxHealth",
+    "Desc": "生命上限"
   },
   {
     "ID": 8,
-    "Name": "MpMax",
-    "Desc": "魔力上限"
+    "Name": "MaxMana",
+    "Desc": "法力上限"
   },
   {
     "ID": 9,
-    "Name": "SpMax",
+    "Name": "MaxStamina",
     "Desc": "耐力上限"
   },
   {
     "ID": 10,
-    "Name": "AtkRate",
-    "Desc": "攻击加成百分比"
+    "Name": "AttackSpeed",
+    "Desc": "攻击速度"
+  },
+  {
+    "ID": 11,
+    "Name": "Accuracy",
+    "Desc": "命中率"
+  },
+  {
+    "ID": 12,
+    "Name": "Dodge",
+    "Desc": "闪避率"
+  },
+  {
+    "ID": 13,
+    "Name": "CriticalChance",
+    "Desc": "暴击率"
+  },
+  {
+    "ID": 14,
+    "Name": "CriticalMultiplier",
+    "Desc": "暴击倍率"
   }
 ]

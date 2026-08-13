@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
@@ -23,7 +24,7 @@ namespace GameCore
     /// </summary>
     public class AudioSystem : AGameSystem
     {
-        [InspectorName("音频通道")]
+        [LabelText("音频通道")]
         [Tooltip("每个项目音频通道对应的实际 AudioChannel 实例。")]
         [SerializeField] private SerializableDictionary<EAudioChannel, AudioChannel> m_audioChannels;
 

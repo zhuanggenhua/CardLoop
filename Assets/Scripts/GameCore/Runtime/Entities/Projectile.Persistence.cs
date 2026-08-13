@@ -1,11 +1,10 @@
 using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace GameCore
 {
     /// <summary>
-    /// 投射物完整持久化存档块，保存飞行状态、来源、伤害和爆炸规则。
+    /// 投射物完整持久化存档块，保存飞行状态、来源、命中效果和爆炸规则。
     /// </summary>
     [Serializable]
     public class ProjectileDataBlock : EntityDataBlock
@@ -46,9 +45,9 @@ namespace GameCore
         public string fireCommandIssuerId;
 
         /// <summary>
-        /// 投射物携带的基础伤害载荷。
+        /// 投射物命中时施加的 EX-GAS GameplayEffect ID。
         /// </summary>
-        public FormalDamageEffectPayload baseDamage;
+        public int impactGameplayEffectId;
 
         /// <summary>
         /// 命中终止时的爆炸半径；0 表示不做范围扩散。
@@ -58,14 +57,12 @@ namespace GameCore
         /// <summary>
         /// 爆炸范围内是否应用基础伤害。
         /// </summary>
-        [FormerlySerializedAs("explosionApplyBaseEffects")]
-        public bool explosionApplyBaseDamage;
+        public bool explosionApplyImpactEffect;
 
         /// <summary>
         /// 爆炸范围应用基础伤害时是否跳过主命中目标。
         /// </summary>
-        [FormerlySerializedAs("explosionBaseEffectsIgnorePrimaryTarget")]
-        public bool explosionBaseDamageIgnorePrimaryTarget;
+        public bool explosionImpactEffectIgnorePrimaryTarget;
     }
 
     /// <summary>
@@ -86,12 +83,10 @@ namespace GameCore
         public PersistableReference<CharacterBase> source;
         public EGameCommandIssuerKind fireCommandIssuerKind;
         public string fireCommandIssuerId;
-        public FormalDamageEffectPayload baseDamage;
+        public int impactGameplayEffectId;
         public float explosionRadius;
-        [FormerlySerializedAs("explosionApplyBaseEffects")]
-        public bool explosionApplyBaseDamage;
-        [FormerlySerializedAs("explosionBaseEffectsIgnorePrimaryTarget")]
-        public bool explosionBaseDamageIgnorePrimaryTarget;
+        public bool explosionApplyImpactEffect;
+        public bool explosionImpactEffectIgnorePrimaryTarget;
     }
 
     /// <summary>
@@ -113,10 +108,10 @@ namespace GameCore
             projectileBlock.source = m_source;
             projectileBlock.fireCommandIssuerKind = m_fireCommandContext.IssuerKind;
             projectileBlock.fireCommandIssuerId = m_fireCommandContext.IssuerId;
-            projectileBlock.baseDamage = m_baseDamage;
+            projectileBlock.impactGameplayEffectId = m_impactGameplayEffectId;
             projectileBlock.explosionRadius = m_explosionRadius;
-            projectileBlock.explosionApplyBaseDamage = m_explosionApplyBaseDamage;
-            projectileBlock.explosionBaseDamageIgnorePrimaryTarget = m_explosionBaseDamageIgnorePrimaryTarget;
+            projectileBlock.explosionApplyImpactEffect = m_explosionApplyImpactEffect;
+            projectileBlock.explosionImpactEffectIgnorePrimaryTarget = m_explosionImpactEffectIgnorePrimaryTarget;
         }
 
         protected override void OnLoad(PersistableDataBlock block)
@@ -130,10 +125,11 @@ namespace GameCore
             m_operating = projectileBlock.operating;
             m_source = projectileBlock.source.ResolveOrNull();
             m_fireCommandContext = GameCommandContext.Recreate(projectileBlock.fireCommandIssuerKind, m_source, projectileBlock.fireCommandIssuerId);
-            m_baseDamage = projectileBlock.baseDamage;
+            m_impactGameplayEffectId = ProjectileLaunchParameters.RequireGameplayEffectId(
+                projectileBlock.impactGameplayEffectId);
             m_explosionRadius = projectileBlock.explosionRadius;
-            m_explosionApplyBaseDamage = projectileBlock.explosionApplyBaseDamage;
-            m_explosionBaseDamageIgnorePrimaryTarget = projectileBlock.explosionBaseDamageIgnorePrimaryTarget;
+            m_explosionApplyImpactEffect = projectileBlock.explosionApplyImpactEffect;
+            m_explosionImpactEffectIgnorePrimaryTarget = projectileBlock.explosionImpactEffectIgnorePrimaryTarget;
         }
 
         internal ProjectileRuntimeStateData CreateRuntimeState()
@@ -151,10 +147,10 @@ namespace GameCore
                 source = m_source,
                 fireCommandIssuerKind = m_fireCommandContext.IssuerKind,
                 fireCommandIssuerId = m_fireCommandContext.IssuerId,
-                baseDamage = m_baseDamage,
+                impactGameplayEffectId = m_impactGameplayEffectId,
                 explosionRadius = m_explosionRadius,
-                explosionApplyBaseDamage = m_explosionApplyBaseDamage,
-                explosionBaseDamageIgnorePrimaryTarget = m_explosionBaseDamageIgnorePrimaryTarget
+                explosionApplyImpactEffect = m_explosionApplyImpactEffect,
+                explosionImpactEffectIgnorePrimaryTarget = m_explosionImpactEffectIgnorePrimaryTarget
             };
         }
 
@@ -174,10 +170,11 @@ namespace GameCore
             m_operating = runtimeState.operating;
             m_source = runtimeState.source.ResolveOrNull();
             m_fireCommandContext = GameCommandContext.Recreate(runtimeState.fireCommandIssuerKind, m_source, runtimeState.fireCommandIssuerId);
-            m_baseDamage = runtimeState.baseDamage;
+            m_impactGameplayEffectId = ProjectileLaunchParameters.RequireGameplayEffectId(
+                runtimeState.impactGameplayEffectId);
             m_explosionRadius = runtimeState.explosionRadius;
-            m_explosionApplyBaseDamage = runtimeState.explosionApplyBaseDamage;
-            m_explosionBaseDamageIgnorePrimaryTarget = runtimeState.explosionBaseDamageIgnorePrimaryTarget;
+            m_explosionApplyImpactEffect = runtimeState.explosionApplyImpactEffect;
+            m_explosionImpactEffectIgnorePrimaryTarget = runtimeState.explosionImpactEffectIgnorePrimaryTarget;
         }
     }
 }

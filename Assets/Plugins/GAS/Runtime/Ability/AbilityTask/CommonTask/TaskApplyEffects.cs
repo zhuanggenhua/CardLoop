@@ -35,6 +35,9 @@ namespace GAS.Runtime
             // 每次激活都刷新上下文；同一个 AbilitySpec 会被重复使用。
             AbilityActivationContext activationContext = _logic.ActivationContext;
             _catcher.Init(Owner, activationContext);
+			Unity.Mathematics.Random authoritativeRandom = activationContext?.HasAuthoritativeRandomSeed == true
+				? new Unity.Mathematics.Random(activationContext.AuthoritativeRandomSeed)
+				: default;
             
             AbilitySystemCell mainTarget = activationContext?.MainTarget ?? Owner;
             _catcher.CatchTargetsNonAllocSafe(mainTarget, ref _catchResults);
@@ -44,6 +47,12 @@ namespace GAS.Runtime
                 {  
                     var effectCfg = GameplayEffectHelper.GetConfigByID(id);  
                     var geEntity = GameplayEffectHelper.CreateGameplayEffectEntity(effectCfg.ComponentConfigs);  
+					if (authoritativeRandom.state != 0u)
+					{
+						GameplayEffectHelper.SetAuthoritativeRandomSeed(
+							geEntity,
+							authoritativeRandom.NextUInt(1u, uint.MaxValue));
+					}
                     GameplayEffectHelper.ApplyGameplayEffectTo(geEntity, target.Entity, Owner.Entity);  
                 }  
             }  

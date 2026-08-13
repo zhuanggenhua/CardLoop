@@ -27,7 +27,7 @@ metadata:
 
 - GameCore 当前是通用框架候选，不是具体游戏业务落地。
 - EX-GAS 是能力身份、规则、消耗、冷却、阻断、时间轴、命中帧、GameplayEffect 和 Cue 的默认职责归属。
-- GameCore 只承接输入、角色状态、资源/表现系统、2D 空间语义、存档和编辑器体验中 EX-GAS 本体无法直接表达的最薄适配。
+- GameCore 只承接其 2D 场景角色的输入、资源/表现系统、空间语义、存档和编辑器体验中 EX-GAS 本体无法直接表达的最薄适配。Gameplay 的角色卡直接使用 EX-GAS `AbilitySystemCell`，不通过 GameCore 再包一层。
 - 测试只能保护正式职责边界；不得用大量迁移测试长期替代使用文档。
 - 旧项目技能样例、旧业务表数据和迁移防回流测试不能把项目侧中转层“护”成正式职责。
 
@@ -40,7 +40,9 @@ metadata:
 | 伤害、状态和条件效果 | EX-GAS GameplayEffect |
 | 表现触发 | EX-GAS Cue |
 | 项目输入、Prefab/Icon、资源引用 | `exgas.abilityGameCore` 项目配置 |
-| 角色当前属性、死亡、存档和 UI 投影 | GameCore 角色/资源/持久化职责 |
+| 角色属性身份、当前值和上限 | EX-GAS Attribute / AttributeSet 表及其生成代码；运行时值由角色 ASC 持有 |
+| 2D 场景角色的死亡和 UI 投影 | GameCore `CharacterBase` 与 UI 职责；只能消费 GAS 属性，不得另存一套可写属性真相 |
+| 角色 GAS 长期状态快照 | EX-GAS `AbilitySystemCell` 正式 OOP 门面；Gameplay / GameCore 只聚合其返回的序列化事实 |
 | 2D 目标捕获几何 | EX-GAS TaskApplyEffects + 已登记 TargetCatcher |
 
 ## 官方建议裁决
@@ -60,6 +62,13 @@ metadata:
 5. 若需要编辑 2D 命中范围，使用 EX-GAS 时间轴窗口里的 TaskApplyEffects / TargetCatcher，不新建项目侧命中框作者入口。
 6. 保存后通过 Luban 生成结果进入 `Assets/DataGenerated/Luban/Json/GAS`；不得手改生成 JSON。
 
+## Gameplay 静态标签作者入口
+
+- Gameplay 内容的静态标签字段只保存 EX-GAS 的整数标签码。作者选择直接复用 EX-GAS `GeneralGasChoiceHelper.Tags()`；它读取 GAS 已生成的作者数据，Gameplay 不复制为本地标签表、枚举或字符串符号表。
+- `Gameplay.Editor.ContentValidationMenu` 在编辑器校验时同样读取这一个官方选择结果。内容引用了不存在的标签码时报告 `CONTENT_TAG_UNKNOWN`；若 GAS 作者数据本身为空，则报告 `CONTENT_TAG_AUTHORING_SOURCE_EMPTY`。校验过程中的临时集合只服务本次检查，不保存为项目标签目录。
+- 内容自身的标签层级比较使用 `TagHelper.HasTag(实际标签码, 查询标签码)`；角色当前持有的固有或临时标签使用其 `AbilitySystemCell` 的正式查询。整数相等只可判断同一码，不能替代父子层级语义。
+- 此入口的程序集依赖是 `Gameplay.Editor -> com.exhard.exgas.general`。它仅用于作者选择和编辑器校验，不建立 Gameplay 运行时标签服务，也不修改 EX-GAS 插件源码。
+
 ## 已登记正式集成点
 
 | 集成点 | 允许职责 | 禁止职责 |
@@ -67,11 +76,16 @@ metadata:
 | `TimelineActiveAbility` / `FormalAbilityInputGateRuntime` | 把本地输入、缓冲、按住释放转换成 EX-GAS Ability 激活请求；读取 EX-GAS Timeline 的前后摇节奏。 | 不保存弹匣、换弹、连发、命中、伤害、冷却或表现规则。 |
 | `exgas.abilityGameCore` | 为 EX-GAS Ability 提供 GameCore 必需的 Prefab/Icon/输入配置。 | 不承载能力身份、消耗、冷却、命中、伤害或 Cue 真相。 |
 | `Gas2DTargetCatchers` / `CatchArea*2D` | 给 EX-GAS TaskApplyEffects 提供 GameCore 2D 空间和命中目标解析。 | 不在场景或 Ability Prefab 上另做第二套 Hitbox 真相。 |
-| `FormalGameplayEffectDamageBridge` / `FormalGameplayEffectDamageHelper` / `FormalGameplayEffectDamageSystem` | 把 GameplayEffect 中的正式伤害载荷应用到 GameCore 角色当前生命值和反馈链；现有类名含 Bridge 是迁移遗留命名，后续重构时应按正式集成点命名收口。 | 不在 TaskApplyEffects 或能力壳里写伤害数值。 |
-| `FormalGameplayAttributeSet` / `FormalAttributeCatalog` | 维护 GameCore 属性与 EX-GAS Attribute code 的映射。 | 不创建第二套属性职责。 |
+| `GameplayEffectDamageIntegration` / `GameplayEffectDamageSystem` | 把 EX-GAS GameplayEffect 表配置解析为程序集内部的伤害执行数据；在 ECS 效果查询结束后结算，并把最终生命变化写回目标 ASC。 | 不在投射物、TaskApplyEffects、能力壳或反馈代码里保存第二份伤害数值、类型、缩放或生命真相。 |
+| `CharacterAttributes` | 读取 EX-GAS 生成的 `FightUnit` 属性集、属性编号和默认配置，并为 `CharacterSheet` 应用角色差异覆盖。 | 不手写属性编号、稳定 ID、显示名或第二份属性目录；不恢复已删除的 `Stats / EStat` 属性模型。 |
+| `GameCore.GasIntegration` / `GasGeneratedConfigIntegration` | 作为生成配置程序集与 GameCore 运行时的显式程序集边界，注册项目已登记的 Ability、Timeline 和 GameplayEffect 配置解析入口。 | 不把项目手写代码放回生成目录，不复制 Luban 表数据，不成为新的规则作者源。 |
 | `FormalGameplayTagCatalog` | 维护 GameCore 需要识别的 EX-GAS Tag 映射。 | 不用本地布尔状态长期镜像 GAS Tag。 |
 | `CuePlayGameCoreAnimator` / `CuePlayGameCoreAudio` / `CuePlayGameCoreFeedback` | 把 EX-GAS Cue 转发到 GameCore 已有动画、音频和反馈系统。 | 不承担规则结算、目标选择、伤害或技能身份。 |
 | `GasTimelineHitboxSceneHandle` | 在 EX-GAS 时间轴窗口中辅助编辑已登记 2D TargetCatcher 参数。 | 不新建第二套保存入口、自动读表或自动刷新缓存。 |
+| `Gameplay.Editor.ContentValidationMenu` | 复用 `GeneralGasChoiceHelper.Tags()` 校验内容静态标签是否仍存在于 EX-GAS 作者数据中。 | 不建立本地标签表、运行时标签查询器或另一条 GAS 初始化链。 |
+| **计划中：`AbilitySystemCell` 长期状态快照** | 由 EX-GAS OOP 门面导出等级、固有标签、属性基础值、已授予 Ability Code 与等级；创建新 Cell 时用当前 ASC 作者配置校验结构，并由调用方提供 Ability Code 到官方 `AbilityConfig` 的解析函数。 | 不保存临时标签、活动 Ability、Cooldown、GameplayEffect、Cue、Timeline、ECS Entity、CurrentValue 派生缓存或项目内容 ID；Gameplay 不直接读取 ECS Buffer。 |
+
+`Gameplay.Tabletop.CharacterCard` 不是 GameCore / EX-GAS 之间的新集成层：它继承 `TabletopCard` 并直接拥有 EX-GAS `AbilitySystemCell`。一个逻辑角色只能由它或 `CharacterBase` 之一拥有 ASC；不得以两者同时表示同一角色，也不得加 resolver、adapter 或同步副本来掩盖双状态。
 
 ## 当前排除项
 
@@ -79,6 +93,31 @@ metadata:
 |------|------|------|
 | `TaskApplyWorldElement` / `XParamApplyWorldElement` | 不作为 GameCore / EX-GAS 正式集成点保留。 | 本地表源中只服务 `Flamethrower / 持续喷火` 旧能力样例；属于旧玩法数据把世界元素系统挂到 GAS Timeline 的迁移中转层，不是 GAS 官方建议下的通用扩展主线。 |
 | `Temporal*Effect` / `ITemporalEffect` / 本地 `TemporalEffect` 存档与 UI | 已从 GameCore 通用框架中删除。 | EX-GAS 官方 GameplayEffect 已拥有 Duration、Period、GrantedAbilities、Modifiers、Tags、RemoveGameplayEffectsWithTags 和 Cue 触发；本地 Temporal 另做持续时间、tick、授予/压制能力、净化、存档和 UI 展示，属于第二套效果职责。后续如需 buff/debuff 展示或净化，应基于 EX-GAS GameplayEffect / Tag / Cue 正式入口重新设计薄投影。 |
+
+## 当前实现状态与缺口
+
+- `CharacterSheet` 不再保存旧 `Stats` 或等级缩放数组；角色作者入口是 `CharacterAttributeOverride[]`，属性码、默认值和钳制规则由 EX-GAS `FightUnit` 表提供。`CharacterAttributes.CreateConfig` 只克隆正式配置并应用角色差异，重复、未知、超出表格钳制范围或非法覆盖会立即抛错，不静默修正作者输入。
+- 角色首次创建 ASC 时直接使用 `CharacterSheet.CreateAttributeSetConfig`。旧 `AttributeBootstrapBuffer`、`Stats`、`EStat` 和 `FormalAttributeCatalog` 已删除；ASC 初始化前读取属性属于生命周期错误，会立即抛出异常。
+- `UIStat`、`UIStatBar` 和 `UICharacterInfo` 读取角色公开的 EX-GAS 属性码查询入口。当前仓库没有 prefab 或 scene 引用这些 UI 脚本，因此本切片没有真实可截图入口。
+- 当前资源与上限已拆成不同 GAS 属性：`Health / MaxHealth`、`Mana / MaxMana`、`Stamina / MaxStamina`。资源变化修改对应当前属性的基础值后调用 `AttributeHelper.RecalculateCurrentValue`，不直接写 `CAttributeData.CurrentValue`。角色卡 ASC 快照恢复尚未实现；实现后必须从基础值创建新 Cell 并由 EX-GAS 正常计算 CurrentValue，不得把当前派生值作为第二真相写回。
+- 投射物的发射参数、运行状态和存档只保存 `impactGameplayEffectId`。命中或爆炸时从 EX-GAS 配置取得正式 GameplayEffect；动态命中方向只通过效果实例上的 `MCGameplayEffectImpactOverride` 传入，不复制伤害数值、类型、缩放或击退配置。
+- `GameplayEffectDamagePayload` 与 `DamageDescriptor` 都是程序集内部、不可变的表格转换执行数据，不是 Inspector 或 Mod 作者入口。旧 `GameplayEffectDamageApplier`、`AEffect` / `IEffect` 和可绕过 GameplayEffect 的 `HealOrDamagePlayer` 已删除。
+- 旧 `AddOrRemoveMana` 可序列化命令同样已删除：技能消耗和恢复不能再通过项目命令直接修改角色法力，必须由 EX-GAS Ability 的 Cost GameplayEffect 或正式 GameplayEffect Modifier 表达。`CharacterBase` 只在 GameCore 内部保留资源写入语义，供复活、升级等角色生命周期使用；它们不对 Gameplay 或内容作者暴露为第二条效果入口。
+- 当前 `GameplayEffectDamageSystem.CreateResolutionRolls` 用效果、来源和目标的 ECS Entity 索引生成本地随机种子。这避免了 `UnityEngine.Random`，但不同客户端的 Entity 索引不保证一致，尚不满足联机或回放确定性。后续必须由战斗或单局的权威随机生命周期为每次效果应用提供同步种子或已确认掷值；在该 owner 确定前，不新增全局随机服务、静态委托或包装层。
+- 伤害和条件的固定枚举仍是当前内置规则限制；需要可由 Mod 扩展的伤害语义前，必须先按 EX-GAS GameplayTag / GameplayEffect 条件的正式能力重新裁决，不能在 GameCore 再造枚举或本地标签表。
+
+### 待裁决的 ASC 长期状态契约
+
+官方 `EX-GAS-2.0` README 与本地 `2.0.4` 源码已经重新校准，完整接口证据见 [`ai-quick/ex-gas-runtime.md`](ai-quick/ex-gas-runtime.md)。当前只确认以下事实：
+
+- Cell 可读取 ASC 等级、按已知属性码读取 `BaseValue` / `CurrentValue`、按已知技能码取得 `AbilitySpec`。
+- Cell 在玩家构建中不能枚举全部固有标签、属性集或已授予技能；相关标签和属性集枚举被 `UNITY_EDITOR` 包围，技能全集只在 Cell 未公开的 Controller 上。
+- 官方 `GASWatcher` 是编辑器调试工具，不是业务存档 API。
+- 官方把 RPC/网络同步列为 3.0 后续计划，当前 2.0.4 没有可直接复用的 GAS 网络复制契约。
+
+因此“必须修改插件 OOP 门面”不再作为已完成架构决定。模块 8.3 继续前必须比较三种职责方案：角色领域长期事实作为作者源并据此重建 Cell、利用 ASC 预设列举已知结构后通过现有 API 读取、或在确有必要时补充插件正式快照/枚举接口。裁决前不得用反射、Watcher 或 ECS Buffer 建项目旁路，也不得提前实现一份平行 GAS 状态容器。
+
+当前候选保存边界仍是：长期等级、固有标签、属性基础值、已学技能和技能等级；活动 Ability、Cooldown、持续/周期 GE、临时标签、Cue、Timeline 进度和战斗随机流不属于普通局外长期成长。但这只是待模块 8.3 结合角色领域所有权确认的候选，不是已经锁定的存档协议。
 
 ## 全局运行时生命周期
 
@@ -101,5 +140,6 @@ metadata:
 ## 测试口径
 
 - 保留少量框架合同测试，证明 EX-GAS 职责与 GameCore 职责的边界没有断。
+- 2026-08-10 已在打开的 Unity Editor Test Runner 重新验证：`FormalDamagePipelineEditModeTests` 为 `7/7`，`GameCore.Tests` EditMode 为 `89/89`，`Gameplay.Tests` EditMode 为 `65/65`，`Gameplay.Tests` PlayMode 为 `9/9`，均为零失败。覆盖角色覆盖、EX-GAS 默认值和钳制、ASC 初始化前读取报错、属性码级查询与事件、伤害写入当前生命、快照恢复后当前值重算、法力消耗与上限分离，以及投射物只携带 GameplayEffect ID 的合同。
 - 迁移防回流测试只保留代表性用例；不得把旧项目所有技能、地图、商店、宝箱或剧情语义长期当成框架测试。
 - 发现测试只是在保护未登记中转层时，优先审查该中转层是否该删；不先加更多测试。

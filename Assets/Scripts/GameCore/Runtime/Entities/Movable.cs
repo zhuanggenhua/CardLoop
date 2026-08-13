@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -63,61 +64,61 @@ namespace GameCore
     public abstract partial class Movable : Entity, ICharacterAnimationStateReceiver
     {
         [Header("引用")]
-        [InspectorName("刚体")]
+        [LabelText("刚体")]
         [Tooltip("正式 2D 移动和碰撞检测使用的 Rigidbody2D。不能为空。")]
         [SerializeField] private Rigidbody2D m_rigidbody = null;
 
         [Header("移动设置")]
-        [InspectorName("基础移动速度")]
+        [LabelText("基础移动速度")]
         [Tooltip("动作执行层的基础移动速度；角色属性倍率会在 CharacterBase 中叠加。")]
         [SerializeField] private float m_moveSpeed = 4.0f;
-        [InspectorName("输入方向模式")]
+        [LabelText("输入方向模式")]
         [Tooltip("移动输入方向限制。吸收 TopDown CharacterMovement 的方向模式，但不接入它的 InputManager。")]
         [SerializeField] private EMovementInputMode m_movementInputMode = EMovementInputMode.Free;
-        [InspectorName("使用模拟输入强度")]
+        [LabelText("使用模拟输入强度")]
         [Tooltip("启用后保留摇杆输入强度；关闭后只使用归一化方向，键盘和摇杆速度一致。")]
         [SerializeField] private bool m_useAnalogMovementInput = false;
-        [InspectorName("加速度")]
+        [LabelText("加速度")]
         [Tooltip("输入从静止过渡到目标速度的响应速度。0 表示立即达到目标速度。")]
         [SerializeField] private float m_acceleration = 10.0f;
-        [InspectorName("减速度")]
+        [LabelText("减速度")]
         [Tooltip("输入松开后回到静止的响应速度。0 表示立即停止。")]
         [SerializeField] private float m_deceleration = 10.0f;
-        [InspectorName("静止阈值")]
+        [LabelText("静止阈值")]
         [Tooltip("低于该强度时视为静止，避免摇杆漂移或浮点误差让角色抖动。")]
         [SerializeField] private float m_idleThreshold = 0.05f;
-        [InspectorName("移动速度倍率")]
+        [LabelText("移动速度倍率")]
         [Tooltip("动作执行层的常规速度倍率；RPG 属性、装备和状态修正仍在 CharacterBase 中处理。")]
         [SerializeField] private float m_movementSpeedMultiplier = 1.0f;
-        [InspectorName("移动速度倍率上限")]
+        [LabelText("移动速度倍率上限")]
         [Tooltip("限制动作执行层速度倍率上限，避免区域、Buff 和临时效果叠乘后失控。")]
         [SerializeField] private float m_movementSpeedMaxMultiplier = float.MaxValue;
-        [InspectorName("禁止普通移动")]
+        [LabelText("禁止普通移动")]
         [Tooltip("禁用玩家输入和 AI 驱动的普通移动；强制位移和推力仍按各自规则处理。")]
         [SerializeField] private bool m_movementForbidden = false;
-        [InspectorName("推力强度倍率")]
+        [LabelText("推力强度倍率")]
         [Tooltip("受击或技能推力的强度倍率。0 表示不可被推动。")]
         [SerializeField] private float m_pushIntensityScale = 1.0f;
-        [InspectorName("推力阻力倍率")]
+        [LabelText("推力阻力倍率")]
         [Tooltip("推力衰减速度倍率，越高越快停下。")]
         [SerializeField] private float m_pushResistanceScale = 1.0f;
-        [InspectorName("禁用所有移动")]
+        [LabelText("禁用所有移动")]
         [Tooltip("完全关闭移动、卡墙修正和推力处理，通常只用于特殊静态对象。")]
         [SerializeField] private bool m_disableAllMovements = false;
-        [InspectorName("死亡期间可移动")]
+        [LabelText("死亡期间可移动")]
         [Tooltip("允许死亡状态继续执行普通移动。默认关闭。")]
         [SerializeField] private bool m_canMoveDuringDeath = false;
-        [InspectorName("朝向更新策略")]
+        [LabelText("朝向更新策略")]
         [Tooltip("决定朝向跟随移动意图还是技能/交互目标方向。")]
         [SerializeField] protected ELookAtDirectionUpdateStrategy m_lookAtDirectionUpdateStrategy = ELookAtDirectionUpdateStrategy.MovementBased;
 
         [Header("控制器设置")]
-        [InspectorName("默认控制器")]
+        [LabelText("默认控制器")]
         [Tooltip("玩家、AI 或脚本控制器。运行时可临时切换 active controller，但默认控制器仍是生命周期入口。")]
         [SerializeReference, SubclassSelector] protected IController m_controller = null;
 
         [Header("动画设置")]
-        [InspectorName("动画策略")]
+        [LabelText("动画策略")]
         [Tooltip("把移动、朝向、受击和死亡状态转成具体动画表现。")]
         [SerializeReference, SubclassSelector] protected IAnimationStrategy m_animationStrategy = null;
 
@@ -593,9 +594,9 @@ namespace GameCore
         public bool IsPushed() => motionRuntime.IsPushed();
         public void InterruptPush() => motionRuntime.InterruptPush();
 
-        protected bool TryPush(DamageInputDescriptor damageInput, Vector2 velocity) => TryPush(damageInput, velocity, default);
+        private protected bool TryPush(DamageInputDescriptor damageInput, Vector2 velocity) => TryPush(damageInput, velocity, default);
 
-        protected bool TryPush(DamageInputDescriptor damageInput, Vector2 velocity, DamageImpactSettings impactSettings)
+        private protected bool TryPush(DamageInputDescriptor damageInput, Vector2 velocity, DamageImpactSettings impactSettings)
         {
             bool isSelfTargeted = damageInput.TryGetSourceCharacter(out CharacterBase sourceCharacter) && sourceCharacter == this;
 

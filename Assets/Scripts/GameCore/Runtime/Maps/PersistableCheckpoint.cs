@@ -7,7 +7,7 @@ namespace GameCore
     [Serializable]
     public struct PersistableCheckpoint : ICheckpoint
     {
-        [FormerlySerializedAs("map"), MapSelector]
+        [FormerlySerializedAs("map"), SceneAddressSelector]
         public string sceneAddress;
         public PersistableReference<Checkpoint> instance;
 

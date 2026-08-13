@@ -12,6 +12,7 @@ metadata:
 
 ## 已知事实
 
+- Gameplay 地基对象模型和参考吸收裁决必须先查 ../../standards/gameplay-architecture.md：StackCraft 主要证明卡牌/牌堆/牌桌交互对象模型，2DRPGEngine 主要证明 RPG 数据、地图、存档、任务、对话、命令和技能族闭包，不能混用成一套平铺系统。
 - Unity 工程根目录：`C:\Gamedev\Unity\Project\CardLoop`。
 - 当前阶段是 GameCore 通用框架搭建，不是具体游戏玩法落地；GameCore 的默认入口和默认持久化名不得绑定当前 Unity 工程名。
 - 《卡牌生存：无限》当前作为 CardLoop 的项目愿景草案和架构扩展性约束记录，入口见 [`card-survival-infinite.md`](card-survival-infinite.md)；2026-08-02 已以最新附件为主，同步局外准备、局内生存、成长带出、多世界、联机、Mod、跑团工具、职业经历、混合回合/即时制、UI 和荒岛流程补充。

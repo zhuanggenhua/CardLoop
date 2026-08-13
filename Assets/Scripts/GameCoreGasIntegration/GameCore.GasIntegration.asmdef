@@ -1,0 +1,21 @@
+{
+  "name": "GameCore.GasIntegration",
+  "rootNamespace": "GameCore.GasIntegration",
+  "references": [
+    "GameCore",
+    "GAS.GeneratedRuntime",
+    "GAS.GeneratedConfig",
+    "Luban.Runtime",
+    "SimpleJSON",
+    "com.exhard.exgas.runtime"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

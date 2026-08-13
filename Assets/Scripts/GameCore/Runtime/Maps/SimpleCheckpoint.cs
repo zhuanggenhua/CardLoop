@@ -7,7 +7,7 @@ namespace GameCore
     [Serializable]
     public struct SimpleCheckpoint : ICheckpoint
     {
-        [FormerlySerializedAs("map"), MapSelector]
+        [FormerlySerializedAs("map"), SceneAddressSelector]
         public string sceneAddress;
         public Vector3 position;
 

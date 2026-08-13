@@ -1,3 +1,5 @@
+using GameCore.Editor;
+using GAS.Runtime;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,8 +8,6 @@ namespace GameCore
     [CustomEditor(typeof(CharacterSheet))]
     public class CharacterSheetEditor : DatabaseEntryEditor
     {
-        private int m_previewLevel = Constants.MinLevel;
-
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
@@ -16,18 +16,15 @@ namespace GameCore
             CharacterSheetFeedbackEditorUtility.DrawFeedbackWarnings(sheet);
 
             EditorGUILayout.Separator();
-            EditorGUILayout.LabelField("Evolution Preview", EditorStyles.boldLabel);
-            m_previewLevel = EditorGUILayout.IntSlider(
-                "Level",
-                m_previewLevel,
-                Constants.MinLevel,
-                Constants.MaxLevel);
+            EditorGUILayout.LabelField("EX-GAS 属性预览", EditorStyles.boldLabel);
 
-            Stats previewStats = sheet.GetStatsAtLevel(m_previewLevel);
+            AttrSetConfig config = sheet.CreateAttributeSetConfig();
             GUI.enabled = false;
-            foreach (FormalAttributeDefinition attribute in FormalAttributeCatalog.Definitions)
+            foreach (AttributeBaseSetting attribute in config.Settings)
             {
-                EditorGUILayout.IntField(attribute.DisplayName, previewStats[attribute.Stat]);
+                EditorGUILayout.FloatField(
+                    CharacterAttributeCodeDrawer.GetDisplayName(attribute.Code),
+                    attribute.InitValue);
             }
             GUI.enabled = true;
         }

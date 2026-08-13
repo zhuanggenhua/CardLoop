@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 
@@ -21,11 +22,11 @@ namespace GameCore
     [Serializable]
     public struct MessageData
     {
-        [InspectorName("消息名")]
+        [LabelText("消息名")]
         [Tooltip("必须命中 AnimationStateMessageNames 中登记的正式消息名。")]
         public string message;
 
-        [InspectorName("传播模式")]
+        [LabelText("传播模式")]
         [Tooltip("当前只支持显式接收者模式，旧字符串传播模式不会在正式运行时兜底。")]
         public EMessagePropagationMode propagationMode;
 
@@ -40,11 +41,11 @@ namespace GameCore
     /// </summary>
     public class StateMessageDispatcher : StateMachineBehaviour
     {
-        [InspectorName("进入状态消息")]
+        [LabelText("进入状态消息")]
         [Tooltip("Animator 进入该状态时派发的消息。为空则不派发。")]
         public MessageData animationStartMessage;
 
-        [InspectorName("退出状态消息")]
+        [LabelText("退出状态消息")]
         [Tooltip("Animator 退出该状态时派发的消息。为空则不派发。")]
         public MessageData animationEndMessage;
 

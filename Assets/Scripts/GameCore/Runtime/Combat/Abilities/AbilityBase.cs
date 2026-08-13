@@ -61,20 +61,6 @@ namespace GameCore
             }
         }
 
-        protected virtual CharacterBase[] CreateValidTargetSnapshot(System.Collections.Generic.IEnumerable<CharacterBase> targets)
-        {
-            if (targets == null)
-            {
-                return System.Array.Empty<CharacterBase>();
-            }
-
-            return targets as CharacterBase[] ?? new System.Collections.Generic.List<CharacterBase>(targets).ToArray();
-        }
-
-        protected virtual void OnEffectsApplied(EffectApplicationResult result)
-        {
-        }
-
         public virtual void UpdateCooldowns()
         {
             UpdateCooldowns(UnityEngine.Time.deltaTime);

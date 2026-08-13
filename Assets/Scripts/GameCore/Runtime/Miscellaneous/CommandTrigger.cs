@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -29,21 +30,21 @@ namespace GameCore
         }
 
         [Header("条件")]
-        [InspectorName("触发时机")]
+        [LabelText("触发时机")]
         [Tooltip("组件在何种事件发生时尝试执行命令。")]
         [SerializeField] private EActivationEvent m_activationEvent;
 
-        [InspectorName("执行条件")]
+        [LabelText("执行条件")]
         [Tooltip("命令执行前需要满足的条件。为空时视为满足。")]
         [SerializeReference, SubclassSelector] private ICondition m_condition;
 
         [Header("动作")]
-        [InspectorName("执行命令")]
+        [LabelText("执行命令")]
         [Tooltip("触发时执行的命令，支持上下文命令接收当前玩家或脚本上下文。")]
         [SerializeReference, SubclassSelector] private ICommand m_toExecute;
 
         [Header("设置")]
-        [InspectorName("延迟帧数")]
+        [LabelText("延迟帧数")]
         [Tooltip("触发后延迟多少帧再执行命令；0 表示立即执行。")]
         [SerializeField] private int m_frameDelay = 0;
 

@@ -50,15 +50,15 @@ namespace GameCore
             if (m_healthSlider?.isActiveAndEnabled ?? false)
             {
                 m_healthSlider.minValue = 0;
-                m_healthSlider.maxValue = m_target.GetMaxHealth();
-                m_healthSlider.value = m_target.GetCurrentHealth();
+                m_healthSlider.maxValue = m_target.GetAttributeBaseValue(CharacterAttributes.MaxHealth);
+                m_healthSlider.value = m_target.GetAttributeCurrentValue(CharacterAttributes.Health);
             }
 
             if (m_manaSlider?.isActiveAndEnabled ?? false)
             {
                 m_manaSlider.minValue = 0;
-                m_manaSlider.maxValue = m_target.GetMaxMana();
-                m_manaSlider.value = m_target.GetCurrentMana();
+                m_manaSlider.maxValue = m_target.GetAttributeBaseValue(CharacterAttributes.MaxMana);
+                m_manaSlider.value = m_target.GetAttributeCurrentValue(CharacterAttributes.Mana);
             }
         }
 
@@ -70,7 +70,7 @@ namespace GameCore
             }
         }
 
-        private void OnStatsChanged(Stats previous) => UpdateResourceBars();
+        private void OnAttributeValueChanged(CharacterAttributeValueChange change) => UpdateResourceBars();
 
         private void OnLevelUpped(int level) => UpdateNameAndLevel();
 
@@ -82,8 +82,8 @@ namespace GameCore
             }
 
             m_targetListening = true;
-            m_target.AddStatsChangedListener(OnStatsChanged);
-            m_target.AddCurrentStatsChangedListener(OnStatsChanged);
+            m_target.AddAttributeBaseValueChangedListener(OnAttributeValueChanged);
+            m_target.AddAttributeCurrentValueChangedListener(OnAttributeValueChanged);
             m_target.AddLevelUppedListener(OnLevelUpped);
 
             UpdateResourceBars();
@@ -103,8 +103,8 @@ namespace GameCore
                 return;
             }
 
-            m_target.RemoveStatsChangedListener(OnStatsChanged);
-            m_target.RemoveCurrentStatsChangedListener(OnStatsChanged);
+            m_target.RemoveAttributeBaseValueChangedListener(OnAttributeValueChanged);
+            m_target.RemoveAttributeCurrentValueChangedListener(OnAttributeValueChanged);
             m_target.RemoveLevelUppedListener(OnLevelUpped);
         }
 

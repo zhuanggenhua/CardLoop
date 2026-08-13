@@ -19,23 +19,23 @@ namespace GameCore
 
         public override void OnSystemStart()
         {
-            EventKit.Type.Register<MapLoadedEvent>(OnMapLoaded);
-            EventKit.Type.Register<MapUnloadingEvent>(OnMapUnloading);
+            EventKit.Type.Register<SceneLoadedEvent>(OnSceneLoaded);
+            EventKit.Type.Register<SceneUnloadingEvent>(OnSceneUnloading);
         }
 
         public override void OnSystemStop()
         {
-            EventKit.Type.UnRegister<MapLoadedEvent>(OnMapLoaded);
-            EventKit.Type.UnRegister<MapUnloadingEvent>(OnMapUnloading);
+            EventKit.Type.UnRegister<SceneLoadedEvent>(OnSceneLoaded);
+            EventKit.Type.UnRegister<SceneUnloadingEvent>(OnSceneUnloading);
         }
 
-        private void OnMapLoaded(MapLoadedEvent _)
+        private void OnSceneLoaded(SceneLoadedEvent _)
         {
             LoadPreInstancedDataBlocks();
             LoadRuntimeInstancedDataBlocks();
         }
 
-        private void OnMapUnloading(MapUnloadingEvent _)
+        private void OnSceneUnloading(SceneUnloadingEvent _)
         {
             SnapshotPersistables(true);
         }
@@ -225,7 +225,12 @@ namespace GameCore
 
         private void LoadRuntimeInstancedDataBlocks()
         {
-            string currentSceneAddress = GameManager.MapSystem.GetCurrentSceneAddress();
+            if (m_runtimeInstanced.Count == 0)
+            {
+                return;
+            }
+
+            string currentSceneAddress = GameManager.SceneSystem.CurrentSceneAddress;
             List<string> keysToRemove = new();
 
             foreach (KeyValuePair<string, PersistableDataBlock> kvp in m_runtimeInstanced)

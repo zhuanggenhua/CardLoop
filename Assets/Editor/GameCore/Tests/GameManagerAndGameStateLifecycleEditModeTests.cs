@@ -62,7 +62,7 @@ namespace GameCore.Tests
         }
 
         [Test]
-        public void GameStateSystem_RepeatedStartAndStopKeepsOneStateLayer()
+        public void GameStateSystem_RepeatedDirectStartThrowsAndRestartAfterStopRemainsValid()
         {
             GameManager gameManager = CreateGameManagerWithInputSystem();
             GameStateSystem gameStateSystem = CreateObject("GameStateSystem").AddComponent<GameStateSystem>();
@@ -74,7 +74,9 @@ namespace GameCore.Tests
             SetStaticField(typeof(GameManager), "_instance", gameManager);
 
             gameStateSystem.OnSystemStart();
-            gameStateSystem.OnSystemStart();
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => gameStateSystem.OnSystemStart());
+            StringAssert.Contains("重复启动", exception.Message);
 
             gameStateSystem.RemoveLayer(EGameState.Gameplay);
 
@@ -84,6 +86,10 @@ namespace GameCore.Tests
 
             Assert.AreEqual(EGameState.None, gameStateSystem.currentState);
             Assert.AreEqual(1.0f, Time.timeScale);
+
+            gameStateSystem.OnSystemStart();
+            Assert.AreEqual(EGameState.Gameplay, gameStateSystem.currentState);
+            gameStateSystem.OnSystemStop();
         }
 
         [Test]
@@ -113,6 +119,37 @@ namespace GameCore.Tests
                     "Dependency.Shutdown",
                 },
                 LifecycleLog);
+        }
+
+        [Test]
+        public void SystemLifecycle_RepeatedDirectStartThrowsInsteadOfBeingIgnored()
+        {
+            GameObject gameManagerObject = CreateObject("GameManager");
+            GameManager gameManager = gameManagerObject.AddComponent<GameManager>();
+            CreateChildSystem<DependencyLifecycleProbeSystem>(gameManagerObject, "Dependency");
+
+            InvokeInstanceMethod(gameManager, "FindSystems");
+            InvokeInstanceMethod(gameManager, "InitializeSystems");
+            TargetInvocationException initializationException = Assert.Throws<TargetInvocationException>(
+                () => InvokeInstanceMethod(gameManager, "InitializeSystems"));
+            Assert.That(initializationException.InnerException, Is.TypeOf<InvalidOperationException>());
+            StringAssert.Contains("重复初始化", initializationException.InnerException.Message);
+
+            InvokeInstanceMethod(gameManager, "StartSystems");
+
+            TargetInvocationException exception = Assert.Throws<TargetInvocationException>(
+                () => InvokeInstanceMethod(gameManager, "StartSystems"));
+            Assert.That(exception.InnerException, Is.TypeOf<InvalidOperationException>());
+            StringAssert.Contains("重复启动", exception.InnerException.Message);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    "Dependency.Init",
+                    "Dependency.Start",
+                },
+                LifecycleLog);
+
+            InvokeInstanceMethod(gameManager, "ShutdownSystems");
         }
 
         [Test]

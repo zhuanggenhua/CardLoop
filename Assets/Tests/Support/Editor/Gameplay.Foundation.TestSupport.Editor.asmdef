@@ -1,0 +1,25 @@
+{
+  "name": "Gameplay.Foundation.TestSupport.Editor",
+  "rootNamespace": "Gameplay.Tests.Support.Editor",
+  "references": [
+    "GameCore",
+    "Gameplay.Runtime",
+    "Gameplay.Foundation.TestSupport",
+    "GAS.GeneratedRuntime",
+    "Unity.TextMeshPro",
+    "YokiFrame.UIKit",
+    "Unity.InputSystem",
+    "YooAsset.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

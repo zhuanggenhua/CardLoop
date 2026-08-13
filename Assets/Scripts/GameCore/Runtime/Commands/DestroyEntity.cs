@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace GameCore
     [Serializable]
     public class DestroyEntity : IContextualCommand
     {
-        [InspectorName("目标实体")]
+        [LabelText("目标实体")]
         [Tooltip("命令执行时要销毁的实体。缺失时会暴露配置错误。")]
         [SerializeField] private Entity m_toDestroy = null;
 

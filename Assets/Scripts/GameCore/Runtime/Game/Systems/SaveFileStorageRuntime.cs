@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using YokiFrame;
@@ -21,79 +22,71 @@ namespace GameCore
         private static bool s_saveKitConfigured;
         private static string s_configuredSaveKitPath;
 
-        public static void EraseSaveData(string saveFileName)
+        public static bool DeleteSaveData(int slotId)
         {
             ConfigureSaveKit();
-            SaveKit.Delete(GetSlotId(saveFileName));
+            if (!SaveKit.Exists(slotId))
+            {
+                return false;
+            }
+            return SaveKit.Delete(slotId);
         }
 
-        public static SaveDataBlock ExtractSaveDataFromFile(string saveFileName)
+        public static IReadOnlyList<SaveMeta> GetAllSaveMetadata()
         {
-            try
+            ConfigureSaveKit();
+            List<SaveMeta> metadata = SaveKit.GetAllSlots();
+            metadata.Sort((left, right) => left.SlotId.CompareTo(right.SlotId));
+            return metadata;
+        }
+
+        public static int DeleteAllSaveData()
+        {
+            IReadOnlyList<SaveMeta> metadata = GetAllSaveMetadata();
+            int deletedCount = 0;
+            for (int i = 0; i < metadata.Count; i++)
             {
-                ConfigureSaveKit();
-                SaveData saveData = SaveKit.Load(GetSlotId(saveFileName));
-                return saveData?.GetModule<SaveDataBlock>();
+                if (SaveKit.Delete(metadata[i].SlotId))
+                {
+                    deletedCount++;
+                }
             }
-            catch
-            {
-                return null;
-            }
+            return deletedCount;
+        }
+
+        public static SaveData ExtractSaveContainerFromFile(int slotId)
+        {
+            ConfigureSaveKit();
+            return SaveKit.Load(slotId);
         }
 
         /// <summary>
-        /// 把世界存档块写入 SaveKit。这里故意只注册一个 SaveDataBlock 模块，
-        /// 避免 SaveKit 的模块容器反过来拆散当前世界状态的单一聚合语义。
+        /// 把各领域已经组装好的模块容器写入 SaveKit；文件层不识别任何业务模块。
         /// </summary>
-        public static bool StoreSaveDataToFile(string saveFileName, SaveDataBlock block)
+        public static bool StoreSaveContainer(
+            int slotId,
+            SaveData container,
+            string displayName)
         {
-            if (block == null)
+            if (container == null)
             {
-                throw new ArgumentNullException(nameof(block));
+                throw new ArgumentNullException(nameof(container));
             }
 
             ConfigureSaveKit();
-
-            SaveData saveData = SaveKit.CreateSaveData();
-            saveData.RegisterModule(block);
-
-            string displayName = string.IsNullOrWhiteSpace(block.header) ? saveFileName : block.header;
-            return SaveKit.Save(GetSlotId(saveFileName), saveData, displayName);
+            return SaveKit.Save(slotId, container, displayName);
         }
 
-        /// <summary>
-        /// 将旧菜单保存名稳定映射到 SaveKit 槽位。已存在的 SAVEFILE_A/B/C 直接对应 0/1/2；
-        /// 其他名称只作为兜底，用确定性哈希分配到剩余槽位，避免跨运行随机变化。
-        /// </summary>
-        public static int GetSlotId(string saveFileName)
+        public static SaveMeta GetSaveMetadata(int slotId)
         {
-            if (string.IsNullOrWhiteSpace(saveFileName))
-            {
-                throw new ArgumentException("Save file name cannot be empty.", nameof(saveFileName));
-            }
+            ConfigureSaveKit();
+            return SaveKit.GetMeta(slotId);
+        }
 
-            string normalized = Path.GetFileNameWithoutExtension(saveFileName.Trim()).ToUpperInvariant();
-            int underscoreIndex = normalized.LastIndexOf('_');
-            string suffix = underscoreIndex >= 0 ? normalized[(underscoreIndex + 1)..] : normalized;
-
-            if (suffix.Length == 1 && suffix[0] >= 'A' && suffix[0] <= 'Z')
-            {
-                return suffix[0] - 'A';
-            }
-
-            if (int.TryParse(suffix, out int numericSlot) && numericSlot >= 0 && numericSlot < SaveKitMaxSlots)
-            {
-                return numericSlot;
-            }
-
-            uint hash = 2166136261;
-            for (int i = 0; i < normalized.Length; ++i)
-            {
-                hash ^= normalized[i];
-                hash *= 16777619;
-            }
-
-            return (int)(hash % SaveKitMaxSlots);
+        public static SaveData CreateSaveContainer()
+        {
+            ConfigureSaveKit();
+            return SaveKit.CreateSaveData();
         }
 
         /// <summary>

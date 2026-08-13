@@ -1,30 +1,30 @@
 namespace GameCore
 {
     /// <summary>
-    /// 地图开始加载时发送的领域事件。事件类型归 GameCore 所有，派发机制统一走 Yoki EventKit。
+    /// 技术场景开始加载时发送的生命周期事件。事件类型归 GameCore 所有，派发机制统一走 Yoki EventKit。
     /// </summary>
-    public readonly struct MapLoadingEvent
+    public readonly struct SceneLoadingEvent
     {
     }
 
     /// <summary>
-    /// 地图完成加载时发送的领域事件。监听者应只依赖已稳定的地图生命周期结果。
+    /// 技术场景完成加载时发送的生命周期事件。监听者应只依赖已稳定的场景结果。
     /// </summary>
-    public readonly struct MapLoadedEvent
+    public readonly struct SceneLoadedEvent
     {
     }
 
     /// <summary>
-    /// 地图开始卸载时发送的领域事件。地图相关系统和场景组件统一直接订阅该事件。
+    /// 技术场景开始卸载时发送的生命周期事件。
     /// </summary>
-    public readonly struct MapUnloadingEvent
+    public readonly struct SceneUnloadingEvent
     {
     }
 
     /// <summary>
-    /// 地图完成卸载时发送的领域事件。后续新事件继续留在 GameCore 强类型事件定义层。
+    /// 技术场景完成卸载时发送的生命周期事件。
     /// </summary>
-    public readonly struct MapUnloadedEvent
+    public readonly struct SceneUnloadedEvent
     {
     }
 
@@ -52,16 +52,24 @@ namespace GameCore
     }
 
     /// <summary>
-    /// 地图切换流程开始时发送的领域事件。它用于输入锁定等框架级响应，不承载具体地图业务。
+    /// 场景切换流程开始时发送的生命周期事件。它用于输入锁定等框架级响应，不承载具体场景业务。
     /// </summary>
-    public readonly struct MapTransitionStartedEvent
+    public readonly struct SceneTransitionStartedEvent
     {
     }
 
     /// <summary>
-    /// 地图切换流程完成时发送的领域事件。它用于恢复输入等框架级响应。
+    /// 场景成功完成淡入、加载和淡入后发送的生命周期事件。
     /// </summary>
-    public readonly struct MapTransitionCompletedEvent
+    public readonly struct SceneTransitionCompletedEvent
+    {
+    }
+
+    /// <summary>
+    /// 场景切换流程结束时发送的生命周期事件。它覆盖成功、失败和取消，
+    /// 输入解锁等 finally 清理职责必须订阅此事件，而不是把“成功完成”误当作“流程已结束”。
+    /// </summary>
+    public readonly struct SceneTransitionEndedEvent
     {
     }
 

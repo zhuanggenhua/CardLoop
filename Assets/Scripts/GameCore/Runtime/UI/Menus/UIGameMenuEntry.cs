@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -21,16 +22,16 @@ namespace GameCore
         }
 
         [Header("设置")]
-        [InspectorName("菜单动作")]
+        [LabelText("菜单动作")]
         [Tooltip("点击该条目时执行的菜单动作。")]
         [SerializeField] private EGameMenuAction m_action = EGameMenuAction.None;
 
         [Header("引用")]
-        [InspectorName("按钮")]
+        [LabelText("按钮")]
         [Tooltip("接收点击和焦点的按钮。")]
         [SerializeField] private Button m_button = null;
 
-        [InspectorName("文本")]
+        [LabelText("文本")]
         [Tooltip("条目选中时显示的文本提示。")]
         [SerializeField] private TextMeshProUGUI m_text = null;
 

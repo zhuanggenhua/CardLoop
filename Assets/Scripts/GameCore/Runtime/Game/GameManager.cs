@@ -46,6 +46,7 @@ namespace GameCore
         public static InputSystem InputSystem => GetSystem<InputSystem>();
         public static SaveSystem SaveSystem => GetSystem<SaveSystem>();
         public static MapSystem MapSystem => GetSystem<MapSystem>();
+        public static SceneSystem SceneSystem => GetSystem<SceneSystem>();
         public static PlayerSystem PlayerSystem => GetSystem<PlayerSystem>();
         public static PersistenceSystem PersistenceSystem => GetSystem<PersistenceSystem>();
         public static TransitionSystem TransitionSystem => GetSystem<TransitionSystem>();
@@ -55,9 +56,9 @@ namespace GameCore
         private static GameManager _instance = null;
         private Dictionary<Type, AGameSystem> m_systems = null;
         private bool m_startInvoked = false;
-        private bool m_resourceInitializationEntered = false;
-        private bool m_modInitializationEntered = false;
-        private bool m_gasInitializationEntered = false;
+        private bool m_resourceRuntimeStarted = false;
+        private bool m_modRuntimeStarted = false;
+        private bool m_gasRuntimeStarted = false;
         private GameManagerStartupState m_startupState = GameManagerStartupState.NotStarted;
         private Exception m_startupException = null;
 
@@ -110,23 +111,23 @@ namespace GameCore
                         $"{nameof(GameManager)} 缺少 {nameof(GameConfig)}。测试场景和正式入口必须显式配置它。");
                 }
 
-                m_resourceInitializationEntered = true;
                 await ResourceSystem.InitializeAsync(cancellationToken: destroyCancellationToken);
+                m_resourceRuntimeStarted = true;
 
-                m_modInitializationEntered = true;
-                await ModAPI.Initialize();
+                await ModAPI.Initialize(cancellationToken: destroyCancellationToken);
                 if (!ModAPI.Initialized)
                 {
                     throw new InvalidOperationException("ModAPI 初始化未完成，不能继续启动 GameCore 系统。");
                 }
+                m_modRuntimeStarted = true;
 
                 if (this == null || _instance != this)
                 {
                     return;
                 }
 
-                m_gasInitializationEntered = true;
                 FormalAbilityRuntimeBootstrap.EnsureInitialized();
+                m_gasRuntimeStarted = true;
                 InitializeSystems();
 
                 m_startInvoked = true;
@@ -190,7 +191,7 @@ namespace GameCore
             ShutdownSystems();
             m_startInvoked = false;
 
-            if (m_gasInitializationEntered)
+            if (m_gasRuntimeStarted)
             {
                 try
                 {
@@ -202,11 +203,11 @@ namespace GameCore
                 }
                 finally
                 {
-                    m_gasInitializationEntered = false;
+                    m_gasRuntimeStarted = false;
                 }
             }
 
-            if (m_modInitializationEntered)
+            if (m_modRuntimeStarted)
             {
                 try
                 {
@@ -218,11 +219,11 @@ namespace GameCore
                 }
                 finally
                 {
-                    m_modInitializationEntered = false;
+                    m_modRuntimeStarted = false;
                 }
             }
 
-            if (m_resourceInitializationEntered)
+            if (m_resourceRuntimeStarted)
             {
                 try
                 {
@@ -234,7 +235,7 @@ namespace GameCore
                 }
                 finally
                 {
-                    m_resourceInitializationEntered = false;
+                    m_resourceRuntimeStarted = false;
                 }
             }
         }

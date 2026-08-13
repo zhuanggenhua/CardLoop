@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using Unity.Mathematics;
@@ -21,7 +22,7 @@ namespace GameCore
     /// </summary>
     public abstract class ACameraMovementStrategy : ICameraMovementStrategy
     {
-        [InspectorName("移动速度")]
+        [LabelText("移动速度")]
         [Tooltip("镜头插值到目标位置的世界单位/秒。正式玩法相机缺失时会报警并跳过。")]
         [SerializeField] private float m_speed = 10f;
 
@@ -82,7 +83,7 @@ namespace GameCore
     [Serializable]
     public class MoveCameraToPosition : ACameraMovementStrategy
     {
-        [InspectorName("目标世界坐标")]
+        [LabelText("目标世界坐标")]
         [Tooltip("镜头移动的世界 XY 坐标，Z 轴保持当前相机值。")]
         [SerializeField] private Vector2 m_targetPosition;
 
@@ -96,7 +97,7 @@ namespace GameCore
     [Serializable]
     public class MoveCameraToGameObject : ACameraMovementStrategy
     {
-        [InspectorName("目标对象")]
+        [LabelText("目标对象")]
         [Tooltip("镜头要跟随移动到的场景对象。必须由命令资产或场景显式配置。")]
         [SerializeField] private GameObject m_targetGameObject;
 
@@ -120,7 +121,7 @@ namespace GameCore
     [Serializable]
     public class MoveCamera : IContextualCommand
     {
-        [InspectorName("镜头移动策略")]
+        [LabelText("镜头移动策略")]
         [Tooltip("选择移动到坐标、对象或复位等具体策略。缺失时会暴露配置错误。")]
         [SerializeReference, SubclassSelector] private ICameraMovementStrategy m_cameraMovementStrategy;
 

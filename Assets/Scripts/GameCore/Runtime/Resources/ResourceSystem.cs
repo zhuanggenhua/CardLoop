@@ -24,8 +24,14 @@ namespace GameCore
         private static readonly HashSet<ResourceOperationState> ActiveOperations = new();
         private static readonly List<ModPackageEntry> ModPackages = new();
         private static ResourceSystemSceneLoaderPool s_sceneLoaderPool;
+        private static bool s_ownsResourceRuntime;
+        private static CancellationTokenSource s_initializationCancellation;
 
-        public static bool Initialized => DefaultPackage != null && YooAssets.IsInitialized;
+        public static bool Initialized =>
+            s_ownsResourceRuntime &&
+            DefaultPackage != null &&
+            YooInit.Initialized &&
+            YooAssets.IsInitialized;
         public static ResourcePackage DefaultPackage { get; private set; }
 
         /// <summary>
@@ -54,26 +60,67 @@ namespace GameCore
         {
             if (Initialized)
             {
-                return;
-            }
-
-            if (YooAssets.IsInitialized && !YooInit.Initialized)
-            {
                 throw new InvalidOperationException(
-                    "YooAsset 已被其它入口初始化，但 YokiFrame.YooInit 尚未初始化。请只保留 GameManager 的正式资源启动入口。");
+                    "资源系统已经初始化，重复初始化违反进程级唯一启动入口。");
             }
 
-            if (!YooInit.Initialized)
+            EnsureReadyForInitialization();
+
+            YooInitConfig initializationConfig = config ?? new YooInitConfig();
+            ValidateInitializationConfig(initializationConfig);
+
+            s_ownsResourceRuntime = true;
+            CancellationTokenSource initializationCancellation =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            s_initializationCancellation = initializationCancellation;
+            try
             {
-                await YooInit.InitAsync(config ?? new YooInitConfig(), cancellationToken);
+                initializationCancellation.Token.ThrowIfCancellationRequested();
+
+                // YokiFrame 取消等待时不会回滚已登记的资源包；先让插件完成，再在提交前检查本轮取消。
+                await YooInit.InitAsync(initializationConfig);
+                initializationCancellation.Token.ThrowIfCancellationRequested();
+
+                DefaultPackage = YooInit.DefaultPackage ??
+                    throw new InvalidOperationException("YokiFrame.YooInit 未提供默认资源包，请检查 YooInitConfig.PackageNames。");
+
+                YooInitUIKitExt.ConfigureUIKit();
+                s_sceneLoaderPool = new ResourceSystemSceneLoaderPool();
+                SceneKit.SetLoaderPool(s_sceneLoaderPool);
             }
+            catch (Exception initializationException)
+            {
+                try
+                {
+                    RollbackFailedInitialization();
+                }
+                catch (Exception shutdownException)
+                {
+                    throw new AggregateException(
+                        "资源系统初始化失败，且初始化后的回滚也失败。",
+                        initializationException,
+                        shutdownException);
+                }
 
-            DefaultPackage = YooInit.DefaultPackage ??
-                throw new InvalidOperationException("YokiFrame.YooInit 未提供默认资源包，请检查 YooInitConfig.PackageNames。");
+                if (HasYokiFramePartialInitializationState())
+                {
+                    throw new InvalidOperationException(
+                        "资源系统初始化失败，YokiFrame 保留了未完成的资源包状态。"
+                        + "当前插件没有公开的完整回滚入口；请重启 Unity Editor，或在获得插件源码修改授权后修复该插件生命周期。",
+                        initializationException);
+                }
 
-            YooInitUIKitExt.ConfigureUIKit();
-            s_sceneLoaderPool = new ResourceSystemSceneLoaderPool();
-            ResKit.SetSceneLoaderPool(s_sceneLoaderPool);
+                throw;
+            }
+            finally
+            {
+                if (ReferenceEquals(s_initializationCancellation, initializationCancellation))
+                {
+                    s_initializationCancellation = null;
+                }
+
+                initializationCancellation.Dispose();
+            }
         }
 
         /// <summary>
@@ -81,15 +128,52 @@ namespace GameCore
         /// </summary>
         public static void Shutdown()
         {
+            if (!Initialized && s_initializationCancellation != null)
+            {
+                // 初始化尚未交付完整资源状态时，只取消本轮初始化；回滚由初始化入口统一完成。
+                s_initializationCancellation.Cancel();
+                return;
+            }
+
+            if (!s_ownsResourceRuntime)
+            {
+                if (YooInit.Initialized || YooAssets.IsInitialized ||
+                    HasYokiFramePartialInitializationState() || HasLocalResourceState())
+                {
+                    throw new InvalidOperationException(
+                        "资源系统尚未取得资源运行时所有权，不能关闭其它入口或未完成初始化保留的状态。");
+                }
+
+                ResetState();
+                return;
+            }
+
+            ShutdownOwnedRuntime();
+        }
+
+        private static void ShutdownOwnedRuntime()
+        {
+            if (!YooInit.Initialized || !YooAssets.IsInitialized)
+            {
+                throw new InvalidOperationException(
+                    "资源系统已标记为初始化，但 YokiFrame.YooInit 或 YooAsset 的状态不完整。");
+            }
+
             foreach (ResourceOperationState operation in ActiveOperations.ToArray())
             {
                 operation.Release();
             }
 
-            if (!YooAssets.IsInitialized)
+            YooInit.Dispose();
+            YooAssets.Destroy();
+            ResetState();
+        }
+
+        private static void RollbackFailedInitialization()
+        {
+            foreach (ResourceOperationState operation in ActiveOperations.ToArray())
             {
-                ResetState();
-                return;
+                operation.Release();
             }
 
             if (YooInit.Initialized)
@@ -97,7 +181,11 @@ namespace GameCore
                 YooInit.Dispose();
             }
 
-            YooAssets.Destroy();
+            if (YooAssets.IsInitialized)
+            {
+                YooAssets.Destroy();
+            }
+
             ResetState();
         }
 
@@ -535,6 +623,83 @@ namespace GameCore
             }
         }
 
+        private static void EnsureReadyForInitialization()
+        {
+            if (s_ownsResourceRuntime)
+            {
+                throw new InvalidOperationException(
+                    "资源系统仍持有未关闭的资源运行时，不能重复初始化。"
+                    + "请先通过正式关闭入口释放当前资源系统。");
+            }
+
+            if (YooInit.Initialized)
+            {
+                throw new InvalidOperationException(
+                    "YokiFrame.YooInit 已由其它入口初始化。资源系统不能接管外部资源状态；"
+                    + "请只保留 GameManager 的正式资源启动入口。");
+            }
+
+            if (YooAssets.IsInitialized)
+            {
+                throw new InvalidOperationException(
+                    "YooAsset 已被其它入口初始化，但 YokiFrame.YooInit 尚未初始化。"
+                    + "请只保留 GameManager 的正式资源启动入口。");
+            }
+
+            if (HasYokiFramePartialInitializationState())
+            {
+                throw new InvalidOperationException(
+                    "YokiFrame 保留了未完成的资源包状态，不能继续初始化资源系统。"
+                    + "请重启 Unity Editor，或在获得插件源码修改授权后修复该插件生命周期。");
+            }
+
+            if (HasLocalResourceState())
+            {
+                throw new InvalidOperationException(
+                    "资源系统保留了未关闭的项目状态，不能重新初始化。"
+                    + "请先通过正式关闭入口释放当前资源系统。");
+            }
+        }
+
+        private static void ValidateInitializationConfig(YooInitConfig config)
+        {
+            if (!config.Validate(out List<string> validationErrors))
+            {
+                throw new ArgumentException(
+                    $"YooAsset 初始化配置无效：{string.Join("；", validationErrors)}",
+                    nameof(config));
+            }
+
+            switch (config.PlayMode)
+            {
+                case EPlayMode.HostPlayMode when YooInit.HostModeHandler == null:
+                    throw new InvalidOperationException(
+                        "YooAsset HostPlayMode 缺少 YokiFrame.YooInit.HostModeHandler。"
+                        + "必须在 GameManager 启动前由项目资源配置提供该处理器。");
+
+                case EPlayMode.WebPlayMode when YooInit.WebModeHandler == null:
+                    throw new InvalidOperationException(
+                        "YooAsset WebPlayMode 缺少 YokiFrame.YooInit.WebModeHandler。"
+                        + "必须在 GameManager 启动前由项目资源配置提供该处理器。");
+
+                case EPlayMode.CustomPlayMode when YooInit.CustomHandler == null:
+                    throw new InvalidOperationException(
+                        "YooAsset CustomPlayMode 缺少 YokiFrame.YooInit.CustomHandler。"
+                        + "必须在 GameManager 启动前由项目资源配置提供该处理器。");
+            }
+        }
+
+        private static bool HasYokiFramePartialInitializationState()
+        {
+            return YooInit.DefaultPackage != null || YooInit.Packages.Count > 0;
+        }
+
+        private static bool HasLocalResourceState()
+        {
+            return DefaultPackage != null || s_sceneLoaderPool != null ||
+                   ActiveOperations.Count > 0 || ModPackages.Count > 0;
+        }
+
         private static void EnsureSucceeded(AsyncOperationBase operation, string action)
         {
             if (operation.Status != EOperationStatus.Succeeded)
@@ -569,6 +734,8 @@ namespace GameCore
             ModPackages.Clear();
             s_sceneLoaderPool = null;
             DefaultPackage = null;
+            s_ownsResourceRuntime = false;
+            s_initializationCancellation = null;
         }
 
         private static bool IsSceneAsset(AssetInfo assetInfo)
@@ -582,7 +749,7 @@ namespace GameCore
             if (s_sceneLoaderPool?.UsesPackage(packageName) == true)
             {
                 throw new InvalidOperationException(
-                    $"资源包 {packageName} 仍有 SceneKit 场景正在使用。请先通过 MapSystem 切离该场景，再卸载 Mod 包。");
+                    $"资源包 {packageName} 仍有 SceneKit 场景正在使用。请先通过 SceneSystem 切离该场景，再卸载 Mod 包。");
             }
         }
 

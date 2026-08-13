@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
@@ -21,11 +22,11 @@ namespace GameCore
     public class BidirectionalAnimationStrategy : AAnimationStrategy
     {
         [Header("双向动画设置")]
-        [InspectorName("默认朝向")]
+        [LabelText("默认朝向")]
         [Tooltip("原始 Sprite 资源默认面朝方向；运行时会根据目标方向决定是否水平翻转。")]
         [SerializeField] private EBidrectionalAnimationDirection m_defaultDirection = EBidrectionalAnimationDirection.Right;
 
-        [InspectorName("启用水平镜像")]
+        [LabelText("启用水平镜像")]
         [Tooltip("仅用于缺少真实左右方向素材的角色。使用四向 SpriteLibrary 的角色必须关闭。")]
         [SerializeField] private bool m_flipHorizontalDirections = true;
 

@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,41 +13,41 @@ namespace GameCore
     public sealed class TerrainTransitionLink
     {
         [Header("端点")]
-        [InspectorName("起点层 ID")]
+        [LabelText("起点层 ID")]
         [Tooltip("跨层连接的起点逻辑层。必须对应 TerrainNavigationLayerSource 的层 ID。")]
         [SerializeField] private int m_fromLayerId = TerrainNodeKey.DefaultLayerId;
 
-        [InspectorName("起点格")]
+        [LabelText("起点格")]
         [Tooltip("连接从哪个规则格出发。")]
         [SerializeField] private Vector3Int m_fromCell;
 
-        [InspectorName("终点层 ID")]
+        [LabelText("终点层 ID")]
         [Tooltip("跨层连接的终点逻辑层。")]
         [SerializeField] private int m_toLayerId = TerrainNodeKey.DefaultLayerId;
 
-        [InspectorName("终点格")]
+        [LabelText("终点格")]
         [Tooltip("连接到达的规则格。")]
         [SerializeField] private Vector3Int m_toCell;
 
         [Header("过渡")]
-        [InspectorName("过渡类型")]
+        [LabelText("过渡类型")]
         [Tooltip("说明该连接的作者语义，例如坡道、楼梯或落差；None 会被视为无效连接。")]
         [SerializeField] private ETerrainTransitionLinkKind m_kind = ETerrainTransitionLinkKind.Ramp;
 
-        [InspectorName("允许反向")]
+        [LabelText("允许反向")]
         [Tooltip("开启后会同时生成反向边；关闭时只允许从起点到终点。")]
         [SerializeField] private bool m_bidirectional = true;
 
-        [InspectorName("附加代价")]
+        [LabelText("附加代价")]
         [Tooltip("进入该跨层连接的相对寻路代价。")]
         [Min(0.01f)]
         [SerializeField] private float m_traversalCost = 1.0f;
 
-        [InspectorName("连续路径点")]
+        [LabelText("连续路径点")]
         [Tooltip("跨层过程中要经过的连续世界坐标点。为空时路径只使用节点中心。")]
         [SerializeField] private Vector2[] m_worldWaypoints = Array.Empty<Vector2>();
 
-        [InspectorName("切层提交点")]
+        [LabelText("切层提交点")]
         [Tooltip("角色到达该世界坐标后可认为已经提交到目标层，用于后续连续跨层表现。")]
         [SerializeField] private Vector2 m_commitPoint;
 

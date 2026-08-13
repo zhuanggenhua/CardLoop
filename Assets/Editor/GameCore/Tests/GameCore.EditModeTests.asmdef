@@ -12,6 +12,7 @@
     "Unity.InputSystem",
     "UniTask",
     "YokiFrame",
+    "YokiFrame.SaveKit",
     "YokiFrame.SceneKit",
     "MoreMountains.Tools"
   ],

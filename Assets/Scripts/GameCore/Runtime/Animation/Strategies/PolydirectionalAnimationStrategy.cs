@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 using UnityEngine.U2D.Animation;
@@ -26,15 +27,15 @@ namespace GameCore
     [Serializable]
     public struct AnimationDirectionOverride
     {
-        [InspectorName("方向动画库")]
+        [LabelText("方向动画库")]
         [Tooltip("角色朝该方向时切换到的 SpriteLibraryAsset。")]
         public SpriteLibraryAsset spriteLibrary;
 
-        [InspectorName("水平翻转")]
+        [LabelText("水平翻转")]
         [Tooltip("开启后使用同一动画库但水平翻转 SpriteRenderer，适合复用左右对称资源。")]
         public bool flipSprite;
 
-        [InspectorName("匹配优先级")]
+        [LabelText("匹配优先级")]
         [Tooltip("当两个方向与输入方向距离几乎相同时，优先级较高的方向胜出。")]
         public float priority;
     }
@@ -46,11 +47,11 @@ namespace GameCore
     public class PolydirectionalAnimationStrategy : AAnimationStrategy
     {
         [Header("多方向动画设置")]
-        [InspectorName("Sprite Library")]
+        [LabelText("Sprite Library")]
         [Tooltip("运行时要切换 SpriteLibraryAsset 的 SpriteLibrary 组件。")]
         [SerializeField] protected SpriteLibrary m_spriteLibrary = null;
 
-        [InspectorName("方向覆盖")]
+        [LabelText("方向覆盖")]
         [Tooltip("每个方向对应的动画库和翻转策略；为空时保持默认动画库。")]
         [SerializeField] private SerializableDictionary<EAnimationDirection, AnimationDirectionOverride> m_animationDirectionOverrides = new();
 

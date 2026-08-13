@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -46,11 +47,11 @@ namespace GameCore
             Pressed
         }
 
-        [InspectorName("控制器图标库")]
+        [LabelText("控制器图标库")]
         [Tooltip("按控制器类型配置 SpriteLibraryAsset；每个库内需要用动作名作为分类、按钮状态作为标签。")]
         [SerializeField] private SerializableDictionary<EControllerType, SpriteLibraryAsset> m_controllerSpriteLibraries = null;
 
-        [InspectorName("显示按键提示")]
+        [LabelText("显示按键提示")]
         [Tooltip("默认关闭，避免测试时按键提示遮挡画面；需要检查提示时可在 Inspector 或代码中打开。")]
         [SerializeField] private bool m_buttonPromptsVisible = false;
 

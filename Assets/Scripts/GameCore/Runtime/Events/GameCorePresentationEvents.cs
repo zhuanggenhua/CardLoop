@@ -17,7 +17,7 @@ namespace GameCore
     /// 受击反馈播放后发送的纯表现事件。
     /// 它只给镜头、闪屏和浮字这类表现层消费，不承担伤害或死亡结算。
     /// </summary>
-    public readonly struct DamageTakenPresentationEvent
+    internal readonly struct DamageTakenPresentationEvent
     {
         public DamageTakenPresentationEvent(DamageTakenFeedbackContext context)
         {

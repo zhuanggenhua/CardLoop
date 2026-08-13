@@ -41,8 +41,8 @@ namespace GameCore
 
         private void OnEnable()
         {
-            EventKit.Type.Register<MapLoadedEvent>(OnMapLoaded);
-            EventKit.Type.Register<MapUnloadedEvent>(OnMapUnloaded);
+            EventKit.Type.Register<SceneLoadedEvent>(OnSceneLoaded);
+            EventKit.Type.Register<SceneUnloadedEvent>(OnSceneUnloaded);
             TryBindPlayerSystem();
             RefreshCameraBinding();
         }
@@ -55,18 +55,18 @@ namespace GameCore
 
         private void OnDisable()
         {
-            EventKit.Type.UnRegister<MapLoadedEvent>(OnMapLoaded);
-            EventKit.Type.UnRegister<MapUnloadedEvent>(OnMapUnloaded);
+            EventKit.Type.UnRegister<SceneLoadedEvent>(OnSceneLoaded);
+            EventKit.Type.UnRegister<SceneUnloadedEvent>(OnSceneUnloaded);
             UnbindPlayerSystem();
             ClearCameraBinding();
         }
 
-        private void OnMapLoaded(MapLoadedEvent _)
+        private void OnSceneLoaded(SceneLoadedEvent _)
         {
             RefreshCameraBinding();
         }
 
-        private void OnMapUnloaded(MapUnloadedEvent _)
+        private void OnSceneUnloaded(SceneUnloadedEvent _)
         {
             RefreshCameraBinding();
         }

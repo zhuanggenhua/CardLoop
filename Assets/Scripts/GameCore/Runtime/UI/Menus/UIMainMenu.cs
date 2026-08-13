@@ -78,7 +78,7 @@ namespace GameCore
 
         public void HandleSaveFileClicked(SaveFileActionDesc desc)
         {
-            GameManager.SaveSystem.LoadFromFile(desc.filename);
+            GameManager.SaveSystem.LoadFromFile(desc.slotId);
         }
 
         private void StartCancelListeningIfReady()

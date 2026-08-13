@@ -16,20 +16,25 @@ namespace GAS.Runtime
         public Vector3 AimOrigin { get; }
         public bool HasAimDirection { get; }
         public AbilitySystemCell MainTarget { get; }
+        public uint AuthoritativeRandomSeed { get; }
+        public bool HasAuthoritativeRandomSeed => AuthoritativeRandomSeed != 0u;
 
         public AbilityActivationContext(
             Vector3 aimOrigin,
-            AbilitySystemCell mainTarget = null)
+            AbilitySystemCell mainTarget = null,
+            uint authoritativeRandomSeed = 0u)
         {
             AimOrigin = aimOrigin;
             MainTarget = mainTarget;
+            AuthoritativeRandomSeed = authoritativeRandomSeed;
         }
 
         public AbilityActivationContext(
             Vector3 aimOrigin,
             Vector3 aimDirection,
-            AbilitySystemCell mainTarget = null)
-            : this(aimOrigin, mainTarget)
+            AbilitySystemCell mainTarget = null,
+            uint authoritativeRandomSeed = 0u)
+            : this(aimOrigin, mainTarget, authoritativeRandomSeed)
         {
             if (aimDirection.sqrMagnitude <= DirectionEpsilon)
             {

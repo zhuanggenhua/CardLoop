@@ -21,13 +21,7 @@ namespace GAS.Runtime
       
             foreach (var (_, ge) in SystemAPI.Query<RefRO<CEffectDestroy>>().WithEntityAccess())  
             {  
-                // 释放 CStacking 中的 NativeArray  
-                if (state.EntityManager.HasComponent<CStacking>(ge))  
-                {  
-                    var stacking = state.EntityManager.GetComponentData<CStacking>(ge);  
-                    if (stacking.overflowEffects.IsCreated)  
-                        stacking.overflowEffects.Dispose();  
-                }  
+                NativeContainerCleanup.DisposeGameplayEffect(state.EntityManager, ge);
           
                 ecb.DestroyEntity(ge);  
                 ecb.RemoveComponent<CEffectDestroy>(ge);  

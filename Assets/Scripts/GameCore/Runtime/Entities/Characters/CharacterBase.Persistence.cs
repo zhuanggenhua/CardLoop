@@ -13,7 +13,7 @@ namespace GameCore
         {
             base.OnSave(block);
             CharacterBaseDataBlock characterBlock = block.As<CharacterBaseDataBlock>();
-            characterBlock.currentStats = CreateCurrentStatsSnapshot();
+            characterBlock.attributes = CaptureAttributeSnapshot();
             characterBlock.level = m_level;
             characterBlock.activeAlterationRules = CreateActiveAlterationRuleSnapshots();
             characterBlock.abilityRuntimeStates =
@@ -47,7 +47,7 @@ namespace GameCore
                     characterBlock.abilityRuntimeStates);
             }
 
-            ApplySavedCurrentStatsToOwnedAttributeTruth(characterBlock.currentStats);
+            RestoreAttributeSnapshot(characterBlock.attributes);
         }
 
         private CharacterAbilitySourceData[] CreateAbilitySourceDataBlocks()
@@ -150,7 +150,7 @@ namespace GameCore
                 lookAtDirection = m_lookAtDirection,
                 controllerData = m_controller?.CreateDataBlock(),
                 level = m_level,
-                currentStats = CreateCurrentStatsSnapshot(),
+                attributes = CaptureAttributeSnapshot(),
                 activeAlterationRules = CreateActiveAlterationRuleSnapshots(),
                 abilityRuntimeStates =
                     TryGetOwnedAbilitySet(out CharacterAbilitySet abilitySet)
@@ -191,7 +191,7 @@ namespace GameCore
                     runtimeState.abilityRuntimeStates);
             }
 
-            ApplySavedCurrentStatsToOwnedAttributeTruth(runtimeState.currentStats);
+            RestoreAttributeSnapshot(runtimeState.attributes);
         }
     }
 }

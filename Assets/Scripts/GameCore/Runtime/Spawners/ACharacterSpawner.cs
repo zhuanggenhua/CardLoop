@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +14,11 @@ namespace GameCore
     [Serializable]
     public struct CharacterSpawn
     {
-        [InspectorName("角色 Prefab")]
+        [LabelText("角色 Prefab")]
         [Tooltip("要通过 PersistenceSystem 实例化的正式 CharacterActor Prefab。")]
         [SerializeField] private GameObject m_prefab;
 
-        [InspectorName("权重")]
+        [LabelText("权重")]
         [Tooltip("刷出概率权重；同一刷怪器下所有条目之和必须为 100。")]
         [SerializeField] private int m_rate;
 
@@ -61,29 +62,29 @@ namespace GameCore
     public abstract class ACharacterSpawner : Persistable
     {
         [Header("通用设置")]
-        [InspectorName("角色池")]
+        [LabelText("角色池")]
         [FormerlySerializedAs("m_monsters")]
         [SerializeField] private CharacterSpawn[] m_characters = Array.Empty<CharacterSpawn>();
-        [InspectorName("最小等级")]
+        [LabelText("最小等级")]
         [SerializeField, Range(Constants.MinLevel, Constants.MaxLevel)] private int m_minLevel = Constants.MinLevel;
-        [InspectorName("最大等级")]
+        [LabelText("最大等级")]
         [SerializeField, Range(Constants.MinLevel, Constants.MaxLevel)] private int m_maxLevel = Constants.MaxLevel;
 
         [Header("刷出设置")]
-        [InspectorName("刷出冷却")]
+        [LabelText("刷出冷却")]
         [SerializeField] private float m_spawnCooldown = 5.0f;
-        [InspectorName("预刷角色数")]
+        [LabelText("预刷角色数")]
         [FormerlySerializedAs("m_monstersToPrespawn")]
         [SerializeField] private int m_charactersToPrespawn = 4;
-        [InspectorName("最大同时存活数")]
+        [LabelText("最大同时存活数")]
         [FormerlySerializedAs("m_maxSimulatenousMonsterCount")]
         [SerializeField] private int m_maxSimultaneousCharacterCount = 4;
 
         [Header("刷出限制")]
-        [InspectorName("限制总刷出数量")]
+        [LabelText("限制总刷出数量")]
         [FormerlySerializedAs("m_limitMonsterCount")]
         [SerializeField] private bool m_limitCharacterCount = false;
-        [InspectorName("最大总刷出数量")]
+        [LabelText("最大总刷出数量")]
         [FormerlySerializedAs("m_maxMonsterCount")]
         [SerializeField, Min(1)] private int m_maxCharacterCount = 1;
 

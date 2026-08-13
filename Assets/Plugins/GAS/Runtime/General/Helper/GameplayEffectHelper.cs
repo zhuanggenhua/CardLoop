@@ -140,6 +140,19 @@ namespace GAS.Runtime
             return entity;
         }
 
+		public static void SetAuthoritativeRandomSeed(Entity gameplayEffect, uint seed)
+		{
+			if (seed == 0u)
+			{
+				throw new ArgumentOutOfRangeException(nameof(seed), "GameplayEffect 权威随机种子不能为 0。");
+			}
+
+			EntityHelper.AddComponent<CEffectAuthoritativeRandomSeed>(gameplayEffect);
+			EntityHelper.SetComponent(
+				gameplayEffect,
+				new CEffectAuthoritativeRandomSeed { Value = seed });
+		}
+
         public static void ApplyGameplayEffectTo(Entity gameplayEffect, Entity target, Entity source)
         {
             EntityHelper.AddComponent<CEffectInUsage>(gameplayEffect);

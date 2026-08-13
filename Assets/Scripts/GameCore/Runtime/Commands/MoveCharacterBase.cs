@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -17,7 +18,7 @@ namespace GameCore
             return targetCharacter;
         }
 
-        [InspectorName("相对位移")]
+        [LabelText("相对位移")]
         [Tooltip("命令执行时在目标角色当前位置基础上添加的位移。")]
         [SerializeField] private Vector2 m_movement;
 

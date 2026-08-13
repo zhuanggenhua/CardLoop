@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -20,12 +21,12 @@ namespace GameCore
     [Serializable]
     public class AreConditionMet : ABaseCondition
     {
-        [InspectorName("组合方式")]
+        [LabelText("组合方式")]
         [Tooltip("All 表示所有子条件都满足才成立；Any 表示任意一个条件满足即可成立。")]
         [SerializeField]
         private EGameConditionOperation m_operator = EGameConditionOperation.All;
 
-        [InspectorName("子条件")]
+        [LabelText("子条件")]
         [Tooltip("需要聚合判断的条件列表。空列表在 All 下视为满足，在 Any 下视为不满足。")]
         [SerializeReference, SubclassSelector]
         private ICondition[] m_conditions = null;

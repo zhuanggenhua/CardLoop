@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -21,7 +22,7 @@ namespace GameCore
     [Serializable]
     public class OpenMenu : IContextualCommand
     {
-        [InspectorName("目标菜单")]
+        [LabelText("目标菜单")]
         [Tooltip("命令执行时请求打开的菜单类型。")]
         [SerializeField] private EMenu m_menuToOpen;
 

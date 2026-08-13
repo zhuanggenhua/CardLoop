@@ -8,7 +8,7 @@ namespace GameCore
         {
             if (string.IsNullOrEmpty(sceneAddress))
             {
-                return GameManager.MapSystem.GetCurrentSceneAddress();
+                return GameManager.SceneSystem.CurrentSceneAddress;
             }
 
             return sceneAddress;

@@ -1,109 +1,165 @@
+using System;
+using GAS.Runtime;
 using Unity.Mathematics;
 
 namespace GameCore
 {
+    /// <summary>
+    /// 纯伤害解算器。属性来自命中快照，随机掷值由权威调用方显式传入。
+    /// </summary>
     public static class DamageSolver
     {
-        public static int CalculateDamageOut(int flatDamages, float scale, int stat)
+        internal static int CalculateDamageOut(int flatDamages, float scale, float attack)
         {
-            return flatDamages + (int)math.round(stat * scale);
+            return flatDamages + (int)math.round(attack * scale);
         }
 
-        public static int CalculateDamageIn(int damage, int stat)
+        internal static int CalculateDamageIn(int damage, float defense)
         {
-            return (int)math.floor(damage * (100.0f / (100.0f + stat)));
+            float nonNegativeDefense = math.max(0.0f, defense);
+            return (int)math.floor(damage * (100.0f / (100.0f + nonNegativeDefense)));
         }
 
-        public static int CalculateCriticalDamage(int damage)
+        internal static int CalculateCriticalDamage(int damage, float criticalMultiplierPercent)
         {
-            return damage * 2;
+            return (int)math.round(damage * math.max(0.0f, criticalMultiplierPercent) / 100.0f);
         }
 
-        public static int CalculateMissDamage(int damage)
+        internal static bool EvaluateCritical(float criticalChancePercent, float rollPercent)
         {
-            return 0;
+            return rollPercent < math.clamp(criticalChancePercent, 0.0f, 100.0f);
         }
 
-        public static bool EvaluateCritical(int luck)
+        internal static bool EvaluateMiss(float accuracy, float dodge, float hitRollPercent)
         {
-            return UnityEngine.Random.Range(1, 100) < luck;
+            float nonNegativeAccuracy = math.max(0.0f, accuracy);
+            float nonNegativeDodge = math.max(0.0f, dodge);
+            float denominator = nonNegativeAccuracy + nonNegativeDodge;
+            float hitChance = denominator <= 0.0f
+                ? 0.0f
+                : nonNegativeAccuracy * 100.0f / denominator;
+            return hitRollPercent >= hitChance;
         }
 
-        public static bool EvaluateMiss(int attackerAgility, int defenderAgility)
+        internal static DamageOutputDescriptor SolveDamageOutput(
+            CharacterBase attacker,
+            DamageDescriptor input,
+            DamageResolutionRolls rolls)
         {
-            float missChance = math.clamp((int)math.floor((90.0f + attackerAgility) * (100.0f / (100.0f + defenderAgility))), 0, 100);
-            return UnityEngine.Random.Range(1, 100) > missChance;
-        }
-
-        public static DamageOutputDescriptor SolveDamageOutput(CharacterBase attacker, DamageDescriptor input)
-        {
-            if (attacker)
-            {
-                CombatStatSnapshot attackerCombatStats = attacker.CreateCombatStatSnapshot();
-                int damage = CalculateDamageOut(
-                    input.flatDamages,
-                    input.scalingFactor,
-                    attackerCombatStats.GetOffensiveStat(input.damageType));
-
-                bool canCriticalHit =
-                    GameManager.Config.canCriticalHit &&
-                    input.criticalBehavior != EResolutionBehavior.Never;
-
-                bool criticalHit =
-                    canCriticalHit &&
-                    (input.criticalBehavior == EResolutionBehavior.Always || EvaluateCritical(attackerCombatStats.Luck));
-
-                return new DamageOutputDescriptor
-                {
-                    source = CharacterDamageSource.Create(attacker),
-                    damage = criticalHit ? CalculateCriticalDamage(damage) : damage,
-                    type = input.damageType,
-                    flags = criticalHit ? EDamageFlag.Critical : EDamageFlag.None,
-                    missBehavior = input.missBehavior,
-                    ignoreDefense = input.ignoreDefense,
-                    silent = input.silent
-                };
-            }
-            else
+            if (!attacker)
             {
                 return new DamageOutputDescriptor
                 {
                     source = new UnknownDamageSource(),
-                    damage = input.flatDamages,
-                    type = input.damageType,
+                    damage = input.FlatDamages,
+                    type = input.DamageType,
                     flags = EDamageFlag.None,
-                    silent = input.silent
+                    rolls = rolls,
+                    missBehavior = input.MissBehavior,
+                    ignoreDefense = input.IgnoreDefense,
+                    silent = input.Silent
                 };
             }
+
+            CombatStatSnapshot attackerCombatStats = attacker.CreateCombatStatSnapshot();
+            return SolveDamageOutput(
+                CharacterDamageSource.Create(attacker),
+                attackerCombatStats,
+                input,
+                rolls);
         }
 
-        public static DamageInputDescriptor SolveDamageInput(CharacterBase defender, DamageOutputDescriptor output)
+        internal static DamageOutputDescriptor SolveDamageOutput(
+            AbilitySystemCell attacker,
+            DamageDescriptor input,
+            DamageResolutionRolls rolls)
         {
-            if (output.TryGetSourceCombatStatSnapshot(out CombatStatSnapshot attackerCombatStats))
+            if (attacker == null)
             {
-                CombatStatSnapshot defenderCombatStats = defender.CreateCombatStatSnapshot();
-                int damage = CalculateDamageIn(
-                    output.damage,
-                    output.ignoreDefense ? 0 : defenderCombatStats.GetDefensiveStat(output.type)
-                );
-
-                bool canMiss =
-                    GameManager.Config.canMissHit &&
-                    output.missBehavior != EResolutionBehavior.Never;
-
-                bool missed =
-                    canMiss &&
-                    (output.missBehavior == EResolutionBehavior.Always || EvaluateMiss(attackerCombatStats.Agility, defenderCombatStats.Agility));
-
-                return new DamageInputDescriptor
-                {
-                    source = output.source,
-                    damage = missed ? CalculateMissDamage(damage) : damage,
-                    flags = missed ? output.flags | EDamageFlag.Miss : output.flags,
-                    silent = output.silent
-                };
+                return SolveDamageOutput((CharacterBase)null, input, rolls);
             }
-            else
+
+            CombatStatSnapshot attackerCombatStats = CreateCombatStatSnapshot(attacker);
+            return SolveDamageOutput(
+                new AbilitySystemDamageSource(attacker),
+                attackerCombatStats,
+                input,
+                rolls);
+        }
+
+        internal static DamageInputDescriptor SolveDamageInput(
+            CharacterBase defender,
+            DamageOutputDescriptor output)
+        {
+            return SolveDamageInput(defender.CreateCombatStatSnapshot(), output);
+        }
+
+        internal static DamageInputDescriptor SolveDamageInput(
+            AbilitySystemCell defender,
+            DamageOutputDescriptor output)
+        {
+            if (defender == null)
+            {
+                throw new ArgumentNullException(nameof(defender));
+            }
+
+            return SolveDamageInput(CreateCombatStatSnapshot(defender), output);
+        }
+
+        internal static CombatStatSnapshot CreateCombatStatSnapshot(AbilitySystemCell abilitySystem)
+        {
+            if (abilitySystem == null)
+            {
+                throw new ArgumentNullException(nameof(abilitySystem));
+            }
+
+            return new CombatStatSnapshot(
+                abilitySystem.GetAttrCurrentValue(CharacterAttributes.SetCode, CharacterAttributes.Attack),
+                abilitySystem.GetAttrCurrentValue(CharacterAttributes.SetCode, CharacterAttributes.Defense),
+                abilitySystem.GetAttrCurrentValue(CharacterAttributes.SetCode, CharacterAttributes.Accuracy),
+                abilitySystem.GetAttrCurrentValue(CharacterAttributes.SetCode, CharacterAttributes.Dodge),
+                abilitySystem.GetAttrCurrentValue(CharacterAttributes.SetCode, CharacterAttributes.CriticalChance),
+                abilitySystem.GetAttrCurrentValue(CharacterAttributes.SetCode, CharacterAttributes.CriticalMultiplier));
+        }
+
+        private static DamageOutputDescriptor SolveDamageOutput(
+            IDamageSource source,
+            CombatStatSnapshot attackerCombatStats,
+            DamageDescriptor input,
+            DamageResolutionRolls rolls)
+        {
+            int damage = CalculateDamageOut(
+                input.FlatDamages,
+                input.ScalingFactor,
+                attackerCombatStats.GetOffensiveStat(input.DamageType));
+            bool canCriticalHit =
+                GameManager.Config.canCriticalHit &&
+                input.CriticalBehavior != EResolutionBehavior.Never;
+            bool criticalHit =
+                canCriticalHit &&
+                (input.CriticalBehavior == EResolutionBehavior.Always ||
+                 EvaluateCritical(attackerCombatStats.CriticalChance, rolls.CriticalRollPercent));
+
+            return new DamageOutputDescriptor
+            {
+                source = source,
+                damage = criticalHit
+                    ? CalculateCriticalDamage(damage, attackerCombatStats.CriticalMultiplier)
+                    : damage,
+                type = input.DamageType,
+                flags = criticalHit ? EDamageFlag.Critical : EDamageFlag.None,
+                rolls = rolls,
+                missBehavior = input.MissBehavior,
+                ignoreDefense = input.IgnoreDefense,
+                silent = input.Silent
+            };
+        }
+
+        private static DamageInputDescriptor SolveDamageInput(
+            CombatStatSnapshot defenderCombatStats,
+            DamageOutputDescriptor output)
+        {
+            if (!output.TryGetSourceCombatStatSnapshot(out CombatStatSnapshot attackerCombatStats))
             {
                 return new DamageInputDescriptor
                 {
@@ -113,7 +169,28 @@ namespace GameCore
                     silent = output.silent
                 };
             }
+
+            int damage = CalculateDamageIn(
+                output.damage,
+                output.ignoreDefense ? 0.0f : defenderCombatStats.GetDefensiveStat(output.type));
+            bool canMiss =
+                GameManager.Config.canMissHit &&
+                output.missBehavior != EResolutionBehavior.Never;
+            bool missed =
+                canMiss &&
+                (output.missBehavior == EResolutionBehavior.Always ||
+                 EvaluateMiss(
+                     attackerCombatStats.Accuracy,
+                     defenderCombatStats.Dodge,
+                     output.rolls.HitRollPercent));
+
+            return new DamageInputDescriptor
+            {
+                source = output.source,
+                damage = missed ? 0 : damage,
+                flags = missed ? output.flags | EDamageFlag.Miss : output.flags,
+                silent = output.silent
+            };
         }
     }
 }
-

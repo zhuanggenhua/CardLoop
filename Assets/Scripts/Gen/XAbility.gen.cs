@@ -10,6 +10,7 @@ namespace GAS.Runtime
         public const int ABILITY_Attack = 20001;
         public const int ABILITY_TransformReplaceSmoke = 20002;
         public const int ABILITY_ChargedAttackRelease = 20004;
+        public const int ABILITY_TabletopBasicAttack = 20005;
 
         public static void LoadAbilityCode()
         {

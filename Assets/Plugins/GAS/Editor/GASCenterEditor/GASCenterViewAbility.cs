@@ -178,7 +178,7 @@ namespace GAS.Editor
                     : string.Empty;
                 worksheet.Cells[row, _headerMap["ActivationBlockedTags"]].Value = 
                     ComponentTypes.Contains(AbilityEditComponent.ActivationBlockedTags) && activationBlockedTags.Count > 0
-                    ? string.Join(";", activationBlockedTags)
+                    ? $"0;0;{string.Join(",", activationBlockedTags)}"
                     : string.Empty;
                 
                 // abilityLogic需要特殊处理

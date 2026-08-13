@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Threading.Tasks;
 using MackySoft.SerializeReferenceExtensions;
@@ -21,12 +22,12 @@ namespace GameCore
     /// </summary>
     public class Entity : Persistable, IInteractionTarget
     {
-        [InspectorName("交互逻辑")]
+        [LabelText("交互逻辑")]
         [Tooltip("玩家与实体交互时执行的项目侧交互实现。为空时会播放拒绝反馈。")]
         [SerializeReference, SubclassSelector] private IInteraction m_interaction = null;
 
         [Header("反馈")]
-        [InspectorName("交互反馈")]
+        [LabelText("交互反馈")]
         [SerializeField]
         [Tooltip("实体交互成功或拒绝时的表现反馈。交互规则仍由 IInteraction/ICommand 负责。")]
         private GameplayFeedbackSet m_feedbacks = new();

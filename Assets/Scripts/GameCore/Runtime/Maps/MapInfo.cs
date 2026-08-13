@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using MackySoft.SerializeReferenceExtensions;
 
@@ -32,7 +33,7 @@ namespace GameCore
         [SerializeField] private Transform m_cameraTarget = null;
 
         [Header("地形导航")]
-        [InspectorName("地形导航地图")]
+        [LabelText("地形导航地图")]
         [Tooltip("本场景唯一的 Tilemap 地形规则入口。未配置时保留旧的直线点击移动，正式地形验收场景必须配置。")]
         [SerializeField] private TerrainNavigationMap m_terrainNavigationMap = null;
 

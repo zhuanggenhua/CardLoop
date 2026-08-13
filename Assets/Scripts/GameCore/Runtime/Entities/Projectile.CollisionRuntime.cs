@@ -1,4 +1,8 @@
+using System;
+using GAS.Runtime;
+using Unity.Entities;
 using UnityEngine;
+using UEntity = Unity.Entities.Entity;
 
 namespace GameCore
 {
@@ -23,31 +27,59 @@ namespace GameCore
 
             if (character)
             {
-                EffectImpactSettings impactSettings = new()
-                {
-                    impactDataType = EEffectImpactDataType.Velocity,
-                    impactData = m_direction
-                };
-                bool applied = FormalGameplayEffectDamageHelper.TryApplyDamage(
-                    m_source,
+                ApplyImpactGameplayEffect(
                     character,
-                    new FormalDamageEffectPayload(
-                        m_baseDamage.damageDescriptor,
-                        m_baseDamage.visualFlags,
-                        impactSettings.damageImpact,
-                        impactSettings.impactDataType,
-                        impactSettings.impactData));
-
-                // 只要命中闭包里至少有一项不是“不适用”，就视为有效碰撞。
-                if (applied)
-                {
-                    OnCollision(character);
-                }
+                    EEffectImpactDataType.Velocity,
+                    m_direction);
+                OnCollision(character);
             }
             else
             {
                 OnCollision();
             }
+        }
+
+        private void ApplyImpactGameplayEffect(
+            CharacterBase target,
+            EEffectImpactDataType impactDataType,
+            Vector2 impactData)
+        {
+            if (target == null)
+            {
+                throw new ArgumentNullException(nameof(target));
+            }
+
+            int gameplayEffectId = ProjectileLaunchParameters.RequireGameplayEffectId(
+                m_impactGameplayEffectId);
+            GameplayEffectConfig effectConfig = GameplayEffectHelper.GetConfigByID(gameplayEffectId)
+                ?? throw new InvalidOperationException(
+                    $"投射物 {name} 引用的 EX-GAS GameplayEffect {gameplayEffectId} 不存在。");
+
+            UEntity targetAscEntity = RequireAbilitySystemEntity(target);
+            UEntity sourceAscEntity = m_source != null
+                ? RequireAbilitySystemEntity(m_source)
+                : UEntity.Null;
+            UEntity gameplayEffect = effectConfig.CreateGameplayEffectEntity();
+            EntityHelper.AddManagedComponent<MCGameplayEffectImpactOverride>(gameplayEffect);
+            EntityHelper.SetManagedComponent(
+                gameplayEffect,
+                new MCGameplayEffectImpactOverride(impactDataType, impactData));
+            GameplayEffectHelper.ApplyGameplayEffectTo(
+                gameplayEffect,
+                targetAscEntity,
+                sourceAscEntity);
+        }
+
+        private static UEntity RequireAbilitySystemEntity(CharacterBase character)
+        {
+            if (!character.TryGetFormalAbilitySystem(out AbilitySystemComponent abilitySystem) ||
+                abilitySystem?.Cell == null)
+            {
+                throw new InvalidOperationException(
+                    $"角色 {character.name} 的正式 AbilitySystemComponent 尚未初始化，无法施加投射物命中效果。");
+            }
+
+            return abilitySystem.Cell.Entity;
         }
 
         private bool TryColliding(GameObject target)

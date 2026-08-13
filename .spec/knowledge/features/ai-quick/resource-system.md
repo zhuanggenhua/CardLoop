@@ -47,7 +47,7 @@ YooAsset 官方文档负责解释 `ResourcePackage`、资产句柄和包生命�
 
 `LoadAssetsAsync` 只支持明确地址集合。当前项目没有 Addressables 标签交集语义；`MergeMode.Intersection` 会抛出 `NotSupportedException`。
 
-`LoadAssetsByAssetTagAsync` 是项目对 YooAsset `ResourcePackage.GetAssetInfos(tag)` 的正式复用入口。它会为标签命中的每个资源建立并持有句柄，调用方负责释放返回的合并句柄。Gameplay 内容由 `ContentRegistrySystem` 持有该句柄并交给 `ContentIndex`，不由 `ResourceSystem` 保存玩法索引。
+`LoadAssetsByAssetTagAsync` 是项目对 YooAsset `ResourcePackage.GetAssetInfos(tag)` 的正式复用入口。它会为标签命中的每个资源建立并持有句柄，调用方负责释放返回的合并句柄。Gameplay 当前由 `ScenarioDirector` 在开局时取得该句柄并构建 `ContentIndex`，内容索引随对应 `ScenarioRun` 存续；`ResourceSystem` 不保存玩法索引。
 
 ## 生命周期
 

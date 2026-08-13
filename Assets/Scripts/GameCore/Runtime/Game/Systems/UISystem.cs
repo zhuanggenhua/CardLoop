@@ -49,8 +49,6 @@ namespace GameCore
                 m_uiInstance.SetActive(true);
             }
 
-            // 正式场景不允许继续靠运行时重复节点而“看起来能跑”。
-            FormalSceneSingletonConflictDiagnostics.ReportFormalSceneSingletonConflicts($"{nameof(UISystem)}.{nameof(ShowUI)}");
         }
 
         public Task<bool> OpenMenuAsync(EMenu menu)

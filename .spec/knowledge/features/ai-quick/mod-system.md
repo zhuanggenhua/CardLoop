@@ -6,7 +6,7 @@ metadata:
   role: project-reference
   source: project-source + yooasset-official-entry
   status: 已交付
-  verified_at: 2026-08-04
+  verified_at: 2026-08-11
   update_triggers: mod-schema-change, mod-loader-change, resource-package-change, validation-policy-change
 ---
 
@@ -36,11 +36,11 @@ Mod 系统是 CardLoop 自有运行时能力，不是 YooAsset 或 EX-GAS 的官
 
 ## 生命周期
 
-`GameManager.Start` 调用 `await ModAPI.Initialize()`。随后 Mod 系统创建或读取 `ModConfig`，扫描 LoadingPath，解压 zip，读取目录内的 `*.cfg`，检查状态和 API 兼容性，再让 `ResourceSystem.LoadModPackageAsync` 初始化启用 Mod 的独立包。
+`GameManager.Start` 调用 `await ModAPI.Initialize(cancellationToken: destroyCancellationToken)`。随后 Mod 系统创建或读取 `ModConfig`，扫描 LoadingPath，解压 zip，读取目录内的 `*.cfg`，检查状态和 API 兼容性，再让 `ResourceSystem.LoadModPackageAsync` 初始化启用 Mod 的独立包。
 
 初始化完成后通过 `ModAPI.CreateInfoSnapshot()` 读取清单，通过 `GetModState`、`SetModEnabled` 和 `DeleteMod` 修改持久化状态。`SetModEnabled` 当前只保存状态并触发刷新通知，不会在本次运行中自动卸载或重新加载已经初始化的包。
 
-`GameManager.OnDestroy` 调用 `ModAPI.Shutdown()` 清理 Mod 状态，再由 `ResourceSystem.Shutdown()` 释放资源包。`ModAPI.Shutdown` 自身不销毁 YooAsset 包。
+如果 Mod 启动已成功，`GameManager.OnDestroy` 调用 `ModAPI.Shutdown()` 清理 Mod 状态，再由 `ResourceSystem.Shutdown()` 释放资源包；启动尚未成功时，销毁取消令牌只阻止 ModAPI 提交迟到结果。`ModAPI.Shutdown` 自身不销毁 YooAsset 包。
 
 ## 最小真实示例
 
@@ -91,7 +91,7 @@ private void SetEnabled(ModInfo modInfo, bool enabled)
 ## 当前真实缺口
 
 - 当前只确认 Mod 能初始化独立 YooAsset 包，未确认能运行时合并 EX-GAS GameplayTag 作者表、生成标签码或更新 `XTag` 常量。
-- `ModAPI.Initialize` 没有取消令牌和中途回滚协议。
+- `ModAPI.Initialize` 已有取消令牌并保证不提交迟到结果，但 `IModLoader` 还没有可中断扫描参数；正在进行的扫描或资源包操作需要先收敛，不能承诺立即中断。
 - 启停状态变化与已加载包之间没有自动热切换链路。
 - Mod 内容如何映射到 Gameplay 稳定 ID、关卡作者源、存档依赖和联机校验仍未形成完整契约。
 

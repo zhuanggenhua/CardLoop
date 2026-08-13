@@ -8,6 +8,8 @@ namespace GameCore.Tests
 {
     public sealed class FormalDamagePipelineEditModeTests
     {
+        private const int ChargedDamageGameplayEffectId = 2004;
+
         private readonly System.Collections.Generic.List<UnityEngine.Object> m_createdObjects = new();
 
         [SetUp]
@@ -35,53 +37,114 @@ namespace GameCore.Tests
         }
 
         [Test]
-        public void Damage_UpdatesFormalAscCurrentHealth()
+        public void AttributeQueries_ReadFormalGasValuesByAttributeCode()
         {
-            CharacterActor attacker = CreateCharacter("attacker", CreateStats(health: 30, physicalAttack: 10));
-            CharacterActor defender = CreateCharacter("defender", CreateStats(health: 50, physicalDefense: 3));
+            CharacterActor character = CreateCharacter(
+                "attribute-query-character",
+                CreateAttributeOverrides(health: 50, mana: 12, attack: 23));
+
+            Assert.AreEqual(23.0f, character.GetAttributeBaseValue(CharacterAttributes.Attack));
+            Assert.AreEqual(23.0f, character.GetAttributeCurrentValue(CharacterAttributes.Attack));
+            Assert.AreEqual(50.0f, character.GetAttributeBaseValue(CharacterAttributes.MaxHealth));
+            Assert.AreEqual(50.0f, character.GetAttributeCurrentValue(CharacterAttributes.Health));
+
+            character.ConsumeMana(5);
+
+            Assert.AreEqual(12.0f, character.GetAttributeBaseValue(CharacterAttributes.MaxMana));
+            Assert.AreEqual(7.0f, character.GetAttributeCurrentValue(CharacterAttributes.Mana));
+            Assert.Throws<InvalidOperationException>(() => character.GetAttributeBaseValue(9999));
+        }
+
+        [Test]
+        public void AttributeChangeEvents_PublishCurrentValueByGasAttributeCode()
+        {
+            CharacterActor caster = CreateCharacter("caster", CreateAttributeOverrides(health: 30, mana: 12));
+            CharacterAttributeValueChange? observedChange = null;
+            caster.AddAttributeCurrentValueChangedListener(change => observedChange = change);
+
+            caster.ConsumeMana(5);
+
+            Assert.IsTrue(observedChange.HasValue);
+            Assert.AreEqual(CharacterAttributes.Mana, observedChange.Value.AttributeCode);
+            Assert.AreEqual(12.0f, observedChange.Value.PreviousValue);
+            Assert.AreEqual(7.0f, observedChange.Value.CurrentValue);
+        }
+
+        [Test]
+        public void ConfiguredDamageEffect_UpdatesFormalAscCurrentHealth()
+        {
+            CharacterActor attacker = CreateCharacter("attacker", CreateAttributeOverrides(health: 30, attack: 10));
+            CharacterActor defender = CreateCharacter("defender", CreateAttributeOverrides(health: 50, defense: 3));
 
             int previousHealth = defender.GetCurrentHealth();
             int previousMaxHealth = defender.GetMaxHealth();
             Assert.AreEqual(50, previousHealth);
             Assert.AreEqual(50, previousMaxHealth);
 
-            FormalDamageEffectPayload payload = new(
-                new DamageDescriptor
-                {
-                    damageType = EDamageType.Physical,
-                    flatDamages = 7,
-                    scalingFactor = 0.0f,
-                    criticalBehavior = EResolutionBehavior.Never,
-                    missBehavior = EResolutionBehavior.Never,
-                    ignoreDefense = true,
-                    silent = true
-                },
-                EEffectVisualFlags.None,
-                default,
-                EEffectImpactDataType.Velocity,
-                Vector2.zero);
-            bool applied = FormalGameplayEffectDamageHelper.TryApplyDamage(attacker, defender, payload);
+            ApplyConfiguredGameplayEffect(attacker, defender, ChargedDamageGameplayEffectId);
+            GasEditModeTestHelper.AdvanceWorldUntil(() => defender.GetCurrentHealth() < previousHealth);
+            int damagedHealth = defender.GetCurrentHealth();
 
-            Assert.IsTrue(applied);
-            GasEditModeTestHelper.AdvanceWorldUntil(() => defender.GetCurrentHealth() == previousHealth - 7);
-            Assert.AreEqual(previousHealth - 7, defender.GetCurrentHealth());
+            Assert.Less(damagedHealth, previousHealth);
             Assert.AreEqual(previousMaxHealth, defender.GetMaxHealth());
 
             Assert.IsTrue(defender.TryGetFormalAbilitySystem(out AbilitySystemComponent defenderAsc));
             int currentFormalHealth = Mathf.RoundToInt(defenderAsc.GetAttrCurrentValue(
-                FormalGameplayAttributeSet.SetCode,
-                FormalGameplayAttributeSet.Health));
+                CharacterAttributes.SetCode,
+                CharacterAttributes.Health));
             int baseFormalHealth = Mathf.RoundToInt(defenderAsc.GetAttrBaseValue(
-                FormalGameplayAttributeSet.SetCode,
-                FormalGameplayAttributeSet.Health));
-            Assert.AreEqual(previousHealth - 7, currentFormalHealth);
+                CharacterAttributes.SetCode,
+                CharacterAttributes.MaxHealth));
+            Assert.AreEqual(damagedHealth, currentFormalHealth);
             Assert.AreEqual(previousMaxHealth, baseFormalHealth);
+        }
+
+        [Test]
+        public void ConfiguredDamageEffect_RemainsAppliedAfterFormalAttributeRecalculation()
+        {
+            CharacterActor attacker = CreateCharacter("attacker", CreateAttributeOverrides(health: 30, attack: 10));
+            CharacterActor defender = CreateCharacter("defender", CreateAttributeOverrides(health: 50, defense: 3));
+
+            ApplyConfiguredGameplayEffect(attacker, defender, ChargedDamageGameplayEffectId);
+            GasEditModeTestHelper.AdvanceWorldUntil(() => defender.GetCurrentHealth() < 50);
+            int damagedHealth = defender.GetCurrentHealth();
+            Assert.IsTrue(defender.TryGetFormalAbilitySystem(out AbilitySystemComponent defenderAsc));
+
+            AttributeHelper.RecalculateCurrentValue(
+                defenderAsc.Cell.Entity,
+                CharacterAttributes.SetCode,
+                CharacterAttributes.Health);
+
+            Assert.AreEqual(damagedHealth, defender.GetCurrentHealth());
+            Assert.AreEqual(50, defender.GetMaxHealth());
+        }
+
+        [Test]
+        public void CharacterAttributeSnapshot_RestoresGasBaseValuesAndCurrentResources()
+        {
+            CharacterActor character = CreateCharacter(
+                "snapshot-character",
+                CreateAttributeOverrides(health: 50, mana: 12, attack: 23));
+            character.ConsumeMana(5);
+            CharacterAttributeSnapshot snapshot = character.CaptureAttributeSnapshot();
+
+            character.ConsumeMana(3);
+            character.SetAttributeBaseValueAndRecalculate(CharacterAttributes.Attack, 5.0f);
+            Assert.AreEqual(4, character.GetCurrentMana());
+            Assert.AreEqual(5.0f, character.GetAttributeBaseValue(CharacterAttributes.Attack));
+
+            character.RestoreAttributeSnapshot(snapshot);
+
+            Assert.AreEqual(7, character.GetCurrentMana());
+            Assert.AreEqual(7.0f, character.GetAttributeBaseValue(CharacterAttributes.Mana));
+            Assert.AreEqual(23.0f, character.GetAttributeBaseValue(CharacterAttributes.Attack));
+            Assert.AreEqual(23.0f, character.GetAttributeCurrentValue(CharacterAttributes.Attack));
         }
 
         [Test]
         public void ConsumeMana_UpdatesFormalAscCurrentManaWithoutChangingMaxMana()
         {
-            CharacterActor caster = CreateCharacter("caster", CreateStats(health: 30, mana: 12));
+            CharacterActor caster = CreateCharacter("caster", CreateAttributeOverrides(health: 30, mana: 12));
 
             int previousMana = caster.GetCurrentMana();
             int previousMaxMana = caster.GetMaxMana();
@@ -95,13 +158,35 @@ namespace GameCore.Tests
 
             Assert.IsTrue(caster.TryGetFormalAbilitySystem(out AbilitySystemComponent casterAsc));
             int currentFormalMana = Mathf.RoundToInt(casterAsc.GetAttrCurrentValue(
-                FormalGameplayAttributeSet.SetCode,
-                FormalGameplayAttributeSet.Mana));
+                CharacterAttributes.SetCode,
+                CharacterAttributes.Mana));
             int baseFormalMana = Mathf.RoundToInt(casterAsc.GetAttrBaseValue(
-                FormalGameplayAttributeSet.SetCode,
-                FormalGameplayAttributeSet.Mana));
+                CharacterAttributes.SetCode,
+                CharacterAttributes.MaxMana));
             Assert.AreEqual(7, currentFormalMana);
             Assert.AreEqual(previousMaxMana, baseFormalMana);
+        }
+
+        [Test]
+        public void CharacterStartup_UsesGasDefaultsForUnprojectedAttributes()
+        {
+            CharacterActor character = CreateCharacter(
+                "character",
+                CreateAttributeOverrides(health: 50));
+
+            Assert.IsTrue(character.TryGetFormalAbilitySystem(out AbilitySystemComponent characterAsc));
+            Assert.AreEqual(100.0f, characterAsc.GetAttrBaseValue(
+                CharacterAttributes.SetCode,
+                CharacterAttributes.Stamina));
+            Assert.AreEqual(100.0f, characterAsc.GetAttrBaseValue(
+                CharacterAttributes.SetCode,
+                CharacterAttributes.MaxStamina));
+            Assert.AreEqual(100.0f, characterAsc.GetAttrBaseValue(
+                CharacterAttributes.SetCode,
+                CharacterAttributes.Accuracy));
+            Assert.AreEqual(200.0f, characterAsc.GetAttrBaseValue(
+                CharacterAttributes.SetCode,
+                CharacterAttributes.CriticalMultiplier));
         }
 
         private void CreateGameManagerWithMinimalConfig()
@@ -126,7 +211,9 @@ namespace GameCore.Tests
             SetStaticField(typeof(GameManager), "_instance", gameManager);
         }
 
-        private CharacterActor CreateCharacter(string name, Stats baseStats)
+        private CharacterActor CreateCharacter(
+            string name,
+            CharacterAttributeOverride[] attributeOverrides)
         {
             GameObject characterObject = new(name);
             m_createdObjects.Add(characterObject);
@@ -138,7 +225,7 @@ namespace GameCore.Tests
 
             CharacterSheet sheet = ScriptableObject.CreateInstance<CharacterSheet>();
             m_createdObjects.Add(sheet);
-            SetInstanceField(sheet, "m_baseStats", baseStats.Clone());
+            SetInstanceField(sheet, "m_attributeOverrides", attributeOverrides);
             SetInstanceField(character, "m_sheet", sheet);
             SetInstanceField(character, "m_rigidbody", rigidbody2D);
 
@@ -153,28 +240,53 @@ namespace GameCore.Tests
             return character;
         }
 
-        private static Stats CreateStats(
-            int health = 0,
-            int mana = 0,
-            int physicalAttack = 0,
-            int magicalAttack = 0,
-            int physicalDefense = 0,
-            int magicalDefense = 0,
-            int agility = 0,
-            int luck = 0,
-            int attackSpeed = 0)
+        private static void ApplyConfiguredGameplayEffect(
+            CharacterBase source,
+            CharacterBase target,
+            int gameplayEffectId)
         {
-            Stats stats = new();
-            stats[EStat.Health] = health;
-            stats[EStat.Mana] = mana;
-            stats[EStat.PhysicalAttack] = physicalAttack;
-            stats[EStat.MagicalAttack] = magicalAttack;
-            stats[EStat.PhysicalDefense] = physicalDefense;
-            stats[EStat.MagicalDefense] = magicalDefense;
-            stats[EStat.Agility] = agility;
-            stats[EStat.Luck] = luck;
-            stats[EStat.AttackSpeed] = attackSpeed;
-            return stats;
+            GameplayEffectConfig effectConfig = GameplayEffectHelper.GetConfigByID(gameplayEffectId);
+            Assert.IsNotNull(effectConfig, $"找不到 EX-GAS GameplayEffect {gameplayEffectId}。");
+            Assert.IsTrue(source.TryGetFormalAbilitySystem(out AbilitySystemComponent sourceAsc));
+            Assert.IsNotNull(sourceAsc.Cell);
+            Assert.IsTrue(target.TryGetFormalAbilitySystem(out AbilitySystemComponent targetAsc));
+            Assert.IsNotNull(targetAsc.Cell);
+
+            Unity.Entities.Entity gameplayEffect = effectConfig.CreateGameplayEffectEntity();
+            GameplayEffectHelper.ApplyGameplayEffectTo(
+                gameplayEffect,
+                targetAsc.Cell.Entity,
+                sourceAsc.Cell.Entity);
+        }
+
+        private static CharacterAttributeOverride[] CreateAttributeOverrides(
+            float health = 0.0f,
+            float mana = 0.0f,
+            float attack = 0.0f,
+            float defense = 0.0f)
+        {
+            System.Collections.Generic.List<CharacterAttributeOverride> overrides = new();
+            if (health > 0.0f)
+            {
+                overrides.Add(new CharacterAttributeOverride(CharacterAttributes.MaxHealth, health));
+            }
+
+            if (mana > 0.0f)
+            {
+                overrides.Add(new CharacterAttributeOverride(CharacterAttributes.MaxMana, mana));
+            }
+
+            if (attack > 0.0f)
+            {
+                overrides.Add(new CharacterAttributeOverride(CharacterAttributes.Attack, attack));
+            }
+
+            if (defense > 0.0f)
+            {
+                overrides.Add(new CharacterAttributeOverride(CharacterAttributes.Defense, defense));
+            }
+
+            return overrides.ToArray();
         }
 
         private static void InvokeLifecycle(Component component, string methodName)
