@@ -20,7 +20,44 @@ MonoBehaviour:
     Address: "\u724C\u684C\u6D4B\u8BD5\u884C\u52A8\u8FDB\u5EA6"
     Guid: c6a4453a163925b4fa0a3ec2d7e35a81
     Locked: 1
-  m_stackDepthStep: -0.05
+  m_battleAreaViewPrefab:
+    Address: "\u724C\u684C\u6D4B\u8BD5\u6218\u6597\u533A\u57DF"
+    Guid: 0a6a4c2674891c6479b4a9b548a3f247
+    Locked: 1
+  m_projectileViewPrefab:
+    Address: "\u724C\u684C\u6D4B\u8BD5\u6295\u5C04\u7269"
+    Guid: 71374535c96594147a97e6d9c3ff8df0
+    Locked: 1
+  m_cardSmokeEffectPrefab:
+    Address: "\u5361\u724C\u70DF\u96FE\u7C92\u5B50"
+    Guid: 728ff838a02e647fb4521d417e15d709
+    Locked: 1
+  m_hitResultViewPrefab:
+    Address: "\u724C\u684C\u6D4B\u8BD5\u547D\u4E2D\u7ED3\u679C"
+    Guid: d05820f4f6918e74e9827d22a7b5ebdc
+    Locked: 1
+  m_stackHeightStep: 0.002
   m_baseSortingOrder: 10
+  m_cardPickAudio: {fileID: 11400000, guid: 25d01cb9dbf62eb45adebba68793fcfb, type: 2}
+  m_cardDropAudio: {fileID: 11400000, guid: c104863b3156a17418d8b237d21e6858, type: 2}
+  m_cardSwipeAudio: {fileID: 11400000, guid: c3563c96566966147ba2a45c3cb864b3, type: 2}
+  m_eatAudio: {fileID: 11400000, guid: ade90b077948cae40b13c794a2f13c4f, type: 2}
+  m_popAudio: {fileID: 11400000, guid: 4f92c918197a4074da72a59d8d77891f, type: 2}
+  m_cardSmokeAudio: {fileID: 11400000, guid: 6cf56e6a141c7474ea58a23dfb16d395, type: 2}
+  m_coinAudio: {fileID: 11400000, guid: 0a99190ebacfc7f4ab7a81258bba38a0, type: 2}
+  m_coinsAudio: {fileID: 11400000, guid: f5a8b28d8a350c5428e569cf34aff8b0, type: 2}
+  m_cashRegisterAudio: {fileID: 11400000, guid: 6d105530442674249b84a7e28f2d6b3f, type: 2}
   m_battleBaseSortingOrder: 100
-  m_dragFollowSharpness: 12
+  m_projectileSortingOrder: 140
+  m_cardSmokeSortingOrder: 150
+  m_hitResultSortingOrder: 160
+  m_meleeAttackAudio: {fileID: 11400000, guid: 7489a8e208ebe57469dd0dc7b1e9d4b5, type: 2}
+  m_rangedAttackAudio: {fileID: 11400000, guid: e5bd88d49656974418283f7ab626d089, type: 2}
+  m_magicAttackAudio: {fileID: 11400000, guid: 52a4114ec8fc8214f99a1a2efea7d3ae, type: 2}
+  m_meleeHitAudio: {fileID: 11400000, guid: 0baadff8672120644967664417e23443, type: 2}
+  m_rangedHitAudio: {fileID: 11400000, guid: 560bcfcb561d8eb41a546d223a74983b, type: 2}
+  m_magicHitAudio: {fileID: 11400000, guid: 817f5151602bc104f92bf001a3ba03db, type: 2}
+  m_missAudio: {fileID: 11400000, guid: 9382d861fc09c6e438534205c1fcc271, type: 2}
+  m_criticalAudio: {fileID: 11400000, guid: 29ea83bac279cbd4c8bc9cabf50fea17, type: 2}
+  m_dragFollowSharpness: 100
+  m_moveDurationSeconds: 0.1

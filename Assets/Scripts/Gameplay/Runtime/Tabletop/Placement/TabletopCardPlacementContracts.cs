@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Gameplay.Tabletop
@@ -12,26 +13,41 @@ namespace Gameplay.Tabletop
 	public sealed class TabletopCardPlacementDefinition
 	{
 		[SerializeField]
+		[LabelText("牌桌边界")]
 		[Tooltip("牌桌中允许卡牌完整占据的二维边界。")]
 		private Rect m_bounds = new Rect(-5f, -3f, 10f, 6f);
 
 		[SerializeField]
+		[LabelText("禁放区域")]
 		[Tooltip("牌桌边界内禁止卡牌占据的区域，例如固定 HUD 或特殊工位保留区。")]
 		private Rect[] m_restrictedAreas = Array.Empty<Rect>();
 
 		[SerializeField]
-		[Tooltip("单张卡牌在牌桌规则坐标中的统一宽高。")]
-		private Vector2 m_cardSize = new Vector2(1.4f, 2f);
+		[LabelText("卡牌尺寸")]
+		[Tooltip("单张卡牌在牌桌上的可见宽高。StackCraft 角色卡原始可见尺寸是 0.8 × 1.0。")]
+		private Vector2 m_cardSize = new Vector2(0.8f, 1f);
 
 		[SerializeField]
-		[Tooltip("同一牌堆每增加一张卡牌时，规则占地在 XY 平面的偏移。")]
-		private Vector2 m_stackStep = new Vector2(0f, 0.08f);
+		[LabelText("卡牌占地边距")]
+		[Tooltip("只参与放置解算的额外占地，不拉伸卡面表现。StackCraft 默认 margin 是 0.1 × 0.1。")]
+		private Vector2 m_cardMargin = new Vector2(0.1f, 0.1f);
+
+		[SerializeField]
+		[LabelText("堆叠步进")]
+		[Tooltip("同一牌堆每增加一张卡牌时，规则占地在 XY 平面的偏移。当前 2D 牌桌用 Y 轴承接 StackCraft 的 Z 轴 -0.18 露出。")]
+		private Vector2 m_stackStep = new Vector2(0f, -0.18f);
+
+		[SerializeField]
+		[LabelText("上限加成扩展")]
+		[Tooltip("牌桌上每 1 点卡牌上限加成会让可放置边界向左右和上下各扩展的距离。0 表示该地区不随上限加成扩展牌桌。")]
+		private Vector2 m_cardLimitBonusExpansionPerPoint = new Vector2(0.05f, 0.05f);
 
 		public TabletopCardPlacementRules CreateRuntime()
 		{
 			return new TabletopCardPlacementRules(
 				new TabletopCardPlacementArea(m_bounds, m_restrictedAreas),
-				new TabletopCardStackGeometry(m_cardSize, m_stackStep));
+				new TabletopCardStackGeometry(m_cardSize, m_stackStep, m_cardMargin),
+				m_cardLimitBonusExpansionPerPoint);
 		}
 	}
 
@@ -78,21 +94,43 @@ namespace Gameplay.Tabletop
 	{
 		public Vector2 CardSize { get; }
 
+		public Vector2 CardMargin { get; }
+
+		public Vector2 FootprintSize { get; }
+
 		public Vector2 StackStep { get; }
 
-		internal bool IsValid => CardSize.x > 0f && CardSize.y > 0f && IsFinite(CardSize) && IsFinite(StackStep);
+		internal bool IsValid =>
+			CardSize.x > 0f &&
+			CardSize.y > 0f &&
+			CardMargin.x >= 0f &&
+			CardMargin.y >= 0f &&
+			IsFinite(CardSize) &&
+			IsFinite(CardMargin) &&
+			IsFinite(StackStep);
 
 		public TabletopCardStackGeometry(Vector2 cardSize, Vector2 stackStep)
+			: this(cardSize, stackStep, Vector2.zero)
+		{
+		}
+
+		public TabletopCardStackGeometry(Vector2 cardSize, Vector2 stackStep, Vector2 cardMargin)
 		{
 			if (!IsFinite(cardSize) || cardSize.x <= 0f || cardSize.y <= 0f)
 			{
 				throw new ArgumentException("牌桌卡牌尺寸必须具有有限坐标和正数宽高。", "cardSize");
+			}
+			if (!IsFinite(cardMargin) || cardMargin.x < 0f || cardMargin.y < 0f)
+			{
+				throw new ArgumentException("牌桌卡牌占地边距必须具有有限坐标且不能为负数。", "cardMargin");
 			}
 			if (!IsFinite(stackStep))
 			{
 				throw new ArgumentException("牌桌堆叠步进必须是有限二维坐标。", "stackStep");
 			}
 			CardSize = cardSize;
+			CardMargin = cardMargin;
+			FootprintSize = cardSize + cardMargin;
 			StackStep = stackStep;
 		}
 
@@ -108,7 +146,7 @@ namespace Gameplay.Tabletop
 			}
 			Vector2 span = StackStep * (cardCount - 1);
 			Vector2 center = stackPosition + span * 0.5f;
-			Vector2 size = CardSize + new Vector2(Mathf.Abs(span.x), Mathf.Abs(span.y));
+			Vector2 size = FootprintSize + new Vector2(Mathf.Abs(span.x), Mathf.Abs(span.y));
 			return new Rect(center - size * 0.5f, size);
 		}
 
@@ -133,14 +171,61 @@ namespace Gameplay.Tabletop
 
 		public TabletopCardStackGeometry Geometry { get; }
 
-		public TabletopCardPlacementRules(TabletopCardPlacementArea area, TabletopCardStackGeometry geometry)
+		public Vector2 CardLimitBonusExpansionPerPoint { get; }
+
+		public TabletopCardPlacementRules(
+			TabletopCardPlacementArea area,
+			TabletopCardStackGeometry geometry,
+			Vector2 cardLimitBonusExpansionPerPoint = default)
 		{
 			Area = area ?? throw new ArgumentNullException("area");
 			if (!geometry.IsValid)
 			{
 				throw new ArgumentException("牌桌放置规则缺少有效的堆栈几何。", "geometry");
 			}
+			if (!IsFinite(cardLimitBonusExpansionPerPoint) ||
+				cardLimitBonusExpansionPerPoint.x < 0f ||
+				cardLimitBonusExpansionPerPoint.y < 0f)
+			{
+				throw new ArgumentException(
+					"卡牌上限加成的牌桌扩展必须是有限且大于或等于 0 的二维数值。",
+					nameof(cardLimitBonusExpansionPerPoint));
+			}
 			Geometry = geometry;
+			CardLimitBonusExpansionPerPoint = cardLimitBonusExpansionPerPoint;
+		}
+
+		public TabletopCardPlacementRules CreateForCardLimitBonus(int cardLimitBonus)
+		{
+			if (cardLimitBonus < 0)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(cardLimitBonus),
+					cardLimitBonus,
+					"牌桌卡牌上限加成不能为负数。");
+			}
+			if (cardLimitBonus == 0 ||
+				(CardLimitBonusExpansionPerPoint.x == 0f && CardLimitBonusExpansionPerPoint.y == 0f))
+			{
+				return this;
+			}
+
+			Vector2 expansion = CardLimitBonusExpansionPerPoint * cardLimitBonus;
+			Rect bounds = Area.Bounds;
+			Rect expandedBounds = new Rect(
+				bounds.xMin - expansion.x,
+				bounds.yMin - expansion.y,
+				bounds.width + expansion.x * 2f,
+				bounds.height + expansion.y * 2f);
+			return new TabletopCardPlacementRules(
+				new TabletopCardPlacementArea(expandedBounds, Area.RestrictedAreas),
+				Geometry,
+				CardLimitBonusExpansionPerPoint);
+		}
+
+		private static bool IsFinite(Vector2 value)
+		{
+			return float.IsFinite(value.x) && float.IsFinite(value.y);
 		}
 	}
 

@@ -1,23 +1,19 @@
-# CardLoop AI 规范入口
+# CardLoop Entry
 
-> 本文件只负责把 AI 引导到 `.spec` 规范中心；不要把长期规则、详细 SOP 或项目知识直接追加到这里。
+Compatibility entrypoint for agent tools. The authoritative spec lives under `.spec/`; this file only points, it defines no rules of its own.
 
-## 必读顺序
+Read these three in order — they are the always-in-context core (Claude Code force-loads them via `@import` in `CLAUDE.md`; Codex has no `@import`, so read them voluntarily here):
 
-1. `.spec/AGENTS.md`：项目 AI 规范中心。
-2. `.spec/rules/system.md`：项目硬红线。
-3. `.spec/knowledge/README.md`：知识导航。
-4. 按任务类型继续读取 `.spec/skills/`、`.agents/skills/`、`.codex/skills/` 或 `docs/FantasyWord-framework-migration.md`。
+1. **`.spec/AGENTS.md`** — 项目介绍 + Agent 调度(中心文档,先读)。
+2. **`.spec/knowledge/README.md`** — 项目知识导航(有哪些知识、在哪)。
+3. **`.spec/rules/system.md`** — 硬性禁令 / 护栏(不许做什么)。
 
-## 当前项目事实
+Beyond the core: 子 Agent 规范在 `.spec/agents/`,技能在 `.spec/skills/`;Codex 的索引 / 执行映射见 `.spec/AGENTS.md`。沉淀 / 同步任何能力 → 用 `spec-steward` 技能。
 
-- Unity 工程根目录：`C:\Gamedev\Unity\Project\CardLoop`。
-- 来源工程：`C:\Gamedev\Unity\Project\FantasyWord`。
-- 本轮已从 FantasyWord 静态迁入插件、本地 UPM 包、GameCore 框架候选和可复用 AI 工作流。
-- 2026-08-01 已用 CardLoop 的 Unity `6000.5.4f1` 跑过新鲜 batchmode 验证，Package Resolve 与脚本编译通过；证据见 `docs/FantasyWord-framework-migration.md`。
+Rules for all agents:
 
-## 正式入口
+- **Read and follow `.spec/AGENTS.md` first.**
+- Treat this file as a pointer only. Do not add project rules here.
+- Tool-specific entries must point into `.spec/`; they must not define a second source of truth.
 
-- 项目规范入口是 `.spec/AGENTS.md` 与 `.spec/knowledge/README.md`。
-- FantasyWord 的任务记录、业务知识库、截图证据和历史决策没有作为 CardLoop 正式事实接管。
-- 迁入裁决和排除项见 `docs/FantasyWord-framework-migration.md`。
+Note: Codex relies on voluntarily reading the three core docs after this pointer; Claude Code force-loads them via `@import`. Known asymmetry, acceptable.

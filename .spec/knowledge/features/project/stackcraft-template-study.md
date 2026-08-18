@@ -50,7 +50,7 @@ metadata:
 
 - 已为 StackCraft 参考样例新增 `Assets/StackCraft/Scripts/Core/StackCraftInput.cs`，把模板脚本里的指针位置、鼠标按钮、滚轮和取消键读取改为 Unity 新 Input System。
 - 已把 `Assets/StackCraft/Scenes/Title.unity` 与 `Assets/StackCraft/Prefabs/UI/UIRoot.prefab` 的旧 `StandaloneInputModule` 替换为 `InputSystemUIInputModule`，避免在 `activeInputHandler: 1` 时触发旧输入 API 异常。
-- 已新增编辑器菜单 `Gameplay/StackCraft/Fix Reference Input Compatibility`，用于在 Unity 内重新扫描 StackCraft 场景和 UI 预制体，并把 UI 输入模块绑定到 `Assets/InputSystem_Actions.inputactions`。
+- 曾有一次性编辑器菜单 `Gameplay/StackCraft/Fix Reference Input Compatibility` 用于修参考样例输入；当前阶段已删除该菜单，避免参考模板工具继续出现在正式作者入口。
 - 当前验证只覆盖静态扫描和 `.spec` 链接检查；因为 Unity Editor 当前已打开且 REST/CLI 未响应，还没有完成 StackCraft PlayMode 操作验收。
 
 ## 当前裁决

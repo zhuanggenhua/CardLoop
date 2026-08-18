@@ -338,6 +338,29 @@
     "GrantedAbility": []
   },
   {
+    "ID": 2005,
+    "Name": "按参数恢复生命",
+    "Desc": "即时恢复生命；应用前由调用方设置第一个 Modifier 的 Magnitude。",
+    "AssetTags": [],
+    "GrantedTags": [],
+    "Modifiers": [
+      {
+        "AttrSet": 1,
+        "Attribute": 1,
+        "Magnitude": 0,
+        "Operation": 0,
+        "Mmc": 1001
+      }
+    ],
+    "CueOnApply": [],
+    "CueOnTick": [],
+    "CueOnAdd": [],
+    "CueOnRemove": [],
+    "CueOnActivate": [],
+    "CueOnDeactivate": [],
+    "GrantedAbility": []
+  },
+  {
     "ID": 2003,
     "Name": "基础攻击正式伤害",
     "Desc": "基于攻击者物攻和目标物防的基础攻击伤害",
@@ -367,7 +390,45 @@
       "PushMode": 1,
       "PushIntensity": 0,
       "PushResistance": 0,
-      "InvincibilityDuration": 0
+      "InvincibilityDuration": 0,
+      "Matchups": [
+        {
+          "SourceTag": 7001,
+          "TargetTag": 7002,
+          "Multiplier": 1.5,
+          "Presentation": 1
+        },
+        {
+          "SourceTag": 7002,
+          "TargetTag": 7003,
+          "Multiplier": 1.5,
+          "Presentation": 1
+        },
+        {
+          "SourceTag": 7003,
+          "TargetTag": 7001,
+          "Multiplier": 1.5,
+          "Presentation": 1
+        },
+        {
+          "SourceTag": 7001,
+          "TargetTag": 7003,
+          "Multiplier": 0.75,
+          "Presentation": 2
+        },
+        {
+          "SourceTag": 7002,
+          "TargetTag": 7001,
+          "Multiplier": 0.75,
+          "Presentation": 2
+        },
+        {
+          "SourceTag": 7003,
+          "TargetTag": 7002,
+          "Multiplier": 0.75,
+          "Presentation": 2
+        }
+      ]
     },
     "FormalConditionalDamage": {
       "ConditionKind": 1,
@@ -385,7 +446,8 @@
       "PushMode": 1,
       "PushIntensity": 0,
       "PushResistance": 0,
-      "InvincibilityDuration": 0
+      "InvincibilityDuration": 0,
+      "Matchups": []
     }
   },
   {
@@ -418,7 +480,45 @@
       "PushMode": 0,
       "PushIntensity": 0,
       "PushResistance": 0,
-      "InvincibilityDuration": 0
+      "InvincibilityDuration": 0,
+      "Matchups": [
+        {
+          "SourceTag": 7001,
+          "TargetTag": 7002,
+          "Multiplier": 1.5,
+          "Presentation": 1
+        },
+        {
+          "SourceTag": 7002,
+          "TargetTag": 7003,
+          "Multiplier": 1.5,
+          "Presentation": 1
+        },
+        {
+          "SourceTag": 7003,
+          "TargetTag": 7001,
+          "Multiplier": 1.5,
+          "Presentation": 1
+        },
+        {
+          "SourceTag": 7001,
+          "TargetTag": 7003,
+          "Multiplier": 0.75,
+          "Presentation": 2
+        },
+        {
+          "SourceTag": 7002,
+          "TargetTag": 7001,
+          "Multiplier": 0.75,
+          "Presentation": 2
+        },
+        {
+          "SourceTag": 7003,
+          "TargetTag": 7002,
+          "Multiplier": 0.75,
+          "Presentation": 2
+        }
+      ]
     }
   }
 ]

@@ -4,6 +4,7 @@ using System.Linq;
 using Gameplay.Actions;
 using Gameplay.Content;
 using Gameplay.Quests;
+using Gameplay.Tabletop;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using UnityEditor;
@@ -42,6 +43,29 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void Quests_PreserveScenarioAuthoringOrderAsReadOnlyRuntimeObjects()
+		{
+			QuestDefinition first = CreateQuest("test.quest.order-first");
+			QuestDefinition second = CreateQuest("test.quest.order-second");
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { first, second });
+				QuestLog questLog = new QuestLog(
+					new ContentId("test.scenario.quest-order"),
+					new[] { second.ContentId, first.ContentId },
+					contentIndex);
+
+				Assert.That(
+					questLog.Quests.Select(quest => quest.Definition.ContentId),
+					Is.EqualTo(new[] { second.ContentId, first.ContentId }));
+			}
+			finally
+			{
+				Destroy(first, second);
+			}
+		}
+
+		[Test]
 		public void QuestLifecycle_PublishesCommittedStatusChangesInCausalOrder()
 		{
 			ActionDefinition action = CreateAction("test.quest.lifecycle-action");
@@ -70,6 +94,46 @@ namespace Gameplay.Tests
 				Assert.That(statusChangedEvent.ScenarioId.Value, Is.EqualTo("test.scenario.quest-lifecycle"));
 				Assert.That<QuestStatus>(questLog.GetQuest(statusChangedEvent.QuestId).Status, (IResolveConstraint)(object)Is.EqualTo((object)statusChangedEvent.CurrentStatus), "订阅者收到任务状态事实时，系统状态必须已经提交。", Array.Empty<object>());
 				receivedEvents.Add(statusChangedEvent);
+			}
+		}
+
+		[Test]
+		public void RecordFact_PublishesCommittedProgressBeforeQuestCompletes()
+		{
+			ActionDefinition action = CreateAction("test.quest.progress-action");
+			QuestDefinition quest = CreateActionQuest("test.quest.progress", action.ContentId.Value, 2);
+			ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { action, quest });
+			QuestLog questLog = new QuestLog(
+				new ContentId("test.scenario.quest-progress"),
+				new[] { quest.ContentId },
+				contentIndex);
+			QuestProgressChangedEvent received = default;
+			int eventCount = 0;
+			EventKit.Type.Register<QuestProgressChangedEvent>(OnProgressChanged);
+			try
+			{
+				questLog.ActivateInitialQuests();
+
+				Assert.That(
+					questLog.RecordFact(new ActionCompletedQuestTaskFact(action.ContentId)),
+					Is.True);
+
+				Assert.That(eventCount, Is.EqualTo(1));
+				Assert.That(received.ScenarioId.Value, Is.EqualTo("test.scenario.quest-progress"));
+				Assert.That(received.QuestId, Is.EqualTo(quest.ContentId));
+				Assert.That(questLog.GetQuest(quest.ContentId).Status, Is.EqualTo(QuestStatus.Active));
+				Assert.That(questLog.GetQuest(quest.ContentId).Tasks[0].Progress.CurrentAmount, Is.EqualTo(1));
+			}
+			finally
+			{
+				EventKit.Type.UnRegister<QuestProgressChangedEvent>(OnProgressChanged);
+				Destroy(action, quest);
+			}
+
+			void OnProgressChanged(QuestProgressChangedEvent changedEvent)
+			{
+				received = changedEvent;
+				eventCount++;
 			}
 		}
 
@@ -192,6 +256,263 @@ namespace Gameplay.Tests
 			}
 		}
 
+		[Test]
+		public void CardSaleQuestTask_CountsSpecificSoldCardsFromCommittedSaleFact()
+		{
+			CardDefinition sellable = CreateCard("test.card.sellable");
+			CardDefinition other = CreateCard("test.card.other");
+			QuestDefinition quest = CreateCardSaleQuest(
+				"test.quest.sell-two",
+				sellable.ContentId.Value,
+				2);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { sellable, other, quest });
+				QuestLog questLog = new QuestLog(
+					new ContentId("test.scenario.sell-quest"),
+					new[] { quest.ContentId },
+					contentIndex);
+				questLog.ActivateInitialQuests();
+
+				questLog.RecordFact(new CardsSoldQuestTaskFact(new[] { other.ContentId, sellable.ContentId }));
+
+				QuestProgress progress = questLog.GetQuest(quest.ContentId);
+				Assert.That(progress.Status, Is.EqualTo(QuestStatus.Active));
+				Assert.That(progress.Tasks[0].Progress.CurrentAmount, Is.EqualTo(1));
+
+				questLog.RecordFact(new CardsSoldQuestTaskFact(new[] { sellable.ContentId }));
+
+				Assert.That(progress.Status, Is.EqualTo(QuestStatus.Completed));
+				Assert.That(progress.Tasks[0].Progress.CurrentAmount, Is.EqualTo(2));
+			}
+			finally
+			{
+				Destroy(sellable, other, quest);
+			}
+		}
+
+		[Test]
+		public void CardCreationQuestTask_CountsMatchingCreatedCardsFromCommittedActionFact()
+		{
+			CardDefinition product = CreateCard("test.card.created-product");
+			CardDefinition other = CreateCard("test.card.created-other");
+			QuestDefinition quest = CreateCardCreationQuest(
+				"test.quest.create-two",
+				product.ContentId.Value,
+				2);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { product, other, quest });
+				QuestLog questLog = new QuestLog(
+					new ContentId("test.scenario.create-quest"),
+					new[] { quest.ContentId },
+					contentIndex);
+				questLog.ActivateInitialQuests();
+
+				questLog.RecordFact(new CardsCreatedQuestTaskFact(new[]
+				{
+					other.ContentId,
+					product.ContentId,
+					product.ContentId
+				}));
+
+				QuestProgress progress = questLog.GetQuest(quest.ContentId);
+				Assert.That(progress.Status, Is.EqualTo(QuestStatus.Completed));
+				Assert.That(progress.Tasks[0].Progress.CurrentAmount, Is.EqualTo(2));
+			}
+			finally
+			{
+				Destroy(product, other, quest);
+			}
+		}
+
+		[Test]
+		public void CardDefeatQuestTask_CountsOnlyMatchingDefeatedCardsFromBattleFact()
+		{
+			CardDefinition enemy = CreateCard("test.card.defeated-enemy");
+			CardDefinition other = CreateCard("test.card.defeated-other");
+			QuestDefinition quest = CreateCardDefeatQuest(
+				"test.quest.defeat-two",
+				enemy.ContentId.Value,
+				2);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { enemy, other, quest });
+				QuestLog questLog = new QuestLog(
+					new ContentId("test.scenario.defeat-quest"),
+					new[] { quest.ContentId },
+					contentIndex);
+				questLog.ActivateInitialQuests();
+
+				questLog.RecordFact(new CardsDefeatedQuestTaskFact(new[]
+				{
+					other.ContentId,
+					enemy.ContentId,
+					enemy.ContentId
+				}));
+
+				QuestProgress progress = questLog.GetQuest(quest.ContentId);
+				Assert.That(progress.Status, Is.EqualTo(QuestStatus.Completed));
+				Assert.That(progress.Tasks[0].Progress.CurrentAmount, Is.EqualTo(2));
+			}
+			finally
+			{
+				Destroy(enemy, other, quest);
+			}
+		}
+
+		[Test]
+		public void CardExplorationQuestTask_CountsOnlyMatchingExploredCardsFromCommittedActionFact()
+		{
+			CardDefinition forest = CreateCard("test.card.explore-forest");
+			CardDefinition beach = CreateCard("test.card.explore-beach");
+			QuestDefinition quest = CreateCardExplorationQuest(
+				"test.quest.explore-forest",
+				forest.ContentId.Value,
+				2);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { forest, beach, quest });
+				QuestLog questLog = new QuestLog(
+					new ContentId("test.scenario.explore-quest"),
+					new[] { quest.ContentId },
+					contentIndex);
+				questLog.ActivateInitialQuests();
+
+				questLog.RecordFact(new CardsExploredQuestTaskFact(new[]
+				{
+					beach.ContentId,
+					forest.ContentId,
+					forest.ContentId
+				}));
+
+				QuestProgress progress = questLog.GetQuest(quest.ContentId);
+				Assert.That(progress.Status, Is.EqualTo(QuestStatus.Completed));
+				Assert.That(progress.Tasks[0].Progress.CurrentAmount, Is.EqualTo(2));
+			}
+			finally
+			{
+				Destroy(forest, beach, quest);
+			}
+		}
+
+		[Test]
+		public void ProgressionModeQuestTask_CompletesWhenTargetModeFactIsRecorded()
+		{
+			QuestDefinition quest = CreateProgressionModeQuest(
+				"test.quest.progression-real-time",
+				ActionProgressionMode.RealTime);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { quest });
+				QuestLog questLog = new QuestLog(
+					new ContentId("test.scenario.progression-quest"),
+					new[] { quest.ContentId },
+					contentIndex);
+				questLog.ActivateInitialQuests();
+
+				questLog.RecordFact(new ProgressionModeChangedQuestTaskFact(ActionProgressionMode.RealTime));
+
+				Assert.That(questLog.GetQuest(quest.ContentId).Status, Is.EqualTo(QuestStatus.Completed));
+			}
+			finally
+			{
+				Destroy(quest);
+			}
+		}
+
+		[Test]
+		public void CardSaleQuestTask_EmptyTargetCountsAnySoldCard()
+		{
+			CardDefinition first = CreateCard("test.card.first");
+			CardDefinition second = CreateCard("test.card.second");
+			QuestDefinition quest = CreateCardSaleQuest(
+				"test.quest.sell-any",
+				string.Empty,
+				2);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { first, second, quest });
+				QuestLog questLog = new QuestLog(
+					new ContentId("test.scenario.sell-any-quest"),
+					new[] { quest.ContentId },
+					contentIndex);
+				questLog.ActivateInitialQuests();
+
+				questLog.RecordFact(new CardsSoldQuestTaskFact(new[] { first.ContentId, second.ContentId }));
+
+				Assert.That(questLog.GetQuest(quest.ContentId).Status, Is.EqualTo(QuestStatus.Completed));
+				Assert.That(questLog.GetQuest(quest.ContentId).Tasks[0].Progress.CurrentAmount, Is.EqualTo(2));
+			}
+			finally
+			{
+				Destroy(first, second, quest);
+			}
+		}
+
+		[Test]
+		public void TabletopStateQuestTasks_SetProgressFromCurrentStateFact()
+		{
+			CardDefinition wood = CreateCard("test.card.state.wood");
+			CardDefinition coin = CreateCard("test.card.state.coin");
+			QuestDefinition haveQuest = CreateCardPossessionQuest(
+				"test.quest.have-wood",
+				wood.ContentId.Value,
+				2);
+			QuestDefinition foodQuest = CreateFoodNutritionQuest("test.quest.food-stock", 3);
+			QuestDefinition coinsQuest = CreateCurrencyAmountQuest(
+				"test.quest.coins-stock",
+				coin.ContentId.Value,
+				4);
+			QuestDefinition capacityQuest = CreateCardCapacityQuest("test.quest.card-capacity", 6);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[]
+				{
+					wood,
+					coin,
+					haveQuest,
+					foodQuest,
+					coinsQuest,
+					capacityQuest
+				});
+				QuestLog questLog = new QuestLog(
+					new ContentId("test.scenario.tabletop-state-quest"),
+					new[]
+					{
+						haveQuest.ContentId,
+						foodQuest.ContentId,
+						coinsQuest.ContentId,
+						capacityQuest.ContentId
+					},
+					contentIndex);
+				questLog.ActivateInitialQuests();
+
+				questLog.RecordFact(new TabletopStateQuestTaskFact(
+					new[]
+					{
+						wood.ContentId,
+						wood.ContentId,
+						coin.ContentId
+					},
+					totalFoodNutrition: 3,
+					new[]
+					{
+						new TabletopStateQuestTaskFact.CurrencyStock(coin.ContentId, 4)
+					},
+					cardCapacity: 6));
+
+				Assert.That(questLog.GetQuest(haveQuest.ContentId).Status, Is.EqualTo(QuestStatus.Completed));
+				Assert.That(questLog.GetQuest(foodQuest.ContentId).Status, Is.EqualTo(QuestStatus.Completed));
+				Assert.That(questLog.GetQuest(coinsQuest.ContentId).Status, Is.EqualTo(QuestStatus.Completed));
+				Assert.That(questLog.GetQuest(capacityQuest.ContentId).Status, Is.EqualTo(QuestStatus.Completed));
+			}
+			finally
+			{
+				Destroy(wood, coin, haveQuest, foodQuest, coinsQuest, capacityQuest);
+			}
+		}
+
 		private static QuestDefinition CreateQuest(string contentId, params string[] prerequisiteQuestIds)
 		{
 			QuestDefinition definition = ScriptableObject.CreateInstance<QuestDefinition>();
@@ -208,6 +529,131 @@ namespace Gameplay.Tests
 			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
 			task.FindPropertyRelative("m_actionId").FindPropertyRelative("m_value").stringValue = actionId;
 			task.FindPropertyRelative("m_requiredCompletionCount").intValue = requiredCompletionCount;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateCardSaleQuest(
+			string contentId,
+			string soldCardId,
+			int requiredSoldCount)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new CardSaleQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_cardId").FindPropertyRelative("m_value").stringValue = soldCardId;
+			task.FindPropertyRelative("m_requiredSoldCount").intValue = requiredSoldCount;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateCardDefeatQuest(
+			string contentId,
+			string defeatedCardId,
+			int requiredDefeatCount)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new CardDefeatQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_cardId").FindPropertyRelative("m_value").stringValue = defeatedCardId;
+			task.FindPropertyRelative("m_requiredDefeatCount").intValue = requiredDefeatCount;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateCardExplorationQuest(
+			string contentId,
+			string exploredCardId,
+			int requiredExplorationCount)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new CardExplorationQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_cardId").FindPropertyRelative("m_value").stringValue = exploredCardId;
+			task.FindPropertyRelative("m_requiredExplorationCount").intValue = requiredExplorationCount;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateProgressionModeQuest(
+			string contentId,
+			ActionProgressionMode targetMode)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new ProgressionModeQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_targetMode").intValue = (int)targetMode;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateCardCreationQuest(
+			string contentId,
+			string createdCardId,
+			int requiredCreatedCount)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new CardCreationQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_cardId").FindPropertyRelative("m_value").stringValue = createdCardId;
+			task.FindPropertyRelative("m_requiredCreatedCount").intValue = requiredCreatedCount;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateCardPossessionQuest(
+			string contentId,
+			string cardId,
+			int requiredCardCount)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new CardPossessionQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_cardId").FindPropertyRelative("m_value").stringValue = cardId;
+			task.FindPropertyRelative("m_requiredCardCount").intValue = requiredCardCount;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateFoodNutritionQuest(string contentId, int requiredNutrition)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new FoodNutritionQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_requiredNutrition").intValue = requiredNutrition;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateCurrencyAmountQuest(
+			string contentId,
+			string currencyCardId,
+			int requiredAmount)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new CurrencyAmountQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_currencyCardId").FindPropertyRelative("m_value").stringValue = currencyCardId;
+			task.FindPropertyRelative("m_requiredAmount").intValue = requiredAmount;
+			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+			return definition;
+		}
+
+		private static QuestDefinition CreateCardCapacityQuest(string contentId, int requiredCapacity)
+		{
+			QuestDefinition definition = CreateQuest(contentId);
+			SetTask(definition, new CardCapacityQuestTaskDefinition());
+			SerializedObject serializedDefinition = new SerializedObject(definition);
+			SerializedProperty task = serializedDefinition.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			task.FindPropertyRelative("m_requiredCapacity").intValue = requiredCapacity;
 			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
 			return definition;
 		}

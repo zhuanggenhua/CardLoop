@@ -11,18 +11,26 @@ namespace GameCore
     [Serializable]
     public class ModInfo
     {
+        public string modId;
         public string apiVersion;
         public string authorName;
         public string modName;
         public string version;
         public string description;
         public string packageName;
-        public int loadOrder;
-        public string contentHash;
+        public List<ModDependency> dependencies = new();
         public byte[] modIconBytes;
-        public Dictionary<string, string> metaData = new();
 
         [JsonIgnore] public string FilePath { get; set; }
-        [JsonIgnore] public string FullName => $"{modName}-{version}-{apiVersion}";
+        [JsonIgnore] public string DisplayName => string.IsNullOrWhiteSpace(modName) ? modId : modName;
+    }
+
+    /// <summary>一个 Mod 对另一个稳定 Mod 身份的版本约束；版本边界均为包含。</summary>
+    [Serializable]
+    public sealed class ModDependency
+    {
+        public string modId;
+        public string minimumVersion;
+        public string maximumVersion;
     }
 }

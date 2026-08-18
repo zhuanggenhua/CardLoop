@@ -49,6 +49,22 @@ UE 的 Gameplay Framework 以 Actor、Component、Pawn、Controller、GameMode�
 - 不照搬 UE 类名、继承树、网络 API 或引擎私有结构。
 - 不能用 UE 有 Framework 类作为新增空壳 Context、Owner、Manager、Service 的理由。
 
+### UE Gameplay Ability System
+
+EX-GAS 是当前项目的能力、属性、效果和运行时标签实现；设计它的项目接入、持久化、联机边界或扩展 API 时，必须先用 UE GAS 的职责模型校准，而不是只按 EX-GAS 当前便利接口倒推项目架构。
+
+- ASC / `AbilitySystemCell` 是运行时能力聚合，负责属性集、已授予 Ability、活动 GameplayEffect 和 GameplayTag 等状态；它不自动等于角色所有长期业务数据的存档模型。
+- 网络复制与长期存档是不同职责。UE GAS 提供 Ability Spec、Effect、属性等复制结构，不提供“一次导出完整 ASC 作为 SaveGame”的通用用法；CardLoop 也不得把完整运行时 ASC 快照当成默认需求。
+- 角色需要跨局或跨存档延续的等级、永久属性变化、已学技能等事实，应先判断是否属于角色领域长期状态，并用这些事实和当前作者配置重建 ASC。活动 Ability、Cooldown、临时 Effect、临时标签、Cue 和 Timeline 只有产品明确要求恢复中间态时才进入同步或存档设计。
+- EX-GAS 缺少某个便利接口时，先判断 UE GAS 同职责是否存在、当前产品是否真的需要，以及职责应在角色领域、项目集成边界还是插件 OOP 门面。只有 UE GAS 职责模型与项目需求都证明该能力属于 GAS，而且现有 EX-GAS 正式入口无法表达时，才提出修改插件源码。
+- 发现 EX-GAS 或当前项目实现偏离 UE GAS 的职责边界时，必须说明偏离、现实后果和重构方案；不得用反射、ECS Buffer 旁路、项目薄包装或第二套 Ability / Tag / Effect 状态掩盖偏离。
+
+官方校准入口：
+
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-ability-system-for-unreal-engine
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Plugins/GameplayAbilities
+- 本地 EX-GAS 项目速查：[`../features/ai-quick/ex-gas-runtime.md`](../features/ai-quick/ex-gas-runtime.md)
+
 ### StackCraft 模板
 
 本地参考路径：Assets/StackCraft/Scripts。
@@ -67,6 +83,7 @@ UE 的 Gameplay Framework 以 Actor、Component、Pawn、Controller、GameMode�
 - 吸收卡牌、牌堆、牌桌、拖拽、放置、解算的玩家可见功能和对象直观性。
 - 不照搬 StackCraft 的全局单例、直接 Transform 改状态、固定场景名、旧输入系统和职责混合。
 - 当前卡牌交互相关模块优先以 StackCraft 证明对象模型；2DRPGEngine 不能替代 StackCraft 证明牌桌对象设计。
+- StackCraft 的 `Encounter`、危机、天气和其它日结事件名默认只是剧本内容或规则阶段候选，不直接升为同名顶级系统；只有确认其拥有独立作者源、运行状态、存档和联机生命周期后，才允许建立正式职责入口。
 
 ### 2DRPGEngine / Mythril2D
 
@@ -194,6 +211,7 @@ Mod 和联机扩展通过以下方式保证，不通过贫血拆分保证：
 - 可保存 / 可同步状态通过快照表达；快照保存事实，不保存 Unity 表现对象或资源句柄。
 - 客户端 UI 可以生成候选和意图，但不能绕过单局 / 牌桌 / 行动实例直接写权威状态。
 - 过期联机指令、缺失 Mod 内容、版本不匹配属于真实外部失败，可以显式拒绝；内部不变量破坏必须直接报错。
+- 旧 GameCore 实体命令上下文不能因为包含 `RemotePlayer` 名称就被视为牌桌联机协议。只有同时具备真实连接身份、权限来源、权威聚合提交和可验证序列化边界时，才能承担联机命令职责；否则不得跨领域复用或在 Gameplay 复制一套同名上下文。
 
 ### 内容校验扩展
 

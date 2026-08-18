@@ -10,6 +10,8 @@
         "YokiFrame",
         "YokiFrame.SaveKit",
         "YooAsset.Editor",
+        "Unity.Collections",
+        "Unity.Entities",
         "Unity.Mathematics"
   ],
   "includePlatforms": [

@@ -31,6 +31,7 @@ public partial struct FormalConditionalDamage
         { if(!_buf["PushIntensity"].IsNumber) { throw new SerializationException(); }  PushIntensity = _buf["PushIntensity"]; }
         { if(!_buf["PushResistance"].IsNumber) { throw new SerializationException(); }  PushResistance = _buf["PushResistance"]; }
         { if(!_buf["InvincibilityDuration"].IsNumber) { throw new SerializationException(); }  InvincibilityDuration = _buf["InvincibilityDuration"]; }
+        { var __json0 = _buf["Matchups"]; if(!__json0.IsArray) { throw new SerializationException(); } Matchups = new System.Collections.Generic.List<FormalDamageMatchup>(__json0.Count); foreach(JSONNode __e0 in __json0.Children) { FormalDamageMatchup __v0;  { if(!__e0.IsObject) { throw new SerializationException(); }  __v0 = global::cfg.FormalDamageMatchup.DeserializeFormalDamageMatchup(__e0);  }  Matchups.Add(__v0); }   }
     }
 
     public static FormalConditionalDamage DeserializeFormalConditionalDamage(JSONNode _buf)
@@ -51,6 +52,7 @@ public partial struct FormalConditionalDamage
     public readonly float PushIntensity;
     public readonly float PushResistance;
     public readonly float InvincibilityDuration;
+    public readonly System.Collections.Generic.List<FormalDamageMatchup> Matchups;
    
 
     public  void ResolveRef(Tables tables)
@@ -73,6 +75,7 @@ public partial struct FormalConditionalDamage
         + "PushIntensity:" + PushIntensity + ","
         + "PushResistance:" + PushResistance + ","
         + "InvincibilityDuration:" + InvincibilityDuration + ","
+        + "Matchups:" + Luban.StringUtil.CollectionToString(Matchups) + ","
         + "}";
     }
 }

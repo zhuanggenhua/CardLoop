@@ -1,0 +1,193 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f8eb13bfeea4580a2f39cc9184a0f80, type: 3}
+  m_Name: "\u5730\u57FA\u5F00\u7AEF\u5361\u5305"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardPackDefinition
+  m_contentId:
+    m_value: test.foundation.pack.beginning
+  m_tagCodes: e9030000
+  m_displayName: Beginning
+  m_description: A Beginning card pack.
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_initialUses: 1
+  m_sellValue: 0
+  m_countsTowardCardLimit: 1
+  m_cardLimitBonus: 0
+  m_periodicProductionCardId:
+    m_value: 
+  m_periodicProductionIntervalSeconds: 0
+  m_automaticMovementIntervalSeconds: 0
+  m_automaticMovementRadius: 0
+  m_automaticMovementMaxAttempts: 0
+  m_automaticMovementRetentionCapacity: 0
+  m_cardArt:
+    Address: "\u5F00\u7AEF\u5361\u5305"
+    Guid: 73616de9cb74480998fbb6390ead9f0c
+    Locked: 1
+  m_cardSurface:
+    Address: "\u5361\u724C\u8868\u9762_\u8D35\u91CD\u7269"
+    Guid: 92fc5cfb53cc48a9ac775c857b840f38
+    Locked: 1
+  m_slots:
+  - m_entries:
+    - m_cardId:
+        m_value: test.foundation.day-cycle.sellable
+      m_weight: 16
+    - m_cardId:
+        m_value: test.foundation.product
+      m_weight: 16
+    - m_cardId:
+        m_value: test.foundation.pack.reward.first
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.reward.second
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.soil
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.tree
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.chicken
+      m_weight: 4
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.slime
+      m_weight: 4
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.golden-key
+      m_weight: 4
+    m_recipeEntries:
+    - m_actionId:
+        m_value: test.foundation.recipe.growing-berry
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.growing-berry
+    - m_actionId:
+        m_value: test.foundation.recipe.building-house
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.building-house
+    - m_actionId:
+        m_value: test.foundation.recipe.making-love
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.making-love
+    - m_actionId:
+        m_value: test.foundation.recipe.making-timber
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.making-timber
+    - m_actionId:
+        m_value: test.foundation.recipe.crafting-stick
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.crafting-stick
+    m_recipeChance: 0.1
+  - m_entries:
+    - m_cardId:
+        m_value: test.foundation.day-cycle.sellable
+      m_weight: 16
+    - m_cardId:
+        m_value: test.foundation.product
+      m_weight: 16
+    - m_cardId:
+        m_value: test.foundation.pack.reward.first
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.reward.second
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.soil
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.tree
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.chicken
+      m_weight: 4
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.slime
+      m_weight: 4
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.golden-key
+      m_weight: 4
+    m_recipeEntries:
+    - m_actionId:
+        m_value: test.foundation.recipe.growing-berry
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.growing-berry
+    - m_actionId:
+        m_value: test.foundation.recipe.building-house
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.building-house
+    - m_actionId:
+        m_value: test.foundation.recipe.making-love
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.making-love
+    - m_actionId:
+        m_value: test.foundation.recipe.making-timber
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.making-timber
+    - m_actionId:
+        m_value: test.foundation.recipe.crafting-stick
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.crafting-stick
+    m_recipeChance: 0.1
+  - m_entries:
+    - m_cardId:
+        m_value: test.foundation.day-cycle.sellable
+      m_weight: 16
+    - m_cardId:
+        m_value: test.foundation.product
+      m_weight: 16
+    - m_cardId:
+        m_value: test.foundation.pack.reward.first
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.reward.second
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.soil
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.tree
+      m_weight: 14
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.chicken
+      m_weight: 4
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.slime
+      m_weight: 4
+    - m_cardId:
+        m_value: test.foundation.pack.beginning.golden-key
+      m_weight: 4
+    m_recipeEntries:
+    - m_actionId:
+        m_value: test.foundation.recipe.growing-berry
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.growing-berry
+    - m_actionId:
+        m_value: test.foundation.recipe.building-house
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.building-house
+    - m_actionId:
+        m_value: test.foundation.recipe.making-love
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.making-love
+    - m_actionId:
+        m_value: test.foundation.recipe.making-timber
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.making-timber
+    - m_actionId:
+        m_value: test.foundation.recipe.crafting-stick
+      m_recipeCardId:
+        m_value: test.foundation.recipe-card.crafting-stick
+    m_recipeChance: 0.1

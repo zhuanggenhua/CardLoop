@@ -4,9 +4,9 @@ using GAS.Runtime;
 using GameCore;
 using Gameplay.Content;
 using Gameplay.Tabletop;
+using RuntimeTabletop = Gameplay.Tabletop.Tabletop;
 using NUnit.Framework;
 using UnityEngine;
-using TabletopBoard = Gameplay.Tabletop.Tabletop;
 
 namespace Gameplay.Tests
 {
@@ -35,9 +35,11 @@ namespace Gameplay.Tests
 			CardDefinition enemyDefinition = CreateCard("test.battle.formation-required.enemy");
 			try
 			{
-				TabletopBoard tabletop = new TabletopBoard(
+				RuntimeTabletop tabletop = new RuntimeTabletop(
 					ContentIndex.Build(new ContentAsset[] { playerDefinition, enemyDefinition }),
 					TabletopTestPlacement.Rules,
+					_ => false,
+					(_, __) => { },
 					_ => { });
 				TabletopCard player = tabletop.CreateCard(playerDefinition.ContentId, Vector2.zero);
 				TabletopCard enemy = tabletop.CreateCard(enemyDefinition.ContentId, Vector2.right);
@@ -61,7 +63,7 @@ namespace Gameplay.Tests
 			CardDefinition enemyDefinition = CreateCard("test.battle.formation.enemy");
 			try
 			{
-				TabletopBoard tabletop = CreateBattleTabletop(playerDefinition, enemyDefinition);
+				RuntimeTabletop tabletop = CreateBattleTabletop(playerDefinition, enemyDefinition);
 				TabletopCard playerOne = tabletop.CreateCard(playerDefinition.ContentId, Vector2.zero);
 				TabletopCard playerTwo = tabletop.CreateCard(playerDefinition.ContentId, Vector2.zero);
 				TabletopCard playerThree = tabletop.CreateCard(playerDefinition.ContentId, Vector2.zero);
@@ -98,7 +100,7 @@ namespace Gameplay.Tests
 			CardDefinition enemyDefinition = CreateCard("test.battle.movement.enemy");
 			try
 			{
-				TabletopBoard tabletop = CreateBattleTabletop(playerDefinition, enemyDefinition);
+				RuntimeTabletop tabletop = CreateBattleTabletop(playerDefinition, enemyDefinition);
 				TabletopCard player = tabletop.CreateCard(playerDefinition.ContentId, Vector2.zero);
 				TabletopCard enemy = tabletop.CreateCard(enemyDefinition.ContentId, Vector2.right);
 				TabletopCard bystander = tabletop.CreateCard(playerDefinition.ContentId, Vector2.left);
@@ -118,13 +120,15 @@ namespace Gameplay.Tests
 			}
 		}
 
-		private static TabletopBoard CreateBattleTabletop(
+		private static RuntimeTabletop CreateBattleTabletop(
 			CardDefinition playerDefinition,
 			CardDefinition enemyDefinition)
 		{
-			TabletopBoard tabletop = new TabletopBoard(
+			RuntimeTabletop tabletop = new RuntimeTabletop(
 				ContentIndex.Build(new ContentAsset[] { playerDefinition, enemyDefinition }),
 				TabletopTestPlacement.Rules,
+				_ => false,
+				(_, __) => { },
 				_ => { },
 				new BattleFormationRules(
 					new BattleSideFormationRules(

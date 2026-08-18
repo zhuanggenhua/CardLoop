@@ -14,6 +14,12 @@ namespace GameCore
     public abstract class UIKitMenuPanelBase : UIPanel
     {
         private UIKitMenuOpenData m_openData = UIKitMenuOpenData.Empty;
+        private bool m_isInMenuStack;
+
+        /// <summary>
+        /// 当前面板是否由 GameCore 菜单栈打开；栈内面板必须让菜单栈关闭自己，不能直接绕过状态层。
+        /// </summary>
+        protected bool IsInMenuStack => m_isInMenuStack;
 
         protected sealed override void Awake()
         {
@@ -136,6 +142,20 @@ namespace GameCore
             _ = RunPanelTaskAndReportAsync(task, operationName);
         }
 
+        /// <summary>
+        /// 关闭当前面板。若它属于正式菜单栈，则先让 UI 系统弹栈并恢复 GameState；否则按普通 UIKit 面板关闭。
+        /// </summary>
+        protected void CloseFromMenuStackOrSelf()
+        {
+            if (m_isInMenuStack && GameManager.Exists() && GameManager.HasSystem<UISystem>())
+            {
+                GameManager.UISystem.CloseCurrentMenu();
+                return;
+            }
+
+            CloseSelf();
+        }
+
         private async Task RunPanelTaskAndReportAsync(Task task, string operationName)
         {
             try
@@ -171,11 +191,13 @@ namespace GameCore
 
         internal void NotifyPushedToMenuStack()
         {
+            m_isInMenuStack = true;
             OnPushedToMenuStack();
         }
 
         internal void NotifyPoppedFromMenuStack()
         {
+            m_isInMenuStack = false;
             OnPoppedFromMenuStack();
         }
 

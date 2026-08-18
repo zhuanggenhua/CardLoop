@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using YokiFrame;
 
@@ -10,8 +11,16 @@ namespace GameCore
         [Serializable]
         private struct MenuPanelBinding
         {
+            [LabelText("菜单类型")]
+            [Tooltip("玩家请求打开的菜单枚举，例如暂停菜单或设置菜单。")]
             [SerializeField] private EMenu m_menu;
+
+            [LabelText("面板类型")]
+            [Tooltip("该菜单实际打开的 UIKit 面板类型；必须继承 UIKitMenuPanelBase。")]
             [SerializeField] private UIKitMenuPanelTypeReference m_panelType;
+
+            [LabelText("UI 层级")]
+            [Tooltip("该菜单打开时所在的 UI 层级，用于决定遮挡和输入顺序。")]
             [SerializeField] private UILevel m_level;
 
             public EMenu Menu => m_menu;
@@ -23,10 +32,14 @@ namespace GameCore
 
         private readonly Dictionary<EMenu, UIKitMenuRegistration> m_menuRegistrations = new();
 
-        [Header("Registered Panels")]
+        [Header("菜单注册")]
+        [LabelText("菜单面板注册")]
+        [Tooltip("把菜单枚举映射到正式 UIKit 面板类型；这里是菜单打开请求的唯一作者配置入口。")]
         [SerializeField] private MenuPanelBinding[] m_registeredMenuPanels = Array.Empty<MenuPanelBinding>();
 
-        [Header("Menu Runtime Settings")]
+        [Header("菜单运行设置")]
+        [LabelText("菜单栈名称")]
+        [Tooltip("UIManager 内用于菜单压栈和返回的栈名；同一 UI 宿主内保持唯一即可。")]
         [SerializeField] private string m_stackName = DefaultStackName;
 
         /// <summary>

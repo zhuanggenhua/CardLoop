@@ -26,7 +26,9 @@ namespace GameCore
     {
         None = 0,
         PlayerReceiveDamage = 1 << 0,
-        AnyCharacterReceiveDamageFromPlayer = 1 << 1
+        AnyCharacterReceiveDamageFromPlayer = 1 << 1,
+        [InspectorName("纯能力系统伤害结算")]
+        AbilitySystemDamageResolved = 1 << 2
     }
 
     /// <summary>

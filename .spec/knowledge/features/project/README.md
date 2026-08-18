@@ -10,6 +10,18 @@ metadata:
 
 当前只登记迁移后的事实入口，不承载 FantasyWord 的旧业务知识库。
 
+## 索引
+
+| 文档 | 一句话 |
+|---|---|
+| [`card-survival-infinite.md`](card-survival-infinite.md) | 判断《卡牌生存：无限》的产品愿景、核心交互、局外到局内流程、Mod、关卡编辑器或联机目标时查。 |
+| [`stackcraft-template-study.md`](stackcraft-template-study.md) | 查看 StackCraft 模板导入、设置恢复、整体吸收裁决和候选底座边界时查。 |
+| [`stackcraft-system-reference-matrix.md`](stackcraft-system-reference-matrix.md) | 裁决 StackCraft 模块搬迁顺序、可吸收职责、排除项、UI 框架或联机约束时查。 |
+| [`stackcraft-business-data-migration.md`](stackcraft-business-data-migration.md) | 对账 StackCraft 代表性业务竖切、剩余业务 out-of-scope 范围和删除参考目录门槛时查。 |
+| [`stackcraft-visual-animation-parity.md`](stackcraft-visual-animation-parity.md) | 对账 StackCraft 卡牌表面、材质、进度、命中、粒子、投射物和拖拽 / 移动 / 受击动画是否由当前框架等效承接时查。 |
+| [`gameplay-foundation-proposal.md`](gameplay-foundation-proposal.md) | 查看 Gameplay 地基总体方案、内容定义、作者源、资源/输入选择和分阶段吸收设计时查。 |
+| [`gameplay-foundation-reaudit.md`](gameplay-foundation-reaudit.md) | 重审 Gameplay 地基模块的 OOP、生命周期、作者源、参考等价或 Mod/联机扩展边界时查。 |
+
 ## 已知事实
 
 - Gameplay 地基对象模型和参考吸收裁决必须先查 ../../standards/gameplay-architecture.md：StackCraft 主要证明卡牌/牌堆/牌桌交互对象模型，2DRPGEngine 主要证明 RPG 数据、地图、存档、任务、对话、命令和技能族闭包，不能混用成一套平铺系统。
@@ -19,8 +31,11 @@ metadata:
 - StackCraft 模板当前作为参考模板和候选底座保留；设置恢复、吸收裁决与后续约束见 [`stackcraft-template-study.md`](stackcraft-template-study.md)。
 - 当前主线是打 Gameplay 地基与 StackCraft 架构搬迁 / 吸收审查，不是先实现《卡牌生存：无限》的原创业务内容；游戏愿景、联机、Mod、关卡编辑器和职业成长只作为架构裁决约束。
 - StackCraft 模块吸收审查表见 [`stackcraft-system-reference-matrix.md`](stackcraft-system-reference-matrix.md)：按依赖顺序记录数据定义优先、逐模块重构裁决、UI 框架吸收、联机适配约束、可吸收职责、必须排除的旧职责和临时适配删除条件。
+- StackCraft 业务数据迁移清单见 [`stackcraft-business-data-migration.md`](stackcraft-business-data-migration.md)：当前业务验收范围是代表性竖切，不要求完整迁移 StackCraft 全部原始业务 `.asset`；删除参考目录仍需单独授权和删除后验证。
+- StackCraft 表面 / 动画一致性清单见 [`stackcraft-visual-animation-parity.md`](stackcraft-visual-animation-parity.md)：机制效果和代表性业务通过不等于玩家可见表面、素材布局或动画已与模板一致。
 - Gameplay 地基提案见 [`gameplay-foundation-proposal.md`](gameplay-foundation-proposal.md)：保留本项目框架，使用 YooAsset 与新 Input System，先建立内容定义 / 加载 / 作者源校验，再按 StackCraft 架构搬迁顺序逐块吸收。
 - GameCore 与 EX-GAS 的正式集成边界见 `../gamecore-gas.md`；不得用未登记中转层替代 EX-GAS 正式使用入口。
+- 联机后端裁决见 [`../../../decisions/0002-fishnet-networking.md`](../../../decisions/0002-fishnet-networking.md)：未来采用 FishNet，客户端预测按需启用，不提前接入网络运行时。
 - 已静态迁入 FantasyWord 的插件、本地 UPM 包、GameCore 候选和 AI workflow。
 - 迁移清单见 `../../../../docs/FantasyWord-framework-migration.md`。
 

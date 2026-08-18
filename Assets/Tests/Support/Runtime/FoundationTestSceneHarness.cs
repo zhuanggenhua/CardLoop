@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using GameCore;
 using Gameplay.Actions;
@@ -34,6 +35,74 @@ namespace Gameplay.Tests.Support
 
 		/// <summary>测试多候选与填槽计划的行动内容 ID。</summary>
 		public const string TestActionPlanContentId = "test.foundation.action.plan";
+
+		public const string TestFoodContentId = "test.foundation.day-cycle.food";
+
+		public const string TestSellableCardContentId = "test.foundation.day-cycle.sellable";
+
+		public const string TestCurrencyCardContentId = "test.foundation.day-cycle.currency";
+
+		public const string TestBuyerCardContentId = "test.foundation.day-cycle.buyer";
+
+		public const string TestEncounterCardContentId = "test.foundation.day-cycle.encounter";
+
+		public const string TestSellActionContentId = "test.foundation.day-cycle.sell";
+
+		public const string TestDayCycleScenarioContentId = "test.foundation.scenario.day-cycle";
+
+		public const string TestCardPackContentId = "test.foundation.pack";
+
+		public const string TestBeginningPackContentId = "test.foundation.pack.beginning";
+
+		public const string TestCardPackFirstRewardContentId = "test.foundation.pack.reward.first";
+
+		public const string TestCardPackSecondRewardContentId = "test.foundation.pack.reward.second";
+
+		public const string TestBeginningPackSoilContentId = "test.foundation.pack.beginning.soil";
+
+		public const string TestBeginningPackTreeContentId = "test.foundation.pack.beginning.tree";
+
+		public const string TestBeginningPackChickenContentId = "test.foundation.pack.beginning.chicken";
+
+		public const string TestBeginningPackSlimeContentId = "test.foundation.pack.beginning.slime";
+
+		public const string TestBeginningPackGoldenKeyContentId = "test.foundation.pack.beginning.golden-key";
+
+		public const string TestBeginningPackEggContentId = "test.foundation.pack.beginning.egg";
+
+		public const string TestRecipeGrowingBerryActionContentId = "test.foundation.recipe.growing-berry";
+
+		public const string TestRecipeBuildingHouseActionContentId = "test.foundation.recipe.building-house";
+
+		public const string TestRecipeMakingLoveActionContentId = "test.foundation.recipe.making-love";
+
+		public const string TestRecipeMakingTimberActionContentId = "test.foundation.recipe.making-timber";
+
+		public const string TestRecipeCraftingStickActionContentId = "test.foundation.recipe.crafting-stick";
+
+		public const string TestRecipeGrowingBerryCardContentId = "test.foundation.recipe-card.growing-berry";
+
+		public const string TestRecipeBuildingHouseCardContentId = "test.foundation.recipe-card.building-house";
+
+		public const string TestRecipeMakingLoveCardContentId = "test.foundation.recipe-card.making-love";
+
+		public const string TestRecipeMakingTimberCardContentId = "test.foundation.recipe-card.making-timber";
+
+		public const string TestRecipeCraftingStickCardContentId = "test.foundation.recipe-card.crafting-stick";
+
+		public const string TestOpenCardPackActionContentId = "test.foundation.pack.open";
+
+		public const string TestPackVendorContentId = "test.foundation.pack.vendor";
+
+		public const string TestBeginningPackVendorContentId = "test.foundation.pack.beginning.vendor";
+
+		public const string TestPurchaseCardPackActionContentId = "test.foundation.pack.purchase";
+
+		public const string TestChestContentId = "test.foundation.chest";
+
+		public const string TestDepositCurrencyIntoChestActionContentId = "test.foundation.chest.deposit";
+
+		public const string TestWithdrawCurrencyFromChestActionContentId = "test.foundation.chest.withdraw";
 
         /// <summary>测试场景用于验证任务生命周期的唯一任务内容 ID。</summary>
         public const string TestQuestContentId = "test.foundation.quest";
@@ -87,6 +156,23 @@ namespace Gameplay.Tests.Support
         /// <summary>与来源堆分离的空间候选卡牌。</summary>
         public TabletopCardId TargetCardId { get; private set; }
 
+		/// <summary>测试场景中可由玩家单击打开的卡包。</summary>
+		public TabletopCardId CardPackId { get; private set; }
+
+		public TabletopCardId BeginningPackId { get; private set; }
+
+		public TabletopCardId PackVendorId { get; private set; }
+
+		public TabletopCardId FirstPackPaymentId { get; private set; }
+
+		public TabletopCardId SecondPackPaymentId { get; private set; }
+
+		public TabletopCardId ChestId { get; private set; }
+
+		public TabletopCardId FirstChestCurrencyId { get; private set; }
+
+		public TabletopCardId SecondChestCurrencyId { get; private set; }
+
         /// <summary>测试场景已经收到的释放意图数量。</summary>
         public int ReleaseIntentCount { get; private set; }
 
@@ -107,8 +193,102 @@ namespace Gameplay.Tests.Support
         /// <summary>统一测试场景当前运行的剧本单局。</summary>
 		public ScenarioRun ScenarioRun => m_scenarioRun;
 
+		/// <summary>只为卡包玩家链验收创建一张测试卡包，不改变统一场景的基础卡牌数量。</summary>
+		public TabletopCardId CreateCardPackTestCard()
+		{
+			if (!IsReady)
+			{
+				throw new InvalidOperationException("牌桌地基测试尚未就绪，不能创建测试卡包。");
+			}
+			if (CardPackId.IsValid && Cards.TryGetCard(CardPackId, out _))
+			{
+				throw new InvalidOperationException("当前测试牌桌已经存在卡包测试卡。");
+			}
+			m_scenarioRun.DiscoverContent(new ContentId(TestOpenCardPackActionContentId));
+			CardPackId = m_tabletop.CreateCard(
+				new ContentId(TestCardPackContentId),
+				new Vector2(0f, -2.5f)).Id;
+			return CardPackId;
+		}
+
+		/// <summary>只为 Beginning 卡包业务验收创建一张参考模板对应的卡包。</summary>
+		public TabletopCardId CreateBeginningCardPackTestCard()
+		{
+			if (!IsReady)
+			{
+				throw new InvalidOperationException("牌桌地基测试尚未就绪，不能创建 Beginning 卡包。");
+			}
+			if (BeginningPackId.IsValid && Cards.TryGetCard(BeginningPackId, out _))
+			{
+				throw new InvalidOperationException("当前测试牌桌已经存在 Beginning 卡包。");
+			}
+			m_scenarioRun.DiscoverContent(new ContentId(TestOpenCardPackActionContentId));
+			BeginningPackId = m_tabletop.CreateCard(
+				new ContentId(TestBeginningPackContentId),
+				new Vector2(1.8f, -2.5f)).Id;
+			return BeginningPackId;
+		}
+
+		/// <summary>为卡包商贩玩家链显式创建商贩与两枚付款货币。</summary>
+		public void CreatePackVendorTestCards()
+		{
+			if (!IsReady)
+			{
+				throw new InvalidOperationException("牌桌地基测试尚未就绪，不能创建卡包商贩测试状态。");
+			}
+			if (PackVendorId.IsValid && Cards.TryGetCard(PackVendorId, out _))
+			{
+				throw new InvalidOperationException("当前测试牌桌已经存在卡包商贩测试状态。");
+			}
+			ContentId vendorId = new ContentId(TestPackVendorContentId);
+			ContentId currencyId = new ContentId(TestCurrencyCardContentId);
+			ContentId purchaseActionId = new ContentId(TestPurchaseCardPackActionContentId);
+			if (!m_scenarioRun.ContentIndex.TryGet(vendorId, out PackVendorDefinition _) ||
+				!m_scenarioRun.ContentIndex.TryGet(currencyId, out CardDefinition _) ||
+				!m_scenarioRun.ContentIndex.TryGet(purchaseActionId, out ActionDefinition _))
+			{
+				throw new InvalidOperationException("卡包商贩、货币或购买行动没有进入正式内容索引。");
+			}
+			m_scenarioRun.DiscoverContent(purchaseActionId);
+			PackVendorId = m_tabletop.CreateCard(vendorId, new Vector2(0f, -2.5f)).Id;
+			FirstPackPaymentId = m_tabletop.CreateCard(currencyId, new Vector2(-2.2f, -2.5f)).Id;
+			SecondPackPaymentId = m_tabletop.CreateCard(currencyId, new Vector2(-1.3f, -2.5f)).Id;
+		}
+
+		/// <summary>为箱子存币、取币和用箱子付款的玩家链创建测试牌桌状态。</summary>
+		public void CreateChestTestCards()
+		{
+			if (!IsReady)
+			{
+				throw new InvalidOperationException("牌桌地基测试尚未就绪，不能创建箱子测试状态。");
+			}
+			if (ChestId.IsValid && Cards.TryGetCard(ChestId, out _))
+			{
+				throw new InvalidOperationException("当前测试牌桌已经存在箱子测试状态。");
+			}
+			ContentId chestId = new ContentId(TestChestContentId);
+			ContentId currencyId = new ContentId(TestCurrencyCardContentId);
+			ContentId depositActionId = new ContentId(TestDepositCurrencyIntoChestActionContentId);
+			ContentId withdrawActionId = new ContentId(TestWithdrawCurrencyFromChestActionContentId);
+			ContentId purchaseActionId = new ContentId(TestPurchaseCardPackActionContentId);
+			if (!m_scenarioRun.ContentIndex.TryGet(chestId, out ChestCardDefinition _) ||
+				!m_scenarioRun.ContentIndex.TryGet(currencyId, out CardDefinition _) ||
+				!m_scenarioRun.ContentIndex.TryGet(depositActionId, out ActionDefinition _) ||
+				!m_scenarioRun.ContentIndex.TryGet(withdrawActionId, out ActionDefinition _) ||
+				!m_scenarioRun.ContentIndex.TryGet(purchaseActionId, out ActionDefinition _))
+			{
+				throw new InvalidOperationException("箱子、货币、存币、取币或购买行动没有进入正式内容索引。");
+			}
+			m_scenarioRun.DiscoverContent(depositActionId);
+			m_scenarioRun.DiscoverContent(withdrawActionId);
+			m_scenarioRun.DiscoverContent(purchaseActionId);
+			ChestId = m_tabletop.CreateCard(chestId, new Vector2(2.2f, -2.5f)).Id;
+			FirstChestCurrencyId = m_tabletop.CreateCard(currencyId, new Vector2(0.4f, -2.5f)).Id;
+			SecondChestCurrencyId = m_tabletop.CreateCard(currencyId, new Vector2(1.1f, -2.5f)).Id;
+		}
+
 		/// <summary>只供地基验收显式发现填槽测试行动。</summary>
-		public void DiscoverActionPlanTestContent()
+        public void DiscoverActionPlanTestContent()
 		{
 			if (!IsReady)
 			{
@@ -116,6 +296,32 @@ namespace Gameplay.Tests.Support
 			}
 			m_scenarioRun.DiscoverContent(new ContentId(TestActionPlanContentId));
 		}
+
+        /// <summary>通过正式 UIKit 入口打开剧本存档窗口，供统一场景运行验收。</summary>
+        public void OpenSavePanel(ScenarioSavePanelMode mode = ScenarioSavePanelMode.Save)
+        {
+            if (!IsReady || m_scenarioDirector == null)
+            {
+                throw new InvalidOperationException("牌桌地基测试尚未就绪，不能打开剧本存档窗口。");
+            }
+
+            UIKit.OpenPanelAsync<ScenarioSavePanel>(
+                level: UILevel.Pop,
+                data: new ScenarioSavePanelData(m_scenarioDirector, mode));
+        }
+
+        /// <summary>通过正式 UIKit 入口打开当前单局的只读剧本日志。</summary>
+        public void OpenJournalPanel()
+        {
+            if (!IsReady || m_scenarioRun == null)
+            {
+                throw new InvalidOperationException("牌桌地基测试尚未就绪，不能打开剧本日志。");
+            }
+
+            UIKit.OpenPanelAsync<ScenarioJournalPanel>(
+                level: UILevel.Pop,
+                data: new ScenarioJournalPanelData(m_scenarioRun));
+        }
 
 
         private ScenarioRun m_scenarioRun;
@@ -193,6 +399,13 @@ namespace Gameplay.Tests.Support
 				Debug.LogError("牌桌地基测试活动剧本与请求内容不一致。", this);
 				yield break;
 			}
+
+			if (!contentIndex.TryGet(new ContentId(TestCardPackContentId), out CardPackDefinition cardPack) ||
+				!contentIndex.TryGet(new ContentId(TestOpenCardPackActionContentId), out ActionDefinition openPackAction))
+			{
+				Debug.LogError("牌桌地基测试卡包或打开行动没有进入正式内容索引。", this);
+				yield break;
+			}
             m_tabletop = m_scenarioRun.Tabletop;
             Cards = m_tabletop.Cards;
 			TabletopCard bottom = m_tabletop.CreateCard(contentId, new Vector2(-2.2f, -0.2f));
@@ -213,40 +426,64 @@ namespace Gameplay.Tests.Support
 			m_tabletopInteraction.Bind(m_scenarioRun);
             CoreInputSystem inputSystem = GameManager.GetSystem<CoreInputSystem>();
 			m_dragInput.Bind(inputSystem, m_tabletop, m_tabletopView, RecordReleaseIntent);
-			EventKit.Type.Register<ScenarioRunChangedEvent>(OnScenarioRunChanged);
+            EventKit.Type.Register<ScenarioRunChangedEvent>(OnScenarioRunChanged);
 			m_runChangeRegistered = true;
             inputSystem.SetActionMap(EActionMap.Gameplay);
-			UIKit.OpenPanelAsync<ScenarioTurnPanel>(
-				callback: panel =>
-				{
-					if (panel == null)
-					{
-						throw new InvalidOperationException("活动剧本已经启动，但 UIKit 没有加载回合 HUD。");
-					}
-
-					UIKit.OpenPanelAsync<TabletopCardInfoPanel>(
-						callback: infoPanel =>
-						{
-							if (infoPanel == null)
-							{
-								throw new InvalidOperationException(
-									"牌桌已经就绪，但 UIKit 没有加载卡牌详情面板。");
-							}
-
-							IsReady = true;
-						},
-						level: UILevel.Hud,
-						data: new TabletopCardInfoPanelData(m_tabletopView));
-				},
-				level: UILevel.Hud,
-				data: new ScenarioTurnPanelData(m_scenarioDirector));
+			Exception panelFailure = null;
+			yield return OpenRequiredHudPanelsAsync()
+				.ToCoroutine(exception => panelFailure = exception);
+			if (panelFailure != null)
+			{
+				Debug.LogException(panelFailure, this);
+			}
         }
+
+		private async UniTask OpenRequiredHudPanelsAsync()
+		{
+			CancellationToken cancellationToken = destroyCancellationToken;
+			try
+			{
+				ScenarioTurnPanel turnPanel = await UIKit.OpenPanelUniTaskAsync<ScenarioTurnPanel>(
+					level: UILevel.Hud,
+					data: new ScenarioTurnPanelData(m_scenarioDirector),
+					ct: cancellationToken);
+				if (cancellationToken.IsCancellationRequested || this == null)
+				{
+					return;
+				}
+				if (turnPanel == null)
+				{
+					throw new InvalidOperationException("活动剧本已经启动，但 UIKit 没有加载回合 HUD。");
+				}
+
+				TabletopCardInfoPanel infoPanel = await UIKit.OpenPanelUniTaskAsync<TabletopCardInfoPanel>(
+					level: UILevel.Hud,
+					data: new TabletopCardInfoPanelData(m_tabletopView, m_scenarioRun),
+					ct: cancellationToken);
+				if (cancellationToken.IsCancellationRequested || this == null)
+				{
+					return;
+				}
+				if (infoPanel == null)
+				{
+					throw new InvalidOperationException("牌桌已经就绪，但 UIKit 没有加载卡牌详情面板。");
+				}
+
+				IsReady = true;
+			}
+			catch (OperationCanceledException)
+			{
+				// 场景卸载会取消尚未完成的 UIKit 异步实例化；这是测试场景生命周期的正常退出。
+			}
+		}
 
 		private void OnDisable()
 		{
 			IsReady = false;
 			UIKit.ClosePanel<TabletopCardInfoPanel>();
 			UIKit.ClosePanel<ScenarioTurnPanel>();
+			UIKit.ClosePanel<ScenarioJournalPanel>();
+			UIKit.ClosePanel<ScenarioSavePanel>();
 			m_dragInput?.Unbind();
 			m_tabletopInteraction?.Unbind();
 			m_tabletopView?.Unbind();
@@ -288,6 +525,7 @@ namespace Gameplay.Tests.Support
 				m_tabletop,
 				m_tabletopView,
 				RecordReleaseIntent);
+			IsReady = true;
 		}
 
         private void RecordReleaseIntent(TabletopCardPointerReleaseIntent intent)

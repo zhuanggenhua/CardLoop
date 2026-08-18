@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba2a82d8e1354cacb930b637a3ced24f, type: 3}
+  m_Name: "\u5730\u57FA\u914D\u65B9\u5236\u4F5C\u6728\u68CD\u884C\u52A8"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.ActionDefinition
+  m_contentId:
+    m_value: test.foundation.recipe.crafting-stick
+  m_tagCodes: 
+  m_displayName: Crafting Stick
+  m_description: 'StackCraft recipe reference: Timber x1, Villager x1. Crafting duration
+    10 seconds.'
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_turnCost: 1
+  m_canStartFromClick: 0
+  m_participationSlots: []
+  m_conditions: []
+  m_resultIntents: []
+  m_resultBranches: []
+  references:
+    version: 2
+    RefIds: []

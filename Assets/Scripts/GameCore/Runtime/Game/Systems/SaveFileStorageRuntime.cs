@@ -40,6 +40,12 @@ namespace GameCore
             return metadata;
         }
 
+        public static int GetMaximumSaveSlots()
+        {
+            ConfigureSaveKit();
+            return SaveKit.GetMaxSlots();
+        }
+
         public static int DeleteAllSaveData()
         {
             IReadOnlyList<SaveMeta> metadata = GetAllSaveMetadata();

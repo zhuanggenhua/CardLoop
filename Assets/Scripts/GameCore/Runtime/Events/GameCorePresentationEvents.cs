@@ -1,3 +1,6 @@
+using System;
+using GAS.Runtime;
+
 namespace GameCore
 {
     /// <summary>
@@ -25,6 +28,51 @@ namespace GameCore
         }
 
         public DamageTakenFeedbackContext Context { get; }
+    }
+
+    /// <summary>
+    /// 没有场景角色对象的 ASC 伤害结算结果事件。
+    /// 规则和属性已经由 EX-GAS / GNS 写入完成，监听者只能据此播放牌桌、日志或 HUD 表现。
+    /// </summary>
+    public readonly struct AbilitySystemDamageResolvedPresentationEvent
+    {
+        public AbilitySystemDamageResolvedPresentationEvent(
+            AbilitySystemCell targetAbilitySystem,
+            int appliedDamage,
+            bool isMissed,
+            bool isCriticalHit,
+            bool isSilent,
+            EDamageType damageType,
+            EEffectVisualFlags visualFlags,
+            DamageMatchupResult matchupResult = DamageMatchupResult.None)
+        {
+            TargetAbilitySystem = targetAbilitySystem ??
+                throw new ArgumentNullException(nameof(targetAbilitySystem));
+            if (appliedDamage < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(appliedDamage),
+                    appliedDamage,
+                    "表现事件中的实际伤害不能为负数。");
+            }
+
+            AppliedDamage = appliedDamage;
+            IsMissed = isMissed;
+            IsCriticalHit = isCriticalHit;
+            IsSilent = isSilent;
+            DamageType = damageType;
+            VisualFlags = visualFlags;
+            MatchupResult = matchupResult;
+        }
+
+        public AbilitySystemCell TargetAbilitySystem { get; }
+        public int AppliedDamage { get; }
+        public bool IsMissed { get; }
+        public bool IsCriticalHit { get; }
+        public bool IsSilent { get; }
+        public EDamageType DamageType { get; }
+        public EEffectVisualFlags VisualFlags { get; }
+        public DamageMatchupResult MatchupResult { get; }
     }
 
     /// <summary>

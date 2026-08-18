@@ -10,7 +10,14 @@ namespace GameCore
     /// </summary>
     public static class SceneUtil
     {
-        private static readonly string[] SceneSearchRoots = { "Assets" };
+        /// <summary>
+        /// 正式场景地址和编辑器场景菜单只来自项目场景根，避免插件 Demo、参考模板和恢复场景混入正式入口。
+        /// </summary>
+        private static readonly string[] SceneSearchRoots =
+        {
+            "Assets/Scenes",
+            "Assets/Settings/Scenes"
+        };
 
         /// <summary>
         /// 单个场景资产的编辑器快照，记录路径和是否进入 Build Settings。
@@ -84,8 +91,27 @@ namespace GameCore
             string[] guids = AssetDatabase.FindAssets("t:scene", SceneSearchRoots);
             return guids
                 .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
+                .Where(IsProjectScenePath)
                 .Where(path => !IsUnityTestRunnerScene(path))
                 .ToArray();
+        }
+
+        public static bool IsProjectScenePath(string scenePath)
+        {
+            string normalizedPath = scenePath?.Replace('\\', '/');
+            if (string.IsNullOrWhiteSpace(normalizedPath) ||
+                !normalizedPath.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return SceneSearchRoots.Any(root =>
+            {
+                string normalizedRoot = root.TrimEnd('/').Replace('\\', '/');
+                return normalizedPath.StartsWith(
+                    normalizedRoot + "/",
+                    StringComparison.OrdinalIgnoreCase);
+            });
         }
 
         private static bool IsUnityTestRunnerScene(string scenePath)

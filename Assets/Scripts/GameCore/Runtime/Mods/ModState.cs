@@ -13,15 +13,15 @@ namespace GameCore
     }
 
     /// <summary>
-    /// 单个 Mod 的本地状态记录，使用完整名称作为识别键。
+    /// 单个 Mod 的本地状态记录，版本升级不会改变其稳定身份。
     /// </summary>
     [Serializable]
     public class ModState
     {
         /// <summary>
-        /// Mod 的完整名称或唯一标识。
+        /// Mod 清单声明的稳定身份。
         /// </summary>
-        public string fullName;
+        public string modId;
 
         /// <summary>
         /// 本地期望状态。

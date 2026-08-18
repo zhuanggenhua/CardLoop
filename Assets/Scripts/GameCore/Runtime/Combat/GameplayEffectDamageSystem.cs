@@ -158,7 +158,10 @@ namespace GameCore
                 }
                 else
                 {
-                    ApplyDamageToAbilitySystem(application.TargetAbilitySystem, application.Output);
+                    ApplyDamageToAbilitySystem(
+                        application.TargetAbilitySystem,
+                        application.Output,
+                        application.VisualFlags);
                 }
             }
         }
@@ -191,29 +194,43 @@ namespace GameCore
 
         private static void ApplyDamageToAbilitySystem(
             AbilitySystemCell targetAbilitySystem,
-            DamageOutputDescriptor output)
+            DamageOutputDescriptor output,
+            EEffectVisualFlags visualFlags)
         {
             DamageInputDescriptor input = DamageSolver.SolveDamageInput(targetAbilitySystem, output);
             int currentHealth = Mathf.RoundToInt(targetAbilitySystem.GetAttrCurrentValue(
                 CharacterAttributes.SetCode,
                 CharacterAttributes.Health));
             int appliedDamage = Mathf.Min(Mathf.Max(0, input.damage), currentHealth);
-            if (appliedDamage <= 0)
+            if (appliedDamage <= 0 && !input.IsMissed)
             {
                 return;
             }
 
-            float baseHealth = targetAbilitySystem.GetAttrBaseValue(
-                CharacterAttributes.SetCode,
-                CharacterAttributes.Health);
-            targetAbilitySystem.SetAttrBaseValue(
-                CharacterAttributes.SetCode,
-                CharacterAttributes.Health,
-                baseHealth - appliedDamage);
-            AttributeHelper.RecalculateCurrentValue(
-                targetAbilitySystem.Entity,
-                CharacterAttributes.SetCode,
-                CharacterAttributes.Health);
+            if (appliedDamage > 0)
+            {
+                float baseHealth = targetAbilitySystem.GetAttrBaseValue(
+                    CharacterAttributes.SetCode,
+                    CharacterAttributes.Health);
+                targetAbilitySystem.SetAttrBaseValue(
+                    CharacterAttributes.SetCode,
+                    CharacterAttributes.Health,
+                    baseHealth - appliedDamage);
+                AttributeHelper.RecalculateCurrentValue(
+                    targetAbilitySystem.Entity,
+                    CharacterAttributes.SetCode,
+                    CharacterAttributes.Health);
+            }
+
+            YokiFrame.EventKit.Type.Send(new AbilitySystemDamageResolvedPresentationEvent(
+                targetAbilitySystem,
+                appliedDamage,
+                input.IsMissed,
+                input.IsCriticalHit,
+                input.silent,
+                output.type,
+                visualFlags,
+                input.matchupResult));
         }
 
         private static bool IsConditionMatched(

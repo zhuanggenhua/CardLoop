@@ -11,10 +11,11 @@ description: 维护 CardLoop 的 .spec 规范结构、知识落点、skill 合�
 
 先分层，再写内容：
 
-- 全局 AGENTS：跨项目通用红线、路径、路由原则。落点在 `D:\codex-home\AGENTS.md`。
+- 系统 AGENTS：跨项目通用红线、路径、路由原则。落点在 `D:\codex-home\AGENTS.md`。
 - 项目 AGENTS：项目主入口指针和极少量必须常驻边界。当前根 `AGENTS.md` 只做 `.spec` 指针。
-- 全局 skill：可复用任务类型的具体 SOP。落点在 `D:\codex-home\skills`。
-- 项目 skill：只对 CardLoop 成立的专项 workflow。落点优先 `.spec/skills`；既有 `.codex/.agents/skills` 保留。
+- 系统 skill：可复用任务类型的具体 SOP。落点在 `D:\codex-home\skills`。
+- 项目 skill：只对 CardLoop 成立的专项 workflow。唯一权威落点是 `.spec/skills`；`.agents/skills`、`.claude/skills` 只是宿主发现适配入口，`.codex/skills` 不再作为项目入口。
+- 项目 skill 安装 / 迁入时，安装器或脚本的目标目录必须显式设为 `.spec/skills`；不得把 `.agents/skills`、`.claude/skills` 这类适配入口当作安装目录。
 - 任务/用户故事/专项文档：一次性决定、局部特例、具体素材或当轮偏离。落点在 `openspec/`、`.spec/knowledge/features/project/` 对应专项或 `.spec/tasks`。
 
 ## 内容类型
@@ -48,7 +49,8 @@ description: 维护 CardLoop 的 .spec 规范结构、知识落点、skill 合�
 
 - 新增/删除 `.spec` 文档后，同步 `.spec/knowledge/README.md`。
 - 新增 skill 后确认 frontmatter 只有 `name` 和 `description`。
+- 新增或迁移项目 skill 后，正文只能在 `.spec/skills/<name>/SKILL.md`；宿主发现目录必须通过适配入口指向 `.spec/skills`，不得另存一份。
 - 根 `AGENTS.md` 只能作为指针，不再堆详细 SOP。
 - 同一规范口径只能有一个权威文档；入口、索引和冲突矩阵只能保留摘要和链接，不能重复承载会漂移的模型配置、命令顺序、参数或验收清单。
-- 不作为正式入口保留旧 `.spec/knowledge/features/project` 或既有 skill，除非用户明确要求。
+- 不作为正式入口保留旧宿主 skill 目录、旧项目知识库目录或未迁入 `.spec` 的既有 skill，除非用户明确要求。
 

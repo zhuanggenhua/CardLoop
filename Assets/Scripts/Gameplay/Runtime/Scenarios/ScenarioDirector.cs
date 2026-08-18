@@ -23,6 +23,7 @@ namespace Gameplay.Scenarios
 		private ResourceHandle<IList<ContentAsset>> m_contentHandle;
 
 		private ScenarioRun m_activeRun;
+		private int? m_activeSaveSlotId;
 		private bool m_scenarioChangeInProgress;
 		private string m_returnSceneAddress = string.Empty;
 
@@ -35,6 +36,8 @@ namespace Gameplay.Scenarios
 		public ScenarioRun ActiveRun => m_activeRun;
 
 		public bool IsChangingScenario => m_scenarioChangeInProgress;
+
+		public int? ActiveSaveSlotId => m_activeSaveSlotId;
 
 		private void Awake()
 		{
@@ -67,7 +70,15 @@ namespace Gameplay.Scenarios
 		/// </summary>
 		public async UniTask StartScenarioAsync(ContentId scenarioId)
 		{
-			await StartScenarioAsync(scenarioId, CreateAuthoritativeRandomSeed());
+			await StartScenarioAsync(scenarioId, ScenarioStartOptions.Default, CreateAuthoritativeRandomSeed());
+		}
+
+		/// <summary>
+		/// 使用玩家在标题入口选择的运行选项开始一局剧本。
+		/// </summary>
+		public async UniTask StartScenarioAsync(ContentId scenarioId, ScenarioStartOptions startOptions)
+		{
+			await StartScenarioAsync(scenarioId, startOptions, CreateAuthoritativeRandomSeed());
 		}
 
 		/// <summary>
@@ -75,6 +86,17 @@ namespace Gameplay.Scenarios
 		/// 所有地区牌桌的随机流都由本次单局继续派生，调用方不再逐牌桌初始化。
 		/// </summary>
 		public async UniTask StartScenarioAsync(ContentId scenarioId, uint authoritativeRandomSeed)
+		{
+			await StartScenarioAsync(scenarioId, ScenarioStartOptions.Default, authoritativeRandomSeed);
+		}
+
+		/// <summary>
+		/// 使用调用方提供的运行选项和权威根种子开始单局。
+		/// </summary>
+		public async UniTask StartScenarioAsync(
+			ContentId scenarioId,
+			ScenarioStartOptions startOptions,
+			uint authoritativeRandomSeed)
 		{
 			RequireRunningSystem();
 			RequireNoScenarioChange();
@@ -92,6 +114,7 @@ namespace Gameplay.Scenarios
 					nameof(authoritativeRandomSeed),
 					"剧本单局的权威随机根种子不能为 0。");
 			}
+			int saveSlotId = FindFirstEmptySaveSlot();
 
 			m_scenarioChangeInProgress = true;
 			ResourceHandle<IList<ContentAsset>> contentHandle =
@@ -128,12 +151,15 @@ namespace Gameplay.Scenarios
 				ScenarioRun run = new ScenarioRun(
 					definition,
 					contentIndex,
-					authoritativeRandomSeed);
+					authoritativeRandomSeed,
+					ModAPI.CreateActivePackageSetSnapshot(),
+					startOptions);
 				run.ActivateInitialQuests();
 				m_contentHandle = contentHandle;
 				handleTransferred = true;
 				m_returnSceneAddress = changesScene ? sourceSceneAddress : string.Empty;
 				m_activeRun = run;
+				m_activeSaveSlotId = saveSlotId;
 				EventKit.Type.Send(new ScenarioRunChangedEvent(null, run));
 			}
 			finally
@@ -185,10 +211,43 @@ namespace Gameplay.Scenarios
 			}
 		}
 
+		public async UniTask GameOverAsync()
+		{
+			RequireRunningSystem();
+			RequireNoScenarioChange();
+			RequireActiveRun();
+			if (m_activeSaveSlotId.HasValue &&
+				SaveSlotExists(m_activeSaveSlotId.Value) &&
+				!SaveSystem.DeleteSaveData(m_activeSaveSlotId.Value))
+			{
+				throw new InvalidOperationException(
+					$"游戏结束时删除存档槽位 {m_activeSaveSlotId.Value} 失败。");
+			}
+			await EndScenarioAsync();
+		}
+
 		public int ConfirmTurn()
 		{
 			RequireNoScenarioChange();
 			return RequireActiveRun().ConfirmTurn();
+		}
+
+		public void ContinueDayCycle()
+		{
+			RequireNoScenarioChange();
+			ScenarioRun run = RequireActiveRun();
+			ScenarioDayCyclePhase previousPhase = run.DayCyclePhase;
+			run.ContinueDayCycle();
+			if (previousPhase == ScenarioDayCyclePhase.AwaitingNewDayConfirmation &&
+				run.DayCyclePhase == ScenarioDayCyclePhase.Inactive)
+			{
+				int slotId = m_activeSaveSlotId ??
+					throw new InvalidOperationException("当前剧本单局没有分配存档槽位，不能在新日开始后自动保存。");
+				if (!SaveActiveRunToSlot(slotId))
+				{
+					throw new InvalidOperationException($"新日开始后自动写入存档槽位 {slotId} 失败。");
+				}
+			}
 		}
 
 		/// <summary>
@@ -204,10 +263,15 @@ namespace Gameplay.Scenarios
 			SaveData container = SaveSystem.ExtractSaveContainerFromFile(slotId) ??
 				SaveSystem.CreateSaveContainer();
 			container.RegisterModule(snapshot);
-			return SaveSystem.StoreSaveDataToFile(
+			bool saved = SaveSystem.StoreSaveDataToFile(
 				slotId,
 				container,
 				CreateSaveDisplayName(run));
+			if (saved)
+			{
+				m_activeSaveSlotId = slotId;
+			}
+			return saved;
 		}
 
 		/// <summary>
@@ -234,7 +298,10 @@ namespace Gameplay.Scenarios
 			{
 				IList<ContentAsset> contentAssets = await contentHandle.ToUniTask();
 				ContentIndex contentIndex = ContentIndex.Build(contentAssets);
-				restoredRun = CreateRunFromSaveContainer(container, contentIndex);
+				restoredRun = RestoreRunFromSaveContainer(
+					container,
+					contentIndex,
+					ModAPI.CreateActivePackageSetSnapshot());
 				string targetSceneAddress = GetActiveRegionSceneAddress(restoredRun);
 				string currentSceneAddress = SceneManager.GetActiveScene().name;
 				string returnSceneAddress = HasActiveScenario
@@ -253,6 +320,7 @@ namespace Gameplay.Scenarios
 				m_contentHandle = contentHandle;
 				handleTransferred = true;
 				m_returnSceneAddress = returnSceneAddress;
+				m_activeSaveSlotId = slotId;
 				EventKit.Type.Send(new ScenarioRunChangedEvent(previousRun, restoredRun));
 			}
 			finally
@@ -327,9 +395,52 @@ namespace Gameplay.Scenarios
 			return $"{scenario.DisplayName} · {region.DisplayName} · 第 {run.CurrentDay} 天";
 		}
 
+		private static int FindFirstEmptySaveSlot()
+		{
+			HashSet<int> occupiedSlots = new HashSet<int>();
+			IReadOnlyList<SaveMeta> metadata = SaveSystem.GetAllSaveMetadata();
+			for (int i = 0; i < metadata.Count; i++)
+			{
+				occupiedSlots.Add(metadata[i].SlotId);
+			}
+			int maximumSlots = SaveSystem.GetMaximumSaveSlots();
+			for (int slotId = 0; slotId < maximumSlots; slotId++)
+			{
+				if (!occupiedSlots.Contains(slotId))
+				{
+					return slotId;
+				}
+			}
+			throw new InvalidOperationException("没有可用于新剧本单局的空存档槽位。");
+		}
+
+		private static bool SaveSlotExists(int slotId)
+		{
+			IReadOnlyList<SaveMeta> metadata = SaveSystem.GetAllSaveMetadata();
+			for (int i = 0; i < metadata.Count; i++)
+			{
+				if (metadata[i].SlotId == slotId)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		private static ScenarioRun CreateRunFromSaveContainer(
 			SaveData container,
 			ContentIndex contentIndex)
+		{
+			return RestoreRunFromSaveContainer(
+				container,
+				contentIndex,
+				new ModPackageSetSnapshot(Array.Empty<ModPackageSnapshot>()));
+		}
+
+		private static ScenarioRun RestoreRunFromSaveContainer(
+			SaveData container,
+			ContentIndex contentIndex,
+			ModPackageSetSnapshot currentModPackages)
 		{
 			if (container == null)
 			{
@@ -350,7 +461,7 @@ namespace Gameplay.Scenarios
 				throw new InvalidOperationException(
 					$"存档引用的剧本 {snapshot.ScenarioId} 不存在或类型错误。");
 			}
-			return ScenarioRun.Restore(definition, contentIndex, snapshot);
+			return ScenarioRun.Restore(definition, contentIndex, currentModPackages, snapshot);
 		}
 
 		private static string GetActiveRegionSceneAddress(ScenarioRun run)
@@ -407,6 +518,7 @@ namespace Gameplay.Scenarios
 		{
 			ScenarioRun run = m_activeRun;
 			m_activeRun = null;
+			m_activeSaveSlotId = null;
 			try
 			{
 				run?.End();

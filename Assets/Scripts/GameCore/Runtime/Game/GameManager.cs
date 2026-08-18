@@ -41,6 +41,7 @@ namespace GameCore
 
         // System Access Shortcuts
         public static AudioSystem AudioSystem => GetSystem<AudioSystem>();
+        public static DisplaySettingsSystem DisplaySettingsSystem => GetSystem<DisplaySettingsSystem>();
         public static GameFlagSystem GameFlagSystem => GetSystem<GameFlagSystem>();
         public static GameStateSystem GameStateSystem => GetSystem<GameStateSystem>();
         public static InputSystem InputSystem => GetSystem<InputSystem>();
@@ -59,6 +60,7 @@ namespace GameCore
         private bool m_resourceRuntimeStarted = false;
         private bool m_modRuntimeStarted = false;
         private bool m_gasRuntimeStarted = false;
+        private bool m_shutdownComplete = false;
         private GameManagerStartupState m_startupState = GameManagerStartupState.NotStarted;
         private Exception m_startupException = null;
 
@@ -163,9 +165,28 @@ namespace GameCore
                 return;
             }
 
+            ShutdownOwnedRuntime();
+            _instance = null;
+        }
+
+        private void OnApplicationQuit()
+        {
+            if (_instance == this)
+            {
+                ShutdownOwnedRuntime();
+            }
+        }
+
+        private void ShutdownOwnedRuntime()
+        {
+            if (m_shutdownComplete)
+            {
+                return;
+            }
+
             SetStartupState(GameManagerStartupState.ShuttingDown);
             ShutdownRuntime();
-            _instance = null;
+            m_shutdownComplete = true;
         }
 
         public static bool Exists() => _instance;

@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba2a82d8e1354cacb930b637a3ced24f, type: 3}
+  m_Name: "\u5730\u57FA\u65E5\u7EC8\u51FA\u552E\u884C\u52A8"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.ActionDefinition
+  m_contentId:
+    m_value: test.foundation.day-cycle.sell
+  m_tagCodes: 
+  m_displayName: "\u51FA\u552E"
+  m_description: "\u628A\u53EF\u552E\u5361\u62D6\u5230\u6536\u8D2D\u70B9\uFF0C\u7ACB\u5373\u79FB\u9664\u8BE5\u5361\u5E76\u6309\u51FA\u552E\u4EF7\u503C\u751F\u6210\u8D27\u5E01\u3002"
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_turnCost: 0
+  m_canStartFromClick: 0
+  m_participationSlots:
+  - m_key: sold
+    m_displayName: "\u51FA\u552E\u5361\u724C"
+    m_minimumParticipants: 1
+    m_maximumParticipants: 0
+    m_allowedContentIds:
+    - m_value: test.foundation.day-cycle.sellable
+    m_requiredAllContentTagCodes: 
+    m_requiredAnyContentTagCodes: 
+    m_requiredNoneContentTagCodes: 
+    m_requiredAllAbilitySystemTagCodes: 
+    m_requiredAnyAbilitySystemTagCodes: 
+    m_requiredNoneAbilitySystemTagCodes: 
+  - m_key: buyer
+    m_displayName: "\u6536\u8D2D\u70B9"
+    m_minimumParticipants: 1
+    m_maximumParticipants: 1
+    m_allowedContentIds:
+    - m_value: test.foundation.day-cycle.buyer
+    m_requiredAllContentTagCodes: 
+    m_requiredAnyContentTagCodes: 
+    m_requiredNoneContentTagCodes: 
+    m_requiredAllAbilitySystemTagCodes: 
+    m_requiredAnyAbilitySystemTagCodes: 
+    m_requiredNoneAbilitySystemTagCodes: 
+  m_conditions: []
+  m_resultIntents:
+  - rid: 7366053183022957327
+  m_resultBranches: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 7366053183022957327
+      type: {class: SellCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
+      data:
+        m_soldSlotKey: sold
+        m_currencyCardId:
+          m_value: test.foundation.day-cycle.currency
+        m_anchorSlotKey: buyer

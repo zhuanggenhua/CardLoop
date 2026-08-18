@@ -37,7 +37,7 @@ MonoBehaviour:
         PackRuleName: PackCollector
         FilterRuleName: ContentAssetFilterRule
         AssetTags: 
-        UserData:
+        UserData: 
     - GroupName: "EX-GAS\u8FD0\u884C\u65F6\u914D\u7F6E"
       GroupDesc: "\u6536\u96C6 EX-GAS Luban \u751F\u6210\u8868\uFF0C\u4F9B\u6B63\u5F0F
         GAS \u542F\u52A8\u94FE\u4F7F\u7528 YooAsset \u52A0\u8F7D"
@@ -51,7 +51,7 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: gas-config
-        UserData:
+        UserData: 
     - GroupName: "Gameplay\u5730\u57FA\u6D4B\u8BD5"
       GroupDesc: "\u4EC5\u6536\u96C6 Gameplay \u5730\u57FA\u5165\u53E3\u573A\u666F\u548C
         YooAsset \u9644\u52A0\u5730\u56FE\u6D4B\u8BD5\u573A\u666F"
@@ -65,7 +65,7 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: FoundationSceneFilterRule
         AssetTags: test
-        UserData:
+        UserData: 
       - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u5361\u724C\u89C6\u56FE.prefab"
         CollectorGUID: e0e5e302108a1f74989be97f0f65e7de
         CollectorType: 0
@@ -73,15 +73,7 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: test
-        UserData:
-      - CollectPath: Assets/StackCraft/Sprites/Square.png
-        CollectorGUID: 57fe652483042fb4ba6612b888e7a928
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: test
-        UserData:
+        UserData: 
       - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u884C\u52A8\u8FDB\u5EA6.prefab"
         CollectorGUID: c6a4453a163925b4fa0a3ec2d7e35a81
         CollectorType: 0
@@ -89,7 +81,7 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: test
-        UserData:
+        UserData: 
       - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/TabletopActionChoicePanel.prefab"
         CollectorGUID: ae9ec7c0bd044a14aa08d32076abc9e0
         CollectorType: 0
@@ -97,7 +89,7 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: test
-        UserData:
+        UserData: 
       - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/ScenarioTurnPanel.prefab"
         CollectorGUID: d604ef4e464d47948b862ca7ea8549e6
         CollectorType: 0
@@ -105,7 +97,7 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: test
-        UserData:
+        UserData: 
       - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/TabletopCardInfoPanel.prefab"
         CollectorGUID: f9f7e4abf6776784a8a93aae8e39b83a
         CollectorType: 0
@@ -113,9 +105,377 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: test
-        UserData:
+        UserData: 
       - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/TabletopActionPlanPanel.prefab"
         CollectorGUID: 85f0afcb7902ed74492f214047f17592
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/ScenarioSavePanel.prefab"
+        CollectorGUID: 75feb7a14f4331440b4c5aff26ba00e8
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/ConfirmationDialogPanel.prefab"
+        CollectorGUID: 50cc21655f0a10a49b955657fd13b292
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/ScenarioJournalPanel.prefab"
+        CollectorGUID: 52e6e7abdbad43f46b78454935e41e81
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/ScenarioTitlePanel.prefab"
+        CollectorGUID: c6136ed118f257f4a9b5a1b22db8bf2d
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/UISettings.prefab"
+        CollectorGUID: 4ac2fbf69ee49044ba1da3735d245a44
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u6218\u6597\u533A\u57DF.prefab"
+        CollectorGUID: 0a6a4c2674891c6479b4a9b548a3f247
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u6295\u5C04\u7269.prefab"
+        CollectorGUID: 71374535c96594147a97e6d9c3ff8df0
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/ScenarioPausePanel.prefab"
+        CollectorGUID: 106e2a3942c194244abaff478d34e47d
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/FoundationGameUI.prefab"
+        CollectorGUID: f955e544b74eada42a0c90a2b7961ea9
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Prefabs/\u5361\u724C\u70DF\u96FE\u7C92\u5B50.prefab"
+        CollectorGUID: 728ff838a02e647fb4521d417e15d709
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/\u5361\u724C\u5360\u4F4D\u56FE.png"
+        CollectorGUID: 0f54d867b9639e44c646777766827b09
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u6751\u6C11.png"
+        CollectorGUID: 2181b4d4680e441ba91fc687fb0c6c49
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u6728\u5934.png"
+        CollectorGUID: 39c251c7b570430b8d8281e29559b4fc
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u6D46\u679C.png"
+        CollectorGUID: 390353a1dcab4a5fadae2b2cbdd732ef
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u77F3\u5934.png"
+        CollectorGUID: 86c889e462f44e46874843cf29d0d96b
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u91D1\u5E01.png"
+        CollectorGUID: 3d6a94c1e7f84221afb689521fe235b8
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u54E5\u5E03\u6797.png"
+        CollectorGUID: 1cf050d6ef154d5ca9b41cd0f192c19b
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u5B9D\u7BB1.png"
+        CollectorGUID: dcfe01eceeac4f98bbbe4fc8452bb746
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u6728\u7BB1.png"
+        CollectorGUID: 07344748eee44a97b39bf80ce9e57dbf
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u521D\u59CB\u5361\u5305.png"
+        CollectorGUID: c9616bb038c641edbc04766af61cabdb
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u6D46\u679C\u4E1B.png"
+        CollectorGUID: 4d9e9bf178bd4a11a24e7130459d7a85
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u5CA9\u77F3.png"
+        CollectorGUID: 62bd2bc806de454a883f452cec68163c
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u5F00\u7AEF\u5361\u5305.png"
+        CollectorGUID: 73616de9cb74480998fbb6390ead9f0c
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u571F\u58E4.png"
+        CollectorGUID: 71c50cd0519f4813886708a07b43cfff
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u6811.png"
+        CollectorGUID: cc4eb95872e04893a44270d31ef8a39b
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u9E21.png"
+        CollectorGUID: 7ff3349e78c74186a18ef8a34ece94ed
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u53F2\u83B1\u59C6.png"
+        CollectorGUID: 27c08dd1e4c54ace97e4dcfcebaadc04
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u91D1\u94A5\u5319.png"
+        CollectorGUID: da87052a45b04fe081ec703710874a5a
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u9E21\u86CB.png"
+        CollectorGUID: 1963635a48a542729e9fb106046e349e
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/CardArts/\u914D\u65B9\u5361.png"
+        CollectorGUID: 130c5913e832432388df46f44e84d30d
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: Assets/Art/Sprites/StackCraft
+        CollectorGUID: fc2f5a14a7814167ae99d04b57adf5fd
+        CollectorType: 0
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/\u7BAD\u77E2\u6295\u5C04\u7269.png"
+        CollectorGUID: 41453659326440ac9af82e23f7e2b7d9
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Sprites/\u9B54\u6CD5\u6295\u5C04\u7269.png"
+        CollectorGUID: e154c4f8e260bff5a0dc14e6d89bdd5f
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u89D2\u8272.mat"
+        CollectorGUID: 753f0937c1d64950b0f47e534f841748
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u751F\u7269.mat"
+        CollectorGUID: a58bf9d5d75e402081a2c4570afc3c9d
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u4E3B\u52A8\u654C\u4EBA.mat"
+        CollectorGUID: 53949e6ee1b84c088610c0c0b088d95f
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u6D88\u8017\u54C1.mat"
+        CollectorGUID: 5e76e3e0489c40d5823ec858bdcea64b
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u8D27\u5E01.mat"
+        CollectorGUID: ad73b691c6ce47bc891d0b995d968341
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u88C5\u5907.mat"
+        CollectorGUID: 948918527a624e889ae63770e1e83e46
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u6750\u6599.mat"
+        CollectorGUID: 6d529dce1b3f467f979979d5cb1e25fe
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u914D\u65B9.mat"
+        CollectorGUID: dccf24b24bba463caee5777b021086e0
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u8D44\u6E90.mat"
+        CollectorGUID: e3066071ccb6496ebc6a9eea45d741d0
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u5EFA\u7B51.mat"
+        CollectorGUID: b09cc8c4e00a4c3083b839e8f97eeb6d
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u8D35\u91CD\u7269.mat"
+        CollectorGUID: 92fc5cfb53cc48a9ac775c857b840f38
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Art/Materials/\u5361\u724C\u8868\u9762_\u5730\u533A.mat"
+        CollectorGUID: 64e782f727f04aba9f02eb1760d14a2b
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: test
+        UserData: 
+      - CollectPath: "Assets/Gameplay/Tests/\u724C\u684C/\u724C\u684C\u6D4B\u8BD5\u547D\u4E2D\u7ED3\u679C.prefab"
+        CollectorGUID: d05820f4f6918e74e9827d22a7b5ebdc
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory

@@ -15,15 +15,51 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.card
   m_tagCodes: e9030000
-  m_displayName: Foundation Test Card
-  m_description: Validates YooAsset content discovery, tabletop view and formal pointer
-    input.
+  m_displayName: Villager
+  m_description: A healthy villager.
   m_icon:
     Address: 
     Guid: 
     Locked: 1
+  m_initialUses: 1
+  m_sellValue: 0
+  m_countsTowardCardLimit: 1
+  m_cardLimitBonus: 0
+  m_periodicProductionCardId:
+    m_value: 
+  m_periodicProductionIntervalSeconds: 0
+  m_automaticMovementIntervalSeconds: 0
+  m_automaticMovementRadius: 0
+  m_automaticMovementMaxAttempts: 0
+  m_automaticMovementRetentionCapacity: 0
   m_cardArt:
-    Address: Square
-    Guid: 57fe652483042fb4ba6612b888e7a928
+    Address: "\u6751\u6C11"
+    Guid: 2181b4d4680e441ba91fc687fb0c6c49
+    Locked: 1
+  m_cardSurface:
+    Address: "\u5361\u724C\u8868\u9762_\u89D2\u8272"
+    Guid: 753f0937c1d64950b0f47e534f841748
     Locked: 1
   m_abilitySystemPresetId: 1001
+  m_attributeOverrides:
+  - m_attributeCode: 1
+    m_baseValue: 15
+  - m_attributeCode: 7
+    m_baseValue: 15
+  - m_attributeCode: 4
+    m_baseValue: 2
+  - m_attributeCode: 5
+    m_baseValue: 1
+  - m_attributeCode: 10
+    m_baseValue: 130
+  - m_attributeCode: 11
+    m_baseValue: 95
+  - m_attributeCode: 12
+    m_baseValue: 5
+  - m_attributeCode: 13
+    m_baseValue: 5
+  - m_attributeCode: 14
+    m_baseValue: 150
+  m_automaticBattleAbilityCode: 20005
+  m_automaticAggroRadius: 0
+  m_automaticAttackRadius: 0

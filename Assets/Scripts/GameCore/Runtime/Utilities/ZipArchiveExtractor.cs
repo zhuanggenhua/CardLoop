@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using UnityEngine;
@@ -49,11 +50,11 @@ namespace GameCore
             }
 
             string root = Path.GetFullPath(outputPath);
-            Directory.CreateDirectory(root);
 
             try
             {
                 using ZipArchive archive = new(inputStream, ZipArchiveMode.Read);
+                var destinations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
                     string destinationPath = Path.GetFullPath(Path.Combine(root, entry.FullName));
@@ -62,7 +63,17 @@ namespace GameCore
                         Debug.LogError($"[ZipArchiveExtractor] Unsafe zip entry path: {entry.FullName}");
                         return false;
                     }
+                    if (!destinations.Add(destinationPath))
+                    {
+                        Debug.LogError($"[ZipArchiveExtractor] Duplicate zip entry path: {entry.FullName}");
+                        return false;
+                    }
+                }
 
+                Directory.CreateDirectory(root);
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    string destinationPath = Path.GetFullPath(Path.Combine(root, entry.FullName));
                     if (string.IsNullOrEmpty(entry.Name))
                     {
                         Directory.CreateDirectory(destinationPath);

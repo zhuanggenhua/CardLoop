@@ -36,6 +36,94 @@ namespace GameCore.Tests
         }
 
         [Test]
+        public void ModConfig_WhenExistingFileIsInvalid_ThrowsWithoutReplacingIt()
+        {
+            string configPath = Path.Combine(m_testRoot, "broken-config.json");
+            const string invalidContent = "{ not valid json";
+            File.WriteAllText(configPath, invalidContent);
+
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(
+                () => ModConfig.LoadOrCreate(configPath));
+
+			StringAssert.Contains(Path.GetFullPath(configPath), exception.Message);
+            Assert.That(File.ReadAllText(configPath), Is.EqualTo(invalidContent));
+        }
+
+        [Test]
+        public void ModConfig_WhenExistingFileContainsNull_ThrowsInsteadOfCreatingDefaults()
+        {
+            string configPath = Path.Combine(m_testRoot, "null-config.json");
+            File.WriteAllText(configPath, "null");
+
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(
+                () => ModConfig.LoadOrCreate(configPath));
+
+			StringAssert.Contains(Path.GetFullPath(configPath), exception.Message);
+            Assert.That(File.ReadAllText(configPath), Is.EqualTo("null"));
+        }
+
+        [Test]
+        public void ModConfig_WhenStateIdentityIsDuplicated_ThrowsInsteadOfKeepingTwoTruths()
+        {
+            string configPath = Path.Combine(m_testRoot, "duplicate-state-config.json");
+            File.WriteAllText(
+                configPath,
+                "{\"ApiVersion\":\"0.1.0\",\"States\":[" +
+                "{\"modId\":\"author.example\",\"status\":0}," +
+                "{\"modId\":\"author.example\",\"status\":1}]}");
+
+            InvalidDataException exception = Assert.Throws<InvalidDataException>(
+                () => ModConfig.LoadOrCreate(configPath));
+
+            StringAssert.Contains("重复", exception.Message);
+            StringAssert.Contains("author.example", exception.InnerException?.Message ?? exception.Message);
+        }
+
+        [Test]
+        public void Initialize_WhenProvidedConfigHasNoLoadingPath_ThrowsBeforeCallingLoader()
+        {
+            var config = new ModConfig { LoadingPath = null };
+            var loader = new CountingModLoader();
+
+            Assert.Throws<InvalidDataException>(
+                () => ModAPI.Initialize(config, loader).GetAwaiter().GetResult());
+
+            Assert.That(loader.CallCount, Is.Zero);
+            Assert.That(ModAPI.Initialized, Is.False);
+        }
+
+        [Test]
+        public void ModConfig_SaveAtomically_ReplacesExistingFileWithoutLeavingTemporaryFile()
+        {
+            string configPath = Path.Combine(m_testRoot, "atomic-config.json");
+            ModConfig config = ModConfig.LoadOrCreate(configPath);
+            config.ApiVersion = "1.2.3";
+            config.Save();
+
+            config.ApiVersion = "2.0.0";
+            config.Save();
+
+            ModConfig restored = ModConfig.LoadOrCreate(configPath);
+            Assert.That(restored.ApiVersion, Is.EqualTo("2.0.0"));
+            Assert.That(File.Exists(configPath + ".tmp"), Is.False);
+        }
+
+        [Test]
+        public void Initialize_WhenConfiguredModIsTemporarilyMissing_PreservesItsState()
+        {
+            string configPath = Path.Combine(m_testRoot, "missing-mod-config.json");
+            ModConfig config = ModConfig.LoadOrCreate(configPath);
+            var missingMod = new ModInfo { modId = "author.missing" };
+            config.SetModEnabled(missingMod, false);
+            config.Save();
+
+            ModAPI.Initialize(config, new EmptyModLoader()).GetAwaiter().GetResult();
+
+            ModConfig restored = ModConfig.LoadOrCreate(configPath);
+            Assert.That(restored.GetModState(missingMod), Is.EqualTo(ModStatus.Disabled));
+        }
+
+        [Test]
         public void Initialize_WhenAlreadyInitialized_ThrowsInsteadOfPretendingSuccess()
         {
             ModConfig config = ModConfig.LoadOrCreate(Path.Combine(m_testRoot, "config.json"));
@@ -48,6 +136,21 @@ namespace GameCore.Tests
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
                 () => ModAPI.Initialize(config, loader).GetAwaiter().GetResult());
             StringAssert.Contains("重复", exception.Message);
+        }
+
+        [Test]
+        public void DeleteMod_MarksNextStartupDeletionWithoutHidingCurrentRuntimeMod()
+        {
+            string configPath = Path.Combine(m_testRoot, "delete-config.json");
+            ModConfig config = ModConfig.LoadOrCreate(configPath);
+            config.LoadingPath = Path.Combine(m_testRoot, "Mods");
+            ModAPI.Initialize(config, new ResultModLoader(true, "Loaded")).GetAwaiter().GetResult();
+            ModInfo loaded = ModAPI.CreateInfoSnapshot()[0];
+
+            ModAPI.DeleteMod(loaded);
+
+            Assert.That(ModAPI.GetModState(loaded), Is.EqualTo(ModStatus.Delete));
+            Assert.That(ModAPI.CreateInfoSnapshot(), Does.Contain(loaded));
         }
 
         [Test]
@@ -112,8 +215,24 @@ namespace GameCore.Tests
 
         private sealed class EmptyModLoader : IModLoader
         {
-            public UniTask<bool> LoadAllModsAsync(List<ModInfo> modInfos)
+            public UniTask<bool> LoadAllModsAsync(
+                List<ModInfo> modInfos,
+                CancellationToken cancellationToken)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                return UniTask.FromResult(true);
+            }
+        }
+
+        private sealed class CountingModLoader : IModLoader
+        {
+            public int CallCount { get; private set; }
+
+            public UniTask<bool> LoadAllModsAsync(
+                List<ModInfo> modInfos,
+                CancellationToken cancellationToken)
+            {
+                CallCount++;
                 return UniTask.FromResult(true);
             }
         }
@@ -129,13 +248,18 @@ namespace GameCore.Tests
                 m_modName = modName;
             }
 
-            public UniTask<bool> LoadAllModsAsync(List<ModInfo> modInfos)
+            public UniTask<bool> LoadAllModsAsync(
+                List<ModInfo> modInfos,
+                CancellationToken cancellationToken)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 modInfos.Add(new ModInfo
                 {
+                    modId = $"tests.{m_modName.ToLowerInvariant()}",
                     apiVersion = ModAPI.DefaultAPIVersion,
                     modName = m_modName,
-                    version = "1.0.0"
+                    version = "1.0.0",
+                    packageName = $"Tests{m_modName}"
                 });
                 return UniTask.FromResult(m_result);
             }
@@ -145,9 +269,12 @@ namespace GameCore.Tests
         {
             private readonly UniTaskCompletionSource m_completion = new();
 
-            public async UniTask<bool> LoadAllModsAsync(List<ModInfo> modInfos)
+            public async UniTask<bool> LoadAllModsAsync(
+                List<ModInfo> modInfos,
+                CancellationToken cancellationToken)
             {
                 await m_completion.Task;
+                cancellationToken.ThrowIfCancellationRequested();
                 return true;
             }
 

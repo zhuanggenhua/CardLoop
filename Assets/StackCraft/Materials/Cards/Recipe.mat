@@ -125,7 +125,7 @@ Material:
     - _OcclusionStrength: 1
     - _OverlayScale: 0.8
     - _Parallax: 0.02
-    - _QueueControl: -1
+    - _QueueControl: 0
     - _QueueOffset: 0
     - _Saturation: 1
     - _SmoothnessTextureChannel: 0

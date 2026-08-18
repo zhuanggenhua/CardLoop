@@ -235,6 +235,92 @@ namespace Gameplay.Tests
 				"任务定义已经提供受保护的作者校验钩子，不能再用 sealed 封死代码 Mod 的派生入口。");
 		}
 
+		[Test]
+		public void CardDefinition_RejectsAutomaticMovementWithoutPositiveRadiusAndAttempts()
+		{
+			CardDefinition content = CreateContent("test.automatic-movement.validation");
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_automaticMovementIntervalSeconds\":1.0}",
+				content);
+			try
+			{
+				ContentValidationReport report = ContentValidator.ValidateContentAssets(
+					new ContentAsset[] { content });
+
+				Assert.That(ContainsIssue(report, "CARD_AUTOMATIC_MOVEMENT_RADIUS_INVALID"), Is.True);
+				Assert.That(ContainsIssue(report, "CARD_AUTOMATIC_MOVEMENT_ATTEMPTS_INVALID"), Is.True);
+			}
+			finally
+			{
+				Object.DestroyImmediate(content);
+			}
+		}
+
+		[Test]
+		public void CardDefinition_RejectsNegativeAutomaticMovementRetentionCapacity()
+		{
+			CardDefinition content = CreateContent("test.automatic-movement.retention.validation");
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_automaticMovementRetentionCapacity\":-1}",
+				content);
+			try
+			{
+				ContentValidationReport report = ContentValidator.ValidateContentAssets(
+					new ContentAsset[] { content });
+
+				Assert.That(
+					ContainsIssue(report, "CARD_AUTOMATIC_MOVEMENT_RETENTION_CAPACITY_INVALID"),
+					Is.True);
+			}
+			finally
+			{
+				Object.DestroyImmediate(content);
+			}
+		}
+
+		[Test]
+		public void CardDefinition_RejectsPeriodicProductionWithoutPositiveInterval()
+		{
+			CardDefinition producer = CreateContent("test.periodic.validation.producer");
+			CardDefinition product = CreateContent("test.periodic.validation.product");
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_periodicProductionCardId\":{\"m_value\":\"test.periodic.validation.product\"}}",
+				producer);
+			try
+			{
+				ContentValidationReport report = ContentValidator.ValidateContentAssets(
+					new ContentAsset[] { producer, product });
+
+				bool found = false;
+				for (int i = 0; i < report.Issues.Count; i++)
+				{
+					if (report.Issues[i].Code == "CARD_PERIODIC_PRODUCTION_INTERVAL_INVALID")
+					{
+						found = true;
+						break;
+					}
+				}
+				Assert.That(found, Is.True);
+			}
+			finally
+			{
+				Object.DestroyImmediate(producer);
+				Object.DestroyImmediate(product);
+			}
+		}
+
+		private static bool ContainsIssue(ContentValidationReport report, string code)
+		{
+			for (int i = 0; i < report.Issues.Count; i++)
+			{
+				if (report.Issues[i].Code == code)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		private static CardDefinition CreateContent(string contentId)
 		{
 			CardDefinition content = ScriptableObject.CreateInstance<CardDefinition>();

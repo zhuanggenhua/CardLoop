@@ -104,6 +104,12 @@ namespace Gameplay.Tabletop
 
 		public ContentId ContentId { get; }
 
+		public int RemainingUses { get; private set; }
+
+		public float PeriodicProductionElapsedSeconds { get; private set; }
+
+		public float AutomaticMovementElapsedSeconds { get; private set; }
+
 		/// <summary>当前直接拥有本卡牌空间位置和堆叠顺序的牌堆；移出牌桌后为空。</summary>
 		public TabletopCardStack Stack { get; private set; }
 
@@ -114,7 +120,12 @@ namespace Gameplay.Tabletop
 
 		public bool IsPlacementLocked => Stack?.IsPlacementLocked ?? false;
 
-		internal TabletopCard(TabletopCardId id, ContentId contentId)
+		protected internal TabletopCard(
+			TabletopCardId id,
+			ContentId contentId,
+			int remainingUses = 1,
+			float periodicProductionElapsedSeconds = 0f,
+			float automaticMovementElapsedSeconds = 0f)
 		{
 			if (!id.IsValid)
 			{
@@ -124,9 +135,125 @@ namespace Gameplay.Tabletop
 			{
 				throw new ArgumentException("牌桌卡牌必须引用有效的 Gameplay 内容 ID。", nameof(contentId));
 			}
+			if (remainingUses <= 0)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(remainingUses),
+					remainingUses,
+					"牌桌卡牌剩余使用次数必须大于 0。");
+			}
+			if (!float.IsFinite(periodicProductionElapsedSeconds) || periodicProductionElapsedSeconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(periodicProductionElapsedSeconds),
+					periodicProductionElapsedSeconds,
+					"牌桌卡牌周期产出已累计秒数必须是大于或等于 0 的有限值。");
+			}
+			if (!float.IsFinite(automaticMovementElapsedSeconds) || automaticMovementElapsedSeconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(automaticMovementElapsedSeconds),
+					automaticMovementElapsedSeconds,
+					"牌桌卡牌自动移动已累计秒数必须是大于或等于 0 的有限值。");
+			}
 
 			Id = id;
 			ContentId = contentId;
+			RemainingUses = remainingUses;
+			PeriodicProductionElapsedSeconds = periodicProductionElapsedSeconds;
+			AutomaticMovementElapsedSeconds = automaticMovementElapsedSeconds;
+		}
+
+		/// <summary>创建本卡牌派生类型自己的运行状态快照；普通卡牌没有额外状态。</summary>
+		protected internal virtual TabletopCardRuntimeStateSnapshot CreateRuntimeStateSnapshot()
+		{
+			return null;
+		}
+
+		internal TabletopCardSnapshot CreateSnapshot()
+		{
+			return new TabletopCardSnapshot(
+				Id,
+				ContentId,
+				RemainingUses,
+				PeriodicProductionElapsedSeconds,
+				AutomaticMovementElapsedSeconds,
+				CreateRuntimeStateSnapshot());
+		}
+
+		internal int AdvancePeriodicProduction(float deltaSeconds, float intervalSeconds)
+		{
+			if (!float.IsFinite(deltaSeconds) || deltaSeconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(deltaSeconds),
+					deltaSeconds,
+					"周期产出推进秒数必须是大于或等于 0 的有限值。");
+			}
+			if (!float.IsFinite(intervalSeconds) || intervalSeconds <= 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(intervalSeconds),
+					intervalSeconds,
+					"周期产出间隔必须是大于 0 的有限秒数。");
+			}
+			if (deltaSeconds == 0f)
+			{
+				return 0;
+			}
+
+			PeriodicProductionElapsedSeconds += deltaSeconds;
+			if (PeriodicProductionElapsedSeconds < intervalSeconds)
+			{
+				return 0;
+			}
+
+			int productionCount = Mathf.FloorToInt(PeriodicProductionElapsedSeconds / intervalSeconds);
+			PeriodicProductionElapsedSeconds -= productionCount * intervalSeconds;
+			return productionCount;
+		}
+
+		internal bool AdvanceAutomaticMovement(float deltaSeconds, float intervalSeconds)
+		{
+			if (!float.IsFinite(deltaSeconds) || deltaSeconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(deltaSeconds),
+					deltaSeconds,
+					"自动移动推进秒数必须是大于或等于 0 的有限值。");
+			}
+			if (!float.IsFinite(intervalSeconds) || intervalSeconds <= 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(intervalSeconds),
+					intervalSeconds,
+					"自动移动间隔必须是大于 0 的有限秒数。");
+			}
+			if (deltaSeconds == 0f)
+			{
+				return false;
+			}
+
+			AutomaticMovementElapsedSeconds += deltaSeconds;
+			if (AutomaticMovementElapsedSeconds < intervalSeconds)
+			{
+				return false;
+			}
+
+			int elapsedIntervals = Mathf.FloorToInt(AutomaticMovementElapsedSeconds / intervalSeconds);
+			AutomaticMovementElapsedSeconds -= elapsedIntervals * intervalSeconds;
+			return true;
+		}
+
+		internal void ConsumeUse()
+		{
+			if (RemainingUses <= 1)
+			{
+				throw new InvalidOperationException(
+					$"牌桌卡牌 {Id} 的最后一次使用必须由所属牌桌直接移除，不能留下零次数实例。");
+			}
+
+			RemainingUses--;
 		}
 
 		internal void AttachToStack(TabletopCardStack stack)

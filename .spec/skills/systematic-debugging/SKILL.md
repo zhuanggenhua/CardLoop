@@ -17,6 +17,7 @@ description: 遇到 bug、测试失败、异常行为、Unity 报错或用户反
 
 ## 阶段 2：锁定真相源
 
+- 先读取 `.spec/knowledge/standards/debugging-evidence.md`，按证据分层和链路分段组织排查。
 - 读取完整错误、日志、测试输出或 Unity Console。
 - 复现步骤必须可靠；不能复现就补证据，不猜。
 - 多组件链路必须查边界输入输出，先定位在哪一段断。

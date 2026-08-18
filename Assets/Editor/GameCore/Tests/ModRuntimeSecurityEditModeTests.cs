@@ -11,6 +11,66 @@ namespace GameCore.Tests
     public sealed class ModRuntimeSecurityEditModeTests
     {
         [Test]
+        public void UnZipAll_WhenArchiveIsInvalid_ThrowsAndKeepsOriginalArchive()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "GameCoreModSecurityTests", Guid.NewGuid().ToString("N"));
+            string zipPath = Path.Combine(tempRoot, "broken.zip");
+            Directory.CreateDirectory(tempRoot);
+            File.WriteAllText(zipPath, "not a zip archive");
+
+            try
+            {
+                LogAssert.Expect(LogType.Error, new Regex(@"\[ZipArchiveExtractor\].*"));
+                InvalidDataException exception = Assert.Throws<InvalidDataException>(
+                    () => ModLoader.ExtractArchive(zipPath));
+
+                StringAssert.Contains(zipPath, exception.Message);
+                Assert.That(File.Exists(zipPath), Is.True);
+                Assert.That(Directory.Exists(Path.Combine(tempRoot, "broken")), Is.False);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, true);
+                }
+            }
+        }
+
+        [Test]
+        public void ExtractArchive_UsesDedicatedDirectoryAndRefusesExistingTarget()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "GameCoreModSecurityTests", Guid.NewGuid().ToString("N"));
+            string zipPath = Path.Combine(tempRoot, "example.zip");
+            string outputDirectory = Path.Combine(tempRoot, "example");
+            Directory.CreateDirectory(tempRoot);
+            CreateZipWithEntry(zipPath, "manifest.cfg", "{}");
+
+            try
+            {
+                ModLoader.ExtractArchive(zipPath);
+
+                Assert.That(File.Exists(zipPath), Is.False);
+                Assert.That(File.Exists(Path.Combine(outputDirectory, "manifest.cfg")), Is.True);
+
+                CreateZipWithEntry(zipPath, "replacement.cfg", "{}");
+                InvalidDataException exception = Assert.Throws<InvalidDataException>(
+                    () => ModLoader.ExtractArchive(zipPath));
+
+                StringAssert.Contains("目标目录已经存在", exception.Message);
+                Assert.That(File.Exists(zipPath), Is.True);
+                Assert.That(File.Exists(Path.Combine(outputDirectory, "replacement.cfg")), Is.False);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, true);
+                }
+            }
+        }
+
+        [Test]
         public void ZipArchiveExtractor_RejectsSiblingPrefixTraversal()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), "GameCoreModSecurityTests", Guid.NewGuid().ToString("N"));
@@ -29,6 +89,34 @@ namespace GameCore.Tests
 
                 Assert.IsFalse(extracted, "zip 条目不能写到 Mod 根目录的同前缀兄弟目录。");
                 Assert.IsFalse(File.Exists(escapedPath), "非法 zip 条目不应在 Mod 根目录外落盘。");
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, true);
+                }
+            }
+        }
+
+        [Test]
+        public void ZipArchiveExtractor_RejectsDuplicateDestinationPaths()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "GameCoreModSecurityTests", Guid.NewGuid().ToString("N"));
+            string modRoot = Path.Combine(tempRoot, "Mod");
+            string zipPath = Path.Combine(tempRoot, "duplicates.zip");
+            Directory.CreateDirectory(tempRoot);
+            using (FileStream stream = File.Create(zipPath))
+            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))
+            {
+                archive.CreateEntry("Data.cfg");
+                archive.CreateEntry("data.cfg");
+            }
+
+            try
+            {
+                LogAssert.Expect(LogType.Error, "[ZipArchiveExtractor] Duplicate zip entry path: data.cfg");
+                Assert.That(ZipArchiveExtractor.UnzipFile(zipPath, modRoot), Is.False);
             }
             finally
             {
@@ -61,9 +149,10 @@ namespace GameCore.Tests
                     FilePath = siblingDirectory
                 };
 
-                LogAssert.Expect(LogType.Error, new Regex(@"\[ModAPI\] Refuse to delete mod outside loading root: .*Modsevil"));
-                ModAPI.DeleteModFromDisk(modInfo, modRoot);
+                InvalidDataException exception = Assert.Throws<InvalidDataException>(
+                    () => ModAPI.DeleteModFromDisk(modInfo, modRoot));
 
+                StringAssert.Contains("Mod 根目录外", exception.Message);
                 Assert.IsTrue(Directory.Exists(siblingDirectory), "删除 Mod 时不能删除 Mod 根目录外的同前缀兄弟目录。");
                 Assert.IsTrue(File.Exists(marker), "拒绝删除后目录内容应保持不变。");
             }

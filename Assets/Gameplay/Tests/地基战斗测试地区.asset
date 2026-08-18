@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Scenarios.ScenarioRegionDefinition
   m_contentId:
     m_value: test.foundation.region.battle
-  m_tagCodes:
+  m_tagCodes: 
   m_displayName: "\u5730\u57FA\u6218\u6597\u6D4B\u8BD5\u5730\u533A"
   m_description: "\u9636\u6BB5 B \u7EC4\u5408\u9A8C\u6536\u4E2D\u627F\u63A5\u65C5\u884C\u89D2\u8272\u4E0E\u724C\u684C\u6218\u6597\u7684\u7B2C\u4E8C\u5730\u533A\u3002"
   m_icon:
-    Address:
-    Guid:
+    Address: 
+    Guid: 
     Locked: 1
-  m_sceneAddress:
+  m_sceneAddress: 
   m_tabletopPlacement:
     m_bounds:
       serializedVersion: 2
@@ -30,6 +30,8 @@ MonoBehaviour:
       width: 10
       height: 6
     m_restrictedAreas: []
-    m_cardSize: {x: 1.4, y: 2}
-    m_stackStep: {x: 0.35, y: 0.22}
+    m_cardSize: {x: 0.8, y: 1}
+    m_cardMargin: {x: 0.1, y: 0.1}
+    m_stackStep: {x: 0, y: -0.18}
+    m_cardLimitBonusExpansionPerPoint: {x: 0.05, y: 0.05}
   m_arrivalPosition: {x: 0, y: 0}

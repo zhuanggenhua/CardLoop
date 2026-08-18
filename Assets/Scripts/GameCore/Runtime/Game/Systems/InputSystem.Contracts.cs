@@ -18,6 +18,8 @@ namespace GameCore
         public InputAction openGameMenu;
         public InputAction point;
         public InputAction click;
+        public InputAction middleClick;
+        public InputAction scrollWheel;
         public InputAction toggleMovementControlMode;
     }
 
@@ -61,6 +63,8 @@ namespace GameCore
         OpenGameMenu,
         Point,
         Click,
+        MiddleClick,
+        ScrollWheel,
         ToggleMovementControlMode
     }
 

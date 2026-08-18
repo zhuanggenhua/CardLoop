@@ -12,7 +12,7 @@ description: 写长期计划或复杂实施计划时使用；本项目默认转�
 ## 使用规则
 
 - 复杂任务、研究任务、超过 5 次工具调用或跨会话工作，优先用 planning-with-files。
-- 计划文件放项目根目录，按该全局 skill 的模板维护。
+- 计划文件放项目根目录，按该系统 skill 的模板维护。
 - `.spec/tasks/` 只放轻量任务卡，不替代长期计划。
 - `openspec/` 继续放正式 proposal/change/spec。
 

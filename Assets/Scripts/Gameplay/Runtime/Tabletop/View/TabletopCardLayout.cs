@@ -63,7 +63,7 @@ namespace Gameplay.Tabletop
 			{
 				throw new ArgumentOutOfRangeException("cardIndex", "卡牌成员索引不能为负数。");
 			}
-			Vector3 stackBasePosition = new Vector3(stackPosition.x, stackPosition.y, 0f);
+			Vector3 stackBasePosition = TabletopCoordinateSpace.ToLocalPosition(stackPosition);
 			return new TabletopCardPose(stackBasePosition + parameters.StackVisualStep * cardIndex, checked(parameters.BaseSortingOrder + cardIndex));
 		}
 	}

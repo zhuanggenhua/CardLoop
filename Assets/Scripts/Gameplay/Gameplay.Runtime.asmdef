@@ -1,7 +1,7 @@
 {
   "name": "Gameplay.Runtime",
   "rootNamespace": "Gameplay",
-    "references": [
+  "references": [
     "GameCore",
     "com.exhard.exgas.general",
     "com.exhard.exgas.runtime",
@@ -11,6 +11,8 @@
     "YokiFrame.UIKit",
     "Unity.TextMeshPro",
     "Unity.InputSystem",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime",
     "Unity.Mathematics",
     "UniTask"
   ],

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using Gameplay.Content;
 using Gameplay.Tabletop;
+using Gameplay.Tabletop.Actions;
 
 namespace Gameplay.Scenarios
 {
@@ -21,7 +23,9 @@ namespace Gameplay.Scenarios
 			ScenarioRegionDefinition definition,
 			ContentIndex contentIndex,
 			TabletopCardIdSequence cardIdSequence,
-			Action<ContentId> actionCompleted,
+			Func<ContentId, bool> isContentDiscovered,
+			Action<ContentId, ActionSettlementResult> actionCompleted,
+			Action<IReadOnlyList<ContentId>> cardsDefeated,
 			BattleFormationRules battleFormationRules,
 			uint authoritativeRandomSeed)
 		{
@@ -40,7 +44,9 @@ namespace Gameplay.Scenarios
 			Tabletop = new Gameplay.Tabletop.Tabletop(
 				contentIndex,
 				definition.TabletopPlacement.CreateRuntime(),
+				isContentDiscovered,
 				actionCompleted,
+				cardsDefeated,
 				battleFormationRules,
 				cardIdSequence);
 			Tabletop.InitializeAuthoritativeRandom(authoritativeRandomSeed);
@@ -50,7 +56,9 @@ namespace Gameplay.Scenarios
 			ScenarioRegionDefinition definition,
 			ContentIndex contentIndex,
 			TabletopCardIdSequence cardIdSequence,
-			Action<ContentId> actionCompleted,
+			Func<ContentId, bool> isContentDiscovered,
+			Action<ContentId, ActionSettlementResult> actionCompleted,
+			Action<IReadOnlyList<ContentId>> cardsDefeated,
 			BattleFormationRules battleFormationRules,
 			ScenarioRegionSnapshot snapshot)
 		{
@@ -80,7 +88,9 @@ namespace Gameplay.Scenarios
 				snapshot.Tabletop.Cards,
 				definition.TabletopPlacement.CreateRuntime(),
 				snapshot.Tabletop.ActiveActions,
+				isContentDiscovered,
 				actionCompleted,
+				cardsDefeated,
 				battleFormationRules,
 				cardIdSequence);
 			Tabletop.RestoreAuthoritativeRandom(snapshot.Tabletop.AuthoritativeRandomState);

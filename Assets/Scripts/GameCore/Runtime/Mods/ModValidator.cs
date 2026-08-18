@@ -19,7 +19,9 @@ namespace GameCore
         {
             if (!Version.TryParse(apiVersion, out m_apiVersion))
             {
-                m_apiVersion = new Version(0, 1, 0);
+                throw new ArgumentException(
+                    $"项目 Mod API 版本不是有效版本号：{apiVersion ?? "<null>"}。",
+                    nameof(apiVersion));
             }
         }
 

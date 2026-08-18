@@ -68,5 +68,11 @@ namespace GameCore
             {
             }
         }
+
+        internal bool CloseCurrentMenu()
+        {
+            StartMenuRuntime();
+            return PopCurrentPanel();
+        }
     }
 }

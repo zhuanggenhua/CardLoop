@@ -339,7 +339,8 @@ namespace GAS.Runtime
                     (EDamageType)damage.DamageType,
                     damage.FlatDamage,
                     damage.ScalingFactor,
-                    damage.IgnoreDefense),
+                    damage.IgnoreDefense,
+                    CreateMatchupRules(damage.Matchups)),
                 (EEffectVisualFlags)damage.VisualFlags,
                 new DamageImpactSettings
                 {
@@ -359,7 +360,8 @@ namespace GAS.Runtime
                     (EDamageType)damage.DamageType,
                     damage.FlatDamage,
                     damage.ScalingFactor,
-                    damage.IgnoreDefense),
+                    damage.IgnoreDefense,
+                    CreateMatchupRules(damage.Matchups)),
                 (EEffectVisualFlags)damage.VisualFlags,
                 new DamageImpactSettings
                 {
@@ -379,6 +381,41 @@ namespace GAS.Runtime
                     (EDamageConditionKind)damage.ConditionKind,
                     damage.FacingDotThreshold),
                 CreatePayload(damage));
+        }
+
+        private static DamageMatchupRule[] CreateMatchupRules(IReadOnlyList<cfg.FormalDamageMatchup> matchups)
+        {
+            if (matchups == null || matchups.Count == 0)
+            {
+                return Array.Empty<DamageMatchupRule>();
+            }
+
+            DamageMatchupRule[] rules = new DamageMatchupRule[matchups.Count];
+            for (int matchupIndex = 0; matchupIndex < matchups.Count; matchupIndex++)
+            {
+                cfg.FormalDamageMatchup matchup = matchups[matchupIndex];
+                rules[matchupIndex] = new DamageMatchupRule(
+                    matchup.SourceTag,
+                    matchup.TargetTag,
+                    matchup.Multiplier,
+                    ResolveDamageMatchupResult(matchup.Presentation));
+            }
+
+            return rules;
+        }
+
+        private static DamageMatchupResult ResolveDamageMatchupResult(int value)
+        {
+            return value switch
+            {
+                (int)DamageMatchupResult.None => DamageMatchupResult.None,
+                (int)DamageMatchupResult.Advantage => DamageMatchupResult.Advantage,
+                (int)DamageMatchupResult.Disadvantage => DamageMatchupResult.Disadvantage,
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    value,
+                    "正式伤害克制表现只能是 0=None、1=Advantage、2=Disadvantage。")
+            };
         }
     }
 }

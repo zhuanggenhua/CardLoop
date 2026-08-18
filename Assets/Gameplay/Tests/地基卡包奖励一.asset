@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 732affab875846bba73045887651397f, type: 3}
+  m_Name: "\u5730\u57FA\u5361\u5305\u5956\u52B1\u4E00"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
+  m_contentId:
+    m_value: test.foundation.pack.reward.first
+  m_tagCodes: e9030000
+  m_displayName: Berry Bush
+  m_description: Berries grow here.
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_initialUses: 5
+  m_sellValue: 3
+  m_countsTowardCardLimit: 1
+  m_cardLimitBonus: 0
+  m_periodicProductionCardId:
+    m_value: 
+  m_periodicProductionIntervalSeconds: 0
+  m_automaticMovementIntervalSeconds: 0
+  m_automaticMovementRadius: 0
+  m_automaticMovementMaxAttempts: 0
+  m_automaticMovementRetentionCapacity: 0
+  m_cardArt:
+    Address: "\u6D46\u679C\u4E1B"
+    Guid: 4d9e9bf178bd4a11a24e7130459d7a85
+    Locked: 1
+  m_cardSurface:
+    Address: "\u5361\u724C\u8868\u9762_\u8D44\u6E90"
+    Guid: e3066071ccb6496ebc6a9eea45d741d0
+    Locked: 1

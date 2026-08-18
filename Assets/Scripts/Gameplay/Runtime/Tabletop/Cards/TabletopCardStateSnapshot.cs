@@ -5,6 +5,12 @@ using Gameplay.Content;
 
 namespace Gameplay.Tabletop
 {
+	/// <summary>卡牌派生类型保存自己的局内状态时使用的多态快照基类。</summary>
+	[Serializable]
+	public abstract class TabletopCardRuntimeStateSnapshot
+	{
+	}
+
 	/// <summary>
 	/// 牌桌卡牌状态的可序列化快照，保留实例 ID 与牌堆事实。
 	/// 下一分配号属于剧本单局共享序列，不在每个地区重复保存。
@@ -64,14 +70,49 @@ namespace Gameplay.Tabletop
 		[SerializeField]
 		private ContentId m_contentId;
 
+		[SerializeField]
+		private int m_remainingUses;
+
+		[SerializeField]
+		private float m_periodicProductionElapsedSeconds;
+
+		[SerializeField]
+		private float m_automaticMovementElapsedSeconds;
+
+		[SerializeReference]
+		private TabletopCardRuntimeStateSnapshot m_runtimeState;
+
 		public TabletopCardId CardId => new TabletopCardId(m_cardId);
 
 		public ContentId ContentId => m_contentId;
 
-		internal TabletopCardSnapshot(TabletopCardId cardId, ContentId contentId)
+		public int RemainingUses => m_remainingUses;
+
+		public float PeriodicProductionElapsedSeconds => m_periodicProductionElapsedSeconds;
+
+		public float AutomaticMovementElapsedSeconds => m_automaticMovementElapsedSeconds;
+
+		public TabletopCardRuntimeStateSnapshot RuntimeState => m_runtimeState;
+
+		public bool IsCharacter => m_runtimeState is CharacterAbilitySystemSnapshot;
+
+		public CharacterAbilitySystemSnapshot CharacterAbilitySystem =>
+			m_runtimeState as CharacterAbilitySystemSnapshot;
+
+		internal TabletopCardSnapshot(
+			TabletopCardId cardId,
+			ContentId contentId,
+			int remainingUses,
+			float periodicProductionElapsedSeconds,
+			float automaticMovementElapsedSeconds,
+			TabletopCardRuntimeStateSnapshot runtimeState = null)
 		{
 			m_cardId = cardId.Value;
 			m_contentId = contentId;
+			m_remainingUses = remainingUses;
+			m_periodicProductionElapsedSeconds = periodicProductionElapsedSeconds;
+			m_automaticMovementElapsedSeconds = automaticMovementElapsedSeconds;
+			m_runtimeState = runtimeState;
 		}
 	}
 }

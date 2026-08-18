@@ -42,6 +42,34 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void ScenarioRun_GetDiscoveredActionsFiltersContentAndSortsByContentId()
+		{
+			CardDefinition card = CreateCardDefinition("test.card.discovery-list");
+			ActionDefinition later = CreateActionDefinition("test.action.z-later", card.ContentId.Value);
+			ActionDefinition first = CreateActionDefinition("test.action.a-first", card.ContentId.Value);
+			ActionDefinition hidden = CreateActionDefinition("test.action.m-hidden", card.ContentId.Value);
+			ScenarioDefinition scenario = CreateScenarioDefinition("test.scenario.discovery-list");
+			try
+			{
+				ContentIndex contentIndex = BuildContentIndex(
+					new ContentAsset[] { card, later, first, hidden, scenario });
+				ScenarioRun run = new ScenarioRun(scenario, contentIndex, 12345u);
+
+				run.DiscoverContent(later.ContentId);
+				run.DiscoverContent(card.ContentId);
+				run.DiscoverContent(first.ContentId);
+
+				Assert.That(
+					run.GetDiscoveredActions().Select(action => action.ContentId),
+					Is.EqualTo(new[] { first.ContentId, later.ContentId }));
+			}
+			finally
+			{
+				Destroy(card, later, first, hidden, scenario);
+			}
+		}
+
+		[Test]
 		public void ScenarioRun_HidesUndiscoveredActionsBeforeCandidateQuery()
 		{
 			CardDefinition card = CreateCardDefinition("test.card");

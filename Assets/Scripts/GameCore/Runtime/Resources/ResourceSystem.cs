@@ -48,7 +48,7 @@ namespace GameCore
         private sealed class ModPackageEntry
         {
             public ResourcePackage Package;
-            public int LoadOrder;
+            public string PackageHash;
         }
 
         /// <summary>
@@ -195,9 +195,10 @@ namespace GameCore
         public static async UniTask<ResourcePackage> LoadModPackageAsync(
             string packageName,
             string packageDirectory,
-            int loadOrder = 0)
+            CancellationToken cancellationToken = default)
         {
             EnsureInitialized();
+            cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(packageName))
             {
                 throw new ArgumentException("Mod 资源包名称不能为空。", nameof(packageName));
@@ -220,7 +221,7 @@ namespace GameCore
                 throw new InvalidOperationException($"资源包名称重复：{packageName}");
             }
 
-            ResourcePackage package = YooAssets.CreatePackage(packageName, unchecked((uint)Math.Max(loadOrder, 0)));
+            ResourcePackage package = YooAssets.CreatePackage(packageName);
             try
             {
                 var fileSystemParameters =
@@ -234,22 +235,40 @@ namespace GameCore
                 InitializePackageOperation initialize = package.InitializePackageAsync(options);
                 await initialize;
                 EnsureSucceeded(initialize, $"初始化 Mod 资源包 {packageName}");
+                cancellationToken.ThrowIfCancellationRequested();
 
                 RequestPackageVersionOperation version = package.RequestPackageVersionAsync();
                 await version;
                 EnsureSucceeded(version, $"读取 Mod 资源包版本 {packageName}");
+                cancellationToken.ThrowIfCancellationRequested();
+
+                string packageHashFile = Path.Combine(
+                    Path.GetFullPath(packageDirectory),
+                    YooAssetConfiguration.GetPackageHashFileName(packageName, version.PackageVersion));
+                if (!File.Exists(packageHashFile))
+                {
+                    throw new InvalidDataException(
+                        $"Mod 资源包 {packageName} 缺少 YooAsset 官方包哈希文件：{packageHashFile}");
+                }
+                string packageHash = File.ReadAllText(packageHashFile).Trim();
+                if (string.IsNullOrWhiteSpace(packageHash))
+                {
+                    throw new InvalidDataException($"Mod 资源包 {packageName} 的 YooAsset 包哈希文件为空。");
+                }
 
                 LoadPackageManifestOperation manifest = package.LoadPackageManifestAsync(
                     new LoadPackageManifestOptions(version.PackageVersion, 60));
                 await manifest;
                 EnsureSucceeded(manifest, $"加载 Mod 资源清单 {packageName}");
+                cancellationToken.ThrowIfCancellationRequested();
+
+                EnsurePackageAddressesDoNotConflict(package);
 
                 ModPackages.Add(new ModPackageEntry
                 {
                     Package = package,
-                    LoadOrder = loadOrder
+                    PackageHash = packageHash
                 });
-                ModPackages.Sort((left, right) => right.LoadOrder.CompareTo(left.LoadOrder));
                 return package;
             }
             catch
@@ -272,6 +291,50 @@ namespace GameCore
             ReleaseOperationsForPackage(packageName);
             ModPackages.Remove(entry);
             await DestroyAndRemovePackageAsync(entry.Package);
+        }
+
+        /// <summary>查询指定 Mod 资源包是否已进入当前资源运行时。</summary>
+        public static bool IsModPackageLoaded(string packageName)
+        {
+            EnsureInitialized();
+            if (string.IsNullOrWhiteSpace(packageName))
+            {
+                throw new ArgumentException("Mod 资源包名称不能为空。", nameof(packageName));
+            }
+
+            return ModPackages.Any(candidate =>
+                string.Equals(candidate.Package.PackageName, packageName, StringComparison.Ordinal));
+        }
+
+        /// <summary>读取已加载 Mod 包当前生效的 YooAsset 清单版本。</summary>
+        public static string GetModPackageVersion(string packageName)
+        {
+            EnsureInitialized();
+            ModPackageEntry entry = ModPackages.FirstOrDefault(candidate =>
+                string.Equals(candidate.Package.PackageName, packageName, StringComparison.Ordinal));
+            if (entry == null)
+            {
+                throw new InvalidOperationException($"Mod 资源包尚未加载：{packageName}。");
+            }
+            string version = entry.Package.GetPackageVersion();
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                throw new InvalidOperationException($"Mod 资源包 {packageName} 没有生效的 YooAsset 清单版本。");
+            }
+            return version;
+        }
+
+        /// <summary>读取已加载 Mod 包由 YooAsset 构建产物提供的官方哈希。</summary>
+        public static string GetModPackageHash(string packageName)
+        {
+            EnsureInitialized();
+            ModPackageEntry entry = ModPackages.FirstOrDefault(candidate =>
+                string.Equals(candidate.Package.PackageName, packageName, StringComparison.Ordinal));
+            if (entry == null)
+            {
+                throw new InvalidOperationException($"Mod 资源包尚未加载：{packageName}。");
+            }
+            return entry.PackageHash;
         }
 
         public static void EnsureAssetExists<TAsset>(object key)
@@ -494,17 +557,40 @@ namespace GameCore
         private static ResourcePackage ResolvePackage(string address, Type assetType)
         {
             EnsureInitialized();
+            ResourcePackage resolved = null;
             foreach (ModPackageEntry entry in ModPackages)
             {
                 AssetInfo modAsset = entry.Package.GetAssetInfo(address, assetType);
                 if (modAsset.IsValid)
                 {
-                    return entry.Package;
+                    if (resolved != null)
+                    {
+                        throw new InvalidResourceRequestException(
+                            address,
+                            $"资源定位 {address} 同时命中 Mod 包 {resolved.PackageName} 和 {entry.Package.PackageName}。"
+                            + "当前内容包协议不允许静默覆盖。");
+                    }
+                    resolved = entry.Package;
                 }
             }
 
-            EnsureLocationExists(DefaultPackage, assetType, address);
-            return DefaultPackage;
+            AssetInfo defaultAsset = DefaultPackage.GetAssetInfo(address, assetType);
+            if (defaultAsset.IsValid)
+            {
+                if (resolved != null)
+                {
+                    throw new InvalidResourceRequestException(
+                        address,
+                        $"资源定位 {address} 同时命中默认包 {DefaultPackage.PackageName} 和 Mod 包 {resolved.PackageName}。"
+                        + "当前内容包协议不允许静默覆盖。");
+                }
+                return DefaultPackage;
+            }
+            if (resolved != null)
+            {
+                return resolved;
+            }
+            throw new InvalidResourceRequestException(address, $"所有已加载资源包都不存在资源定位：{address}。");
         }
 
         internal static ResourcePackage ResolveScenePackage(string address)
@@ -515,24 +601,42 @@ namespace GameCore
                 throw new InvalidResourceRequestException(address, "场景地址不能为空。");
             }
 
+            ResourcePackage resolved = null;
             foreach (ModPackageEntry entry in ModPackages)
             {
                 AssetInfo modAsset = entry.Package.GetAssetInfo(address);
                 if (IsSceneAsset(modAsset))
                 {
-                    return entry.Package;
+                    if (resolved != null)
+                    {
+                        throw new InvalidResourceRequestException(
+                            address,
+                            $"场景定位 {address} 同时命中 Mod 包 {resolved.PackageName} 和 {entry.Package.PackageName}。"
+                            + "当前内容包协议不允许静默覆盖。");
+                    }
+                    resolved = entry.Package;
                 }
             }
 
             AssetInfo defaultAsset = DefaultPackage.GetAssetInfo(address);
-            if (!IsSceneAsset(defaultAsset))
+            if (IsSceneAsset(defaultAsset))
+            {
+                if (resolved != null)
+                {
+                    throw new InvalidResourceRequestException(
+                        address,
+                        $"场景定位 {address} 同时命中默认包 {DefaultPackage.PackageName} 和 Mod 包 {resolved.PackageName}。"
+                        + "当前内容包协议不允许静默覆盖。");
+                }
+                return DefaultPackage;
+            }
+            if (resolved == null)
             {
                 throw new InvalidResourceRequestException(
                     address,
                     $"默认资源包中不存在场景地址：{address}。{defaultAsset.Error}");
             }
-
-            return DefaultPackage;
+            return resolved;
         }
 
         private static ResourcePackage GetPackage(string packageName)
@@ -557,6 +661,43 @@ namespace GameCore
             }
 
             return packages;
+        }
+
+        private static void EnsurePackageAddressesDoNotConflict(ResourcePackage candidate)
+        {
+            ResourcePackage[] loadedPackages = GetLoadedPackagesInContentOrder();
+            AssetInfo[] candidateAssets = candidate.GetAllAssetInfos();
+            for (int assetIndex = 0; assetIndex < candidateAssets.Length; assetIndex++)
+            {
+                AssetInfo candidateAsset = candidateAssets[assetIndex];
+                EnsureLocationDoesNotConflict(candidate, loadedPackages, candidateAsset.Address);
+                if (!string.Equals(candidateAsset.AssetPath, candidateAsset.Address, StringComparison.Ordinal))
+                {
+                    EnsureLocationDoesNotConflict(candidate, loadedPackages, candidateAsset.AssetPath);
+                }
+            }
+        }
+
+        private static void EnsureLocationDoesNotConflict(
+            ResourcePackage candidate,
+            IReadOnlyList<ResourcePackage> loadedPackages,
+            string location)
+        {
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                return;
+            }
+            for (int packageIndex = 0; packageIndex < loadedPackages.Count; packageIndex++)
+            {
+                ResourcePackage loaded = loadedPackages[packageIndex];
+                AssetInfo existing = loaded.GetAssetInfo(location);
+                if (existing.IsValid)
+                {
+                    throw new InvalidOperationException(
+                        $"资源定位 {location} 同时存在于资源包 {loaded.PackageName} 和 {candidate.PackageName}。"
+                        + "当前内容包协议不允许静默覆盖。");
+                }
+            }
         }
 
         private static void EnsureLocationExists(Type assetType, string location)
@@ -789,6 +930,10 @@ namespace GameCore
             {
                 m_handle.Completed += handle =>
                 {
+                    if (IsReleased)
+                    {
+                        return;
+                    }
                     EnsureHandleSucceeded(handle, Address);
                     callback(handle.GetAssetObject<T>());
                 };
@@ -841,6 +986,10 @@ namespace GameCore
             {
                 m_operation.Completed += operation =>
                 {
+                    if (IsReleased)
+                    {
+                        return;
+                    }
                     EnsureSucceeded(operation, $"实例化资源 {Address}");
                     callback(m_operation.Result);
                 };
@@ -900,6 +1049,10 @@ namespace GameCore
             {
                 m_handle.Completed += handle =>
                 {
+                    if (IsReleased)
+                    {
+                        return;
+                    }
                     EnsureHandleSucceeded(handle, Address);
                     callback(BuildResults());
                 };

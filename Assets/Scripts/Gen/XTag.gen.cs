@@ -42,6 +42,10 @@ namespace GAS.Runtime
         public const int State_Buff_SpeedUp = 4001002;
         public const int State_Buff_SpCosting = 4001003;
         public const int State_Buff_Invincible = 4001004;
+        public const int Combat = 700;
+        public const int Combat_Melee = 7001;
+        public const int Combat_Ranged = 7002;
+        public const int Combat_Magic = 7003;
 
         public static void InitTagList()
         {
@@ -80,6 +84,10 @@ namespace GAS.Runtime
                 { State_Buff_SpeedUp, new GameplayTag(State_Buff_SpeedUp, new int[] { State, State_Buff }, new int[] {  }) },
                 { State_Buff_SpCosting, new GameplayTag(State_Buff_SpCosting, new int[] { State, State_Buff }, new int[] {  }) },
                 { State_Buff_Invincible, new GameplayTag(State_Buff_Invincible, new int[] { State, State_Buff }, new int[] {  }) },
+                { Combat, new GameplayTag(Combat, new int[] {  }, new int[] { Combat_Melee, Combat_Ranged, Combat_Magic }) },
+                { Combat_Melee, new GameplayTag(Combat_Melee, new int[] { Combat }, new int[] {  }) },
+                { Combat_Ranged, new GameplayTag(Combat_Ranged, new int[] { Combat }, new int[] {  }) },
+                { Combat_Magic, new GameplayTag(Combat_Magic, new int[] { Combat }, new int[] {  }) },
             },
             new Dictionary<int, string>()
             {
@@ -116,6 +124,10 @@ namespace GAS.Runtime
                 { State_Buff_SpeedUp, "State.Buff.SpeedUp" },
                 { State_Buff_SpCosting, "State.Buff.SpCosting" },
                 { State_Buff_Invincible, "State.Buff.Invincible" },
+                { Combat, "Combat" },
+                { Combat_Melee, "Combat.Melee" },
+                { Combat_Ranged, "Combat.Ranged" },
+                { Combat_Magic, "Combat.Magic" },
             }
             );
         }

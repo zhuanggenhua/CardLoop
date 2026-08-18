@@ -189,6 +189,68 @@ namespace GameCore.Tests
                 CharacterAttributes.CriticalMultiplier));
         }
 
+        [Test]
+        public void DamageSolver_UsesTemplateDefenseAndCriticalThresholds()
+        {
+            Assert.AreEqual(11, DamageSolver.CalculateDamageIn(14, 3.0f));
+            Assert.AreEqual(1, DamageSolver.CalculateDamageIn(2, 10.0f));
+            Assert.IsTrue(DamageSolver.EvaluateCritical(5.0f, 5.0f));
+            Assert.IsFalse(DamageSolver.EvaluateCritical(5.0f, 5.01f));
+        }
+
+        [Test]
+        public void DamageSolver_AppliesConfiguredGasTagMatchupAfterDefenseBeforeCritical()
+        {
+            SetInstanceField(GameManager.Config, "m_canCriticalHit", true);
+            AbilitySystemCell attacker = CreateAbilitySystemCell(1001);
+            AbilitySystemCell defender = CreateAbilitySystemCell(1004);
+            try
+            {
+                SetBaseAndRecalculate(attacker, CharacterAttributes.Attack, 20.0f);
+                SetBaseAndRecalculate(attacker, CharacterAttributes.CriticalChance, 100.0f);
+                SetBaseAndRecalculate(attacker, CharacterAttributes.CriticalMultiplier, 200.0f);
+                SetBaseAndRecalculate(defender, CharacterAttributes.Defense, 4.0f);
+                DamageDescriptor descriptor = new(
+                    EDamageType.Physical,
+                    flatDamages: 4,
+                    scalingFactor: 1.0f,
+                    ignoreDefense: false,
+                    matchupRules: new[]
+                    {
+                        new DamageMatchupRule(
+                            XTag.Combat_Melee,
+                            XTag.Combat_Ranged,
+                            1.5f,
+                            DamageMatchupResult.Advantage)
+                    });
+
+                DamageOutputDescriptor output = DamageSolver.SolveDamageOutput(
+                    attacker,
+                    descriptor,
+                    new DamageResolutionRolls(criticalRollPercent: 0.0f, hitRollPercent: 0.0f));
+                DamageInputDescriptor input = DamageSolver.SolveDamageInput(defender, output);
+
+                Assert.AreEqual(60, input.damage);
+                Assert.AreEqual(DamageMatchupResult.Advantage, input.matchupResult);
+                Assert.IsTrue(input.IsCriticalHit);
+                Assert.IsFalse(input.IsMissed);
+            }
+            finally
+            {
+                attacker.Dispose();
+                defender.Dispose();
+            }
+        }
+
+        [Test]
+        public void DamageSolver_UsesTemplateAccuracyMinusDodgeHitChance()
+        {
+            Assert.IsFalse(DamageSolver.EvaluateMiss(95.0f, 5.0f, 90.0f));
+            Assert.IsTrue(DamageSolver.EvaluateMiss(95.0f, 5.0f, 90.01f));
+            Assert.IsFalse(DamageSolver.EvaluateMiss(0.0f, 100.0f, 5.0f));
+            Assert.IsTrue(DamageSolver.EvaluateMiss(0.0f, 100.0f, 5.01f));
+        }
+
         private void CreateGameManagerWithMinimalConfig()
         {
             GameObject gameManagerObject = new("EditModeGameManager");
@@ -257,6 +319,30 @@ namespace GameCore.Tests
                 gameplayEffect,
                 targetAsc.Cell.Entity,
                 sourceAsc.Cell.Entity);
+        }
+
+        private static AbilitySystemCell CreateAbilitySystemCell(int presetId)
+        {
+            AbilitySystemCellConfig config = XLuban.GetAscConfig(presetId);
+            AbilitySystemCell abilitySystem = new();
+            abilitySystem.Init(
+                config.BaseTags ?? Array.Empty<int>(),
+                config.AttrSets ?? Array.Empty<AttrSetConfig>(),
+                config.BaseAbilities ?? Array.Empty<AbilityConfig>(),
+                config.Level);
+            return abilitySystem;
+        }
+
+        private static void SetBaseAndRecalculate(
+            AbilitySystemCell abilitySystem,
+            int attributeCode,
+            float value)
+        {
+            abilitySystem.SetAttrBaseValue(CharacterAttributes.SetCode, attributeCode, value);
+            AttributeHelper.RecalculateCurrentValue(
+                abilitySystem.Entity,
+                CharacterAttributes.SetCode,
+                attributeCode);
         }
 
         private static CharacterAttributeOverride[] CreateAttributeOverrides(

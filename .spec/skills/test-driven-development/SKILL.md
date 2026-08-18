@@ -1,47 +1,21 @@
 ---
 name: test-driven-development
-description: 为 CardLoop 的核心逻辑、新玩法切片、已复现 bug 和高风险公开契约选择 TDD、回归测试或 Unity 验证方式；通用 red-green 流程以全局 tdd skill 为准。
+description: 为 CardLoop 的核心逻辑、新玩法切片、已复现 bug 和高风险公开契约选择 TDD、回归测试或 Unity 验证方式；通用 red-green 流程以系统 tdd skill 为准。
 ---
 
 # CardLoop TDD 适配层
 
-通用 TDD 流程的唯一真相源是 `D:\codex-home\skills\tdd\SKILL.md`。本文件只规定 CardLoop 何时进入 TDD、何时使用其它验证方式，不重复 red-green 流程。
+通用 TDD 流程的唯一真相源是 `D:\codex-home\skills\tdd\SKILL.md`。CardLoop 的测试/TDD 适用政策唯一正文是 [`.spec/knowledge/standards/testing.md`](../../knowledge/standards/testing.md)。本 skill 只负责把具体任务导向正确验证方式，不重复政策正文。
 
-## 进入 TDD 前提
+## 执行顺序
 
-必须先锁定一个真实的 Gameplay / GameCore 行为、当前调用入口和可观察结果。只有框架类型、程序集结构、未来业务接口或没有消费者的运行时抽象时，不启动业务 TDD。
+1. 先读 [`.spec/knowledge/standards/testing.md`](../../knowledge/standards/testing.md)，按其 TDD 适用范围、验证分层、Bug 验收和完成声明口径分类本轮任务。
+2. 如果该标准判定为严格 TDD，继续读取 `D:\codex-home\skills\tdd\SKILL.md`，按 red-green-refactor 执行，并保留 RED 证据。
+3. 如果不进入严格 TDD，按 `testing.md` 选择静态校验、架构守卫、smoke、EditMode / PlayMode、Unity 状态、日志、截图或资源检查，并说明为什么不是业务 TDD。
+4. 汇报时写清验证类型：严格 TDD、回归测试、公开契约测试、架构守卫、smoke、场景验收或人工证据；不得混称。
 
-这类前置工作使用静态检查、架构守卫或最小 Editor smoke，并明确标注为框架验证；不能用一批结构测试替代业务切片。
+## 禁止
 
-## AI 驱动游戏开发口径
-
-CardLoop 当前仍处在“吸收 StackCraft 模板能力、建立 Gameplay 地基、玩法设计持续变化”的阶段。严格 TDD 只用于已经锁定的行为切片、已复现 bug 和高风险公开契约；不能为了显得流程正确，把未定职业、剧本、关卡编辑器、联机、Mod API、UI 手感或创意玩法先写成测试。
-
-当前阶段优先保护的是不应随玩法变化而改变的地基不变量：唯一内容 ID、EX-GAS 标签职责、ResourceSystem / YooAsset 入口、行动请求复核、权威随机、原子结果结算、统一测试场景玩家可见功能验收、以及不得出现第二套真相。
-
-如果实现已经先发生，后补的测试必须如实命名为回归测试、契约测试、架构守卫或场景验收；不得倒称为 TDD。只有先写 RED、确认失败来自目标行为缺失，再 GREEN 的切片才叫严格 TDD。
-
-## 优先测试的 CardLoop 行为
-
-- 新增核心运行时逻辑或一个已确认的 Gameplay 业务切片。
-- 修复已复现 bug，并回到原始现实结果验收。
-- 修改规则结算、数据加载、保存、生成、同步或 UI 状态机。
-- 修改第三方插件接入边界或项目正式入口。
-- 第三次复发的同类错误，或已有证据表明风险高且缺少保护。
-
-## 不机械进入 TDD
-
-- 纯文档、规范、索引、注释和机械命名迁移。
-- 没有真实业务消费者的框架地基或接口草案。
-- 仍在探索的玩法、交互手感、UI 方案、剧本规则、职业成长、联机 / Mod API 形状和关卡编辑器体验。
-- 一次性取证脚本。
-- Unity 资产或场景小调整；改用静态、Editor 或场景验证，并记录限制。
-
-## Unity 验证映射
-
-- 纯结构、程序集、依赖和资源引用：优先静态校验。
-- 菜单、资源、场景和入口可用性：使用轻量 smoke 或 Editor 自动化。
-- 核心运行时、回归 bug 和高风险公开契约：使用 EditMode / PlayMode 行为测试。
-- 无法稳定自动化的 Unity 行为：使用场景状态、Console、截图或资源检查，并说明未覆盖部分。
-
-反射检查类型形状、检查禁止类型不存在、读取私有字段或只验证 Stub 行为，默认归入架构守卫或测试辅助，不计为业务 TDD 覆盖。
+- 不在本 skill 里重新定义 CardLoop 的 TDD 适用政策；政策变化先改 `testing.md`。
+- 不把结构测试、反射检查、Stub 自证或 smoke 冒充业务 TDD。
+- 不把实现后补的测试倒称为 TDD。

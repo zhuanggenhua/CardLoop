@@ -93,6 +93,147 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void FindCandidates_UnlimitedSourceSlotIncludesDraggedStackTail()
+		{
+			CardDefinition sellable = CreateCardDefinition("test.sellable");
+			CardDefinition buyer = CreateCardDefinition("test.buyer");
+			ActionDefinition action = CreateTradeActionDefinition(
+				"test.action.sell-stack",
+				sellable.ContentId.Value,
+				buyer.ContentId.Value,
+				unlimitedSourceSlot: true);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { sellable, buyer, action });
+				TabletopCards state = new TabletopCards();
+				TabletopCard bottom = state.CreateCard("test.sellable", Vector2.zero);
+				TabletopCard middle = state.CreateCard("test.sellable", Vector2.zero);
+				TabletopCard top = state.CreateCard("test.sellable", Vector2.zero);
+				TabletopCard buyerCard = state.CreateCard("test.buyer", Vector2.one);
+				state.MergeStackOnto(middle.Id, bottom.Id);
+				state.MergeStackOnto(top.Id, bottom.Id);
+
+				TabletopCardPointerReleaseIntent intent = new TabletopCardPointerReleaseIntent(
+					middle.Id,
+					Vector2.zero,
+					Vector2.one,
+					Vector2.zero,
+					isDrag: true,
+					buyerCard.Id);
+				ActionCandidate[] candidates = ActionCandidateResolver.FindCandidates(
+					intent,
+					state,
+					contentIndex,
+					new[] { action });
+
+				Assert.That(candidates, Has.Length.EqualTo(1));
+				ActionCandidate candidate = candidates[0];
+				Assert.That(candidate.IsReady, Is.True);
+				CollectionAssert.AreEqual(
+					new[] { middle.Id, top.Id },
+					candidate.Bindings[0].CardIds);
+				CollectionAssert.AreEqual(
+					new[] { buyerCard.Id },
+					candidate.Bindings[1].CardIds);
+				Assert.That(state.GetStackContaining(middle.Id), Is.SameAs(state.GetStackContaining(bottom.Id)));
+			}
+			finally
+			{
+				Object.DestroyImmediate(sellable);
+				Object.DestroyImmediate(buyer);
+				Object.DestroyImmediate(action);
+			}
+		}
+
+		[Test]
+		public void FindCandidates_UnlimitedSourceSlotRejectsDraggedTailWithNonMatchingCard()
+		{
+			CardDefinition sellable = CreateCardDefinition("test.sellable");
+			CardDefinition unsellable = CreateCardDefinition("test.unsellable");
+			CardDefinition buyer = CreateCardDefinition("test.buyer");
+			ActionDefinition action = CreateTradeActionDefinition(
+				"test.action.sell-stack",
+				sellable.ContentId.Value,
+				buyer.ContentId.Value,
+				unlimitedSourceSlot: true);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { sellable, unsellable, buyer, action });
+				TabletopCards state = new TabletopCards();
+				TabletopCard bottom = state.CreateCard("test.sellable", Vector2.zero);
+				TabletopCard middle = state.CreateCard("test.sellable", Vector2.zero);
+				TabletopCard top = state.CreateCard("test.unsellable", Vector2.zero);
+				TabletopCard buyerCard = state.CreateCard("test.buyer", Vector2.one);
+				state.MergeStackOnto(middle.Id, bottom.Id);
+				state.MergeStackOnto(top.Id, bottom.Id);
+
+				TabletopCardPointerReleaseIntent intent = new TabletopCardPointerReleaseIntent(
+					middle.Id,
+					Vector2.zero,
+					Vector2.one,
+					Vector2.zero,
+					isDrag: true,
+					buyerCard.Id);
+				ActionCandidate[] candidates = ActionCandidateResolver.FindCandidates(
+					intent,
+					state,
+					contentIndex,
+					new[] { action });
+
+				Assert.That(candidates, Is.Empty);
+			}
+			finally
+			{
+				Object.DestroyImmediate(sellable);
+				Object.DestroyImmediate(unsellable);
+				Object.DestroyImmediate(buyer);
+				Object.DestroyImmediate(action);
+			}
+		}
+
+		[Test]
+		public void FindCandidates_DraggedStackTailDoesNotReplacePreciseTargetInteraction()
+		{
+			CardDefinition cardDefinition = CreateCardDefinition("test.card");
+			ActionDefinition action = CreateActionDefinition("test.action.precise", "test.card");
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { cardDefinition, action });
+				TabletopCards state = new TabletopCards();
+				TabletopCard bottom = state.CreateCard("test.card", Vector2.zero);
+				TabletopCard middle = state.CreateCard("test.card", Vector2.zero);
+				TabletopCard top = state.CreateCard("test.card", Vector2.zero);
+				TabletopCard target = state.CreateCard("test.card", Vector2.one);
+				state.MergeStackOnto(middle.Id, bottom.Id);
+				state.MergeStackOnto(top.Id, bottom.Id);
+
+				TabletopCardPointerReleaseIntent intent = new TabletopCardPointerReleaseIntent(
+					middle.Id,
+					Vector2.zero,
+					Vector2.one,
+					Vector2.zero,
+					isDrag: true,
+					target.Id);
+				ActionCandidate[] candidates = ActionCandidateResolver.FindCandidates(
+					intent,
+					state,
+					contentIndex,
+					new[] { action });
+
+				Assert.That(candidates, Has.Length.EqualTo(1));
+				Assert.That(candidates[0].IsReady, Is.True);
+				CollectionAssert.AreEqual(
+					new[] { middle.Id, target.Id },
+					candidates[0].Bindings[0].CardIds);
+			}
+			finally
+			{
+				Object.DestroyImmediate(cardDefinition);
+				Object.DestroyImmediate(action);
+			}
+		}
+
+		[Test]
 		public void ActionPlan_BelongsToTabletopAndSubmitsOnlyAfterItsSlotsAreComplete()
 		{
 			CardDefinition cardDefinition = CreateCardDefinition("test.card");
@@ -104,6 +245,8 @@ namespace Gameplay.Tests
 				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
 					contentIndex,
 					TabletopTestPlacement.Rules,
+					_ => false,
+					(_, __) => { },
 					_ => { });
 				tabletop.InitializeAuthoritativeRandom(12345u);
 				TabletopCard first = tabletop.CreateCard(cardDefinition.ContentId, Vector2.zero);
@@ -156,6 +299,8 @@ namespace Gameplay.Tests
 				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
 					contentIndex,
 					TabletopTestPlacement.Rules,
+					_ => false,
+					(_, __) => { },
 					_ => { });
 				TabletopCard card = tabletop.CreateCard(cardDefinition.ContentId, Vector2.zero);
 				ActionCandidate candidate = tabletop.FindCandidates(
@@ -194,10 +339,14 @@ namespace Gameplay.Tests
 				Gameplay.Tabletop.Tabletop sourceTabletop = new Gameplay.Tabletop.Tabletop(
 					contentIndex,
 					TabletopTestPlacement.Rules,
+					_ => false,
+					(_, __) => { },
 					_ => { });
 				Gameplay.Tabletop.Tabletop targetTabletop = new Gameplay.Tabletop.Tabletop(
 					contentIndex,
 					TabletopTestPlacement.Rules,
+					_ => false,
+					(_, __) => { },
 					_ => { });
 				TabletopCard first = sourceTabletop.CreateCard(cardDefinition.ContentId, Vector2.zero);
 				TabletopCard second = sourceTabletop.CreateCard(cardDefinition.ContentId, Vector2.one);
@@ -250,6 +399,22 @@ namespace Gameplay.Tests
 			ActionDefinition definition = ScriptableObject.CreateInstance<ActionDefinition>();
 			string allowed = "\"m_allowedContentIds\":[{\"m_value\":\"" + allowedContentId + "\"}]";
 			JsonUtility.FromJsonOverwrite("{\"m_contentId\":{\"m_value\":\"" + actionId + "\"},\"m_participationSlots\":[{\"m_key\":\"initiator\",\"m_minimumParticipants\":1,\"m_maximumParticipants\":1," + allowed + "},{\"m_key\":\"target\",\"m_minimumParticipants\":1,\"m_maximumParticipants\":1," + allowed + "}]}", (object)definition);
+			return definition;
+		}
+
+		private static ActionDefinition CreateTradeActionDefinition(
+			string actionId,
+			string soldContentId,
+			string buyerContentId,
+			bool unlimitedSourceSlot)
+		{
+			ActionDefinition definition = ScriptableObject.CreateInstance<ActionDefinition>();
+			int sourceMaximum = unlimitedSourceSlot ? 0 : 1;
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"" + actionId + "\"},\"m_participationSlots\":[" +
+				"{\"m_key\":\"sold\",\"m_minimumParticipants\":1,\"m_maximumParticipants\":" + sourceMaximum + ",\"m_allowedContentIds\":[{\"m_value\":\"" + soldContentId + "\"}]}," +
+				"{\"m_key\":\"buyer\",\"m_minimumParticipants\":1,\"m_maximumParticipants\":1,\"m_allowedContentIds\":[{\"m_value\":\"" + buyerContentId + "\"}]}]}",
+				definition);
 			return definition;
 		}
 	}

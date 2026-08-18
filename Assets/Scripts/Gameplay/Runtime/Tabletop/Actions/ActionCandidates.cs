@@ -106,6 +106,7 @@ namespace Gameplay.Tabletop.Actions
 				return Array.Empty<ActionCandidate>();
 			}
 			List<CandidateParticipant> participants = new List<CandidateParticipant> { source };
+			List<CandidateParticipant> draggedStackTail = CreateDraggedStackTail(intent, cards, contentIndex);
 			if (intent.TargetCardId.IsValid)
 			{
 				if (intent.TargetCardId == intent.CardId || !TryCreateParticipant(intent.TargetCardId, cards, contentIndex, out var target))
@@ -129,6 +130,15 @@ namespace Gameplay.Tabletop.Actions
 				}
 				if (seenActionIds.Add(action.ContentId) && TryCreateCandidate(action, participants, out var candidate))
 				{
+					if (TryCreateDraggedTailCandidate(action, participants, draggedStackTail, out var stackTailCandidate))
+					{
+						candidates.Add(stackTailCandidate);
+						continue;
+					}
+					if (ShouldRejectBecauseDraggedTailCannotFillSourceSlot(action, participants, draggedStackTail))
+					{
+						continue;
+					}
 					candidates.Add(candidate);
 				}
 			}
@@ -149,6 +159,37 @@ namespace Gameplay.Tabletop.Actions
 			return true;
 		}
 
+		private static List<CandidateParticipant> CreateDraggedStackTail(
+			TabletopCardPointerReleaseIntent intent,
+			TabletopCards cards,
+			ContentIndex contentIndex)
+		{
+			if (!intent.IsDrag || !intent.TargetCardId.IsValid ||
+				!cards.TryGetStackContaining(intent.CardId, out TabletopCardStack stack))
+			{
+				return null;
+			}
+
+			int startIndex = stack.IndexOf(intent.CardId);
+			if (startIndex < 0 || startIndex >= stack.Cards.Count - 1)
+			{
+				return null;
+			}
+
+			List<CandidateParticipant> participants = new List<CandidateParticipant>(
+				stack.Cards.Count - startIndex);
+			for (int cardIndex = startIndex; cardIndex < stack.Cards.Count; cardIndex++)
+			{
+				if (!TryCreateParticipant(stack.Cards[cardIndex].Id, cards, contentIndex, out var participant))
+				{
+					throw new InvalidOperationException(
+						$"牌桌堆栈中的卡牌 {stack.Cards[cardIndex].Id} 无法解析为行动参与对象。");
+				}
+				participants.Add(participant);
+			}
+			return participants;
+		}
+
 		private static bool TryCreateCandidate(ActionDefinition action, IReadOnlyList<CandidateParticipant> participants, out ActionCandidate candidate)
 		{
 			IReadOnlyList<ActionSlotDefinition> slots = action.ParticipationSlots;
@@ -163,22 +204,135 @@ namespace Gameplay.Tabletop.Actions
 				working[slotIndex] = new List<TabletopCardId>();
 			}
 			SearchResult best = null;
-			SearchAssignments(0, participants, slots, working, ref best);
+			SearchAssignments(0, participants, slots, working, ref best, forbiddenSlotIndex: -1);
 			if (best == null)
 			{
 				candidate = null;
 				return false;
 			}
+			candidate = CreateCandidate(action, slots, best);
+			return true;
+		}
+
+		private static bool TryCreateDraggedTailCandidate(
+			ActionDefinition action,
+			IReadOnlyList<CandidateParticipant> participants,
+			IReadOnlyList<CandidateParticipant> draggedStackTail,
+			out ActionCandidate candidate)
+		{
+			candidate = null;
+			if (draggedStackTail == null || draggedStackTail.Count <= 1 || participants.Count <= 1)
+			{
+				return false;
+			}
+
+			IReadOnlyList<ActionSlotDefinition> slots = action.ParticipationSlots;
+			if (!AreSlotsUsable(slots))
+			{
+				return false;
+			}
+
+			List<CandidateParticipant> otherParticipants = new List<CandidateParticipant>(participants.Count - 1);
+			for (int participantIndex = 1; participantIndex < participants.Count; participantIndex++)
+			{
+				otherParticipants.Add(participants[participantIndex]);
+			}
+			for (int sourceSlotIndex = 0; sourceSlotIndex < slots.Count; sourceSlotIndex++)
+			{
+				ActionSlotDefinition sourceSlot = slots[sourceSlotIndex];
+				if (!CanSlotAcceptCount(sourceSlot, draggedStackTail.Count) ||
+					!AllParticipantsMatch(sourceSlot, draggedStackTail))
+				{
+					continue;
+				}
+
+				List<TabletopCardId>[] working = new List<TabletopCardId>[slots.Count];
+				for (int slotIndex = 0; slotIndex < working.Length; slotIndex++)
+				{
+					working[slotIndex] = new List<TabletopCardId>();
+				}
+				for (int tailIndex = 0; tailIndex < draggedStackTail.Count; tailIndex++)
+				{
+					working[sourceSlotIndex].Add(draggedStackTail[tailIndex].CardId);
+				}
+
+				SearchResult best = null;
+				SearchAssignments(0, otherParticipants, slots, working, ref best, sourceSlotIndex);
+				if (best != null)
+				{
+					candidate = CreateCandidate(action, slots, best);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private static bool ShouldRejectBecauseDraggedTailCannotFillSourceSlot(
+			ActionDefinition action,
+			IReadOnlyList<CandidateParticipant> participants,
+			IReadOnlyList<CandidateParticipant> draggedStackTail)
+		{
+			if (draggedStackTail == null || draggedStackTail.Count <= 1 || participants == null || participants.Count <= 1)
+			{
+				return false;
+			}
+
+			CandidateParticipant source = participants[0];
+			List<CandidateParticipant> otherParticipants = new List<CandidateParticipant>(participants.Count - 1);
+			for (int participantIndex = 1; participantIndex < participants.Count; participantIndex++)
+			{
+				otherParticipants.Add(participants[participantIndex]);
+			}
+
+			IReadOnlyList<ActionSlotDefinition> slots = action.ParticipationSlots;
+			for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)
+			{
+				ActionSlotDefinition slot = slots[slotIndex];
+				if (!CanSlotAcceptCount(slot, draggedStackTail.Count) ||
+					!ActionParticipationEvaluator.MatchesParticipant(slot, source.ContentAsset, source.AbilitySystemCell) ||
+					!CanAssignParticipantsExcludingSlot(slots, otherParticipants, slotIndex))
+				{
+					continue;
+				}
+
+				if (!AllParticipantsMatch(slot, draggedStackTail))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private static bool CanAssignParticipantsExcludingSlot(
+			IReadOnlyList<ActionSlotDefinition> slots,
+			IReadOnlyList<CandidateParticipant> participants,
+			int forbiddenSlotIndex)
+		{
+			List<TabletopCardId>[] working = new List<TabletopCardId>[slots.Count];
+			for (int slotIndex = 0; slotIndex < working.Length; slotIndex++)
+			{
+				working[slotIndex] = new List<TabletopCardId>();
+			}
+
+			SearchResult best = null;
+			SearchAssignments(0, participants, slots, working, ref best, forbiddenSlotIndex);
+			return best != null;
+		}
+
+		private static ActionCandidate CreateCandidate(
+			ActionDefinition action,
+			IReadOnlyList<ActionSlotDefinition> slots,
+			SearchResult best)
+		{
 			List<ActionSlotBinding> bindings = new List<ActionSlotBinding>(slots.Count);
 			for (int i = 0; i < slots.Count; i++)
 			{
 				bindings.Add(new ActionSlotBinding(slots[i], best.CardIdsBySlot[i]));
 			}
-			candidate = new ActionCandidate(action, bindings, best.MissingParticipantCount);
-			return true;
+			return new ActionCandidate(action, bindings, best.MissingParticipantCount);
 		}
 
-		private static void SearchAssignments(int participantIndex, IReadOnlyList<CandidateParticipant> participants, IReadOnlyList<ActionSlotDefinition> slots, List<TabletopCardId>[] working, ref SearchResult best)
+		private static void SearchAssignments(int participantIndex, IReadOnlyList<CandidateParticipant> participants, IReadOnlyList<ActionSlotDefinition> slots, List<TabletopCardId>[] working, ref SearchResult best, int forbiddenSlotIndex)
 		{
 			if (participantIndex >= participants.Count)
 			{
@@ -192,14 +346,40 @@ namespace Gameplay.Tabletop.Actions
 			CandidateParticipant participant = participants[participantIndex];
 			for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)
 			{
+				if (slotIndex == forbiddenSlotIndex)
+				{
+					continue;
+				}
 				ActionSlotDefinition slot = slots[slotIndex];
 				if ((slot.MaximumParticipants <= 0 || working[slotIndex].Count < slot.MaximumParticipants) && ActionParticipationEvaluator.MatchesParticipant(slot, participant.ContentAsset, participant.AbilitySystemCell))
 				{
 					working[slotIndex].Add(participant.CardId);
-					SearchAssignments(participantIndex + 1, participants, slots, working, ref best);
+					SearchAssignments(participantIndex + 1, participants, slots, working, ref best, forbiddenSlotIndex);
 					working[slotIndex].RemoveAt(working[slotIndex].Count - 1);
 				}
 			}
+		}
+
+		private static bool CanSlotAcceptCount(ActionSlotDefinition slot, int participantCount)
+		{
+			return slot != null &&
+				participantCount >= 0 &&
+				(slot.MaximumParticipants == 0 || slot.MaximumParticipants >= participantCount);
+		}
+
+		private static bool AllParticipantsMatch(ActionSlotDefinition slot, IReadOnlyList<CandidateParticipant> participants)
+		{
+			for (int i = 0; i < participants.Count; i++)
+			{
+				if (!ActionParticipationEvaluator.MatchesParticipant(
+						slot,
+						participants[i].ContentAsset,
+						participants[i].AbilitySystemCell))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		private static bool AreSlotsUsable(IReadOnlyList<ActionSlotDefinition> slots)

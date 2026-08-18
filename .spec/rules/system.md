@@ -31,40 +31,21 @@
 ## Unity 与插件边界
 
 - 当前仓库 / Unity 工程名是 CardLoop；正式玩法层代码、程序集、命名空间和作者菜单默认使用 `Gameplay` 作为自有玩法职责归属。除项目事实、仓库路径、迁移记录和外部展示名外，不得再用 `CardLoop` 命名正式玩法模块；`GamePlay` 只是历史拼写，不得新增。
-- 当前阶段默认只打 Gameplay 地基：吸收、拆解和重构 StackCraft 模板能力，建立本项目可扩展框架边界。用户补充的《卡牌生存：无限》玩法设计默认只作为知识记录和架构约束，不等于授权提前实现职业、剧本、关卡、联机、Mod 业务或原创数值内容；除非用户当轮明确切换到玩法实现，不得偏离模板吸收主线。
-- StackCraft 每个一级模块完成吸收后，必须先用 Gameplay 新正式框架在统一测试场景复现该模块**明确选择吸收的玩家可见功能**，并完成自动化或运行验收，才能进入下一个一级模块。明确排除的旧功能不要求复刻，但必须在替换清单中写清排除理由；StackCraft 原脚本、原场景能运行不算新框架验收，文档裁决完成也不算功能吸收完成。
-- StackCraft 吸收不能只做互不相连的模块验收。权威计划必须设置跨模块阶段门禁：剧本运行时、牌桌和行动的当前正式职责形成后，必须用统一测试场景走通“进入场景、加载内容、创建卡牌、拖拽放置、选择行动、推进、结算、反馈”的真实闭环；阶段门禁未通过时不得继续堆后续模块。阶段门禁只控制验证节奏，不得成为 MVP、临时接口、测试专用运行链或欠设计实现的理由。每个阶段必须区分已由新框架复现、因产品裁决排除、尚未完成三类结果，尚未完成项不得被局部测试或文档结论掩盖。
-- 不得把“参考实现职责冲突、规则写死或架构较差”直接等同于“功能可以删除”。只要某项玩家可见效果仍属于本游戏目标，替换清单必须写明它在 Gameplay / GameCore / EX-GAS / UI / 角色 / 存档或联机职责中的等效实现路径，并验证新正式链路能够实现同样结果；当前正式架构做不到时必须登记为未完成能力或集成缺口，不得把“已排除旧代码”表述为“已完成更好架构”。只有明确不属于产品目标的旧功能，才允许按产品裁决彻底排除而不复刻。
-- 吸收 StackCraft 的玩法模块前，必须执行全局 `D:\codex-home\skills\absorb-reference\SKILL.md` 的父级职责检查。StackCraft 的目录、`Manager`、`System` 和单例边界不得直接变成 Gameplay 模块；未先确认剧本、关卡、牌桌、角色或战斗等父级生命周期归属时，不得建立独立子系统。
-- StackCraft 的 `Encounter`、危机、天气和其它日结事件名默认只是剧本内容或规则阶段候选，不得直接建立同名顶级系统；只有确认其拥有独立的配置、运行状态、存档和联机生命周期后，才允许建立正式职责入口。
-- CardLoop 是当前游戏本体，不是外部项目适配壳。除第三方插件官方扩展点或迁移兼容确有必要外，不得把本项目内部系统关系称为“桥接”，也不得用中转层、包装层或兼容层替代正式模块边界。
-- ScriptableObject 配置是 Gameplay 正式作者源之一。不得因为未来支持 Mod、关卡编辑器或联机，就默认否定 SO；只有证明 SO 无法承担该作者入口时，才可改用表格、JSON、Luban 或其它配置源。
-- Gameplay 内容身份只能有一个唯一 ID。Unity GUID、YooAsset 地址、文件路径、包名、资源名、对象引用和运行时实例号只能作为定位、加载或实例引用；不得并列成为第二套内容 ID，不得要求作者同时维护多套身份字段。
-- Gameplay 内容唯一 ID 默认必须由正式作者源自动生成。Unity SO 内容资产首次为空时，应使用资产文件名加稳定短 hash 生成并写回唯一 ID；生成后不得随文件名、路径或资源地址自动漂移。只有迁移旧内容、修复冲突或接入明确 Mod 命名空间时，才允许人工覆盖。
-- 禁止双重更新。任何内容身份、引用关系、资源地址、运行时查询缓存或生成物必须有单一作者源；其它缓存、索引、生成代码或运行时目录只能由作者源生成或校验，不得让作者手动同步两处。
-- 唯一场景对象、正式系统入口和全局运行服务只能在正式 owner 处配置一次。主相机、正式输入、资源系统、事件系统、场景系统、GAS 初始化和同类唯一职责不得在多个玩法组件上重复暴露手填引用；需要多实例时必须先建立对应父级生命周期 owner，例如牌桌、剧本、地图或战斗场景，而不是让子组件各自维护同一对象。
-- 作者源不得要求内容作者手动维护可由上下文推导、由列表位置生成、或只服务运行/存档/联机定位的内部 key。槽位、分支、局部引用和生成物索引需要稳定身份时，必须由正式作者源、创建工具、校验器或编辑器下拉维护；运行时可以保存稳定键，但 Inspector 不得把它伪装成策划必须填写的业务字段。
-- 发现唯一对象重复配置、手填内部 key、第二套身份、第二套事件/资源入口、浅包装或空壳模块时，不得只修用户点名的一处。必须横向搜索同职责同类入口，立即删除或重构证据明确的同类问题；范围不清或会误伤时，至少登记到对应模块吸收/重构清单并说明为什么本轮不动。
-- 同一玩法职责只能有一个正式职责归属。行动、配方、制作、剧本目标、战斗、存档、资源加载和 UI 绑定等职责，不得同时保留 Gameplay / GameCore 旧实现、StackCraft 参考实现和新增实现三套并行链路；参考实现只能作为待吸收证据或临时原型素材，正式接管前必须在专项文档中裁决保留、改造或删除。
-- 现有职责归属只是候选，不是免审理由。凡是已有 GameCore、DatabaseRegistry、ResourceSystem、Mod、GAS 或 Gameplay 代码承载某个职责时，必须先审它是否符合当前游戏本体、StackCraft 吸收目标、Mod/关卡编辑器、联机和商业化扩展边界；不符合时必须重构、拆分、迁移或删除，不得用包装层、桥接层、临时上下文或并行模块绕开。
-- Gameplay 地基设计必须先做成熟游戏框架职责校准。涉及启动流程、系统注册、场景、资源、事件、存档、联机或模块生命周期时，至少用 UE Gameplay Framework 或 Unity Game Framework 这类成熟框架核对职责分层；只吸收职责边界和生命周期原则，不照搬类名、目录名或引擎私有实现。
-- Gameplay 地基架构必须领域对象优先。卡牌、牌堆、牌桌、剧本、角色、工位、行动实例、任务日志等玩家可感知对象必须有清晰对象或聚合承载、可读状态和唯一写入口；不得把玩法主结构拆成平铺的 State / Solver / Resolver / Projector / System 文件集合。Solver、Resolver、Projector、Validator、Index 只能作为领域对象内部协作者，不能成为领域主结构；只有明确采用 DOTS/ECS 或已有真实性能 / 同步证据时，才允许用数据导向拆分作为主结构。
-- Gameplay Tag 的正式职责归属是 EX-GAS。Gameplay 不得新增本地标签值对象、本地标签表、本地标签生成器或其它并行标签系统；内容标签、行动消耗方式、行动结果类型、技能/效果/状态分类等需要标签语义时，只能引用 EX-GAS GameplayTag 标签码或 GAS 官方作者入口。若 GAS 标签入口不能满足 Mod、关卡编辑器或联机需求，必须先停下登记为 EX-GAS/GAS 集成问题，不得在 Gameplay 侧新造替代。
-- Gameplay 运行时代码不得直接新增第二套 YooAsset 资源地址引用或加载封装；当前资源加载职责归属是项目资源系统（`GameCore.ResourceSystem` / `SoftAssetReference`）。若该职责归属不满足 Mod、关卡编辑器、联机或内容包需求，必须优先重构该职责归属，或在专项文档裁决职责迁移；不得在 Gameplay 并行保留薄包装、兼容壳或第二套加载入口。
-- Gameplay 不得新增只转发第三方或框架能力的薄包装。尤其是事件系统：底层事件派发职责归属是 YokiFrame `EventKit`，普通强类型领域事件默认直接使用该系统；只有包装层承担校验、权限、可见性、回放记录、生命周期分发或跨模块稳定 API 时才允许存在。发现包装只是重复声明事件结构和发送方法时，优先删除、内联或重构职责归属，不得因为已有包装就继续堆新包装。
-- Gameplay 正式玩法层不得使用误导职责的网页端、后端或通用框架空壳命名。名称必须对应真实游戏 / Unity 职责；没有实际启动编排职责时不得新增启动壳，只有真正承担新局、读档、场景组合或生命周期编排时才允许使用 `Director` 类入口。
-- 现有 GameCore / DatabaseRegistry / ResourceSystem / Mod / GAS 配置都只是当前项目候选职责归属；若它们与唯一 ID、SO 作者源、Mod/关卡编辑器、联机或 StackCraft 架构吸收目标冲突，必须按正确架构重构，不得为了沿用现有实现保留长期遗留问题。
-- GameCore 当前按通用框架候选处理；框架代码、编辑器菜单、默认资源创建路径、默认存档目录、输入绑定 key、配置文件名和生成物默认名不得写入具体游戏项目名。需要接入具体项目名时，只能放在项目配置、适配层或明确的项目事实文档中。
-- GameCore 与 EX-GAS 之间不得新增未登记边界扩展。任何项目侧集成点必须先读取 GAS 插件自带文档 `Assets/Plugins/GAS/SKILL.md`、`Assets/Plugins/GAS/Wiki/*.md` 和插件 `package.json` 指向的官方仓库；只有确认官方扩展点无法直接承担后，才可在 `.spec/knowledge/features/gamecore-gas.md` 登记使用入口、职责边界、为什么不能直接使用 EX-GAS/Unity 现有能力、以及验收方式；无法说明的集成点优先删除或回到正式职责归属。
-- 接入第三方插件、外部框架或本地 UPM 包时，默认先读插件自带 README / Wiki / SKILL / package.json / 官方仓库文档；项目侧文档只允许记录入口索引、当前项目适配和偏离原因，不得替代插件官方建议做法。
-- `Assets/Plugins` 默认只放第三方插件、外部框架、第三方依赖和它们的项目级配置资源。
-- 自有可复用插件/库应放在 `Assets/ProjectPlugins` 或本地 UPM 包；不得长期伪装成第三方插件。
+- 当前阶段默认只打 Gameplay 地基和 StackCraft 吸收；《卡牌生存：无限》只作为知识记录和架构约束，除非用户当轮明确切换，不得提前实现职业、剧本、关卡、联机、Mod 业务或原创数值内容。
+- StackCraft 吸收必须按 [`knowledge/standards/workflow.md`](../knowledge/standards/workflow.md) 和 [`knowledge/standards/gameplay-architecture.md`](../knowledge/standards/gameplay-architecture.md) 执行；StackCraft 原脚本/原场景能运行、文档裁决完成、内部方法或测试入口存在，都不得声称新框架已吸收完成。
+- 吸收 StackCraft 玩法模块前，必须执行系统 skill `D:\codex-home\skills\absorb-reference\SKILL.md` 的父级职责检查；StackCraft 的目录、`Manager`、`System` 和单例边界不得直接变成 Gameplay 模块。
+- 同一玩法职责只能有一个正式 owner。行动、配方、制作、剧本目标、战斗、存档、资源加载、事件和 UI 绑定等职责，不得同时保留 Gameplay / GameCore 旧实现、StackCraft 参考实现和新增实现三套并行链路。
+- 不得用桥接层、中转层、包装层、兼容壳、浅模块、空壳系统或第二套状态掩盖职责没有收口；设计模式、反模式和防护性架构裁决见 [`knowledge/standards/code-design.md`](../knowledge/standards/code-design.md)。
+- Gameplay 地基必须领域对象优先；对象模型、继承/组合、阶段门禁、Mod 和联机扩展按 [`knowledge/standards/gameplay-architecture.md`](../knowledge/standards/gameplay-architecture.md) 执行，不得把主结构拆成平铺的 State / Solver / Resolver / Projector / System 集合。
+- Gameplay 内容身份、内部 key、`Gameplay` / `GamePlay` / `CardLoop` 命名、GameCore 通用框架命名和生成物规则按 [`knowledge/standards/code-style.md`](../knowledge/standards/code-style.md) 执行；不得让作者手动维护第二套身份、第二套局部 key 或第二份生成真相。
+- 配置真相、唯一依赖入口、资源加载、事件入口、UI/表现和性能边界按 [`knowledge/standards/runtime-implementation-boundaries.md`](../knowledge/standards/runtime-implementation-boundaries.md) 执行；不得新增第二套 YooAsset 加载封装、资源地址真相、事件总线或唯一场景对象引用。
+- EX-GAS / GAS 的能力、标签、效果、Cue、Timeline、TargetCatcher 和 GameCore 集成边界按 [`knowledge/features/gamecore-gas.md`](../knowledge/features/gamecore-gas.md) 执行；未登记项目侧集成点不得成为正式能力。
+- 接入第三方插件、外部框架或本地 UPM 包前，必须先读插件自带 README / Wiki / SKILL / package.json / 官方仓库文档；插件入口、`Assets/Plugins` / `Assets/ProjectPlugins` 边界和偏离登记按 [`knowledge/features/plugin-docs.md`](../knowledge/features/plugin-docs.md) 执行。
 - 第三方插件源码、插件编辑器界面、插件内置样式、插件示例文档或插件生成器本体，未经用户当轮明确许可不得直接修改。
-- 迁入的 GameCore、GAS 生成配置、YooAsset 配置和输入配置在 CardLoop 中都必须经过 Unity 编译和运行验证后，才可称为正式启用。
-- 修改 Unity 资源时必须保留 `.meta` 文件，避免 GUID 丢失。
+- 迁入的 GameCore、GAS 生成配置、YooAsset 配置和输入配置在 CardLoop 中都必须经过 Unity 编译和运行验证后，才可称为正式启用；修改 Unity 资源时必须保留 `.meta` 文件，避免 GUID 丢失。
 
 ## 规范治理
 
-- 新增规则、更新规范、新建或修改 skill 前，必须先判断落点：全局 AGENTS、项目 AGENTS、全局 skill、项目 skill、任务/专项文档。
+- 新增规则、更新规范、新建或修改 skill 前，必须先判断落点：系统 AGENTS、项目 AGENTS、系统 skill、项目 skill、任务/专项文档。
 - 不得把本该进 skill 的具体 SOP、参数、命令顺序、验收清单直接塞进根 AGENTS。
 - `.spec` 结构、知识索引、skill 路由有改动时，必须同步相关索引和说明。

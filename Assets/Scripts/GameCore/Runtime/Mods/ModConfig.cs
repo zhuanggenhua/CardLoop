@@ -34,21 +34,26 @@ namespace GameCore
 
             try
             {
-                ModConfig config = JsonConvert.DeserializeObject<ModConfig>(File.ReadAllText(path)) ?? new ModConfig();
+                ModConfig config = JsonConvert.DeserializeObject<ModConfig>(File.ReadAllText(path));
+                if (config == null)
+                {
+                    throw new InvalidDataException($"Mod 配置文件 {path} 没有包含有效配置。");
+                }
+                config.Validate();
                 config.ConfigPath = path;
                 return config;
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"[ModAPI] Failed to load mod config {path}: {e.Message}");
-                ModConfig fallback = new();
-                fallback.ConfigPath = path;
-                return fallback;
-            }
+			catch (Exception e)
+			{
+				throw new InvalidDataException(
+					$"无法读取 Mod 配置文件 {path}；原文件已保留。具体原因：{e.Message}",
+					e);
+			}
         }
 
         public void Save()
         {
+            Validate();
             string path = string.IsNullOrWhiteSpace(ConfigPath) ? DefaultConfigPath : ConfigPath;
             string directory = Path.GetDirectoryName(path);
             if (!string.IsNullOrWhiteSpace(directory))
@@ -56,7 +61,26 @@ namespace GameCore
                 Directory.CreateDirectory(directory);
             }
 
-            File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
+            string temporaryPath = path + ".tmp";
+            try
+            {
+                File.WriteAllText(temporaryPath, JsonConvert.SerializeObject(this, Formatting.Indented));
+                if (File.Exists(path))
+                {
+                    File.Replace(temporaryPath, path, null);
+                }
+                else
+                {
+                    File.Move(temporaryPath, path);
+                }
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                {
+                    File.Delete(temporaryPath);
+                }
+            }
         }
 
         public ModStatus GetModState(ModInfo modInfo)
@@ -78,27 +102,17 @@ namespace GameCore
 
             ModState created = new()
             {
-                fullName = modInfo.FullName,
+                modId = RequireModId(modInfo),
                 status = ModStatus.Enabled
             };
             States.Add(created);
             return created;
         }
 
-        public void DeleteMod(ModInfo modInfo, bool force = false)
+        public void DeleteMod(ModInfo modInfo)
         {
-            if (force)
-            {
-                if (TryGetModState(modInfo, out ModState modStateInfo))
-                {
-                    States.Remove(modStateInfo);
-                }
-            }
-            else
-            {
-                ModState modStateInfo = EnsureModState(modInfo);
-                modStateInfo.status = ModStatus.Delete;
-            }
+            ModState modStateInfo = EnsureModState(modInfo);
+            modStateInfo.status = ModStatus.Delete;
         }
 
         public void SetModEnabled(ModInfo modInfo, bool isEnabled)
@@ -118,11 +132,36 @@ namespace GameCore
             return true;
         }
 
+        /// <summary>安装目录已经不存在时，消费已达成目标的删除状态；其它缺失 Mod 状态继续保留。</summary>
+        internal int ConsumeDeletedStatesMissingFrom(ISet<string> installedModIds)
+        {
+            if (installedModIds == null)
+            {
+                throw new ArgumentNullException(nameof(installedModIds));
+            }
+
+            int consumed = 0;
+            for (int i = States.Count - 1; i >= 0; i--)
+            {
+                ModState state = States[i];
+                if (state.status != ModStatus.Delete || installedModIds.Contains(state.modId))
+                {
+                    continue;
+                }
+
+                States.RemoveAt(i);
+                consumed++;
+            }
+
+            return consumed;
+        }
+
         public bool TryGetModState(ModInfo modInfo, out ModState modState)
         {
+            string modId = RequireModId(modInfo);
             foreach (ModState stateInfo in States)
             {
-                if (stateInfo.fullName == modInfo.FullName)
+                if (string.Equals(stateInfo.modId, modId, StringComparison.Ordinal))
                 {
                     modState = stateInfo;
                     return true;
@@ -131,6 +170,63 @@ namespace GameCore
 
             modState = null;
             return false;
+        }
+
+        private static string RequireModId(ModInfo modInfo)
+        {
+            if (modInfo == null)
+            {
+                throw new ArgumentNullException(nameof(modInfo));
+            }
+            if (string.IsNullOrWhiteSpace(modInfo.modId))
+            {
+                throw new InvalidOperationException("Mod 清单缺少稳定身份 modId。");
+            }
+            return modInfo.modId;
+        }
+
+        internal void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(LoadingPath))
+            {
+                throw new InvalidDataException("Mod 配置缺少加载目录。");
+            }
+            try
+            {
+                _ = Path.GetFullPath(LoadingPath);
+            }
+            catch (Exception exception)
+            {
+                throw new InvalidDataException($"Mod 加载目录无效：{LoadingPath}。", exception);
+            }
+            if (!Version.TryParse(ApiVersion, out _))
+            {
+                throw new InvalidDataException($"Mod API 版本不是有效版本号：{ApiVersion ?? "<null>"}。");
+            }
+            if (States == null)
+            {
+                throw new InvalidDataException("Mod 配置缺少状态列表。");
+            }
+
+            var stateIds = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < States.Count; i++)
+            {
+                ModState state = States[i] ??
+                    throw new InvalidDataException($"Mod 配置的第 {i + 1} 条状态为空。");
+                if (string.IsNullOrWhiteSpace(state.modId))
+                {
+                    throw new InvalidDataException($"Mod 配置的第 {i + 1} 条状态缺少 Mod ID。");
+                }
+                if (!stateIds.Add(state.modId))
+                {
+                    throw new InvalidDataException($"Mod 配置重复记录状态：{state.modId}。");
+                }
+                if (!Enum.IsDefined(typeof(ModStatus), state.status))
+                {
+                    throw new InvalidDataException(
+                        $"Mod {state.modId} 的状态值无效：{(int)state.status}。");
+                }
+            }
         }
     }
 }

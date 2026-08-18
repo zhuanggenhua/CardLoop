@@ -6,7 +6,7 @@ metadata:
   role: project-reference
   source: official-entry + project-source
   status: 已交付
-  verified_at: 2026-08-04
+  verified_at: 2026-08-13
   update_triggers: yooasset-version-change, resource-system-api-change, package-lifecycle-change, address-policy-change
 ---
 
@@ -35,7 +35,7 @@ YooAsset 官方文档负责解释 `ResourcePackage`、资产句柄和包生命�
 | 现实需求 | 项目入口 | 项目特有规则 |
 |---|---|---|
 | 初始化默认包 | `ResourceSystem.InitializeAsync(CancellationToken)` | 由 `GameManager.Start` 等待完成；默认包来自 `YokiFrame.YooInit`。 |
-| 加载资产 | `ResourceSystem.LoadAssetAsync<T>(string address)` | 只接受字符串地址；先查已加载 Mod 包，再查默认包。 |
+| 加载资产 | `ResourceSystem.LoadAssetAsync<T>(string address)` | 只接受字符串地址；所有已加载包必须唯一命中，默认包与 Mod 包或多个 Mod 包同时命中时直接报错。 |
 | 场景包选择 | 内部 `ResourceSystemSceneLoaderPool` | 通过 ResKit 官方扩展点给 SceneKit 选择默认包 / Mod 包；业务层不直接调用。 |
 | 批量发现内容资产 | `ResourceSystem.LoadAssetsByAssetTagAsync<T>(string assetTag)` | 按 YooAsset 构建清单标签读取默认包和已加载 Mod 包；标签只用于资源发现，不是 GAS 标签或内容 ID。 |
 | 实例化 Prefab | `ResourceSystem.InstantiateAsync<T>(...)` | 使用 `ResourceHandle<T>`；释放实例句柄会销毁实例。 |
@@ -47,7 +47,7 @@ YooAsset 官方文档负责解释 `ResourcePackage`、资产句柄和包生命�
 
 `LoadAssetsAsync` 只支持明确地址集合。当前项目没有 Addressables 标签交集语义；`MergeMode.Intersection` 会抛出 `NotSupportedException`。
 
-`LoadAssetsByAssetTagAsync` 是项目对 YooAsset `ResourcePackage.GetAssetInfos(tag)` 的正式复用入口。它会为标签命中的每个资源建立并持有句柄，调用方负责释放返回的合并句柄。Gameplay 当前由 `ScenarioDirector` 在开局时取得该句柄并构建 `ContentIndex`，内容索引随对应 `ScenarioRun` 存续；`ResourceSystem` 不保存玩法索引。
+`LoadAssetsByAssetTagAsync` 是项目对 YooAsset `ResourcePackage.GetAssetInfos(tag)` 的正式复用入口。它会为标签命中的每个资源建立并持有句柄，调用方负责释放返回的合并句柄。Gameplay 当前由 `ScenarioDirector` 在开局时取得该句柄并构建 `ContentIndex`，内容索引随对应 `ScenarioRun` 存续；`ResourceSystem` 不保存玩法索引。Mod 包加载前会检查地址和资源路径冲突，运行时解析也会再次拒绝多包命中，不实现静默覆盖优先级。
 
 ## 生命周期
 
@@ -116,10 +116,11 @@ private async UniTask UseInstanceAsync(string address, Transform parent)
 - 不在场景切换时直接调用 `YooAssets.Destroy()`；完整销毁只由 `ResourceSystem.Shutdown()` 负责。
 - 不让 UI、全局状态系统或旧主菜单脚本写死基础设施场景名并直接切场景；应用级主菜单流程要等真实 Director / 流程职责出现后再实现。
 - 不把 Mod 的 `packageName`、资源地址或文件路径升级为玩法内容唯一 ID。
+- 不使用已删除的 `loadOrder` 作为依赖关系或资源覆盖优先级；依赖顺序由 Mod 清单依赖拓扑决定，资源冲突直接暴露。
 
 ## 源码证据
 
-- 项目资源入口：[`ResourceSystem.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/ResourceSystem.cs) 的 `InitializeAsync`、`LoadAssetAsync`、`InstantiateAsync`、`LoadModPackageAsync`、`Shutdown`、`EnsureInitialized`。
+ - 项目资源入口：[`ResourceSystem.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/ResourceSystem.cs) 的 `InitializeAsync`、`LoadAssetAsync`、`InstantiateAsync`、`LoadModPackageAsync`、`GetModPackageVersion`、`GetModPackageHash`、`Shutdown`、`EnsureInitialized`。
 - SceneKit 多包后端：[`ResourceSystemSceneLoaderPool.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/ResourceSystemSceneLoaderPool.cs)。
 - 句柄释放：[`ResourceHandle.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/ResourceHandle.cs) 的 `ResourceHandle<T>`、`Dispose`、`AwaitResultAsync`。
 - 缓存和软引用：[`ResourceCache.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/ResourceCache.cs)、[`SoftAssetReference.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/SoftAssetReference.cs)。

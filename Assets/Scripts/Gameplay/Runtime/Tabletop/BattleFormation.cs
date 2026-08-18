@@ -18,10 +18,17 @@ namespace Gameplay.Tabletop
 		[Tooltip("按战斗方顺序定义表现队列；角色的 GAS 阵营与敌我关系不复制到阵型配置。")]
 		private BattleSideFormationRules[] m_sideLayouts = Array.Empty<BattleSideFormationRules>();
 
+		[SerializeField]
+		[LabelText("战斗区域边距")]
+		[Tooltip("战斗区域在卡牌阵列之外保留的二维边距，也用于判断相邻战斗区域是否重叠。")]
+		private Vector2 m_areaMargin = new Vector2(0.1f, 0.1f);
+
 		public IReadOnlyList<BattleSideFormationRules> SideLayouts =>
 			m_sideLayouts ?? Array.Empty<BattleSideFormationRules>();
 
 		public bool IsConfigured => SideLayouts.Count > 0;
+
+		public Vector2 AreaMargin => m_areaMargin;
 
 		public BattleFormationRules()
 		{
@@ -34,7 +41,7 @@ namespace Gameplay.Tabletop
 
 		internal BattleFormation CreateRuntime()
 		{
-			return IsConfigured ? new BattleFormation(SideLayouts) : null;
+			return IsConfigured ? new BattleFormation(SideLayouts, AreaMargin) : null;
 		}
 
 		internal void ValidateContent(ContentValidationContext context, ContentAsset source)
@@ -56,6 +63,13 @@ namespace Gameplay.Tabletop
 				context.AddError(
 					"BATTLE_FORMATION_SIDE_COUNT_INVALID",
 					"战斗阵型至少需要两个战斗方队列。",
+					source);
+			}
+			if (!IsFinite(AreaMargin) || AreaMargin.x < 0f || AreaMargin.y < 0f)
+			{
+				context.AddError(
+					"BATTLE_AREA_MARGIN_INVALID",
+					"战斗区域边距必须是大于或等于 0 的有限二维数值。",
 					source);
 			}
 
@@ -80,6 +94,11 @@ namespace Gameplay.Tabletop
 						source);
 				}
 			}
+		}
+
+		private static bool IsFinite(Vector2 value)
+		{
+			return float.IsFinite(value.x) && float.IsFinite(value.y);
 		}
 	}
 
@@ -163,8 +182,11 @@ namespace Gameplay.Tabletop
 	internal sealed class BattleFormation
 	{
 		private readonly Group[] m_groups;
+		private readonly Vector2 m_areaMargin;
 
-		internal BattleFormation(IReadOnlyList<BattleSideFormationRules> sideLayouts)
+		internal BattleFormation(
+			IReadOnlyList<BattleSideFormationRules> sideLayouts,
+			Vector2 areaMargin)
 		{
 			if (sideLayouts == null)
 			{
@@ -174,7 +196,12 @@ namespace Gameplay.Tabletop
 			{
 				throw new InvalidOperationException("战斗阵型至少需要两个战斗方队列。");
 			}
+			if (!IsFinite(areaMargin) || areaMargin.x < 0f || areaMargin.y < 0f)
+			{
+				throw new InvalidOperationException("战斗区域边距必须是大于或等于 0 的有限二维数值。");
+			}
 
+			m_areaMargin = areaMargin;
 			m_groups = new Group[sideLayouts.Count];
 			for (int index = 0; index < sideLayouts.Count; index++)
 			{
@@ -240,14 +267,48 @@ namespace Gameplay.Tabletop
 			int countInRank = Math.Min(group.ColumnsPerRank, side.ParticipantCount - firstIndexInRank);
 			int columnIndex = indexInSide - firstIndexInRank;
 			float centeredColumnIndex = columnIndex - (countInRank - 1) * 0.5f;
-			Vector2 position = CalculateBattleAnchor(battle.Sides, cards) +
+			Vector2 position = battle.AreaCenter +
 				group.CenterOffset +
 				group.ColumnStep * centeredColumnIndex +
 				group.RankStep * rankIndex;
 			pose = new TabletopCardPose(
-				new Vector3(position.x, position.y, 0f),
+				TabletopCoordinateSpace.ToLocalPosition(position),
 				checked(baseSortingOrder + CalculateParticipantOrder(battle.Sides, sideIndex, indexInSide)));
 			return true;
+		}
+
+		internal Rect CalculateArea(
+			Battle battle,
+			Vector2 cardSize,
+			int additionalParticipantSideIndex = -1)
+		{
+			ValidateBattle(battle);
+			if (!IsFinite(cardSize) || cardSize.x <= 0f || cardSize.y <= 0f)
+			{
+				throw new ArgumentException("战斗区域需要有效的卡牌尺寸。", nameof(cardSize));
+			}
+			if (additionalParticipantSideIndex < -1 ||
+				additionalParticipantSideIndex >= battle.SideCount)
+			{
+				throw new ArgumentOutOfRangeException(nameof(additionalParticipantSideIndex));
+			}
+
+			int largestSideCount = 0;
+			for (int sideIndex = 0; sideIndex < battle.SideCount; sideIndex++)
+			{
+				int participantCount = battle.Sides[sideIndex].ParticipantCount;
+				if (sideIndex == additionalParticipantSideIndex)
+				{
+					participantCount++;
+				}
+				largestSideCount = Math.Max(largestSideCount, participantCount);
+			}
+
+			Vector2 cellSize = cardSize + m_areaMargin;
+			Vector2 areaSize = new Vector2(
+				cellSize.x * largestSideCount,
+				cellSize.y * battle.SideCount) + m_areaMargin * 2f;
+			return new Rect(battle.AreaCenter - areaSize * 0.5f, areaSize);
 		}
 
 		private static int FindSideIndex(
@@ -284,24 +345,6 @@ namespace Gameplay.Tabletop
 			return order;
 		}
 
-		private static Vector2 CalculateBattleAnchor(
-			IReadOnlyList<BattleSide> sides,
-			TabletopCards cards)
-		{
-			Vector2 totalPosition = Vector2.zero;
-			int participantCount = 0;
-			for (int sideIndex = 0; sideIndex < sides.Count; sideIndex++)
-			{
-				IReadOnlyList<TabletopCardId> cardIds = sides[sideIndex].CardIds;
-				for (int cardIndex = 0; cardIndex < cardIds.Count; cardIndex++)
-				{
-					totalPosition += cards.GetStackContaining(cardIds[cardIndex]).Position;
-					participantCount++;
-				}
-			}
-			return totalPosition / participantCount;
-		}
-
 		private readonly struct Group
 		{
 			internal Vector2 CenterOffset { get; }
@@ -316,6 +359,11 @@ namespace Gameplay.Tabletop
 				RankStep = rules.RankStep;
 				ColumnsPerRank = rules.ColumnsPerRank;
 			}
+		}
+
+		private static bool IsFinite(Vector2 value)
+		{
+			return float.IsFinite(value.x) && float.IsFinite(value.y);
 		}
 	}
 }

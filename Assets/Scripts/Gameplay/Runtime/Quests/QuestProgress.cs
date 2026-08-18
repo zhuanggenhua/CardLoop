@@ -89,14 +89,15 @@ namespace Gameplay.Quests
 			return new QuestProgressSnapshot(Definition.ContentId, Status, tasks);
 		}
 
-		internal bool RecordFact(QuestTaskFact fact)
+		internal bool RecordFact(QuestTaskFact fact, out bool completed)
 		{
 			bool changed = false;
 			for (int i = 0; i < m_tasks.Length; i++)
 			{
 				changed |= m_tasks[i].RecordFactFromQuestLog(fact);
 			}
-			return changed && AreAllTasksCompleted();
+			completed = changed && AreAllTasksCompleted();
+			return changed;
 		}
 
 		internal void Activate()

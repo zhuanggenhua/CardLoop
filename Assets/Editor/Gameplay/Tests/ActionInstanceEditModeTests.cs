@@ -347,7 +347,9 @@ namespace Gameplay.Tests
 					cardStateSnapshot,
 					TabletopTestPlacement.Rules,
 					actionSnapshots,
-					completedActionIds.Add,
+					_ => false,
+					(actionId, _) => completedActionIds.Add(actionId),
+					_ => { },
 					cardIdSequence: new TabletopCardIdSequence(context.State.CardIdSequence.NextValue));
 
 				Assert.That<IReadOnlyList<ActionInstance>>(restored.ActiveActions, (IResolveConstraint)(object)((ConstraintExpression)Has.Count).EqualTo((object)1));
@@ -381,6 +383,8 @@ namespace Gameplay.Tests
 					JsonRoundTrip(tabletop.Cards.CreateSnapshot()),
 					TabletopTestPlacement.Rules,
 					new ActionInstanceSnapshot[1] { JsonRoundTrip(tabletop.CreateActiveActionSnapshots()[0]) },
+					_ => false,
+					(_, __) => { },
 					_ => { },
 					cardIdSequence: new TabletopCardIdSequence(context.State.CardIdSequence.NextValue));
 				ActionInstance restoredAction = restored.ActiveActions[0];
@@ -415,6 +419,8 @@ namespace Gameplay.Tests
 						context.Tabletop.Cards.CreateSnapshot(),
 						TabletopTestPlacement.Rules,
 						new ActionInstanceSnapshot[1] { malformed },
+						_ => false,
+						(_, __) => { },
 						_ => { },
 						cardIdSequence: new TabletopCardIdSequence(context.State.CardIdSequence.NextValue));
 				});
@@ -443,6 +449,8 @@ namespace Gameplay.Tests
 						JsonRoundTrip(context.State.CreateSnapshot()),
 						TabletopTestPlacement.Rules,
 						new ActionInstanceSnapshot[1] { actionSnapshot },
+						_ => false,
+						(_, __) => { },
 						_ => { },
 						cardIdSequence: new TabletopCardIdSequence(context.State.CardIdSequence.NextValue));
 				});
@@ -471,6 +479,8 @@ namespace Gameplay.Tests
 						JsonRoundTrip(tabletop.Cards.CreateSnapshot()),
 						TabletopTestPlacement.Rules,
 						new ActionInstanceSnapshot[1] { actionSnapshot },
+						_ => false,
+						(_, __) => { },
 						_ => { },
 						cardIdSequence: new TabletopCardIdSequence(context.State.CardIdSequence.NextValue));
 				});

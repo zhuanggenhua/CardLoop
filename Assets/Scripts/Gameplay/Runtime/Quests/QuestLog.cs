@@ -13,8 +13,29 @@ namespace Gameplay.Quests
 		private readonly ContentId m_scenarioId;
 		private readonly Dictionary<ContentId, QuestProgress> m_quests =
 			new Dictionary<ContentId, QuestProgress>();
+		private readonly List<QuestProgress> m_questOrder = new List<QuestProgress>();
+		private readonly IReadOnlyList<QuestProgress> m_readOnlyQuests;
 
 		public int QuestCount => m_quests.Count;
+
+		public int CompletedQuestCount
+		{
+			get
+			{
+				int count = 0;
+				for (int i = 0; i < m_questOrder.Count; i++)
+				{
+					if (m_questOrder[i].Status == QuestStatus.Completed)
+					{
+						count++;
+					}
+				}
+				return count;
+			}
+		}
+
+		/// <summary>按剧本作者声明顺序读取当前单局的任务，不提供集合写入口。</summary>
+		public IReadOnlyList<QuestProgress> Quests => m_readOnlyQuests;
 
 		internal QuestLog(ContentId scenarioId, IEnumerable<ContentId> questIds, ContentIndex contentIndex)
 		{
@@ -32,6 +53,7 @@ namespace Gameplay.Quests
 			}
 
 			m_scenarioId = scenarioId;
+			m_readOnlyQuests = m_questOrder.AsReadOnly();
 			foreach (ContentId questId in questIds)
 			{
 				if (!questId.IsValid)
@@ -42,12 +64,12 @@ namespace Gameplay.Quests
 				{
 					throw new InvalidOperationException($"任务集合引用的内容 {questId} 不存在或不是任务定义。");
 				}
-				if (!m_quests.TryAdd(
-					questId,
-					new QuestProgress(definition)))
+				QuestProgress quest = new QuestProgress(definition);
+				if (!m_quests.TryAdd(questId, quest))
 				{
 					throw new InvalidOperationException($"任务集合重复包含任务 {questId}。");
 				}
+				m_questOrder.Add(quest);
 			}
 
 			foreach (QuestProgress quest in m_quests.Values)
@@ -80,6 +102,7 @@ namespace Gameplay.Quests
 			}
 
 			m_scenarioId = scenarioId;
+			m_readOnlyQuests = m_questOrder.AsReadOnly();
 			Dictionary<ContentId, QuestProgressSnapshot> saved = new Dictionary<ContentId, QuestProgressSnapshot>();
 			for (int i = 0; i < snapshot.Quests.Count; i++)
 			{
@@ -100,7 +123,9 @@ namespace Gameplay.Quests
 				{
 					throw new InvalidOperationException($"任务日志快照缺少当前剧本任务 {questId}。");
 				}
-				m_quests.Add(questId, new QuestProgress(definition, questSnapshot));
+				QuestProgress quest = new QuestProgress(definition, questSnapshot);
+				m_quests.Add(questId, quest);
+				m_questOrder.Add(quest);
 			}
 			if (saved.Count > 0)
 			{
@@ -158,9 +183,21 @@ namespace Gameplay.Quests
 			}
 
 			List<QuestProgress> completedQuests = new List<QuestProgress>();
-			foreach (QuestProgress quest in m_quests.Values)
+			bool anyProgressChanged = false;
+			for (int i = 0; i < m_questOrder.Count; i++)
 			{
-				if (quest.Status == QuestStatus.Active && quest.RecordFact(fact))
+				QuestProgress quest = m_questOrder[i];
+				if (quest.Status != QuestStatus.Active ||
+					!quest.RecordFact(fact, out bool completed))
+				{
+					continue;
+				}
+
+				anyProgressChanged = true;
+				EventKit.Type.Send(new QuestProgressChangedEvent(
+					m_scenarioId,
+					quest.Definition.ContentId));
+				if (completed)
 				{
 					completedQuests.Add(quest);
 				}
@@ -168,7 +205,7 @@ namespace Gameplay.Quests
 
 			if (completedQuests.Count == 0)
 			{
-				return false;
+				return anyProgressChanged;
 			}
 
 			List<QuestStatusChangedEvent> statusChanges = new List<QuestStatusChangedEvent>();

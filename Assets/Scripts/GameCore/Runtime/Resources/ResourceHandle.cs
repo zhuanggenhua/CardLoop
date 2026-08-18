@@ -21,6 +21,7 @@ namespace GameCore
         public byte OperationType { get; }
         public abstract string PackageName { get; }
         public abstract bool UsesPackage(string packageName);
+        protected bool IsReleased => m_released;
         public bool IsValid => !m_released && IsOperationValid;
         public bool IsDone => IsValid && IsOperationDone;
         public object Result => IsValid ? GetResult() : null;

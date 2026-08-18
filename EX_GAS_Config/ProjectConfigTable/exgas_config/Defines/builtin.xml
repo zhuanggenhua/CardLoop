@@ -40,6 +40,13 @@
         <var name="Mmc" type="int"/>
     </bean>
 
+    <bean name="FormalDamageMatchup" valueType="1" sep=",">
+        <var name="SourceTag" type="int"/>
+        <var name="TargetTag" type="int"/>
+        <var name="Multiplier" type="float"/>
+        <var name="Presentation" type="int"/>
+    </bean>
+
     <bean name="FormalDamage" valueType="1" sep=";">
         <var name="DamageType" type="int"/>
         <var name="FlatDamage" type="int"/>
@@ -52,6 +59,7 @@
         <var name="PushIntensity" type="float"/>
         <var name="PushResistance" type="float"/>
         <var name="InvincibilityDuration" type="float"/>
+        <var name="Matchups" type="(list#sep=|),FormalDamageMatchup"/>
     </bean>
 
     <bean name="FormalConditionalDamage" valueType="1" sep=";">
@@ -68,6 +76,7 @@
         <var name="PushIntensity" type="float"/>
         <var name="PushResistance" type="float"/>
         <var name="InvincibilityDuration" type="float"/>
+        <var name="Matchups" type="(list#sep=|),FormalDamageMatchup"/>
     </bean>
 
     <bean name="Duration" valueType="1">

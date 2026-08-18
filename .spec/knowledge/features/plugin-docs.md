@@ -19,6 +19,12 @@ metadata:
 
 项目已经确认的运行时入口、项目特殊约束和公共工具速查见 [`ai-quick/README.md`](ai-quick/README.md)。本文件仍只负责官方文档入口，不复制这些项目卡的 API 正文。
 
+## 目录边界
+
+- `Assets/Plugins` 默认只放第三方插件、外部框架、第三方依赖和它们的项目级配置资源。
+- 自有可复用插件或库应放在 `Assets/ProjectPlugins` 或本地 UPM 包；不得长期伪装成第三方插件。
+- 第三方 Demo、Example、Editor UI、内置样式和生成器本体只能作为插件随包内容或参考素材处理；要接管为项目正式能力时，必须先登记项目入口、职责边界和偏离原因。
+
 ## 当前入口
 
 | 插件 / 包 | 本地官方文档入口 | 官方仓库 / 文档入口 |
@@ -33,6 +39,8 @@ metadata:
 | Unity Cinemachine | `Packages/manifest.json` 中的 `com.unity.cinemachine` | Unity 官方包文档：`https://docs.unity3d.com/Packages/com.unity.cinemachine@3.1/manual/index.html`；当前项目专项卡待补。 |
 | Unity Timeline | `Packages/manifest.json` 中的 `com.unity.timeline`、EX-GAS Timeline 专项文档 | Unity 官方包文档：`https://docs.unity3d.com/Packages/com.unity.timeline@1.8/manual/index.html`；EX-GAS 时间轴先读插件文档。 |
 | AIBridge Unity | `Packages/com.aibridge.unity/README.md`、`Packages/com.aibridge.unity/package.json` | `Packages/com.aibridge.unity/package.json` 的 `repository.url`。 |
+| PuerTS Unity MCP | `puerts-unity-mcp/README.md`、`puerts-unity-mcp/README-zh.md`、`puerts-unity-mcp/Packages/puerts-unity-mcp/package.json` | 本地 README 和 package.json；项目职责矩阵见 [`ai-quick/unity-automation-tools.md`](ai-quick/unity-automation-tools.md)。 |
+| PuerTS Core / V8 | `puerts-unity-mcp/third_party/puerts/unity/upms/core/package.json`、`puerts-unity-mcp/third_party/puerts/unity/upms/v8/package.json` | 作为 PuerTS Unity MCP 的底层依赖处理，不作为独立 Unity 自动化入口。 |
 | Odin Inspector | `Assets/Plugins/Sirenix/Odin Inspector/`、`Assets/Plugins/Sirenix/Assemblies/Sirenix.OdinInspector.Attributes.dll` | 官方属性文档为 `https://odininspector.com/attributes/label-text-attribute`；当前项目的 ScriptableObject 实际由 `OdinEditor` 绘制，普通字段中文标签统一使用 `[LabelText]`，不修改插件源码。 |
 | UnitySkills | `Packages/com.besty.unity-skills/unity-skills~/SKILL.md`、`Packages/com.besty.unity-skills/unity-skills~/skills/*/SKILL.md`、`references/*.md` | 以包内 skill / references 为本地官方入口。 |
 | NuGetForUnity | `Assets/ThirdParty/nugetforunity/package.json`、`Assets/ThirdParty/nugetforunity/README.pdf`、`Assets/NuGet.config`、`Assets/packages.config` | `package.json` 的 `documentationUrl` / `changelogUrl` 指向 NuGetForUnity 官方仓库；本项目用它管理 Unity 内的 NuGet DLL。 |

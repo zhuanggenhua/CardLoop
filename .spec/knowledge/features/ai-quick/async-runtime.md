@@ -35,7 +35,7 @@ UniTask 的通用 API、PlayerLoop、取消、组合和线程切换直接复用�
 |---|---|
 | 资源启动 | `ResourceSystem.InitializeAsync(..., CancellationToken)` |
 | 资源句柄等待 | `ResourceHandle<T>.ToUniTask()` |
-| Mod 启动 | `ModAPI.Initialize(..., CancellationToken)`、`ModLoader.LoadAllModsAsync`、`LoadModAsync` |
+| Mod 启动 | `ModAPI.Initialize(..., CancellationToken)`、`ModLoader.LoadAllModsAsync` |
 | 压缩包并行解压 | `ModAPI.UnZipAllAsync` 中的 `UniTask.RunOnThreadPool`、`UniTask.WhenAll` |
 | Unity 对象销毁取消 | `GameManager.Start` 将 `destroyCancellationToken` 传给资源和 Mod 启动 |
 | 命令延时 | `Wait` 命令使用 `UniTask.WaitForSeconds` |
@@ -46,7 +46,7 @@ UniTask 的通用 API、PlayerLoop、取消、组合和线程切换直接复用�
 
 `ResourceSystem.InitializeAsync` 的取消只撤销本次项目资源启动结果。YokiFrame 的底层初始化没有完整的中途回滚入口，因此项目入口会等待它收敛到可释放状态，再统一回滚，不能把“中断等待”误说成“第三方资源已立即清理”。
 
-`ModAPI.Initialize` 接受 `CancellationToken`，并在提交 Mod 清单、配置和初始化状态前检查取消。当前 `IModLoader` 没有可中断扫描参数，因此取消不能保证立即停止目录扫描或资源包操作；它保证扫描结束后不会把迟到结果提交为已初始化状态。资源包的最终释放仍由 `ResourceSystem` 统一负责。
+`ModAPI.Initialize` 接受 `CancellationToken`，并把同一令牌传给 `IModLoader` 和 `ResourceSystem.LoadModPackageAsync`。目录扫描、逐 Mod 处理、逐包加载和包初始化各阶段都会检查取消；已经开始的 YooAsset 单次操作没有立即中断入口，因此会自然结束后销毁未发布包，并停止加载后续包。取消结果不会提交为已初始化状态，资源包的最终释放仍由 `ResourceSystem` 统一负责。
 
 使用 `UniTaskVoid` 或 `.Forget()` 时，必须沿用项目已有的异常观察方式；不能让异步异常无人等待、无人记录。
 
@@ -98,5 +98,5 @@ private async UniTask LogTextAsync(
 
 - 当前版本：[`Packages/com.cysharp.unitask/package.json`](../../../../Packages/com.cysharp.unitask/package.json)。
 - 资源异步：[`ResourceSystem.cs`](../../../../Assets/Scripts/GameCore/Runtime/Resources/ResourceSystem.cs) 的 `InitializeAsync`、`ToUniTask` 和各类 `AwaitResultCore`。
-- Mod 异步：[`ModAPI.cs`](../../../../Assets/Scripts/GameCore/Runtime/Mods/ModAPI.cs) 的 `Initialize`、`UnZipAllAsync`、`LoadModInfo`；[`ModLoader.cs`](../../../../Assets/Scripts/GameCore/Runtime/Mods/ModLoader.cs) 的 `LoadAllModsAsync`、`LoadModAsync`。
+- Mod 异步：[`ModAPI.cs`](../../../../Assets/Scripts/GameCore/Runtime/Mods/ModAPI.cs) 的 `Initialize`、`UnZipAllAsync`、`LoadModInfo`；[`ModLoader.cs`](../../../../Assets/Scripts/GameCore/Runtime/Mods/ModLoader.cs) 的 `LoadAllModsAsync`。
 - 启动取消：[`GameManager.cs`](../../../../Assets/Scripts/GameCore/Runtime/Game/GameManager.cs) 的 `Start` 与 `OnDestroy`。

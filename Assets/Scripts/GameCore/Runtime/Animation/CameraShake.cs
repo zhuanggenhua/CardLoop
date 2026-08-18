@@ -6,14 +6,21 @@ namespace GameCore
 {
     /// <summary>
     /// 镜头震动表现入口。
-    /// 当前只消费 GameCore 正式反馈门面广播出的受击上下文，不再直接监听全局伤害通知来反推业务语义。
+    /// 消费 GameCore 正式表现事件，不直接监听伤害规则或战斗管理器来反推业务语义。
     /// </summary>
     public class CameraShake : MonoBehaviour
     {
-        [Header("Settings")]
+        [Header("镜头震动设置")]
+        [Tooltip("普通命中时的震动强度。")]
         [SerializeField] private float m_amplitude = 0.05f;
+
+        [Tooltip("震动在本地 X/Y 方向上的频率。")]
         [SerializeField] private float2 m_frequency = new(60.0f, 50.0f);
+
+        [Tooltip("单次震动持续秒数。")]
         [SerializeField] private float m_duration = 0.2f;
+
+        [Tooltip("暴击时在普通震动强度上的倍率。")]
         [SerializeField] private float m_criticalHitAmplitudeModifier = 2.0f;
 
         private ShakeHandler? m_shakeHandler = null;
@@ -21,11 +28,15 @@ namespace GameCore
         private void OnEnable()
         {
             EventKit.Type.Register<DamageTakenPresentationEvent>(OnDamageTakenPresentation);
+            EventKit.Type.Register<AbilitySystemDamageResolvedPresentationEvent>(
+                OnAbilitySystemDamageResolvedPresentation);
         }
 
         private void OnDisable()
         {
             EventKit.Type.UnRegister<DamageTakenPresentationEvent>(OnDamageTakenPresentation);
+            EventKit.Type.UnRegister<AbilitySystemDamageResolvedPresentationEvent>(
+                OnAbilitySystemDamageResolvedPresentation);
             StopActiveShake();
         }
 
@@ -84,6 +95,18 @@ namespace GameCore
             TransformShaker.InterruptShakeIfInProgress(m_shakeHandler.Value);
             m_shakeHandler = null;
         }
+
+        private void StartShake(bool isCriticalHit)
+        {
+            if (m_shakeHandler.HasValue)
+            {
+                StopActiveShake();
+            }
+
+            float amplitude = isCriticalHit ? m_amplitude * m_criticalHitAmplitudeModifier : m_amplitude;
+            m_shakeHandler = TransformShaker.Shake(this, transform, amplitude, m_frequency, m_duration);
+        }
+
         private void OnDamageTakenPresentation(DamageTakenPresentationEvent presentationEvent)
         {
             DamageTakenFeedbackContext context = presentationEvent.Context;
@@ -94,17 +117,24 @@ namespace GameCore
             {
                 if (!context.damageInput.IsMissed)
                 {
-                    if (m_shakeHandler.HasValue)
-                    {
-                        StopActiveShake();
-                    }
-
-                    bool isCriticalHit = context.damageInput.IsCriticalHit;
-                    float amplitude = isCriticalHit ? m_amplitude * m_criticalHitAmplitudeModifier : m_amplitude;
-                    transform.localPosition = new Vector3(0.0f, 0.0f, transform.localPosition.z);
-                    m_shakeHandler = TransformShaker.Shake(this, transform, amplitude, m_frequency, m_duration);
+                    StartShake(context.damageInput.IsCriticalHit);
                 }
             }
+        }
+
+        private void OnAbilitySystemDamageResolvedPresentation(
+            AbilitySystemDamageResolvedPresentationEvent presentationEvent)
+        {
+            if (!TryGetCameraShakeSources(out ECameraShakeSources cameraShakeSources) ||
+                !cameraShakeSources.HasFlag(ECameraShakeSources.AbilitySystemDamageResolved) ||
+                presentationEvent.IsMissed ||
+                presentationEvent.IsSilent ||
+                presentationEvent.VisualFlags.HasFlag(EEffectVisualFlags.NoCameraShake))
+            {
+                return;
+            }
+
+            StartShake(presentationEvent.IsCriticalHit);
         }
     }
 }

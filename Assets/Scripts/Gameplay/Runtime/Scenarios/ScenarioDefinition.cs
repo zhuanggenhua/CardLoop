@@ -47,6 +47,13 @@ namespace Gameplay.Scenarios
 		[Tooltip("本剧本切换为即时制时，一个普通行动回合单位对应的游戏秒数。战斗、技能时间轴和冷却不使用这个值。")]
 		private float m_secondsPerTurn = 1f;
 
+		[Header("日终")]
+		[SerializeField]
+		[InlineProperty]
+		[LabelText("日终规则")]
+		[Tooltip("声明本剧本是否在每日最后一个行动回合后进入完整日终流程，以及该流程的基础参数。")]
+		private ScenarioDayCycleRules m_dayCycleRules = new ScenarioDayCycleRules();
+
 		[Header("战斗")]
 		[SerializeField]
 		[InlineProperty]
@@ -63,6 +70,8 @@ namespace Gameplay.Scenarios
 		public int TurnsPerDay => m_turnsPerDay;
 
 		public float SecondsPerTurn => m_secondsPerTurn;
+
+		public ScenarioDayCycleRules DayCycleRules => m_dayCycleRules;
 
 		public BattleFormationRules BattleFormationRules => m_battleFormationRules;
 
@@ -83,6 +92,7 @@ namespace Gameplay.Scenarios
 					$"剧本 {ContentId} 的每回合秒数必须是大于 0 的有限值，当前值为 {SecondsPerTurn}。",
 					this);
 			}
+			m_dayCycleRules?.Validate(context, this);
 			ValidateRegions(context);
 			m_battleFormationRules?.ValidateContent(context, this);
 			HashSet<ContentId> questIds = new();
@@ -194,5 +204,13 @@ namespace Gameplay.Scenarios
 					this);
 			}
 		}
+
+		#if UNITY_EDITOR
+		protected override void OnValidate()
+		{
+			base.OnValidate();
+			m_dayCycleRules?.EnsureLocalKeys();
+		}
+		#endif
 	}
 }

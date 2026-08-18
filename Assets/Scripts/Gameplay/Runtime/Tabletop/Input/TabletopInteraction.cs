@@ -65,8 +65,17 @@ namespace Gameplay.Tabletop
                 throw new InvalidOperationException("牌桌交互尚未绑定活动剧本。");
             if (!intent.IsDrag)
             {
-                return Array.Empty<ActionCandidate>();
+				return PresentActionCandidates(scenarioRun.FindActionCandidates(intent));
             }
+			if (scenarioRun.Tabletop.TryDropBattleParticipant(
+					intent.CardId,
+					intent.ReleasePointerPosition,
+					intent.RequestedStackPosition,
+					out _,
+					out _))
+			{
+				return Array.Empty<ActionCandidate>();
+			}
             if (!intent.TargetCardId.IsValid)
             {
                 scenarioRun.Tabletop.TryPlaceStack(
@@ -76,7 +85,11 @@ namespace Gameplay.Tabletop
                 return Array.Empty<ActionCandidate>();
             }
 
-            ActionCandidate[] candidates = scenarioRun.FindActionCandidates(intent);
+			return PresentActionCandidates(scenarioRun.FindActionCandidates(intent));
+		}
+
+		private ActionCandidate[] PresentActionCandidates(ActionCandidate[] candidates)
+		{
             if (candidates.Length == 0)
             {
                 return candidates;

@@ -26,17 +26,22 @@ namespace GameCore
     {
         [LabelText("音频通道")]
         [Tooltip("每个项目音频通道对应的实际 AudioChannel 实例。")]
-        [SerializeField] private SerializableDictionary<EAudioChannel, AudioChannel> m_audioChannels;
+        [SerializeField] private SerializableDictionary<EAudioChannel, AudioChannel> m_audioChannels = new();
 
-        const string kVolumePlayerPrefsKey = "M2D_AudioSystem_Volume_";
+        const string kVolumePlayerPrefsKey = "GameCore_AudioSystem_Volume_";
         const string kChannelVolumePlayerPrefsKey = kVolumePlayerPrefsKey + "Channel_";
         const string kMasterVolumePlayerPrefsKey = kVolumePlayerPrefsKey + "Master";
+		const string kLegacyVolumePlayerPrefsKey = "M2D_AudioSystem_Volume_";
+        const string kLegacyChannelVolumePlayerPrefsKey = kLegacyVolumePlayerPrefsKey + "Channel_";
+		const string kLegacyMasterVolumePlayerPrefsKey = kLegacyVolumePlayerPrefsKey + "Master";
 
         private float m_masterVolume = Constants.DefaultMasterVolume;
+		private readonly Dictionary<EAudioChannel, float> m_defaultChannelVolumeScales = new();
 
         public override void OnSystemStart()
         {
             ValidateAudioChannels();
+			CaptureDefaultSettings();
             LoadSettings();
             EventKit.Type.Register<AudioPlaybackRequestedEvent>(DispatchAudioPlaybackRequest);
         }
@@ -58,14 +63,39 @@ namespace GameCore
 
         public float GetMasterVolume() => m_masterVolume;
 
+		/// <summary>
+		/// 只重置 AudioSystem 拥有的音量偏好，不删除其它系统的 PlayerPrefs。
+		/// </summary>
+		public void ResetSettingsToDefaults()
+		{
+			PlayerPrefs.DeleteKey(kMasterVolumePlayerPrefsKey);
+			PlayerPrefs.DeleteKey(kLegacyMasterVolumePlayerPrefsKey);
+			SetMasterVolume(Constants.DefaultMasterVolume);
+
+			foreach (KeyValuePair<EAudioChannel, AudioChannel> channel in m_audioChannels)
+			{
+				if (channel.Value == null)
+				{
+					continue;
+				}
+
+				PlayerPrefs.DeleteKey($"{kChannelVolumePlayerPrefsKey}{channel.Key}");
+				PlayerPrefs.DeleteKey($"{kLegacyChannelVolumePlayerPrefsKey}{channel.Key}");
+				float defaultScale = m_defaultChannelVolumeScales.TryGetValue(channel.Key, out float scale)
+					? scale
+					: channel.Value.GetVolumeScale();
+				channel.Value.SetVolumeScale(defaultScale);
+			}
+
+			SaveSettings();
+		}
+
         private void LoadSettings()
         {
-            SetMasterVolume(PlayerPrefs.GetFloat(kMasterVolumePlayerPrefsKey, m_masterVolume));
-
-            if (m_audioChannels == null)
-            {
-                return;
-            }
+			float masterVolume = PlayerPrefs.HasKey(kMasterVolumePlayerPrefsKey)
+				? PlayerPrefs.GetFloat(kMasterVolumePlayerPrefsKey)
+				: PlayerPrefs.GetFloat(kLegacyMasterVolumePlayerPrefsKey, m_masterVolume);
+			SetMasterVolume(masterVolume);
 
             foreach (KeyValuePair<EAudioChannel, AudioChannel> channel in m_audioChannels)
             {
@@ -74,25 +104,39 @@ namespace GameCore
                     continue;
                 }
 
-                channel.Value.SetVolumeScale(PlayerPrefs.GetFloat($"{kChannelVolumePlayerPrefsKey}{channel.Key}", channel.Value.GetVolumeScale()));
+				string key = $"{kChannelVolumePlayerPrefsKey}{channel.Key}";
+				string legacyKey = $"{kLegacyChannelVolumePlayerPrefsKey}{channel.Key}";
+				float volume = PlayerPrefs.HasKey(key)
+					? PlayerPrefs.GetFloat(key)
+					: PlayerPrefs.GetFloat(legacyKey, channel.Value.GetVolumeScale());
+				channel.Value.SetVolumeScale(volume);
             }
         }
+
+		private void CaptureDefaultSettings()
+		{
+			m_defaultChannelVolumeScales.Clear();
+			foreach (KeyValuePair<EAudioChannel, AudioChannel> channel in m_audioChannels)
+			{
+				if (channel.Value != null)
+				{
+					m_defaultChannelVolumeScales[channel.Key] = channel.Value.GetVolumeScale();
+				}
+			}
+		}
 
         private void SaveSettings()
         {
             PlayerPrefs.SetFloat(kMasterVolumePlayerPrefsKey, m_masterVolume);
 
-            if (m_audioChannels != null)
+            foreach (KeyValuePair<EAudioChannel, AudioChannel> channel in m_audioChannels)
             {
-                foreach (KeyValuePair<EAudioChannel, AudioChannel> channel in m_audioChannels)
+                if (channel.Value == null)
                 {
-                    if (channel.Value == null)
-                    {
-                        continue;
-                    }
-
-                    PlayerPrefs.SetFloat($"{kChannelVolumePlayerPrefsKey}{channel.Key}", channel.Value.GetVolumeScale());
+                    continue;
                 }
+
+				PlayerPrefs.SetFloat($"{kChannelVolumePlayerPrefsKey}{channel.Key}", channel.Value.GetVolumeScale());
             }
 
             PlayerPrefs.Save();
@@ -222,12 +266,6 @@ namespace GameCore
 
         private void ValidateAudioChannels()
         {
-            if (m_audioChannels == null)
-            {
-                Debug.LogError($"[{nameof(AudioSystem)}] AudioSystem 缺少音频通道配置，所有 AudioClipResolver 播放请求都会失败。", this);
-                return;
-            }
-
             foreach (KeyValuePair<EAudioChannel, AudioChannel> channel in m_audioChannels)
             {
                 if (channel.Value == null)

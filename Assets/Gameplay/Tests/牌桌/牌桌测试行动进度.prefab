@@ -27,7 +27,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.9, y: 0.72, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6544517024842315684}
@@ -81,8 +81,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 57fe652483042fb4ba6612b888e7a928, type: 3}
-  m_Color: {r: 0.24, g: 0.86, b: 0.94, a: 1}
+  m_Sprite: {fileID: 21300000, guid: 0f54d867b9639e44c646777766827b09, type: 3}
+  m_Color: {r: 1, g: 0.7974138, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -118,9 +118,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1925150882276956190}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.86, y: 0.1, z: 1}
+  m_LocalScale: {x: 1.25, y: 0.078125, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6199238157545156394}
@@ -175,8 +175,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 57fe652483042fb4ba6612b888e7a928, type: 3}
-  m_Color: {r: 0.03, g: 0.05, b: 0.07, a: 0.88}
+  m_Sprite: {fileID: 21300000, guid: 0f54d867b9639e44c646777766827b09, type: 3}
+  m_Color: {r: 0.25, g: 0.25, b: 0.25, a: 0.8}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -196,11 +196,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 990cdbb354b15aa4689b0a298ea24c35, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Tabletop.TabletopActionProgressView
   m_backgroundRenderer: {fileID: 7655529061023430511}
   m_fillRenderer: {fileID: 5986407571076195808}
-  m_anchorOffset: {x: 0, y: -0.62, z: -0.08}
+  m_anchorOffset: {x: 0, y: 0.002, z: -0.62}
   m_stackedOffset: 0.14
-  m_runningColor: {r: 0.24, g: 0.86, b: 0.94, a: 1}
+  m_runningColor: {r: 1, g: 0.7974138, b: 0, a: 1}
   m_pausedColor: {r: 1, g: 0.72, b: 0.24, a: 1}

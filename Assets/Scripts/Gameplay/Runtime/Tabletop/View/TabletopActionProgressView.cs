@@ -21,7 +21,7 @@ namespace Gameplay.Tabletop
 		[Header("布局")]
 		[SerializeField]
 		[Tooltip("相对行动锚点卡牌的本地位置。")]
-		private Vector3 m_anchorOffset = new Vector3(0f, -0.62f, -0.08f);
+		private Vector3 m_anchorOffset = new Vector3(0f, 0.002f, -0.62f);
 
 		[SerializeField]
 		[Min(0f)]
@@ -30,7 +30,7 @@ namespace Gameplay.Tabletop
 
 		[Header("状态颜色")]
 		[SerializeField]
-		private Color m_runningColor = new Color(0.24f, 0.86f, 0.94f, 1f);
+		private Color m_runningColor = new Color(1f, 0.7974138f, 0f, 1f);
 
 		[SerializeField]
 		private Color m_pausedColor = new Color(1f, 0.72f, 0.24f, 1f);
@@ -76,7 +76,7 @@ namespace Gameplay.Tabletop
 			IsPaused = paused;
 			StackedIndex = stackedIndex;
 			base.gameObject.SetActive(true);
-			base.transform.localPosition = m_anchorOffset + Vector3.up * (m_stackedOffset * stackedIndex);
+			base.transform.localPosition = m_anchorOffset + Vector3.forward * (m_stackedOffset * stackedIndex);
 			m_fillRenderer.transform.localScale = new Vector3(
 				m_fillBaseLocalScale.x * NormalizedProgress,
 				m_fillBaseLocalScale.y,

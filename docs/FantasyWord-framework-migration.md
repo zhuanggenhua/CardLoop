@@ -40,7 +40,7 @@
 | `Assets/Plugins` | `Assets/Plugins` | 保留主体 | 第三方插件集合；包含插件自带 Demo/Examples，Demo 不是 FantasyWord 旧业务，但可能后续按体积或编译噪音裁剪。 |
 | `Assets/ProjectPlugins/ContextSteering2D` | `Assets/ProjectPlugins/ContextSteering2D` | 保留 | 自有可复用 2D 转向插件。 |
 | `Assets/Scripts/Gen` | `Assets/Scripts/Gen` | 保留 | EX-GAS / GameCore 生成运行时胶水层，包含 `FantasyWord.GAS.GeneratedRuntime.asmdef`、`XAbility.gen.cs`、`XLuban.gen.cs`、`XLauncher.gen.cs` 等；不是手写业务代码，缺失会导致 GameCore Editor smoke / EditMode 测试无法编译。 |
-| `.spec/skills`、`.spec/agents`、`.agents/skills`、`.codex/skills` | 同名目录 | 保留可复用部分 | AI workflow、agents 和专项 skills；旧项目任务事实不接管。 |
+| `.spec/skills`、`.spec/agents` | 同名目录 | 保留并作为唯一权威源 | AI workflow、agents 和专项 skills；旧项目任务事实不接管。`.agents/skills`、`.claude/skills`、`.claude/agents` 只是指向 `.spec` 的宿主发现适配入口，`.codex/skills` 已不再作为项目入口。 |
 | `.unity-env` | `.unity-env` | 保留候选 | Unity 环境脚本候选，需后续验证是否仍适配 CardLoop。 |
 
 ### 保留但待验证：插件集合中的 Demo / Examples
@@ -88,7 +88,7 @@
 | `.spec/decisions` | 未接管旧决策 | 目标仅保留占位 README | FantasyWord 历史架构决策不自动适用于 CardLoop。 |
 | `.spec/knowledge/features/project` | 未接管旧业务知识库 | 目标仅保留占位 README | FantasyWord 业务知识库强项目绑定。 |
 | `openspec/changes`、`openspec/specs` | 未迁入 | 源存在，目标不存在 | 旧项目提案和规格，不自动成为 CardLoop scope。 |
-| `.codex/skills/safe-image-reading` | 未迁入 | 已排除 | 源项目中已暂停，且指向 FantasyWord 备份路径。 |
+| 源项目 `.codex/skills/safe-image-reading` | 未迁入 | 已排除 | 源项目中已暂停，且指向 FantasyWord 备份路径。 |
 | `.spec/skills/equipment-system-workflow` | 未迁入 | 已排除 | 旧装备/坐骑专项流程，强项目绑定。 |
 
 ## Manifest 变更
@@ -224,8 +224,8 @@
 
 ## 本轮静态验证
 
-- 文件数对账通过但存在已解释差异：`Packages/com.aibridge.unity` 比来源多 2 个 Unity 6000.5 对象 ID 兼容文件，`puerts-unity-mcp` 比来源多 2 个 Unity 对象 ID 兼容文件，`Assets/Plugins` 比来源多 2 个 DOTween 模块 asmdef setup 文件；`.spec/skills` 少 1 个旧装备 workflow，`.codex/skills` 少 1 个已暂停的 `safe-image-reading`，均符合本清单裁决。
-- 其余关键目录与来源文件数一致：`Packages/com.besty.unity-skills`、`Packages/com.ami.broaudio`、`Packages/com.cysharp.unitask`、`Packages/com.tuyoogame.yooasset`、`Packages/com.liyingsong.foldertag`、`puerts-unity-mcp-extension`、`Assets/ProjectPlugins/ContextSteering2D`、`Assets/Scripts/Gen`、`.spec/agents`、`.agents/skills`、`.unity-env`。
+- 文件数对账通过但存在已解释差异：`Packages/com.aibridge.unity` 比来源多 2 个 Unity 6000.5 对象 ID 兼容文件，`puerts-unity-mcp` 比来源多 2 个 Unity 对象 ID 兼容文件，`Assets/Plugins` 比来源多 2 个 DOTween 模块 asmdef setup 文件；`.spec/skills` 少 1 个旧装备 workflow，并排除了源项目中已暂停的 `safe-image-reading`，均符合本清单裁决。
+- 其余关键目录与来源文件数一致：`Packages/com.besty.unity-skills`、`Packages/com.ami.broaudio`、`Packages/com.cysharp.unitask`、`Packages/com.tuyoogame.yooasset`、`Packages/com.liyingsong.foldertag`、`puerts-unity-mcp-extension`、`Assets/ProjectPlugins/ContextSteering2D`、`Assets/Scripts/Gen`、`.spec/agents`、`.unity-env`。项目 skill 已收口到 `.spec/skills`；宿主发现入口由 symlink 适配，不再按实体目录对账。
 - `Assets/Scripts/Gen` 已补入并对账通过：源工程 20 个文件 / `.meta`，目标工程 20 个文件 / `.meta`。
 - `Packages/manifest.json` JSON 解析通过。
 - manifest 中所有本地 `file:` 包路径均存在。

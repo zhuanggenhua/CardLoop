@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -5,7 +6,9 @@ namespace GameCore
 {
     public class UISettingsChannelVolume : UISettingsVolume
     {
-        [Header("Settings")]
+        [Header("音频通道")]
+        [LabelText("音频通道")]
+        [Tooltip("这个控件要调整的 GameCore 音频通道。")]
         [SerializeField] private EAudioChannel m_audioChannel;
 
         public EAudioChannel audioChannel => m_audioChannel;

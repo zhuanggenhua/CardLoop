@@ -133,6 +133,24 @@ namespace Gameplay.Tabletop
 			return new TabletopCardStack(detachedCards, Position, isPlacementLocked: false);
 		}
 
+		/// <summary>从当前牌堆抽出指定位置的一张卡，剩余卡牌继续留在原牌堆并保持相对顺序。</summary>
+		internal TabletopCardStack DetachSingleAt(int cardIndex)
+		{
+			if (cardIndex < 0 || cardIndex >= m_cards.Count)
+			{
+				throw new ArgumentOutOfRangeException(nameof(cardIndex), "抽出单张卡牌的位置必须位于牌堆内。");
+			}
+			if (m_cards.Count <= 1)
+			{
+				throw new InvalidOperationException("只有一张卡牌的牌堆不需要抽出单卡。");
+			}
+
+			TabletopCard detachedCard = m_cards[cardIndex];
+			m_cards.RemoveAt(cardIndex);
+			detachedCard.DetachFromStack(this);
+			return new TabletopCardStack(detachedCard, Position, isPlacementLocked: false);
+		}
+
 		internal void MoveTo(Vector2 position)
 		{
 			if (!float.IsFinite(position.x) || !float.IsFinite(position.y))

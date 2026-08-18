@@ -128,11 +128,11 @@ public sealed partial class gameplayEffect : Luban.BeanBase
     /// </summary>
     public readonly Stacking? Stacking;
     /// <summary>
-    /// 正式项目伤害配置；用于基础攻击/背刺等需要角色攻防结算的即时GE
+    /// 正式项目伤害配置；第12项 Matchups 为来源标签,目标标签,倍率,表现语义的列表，用于吸收 StackCraft 克制效果
     /// </summary>
     public readonly FormalDamage? FormalDamage;
     /// <summary>
-    /// 条件正式项目伤害配置；当前用于背刺等命中后条件化附加伤害
+    /// 条件正式项目伤害配置；第14项 Matchups 同 FormalDamage，未配置则不参与克制
     /// </summary>
     public readonly FormalConditionalDamage? FormalConditionalDamage;
    

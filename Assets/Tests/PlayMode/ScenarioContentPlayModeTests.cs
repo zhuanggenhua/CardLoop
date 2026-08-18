@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
@@ -29,6 +30,19 @@ namespace Gameplay.Tests
         private const string FoundationScenePath = "Assets/Scenes/FoundationTest.unity";
         private const string FoundationMapScenePath = "Assets/Scenes/FoundationMapTest.unity";
         private const string FoundationSecondMapScenePath = "Assets/Scenes/FoundationSecondMapTest.unity";
+        private string m_saveDirectory;
+
+        [UnitySetUp]
+        public IEnumerator ConfigureIsolatedSaveDirectory()
+        {
+            m_saveDirectory = Path.Combine(
+                Application.temporaryCachePath,
+                "Gameplay-ScenarioContentTests",
+                System.Guid.NewGuid().ToString("N"));
+            SaveSystem.ResetSaveKitConfigurationForTests();
+            SaveSystem.ConfigureSaveKit(m_saveDirectory);
+            yield return null;
+        }
 
         [UnityTest]
 		public IEnumerator FoundationScene_LoadsCardAndActionAuthorSourcesIntoIndex()
@@ -350,6 +364,17 @@ namespace Gameplay.Tests
 			TabletopCard savedCard = savedRun.Tabletop.CreateCard(
 				new ContentId(FoundationTestSceneHarness.TestProductContentId),
 				new Vector2(1.25f, -0.5f));
+			CharacterCard savedCharacter = (CharacterCard)savedRun.Tabletop.CreateCard(
+				new ContentId("test.foundation.card"),
+				new Vector2(-1.25f, -0.5f));
+			float savedHealth = savedCharacter.AbilitySystem.GetAttrBaseValue(
+				XAttrSet.FightUnit,
+				XAttribute.Health) - 1f;
+			savedCharacter.AbilitySystem.SetAttrBaseValue(
+				XAttrSet.FightUnit,
+				XAttribute.Health,
+				savedHealth);
+			savedCharacter.AbilitySystem.SetLevel(4);
 			director.ConfirmTurn();
 
 			try
@@ -370,6 +395,15 @@ namespace Gameplay.Tests
 				Assert.That(restoredRun.ConfirmedTurnIndex, Is.EqualTo(1));
 				Assert.That(restoredRun.Tabletop.Cards.TryGetCard(savedCard.Id, out TabletopCard restoredCard), Is.True);
 				Assert.That(restoredCard.ContentId.Value, Is.EqualTo(FoundationTestSceneHarness.TestProductContentId));
+				Assert.That(
+					restoredRun.Tabletop.Cards.TryGetCard(savedCharacter.Id, out TabletopCard restoredCharacterCard),
+					Is.True);
+				Assert.That(restoredCharacterCard, Is.TypeOf<CharacterCard>());
+				CharacterCard restoredCharacter = (CharacterCard)restoredCharacterCard;
+				Assert.That(restoredCharacter.AbilitySystem.GetLevel(), Is.EqualTo(4));
+				Assert.That(
+					restoredCharacter.AbilitySystem.GetAttrBaseValue(XAttrSet.FightUnit, XAttribute.Health),
+					Is.EqualTo(savedHealth));
 				Assert.That(harness.ScenarioRun, Is.SameAs(restoredRun));
 				Assert.That(harness.Cards, Is.SameAs(restoredRun.Tabletop.Cards));
 				Assert.That(tabletopView.BoundTabletop, Is.SameAs(restoredRun.Tabletop));
@@ -703,6 +737,12 @@ namespace Gameplay.Tests
             {
                 Object.Destroy(GameManager.Instance.gameObject);
                 yield return null;
+            }
+
+            SaveSystem.ResetSaveKitConfigurationForTests();
+            if (!string.IsNullOrWhiteSpace(m_saveDirectory) && Directory.Exists(m_saveDirectory))
+            {
+                Directory.Delete(m_saveDirectory, true);
             }
 
             yield return null;

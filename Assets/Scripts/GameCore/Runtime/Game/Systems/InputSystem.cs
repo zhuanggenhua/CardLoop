@@ -104,6 +104,29 @@ namespace GameCore
             };
         }
 
+        /// <summary>
+        /// 读取 Gameplay 动作图中 Vector2 类型动作的当前值。
+        /// 牌桌镜头等玩法表现只能通过本入口消费滚轮和方向值，不能直接读取 Unity 原始输入。
+        /// </summary>
+        public Vector2 ReadGameplayVector2(EGameplayInputAction action)
+        {
+            if (!m_isInitialized)
+            {
+                return Vector2.zero;
+            }
+
+            return action switch
+            {
+                EGameplayInputAction.Move or
+                EGameplayInputAction.Point or
+                EGameplayInputAction.ScrollWheel => GetGameplayAction(action).ReadValue<Vector2>(),
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(action),
+                    action,
+                    "该 Gameplay 动作不是二维数值，不能按 Vector2 读取。")
+            };
+        }
+
         public void AddControlsChangedListener(System.Action listener)
         {
             m_controlsChanged += listener;
@@ -154,6 +177,11 @@ namespace GameCore
 
         public bool IsGameplayActionPressed(EGameplayInputAction action)
         {
+            if (!m_isInitialized)
+            {
+                return false;
+            }
+
             return GetGameplayAction(action).IsInProgress();
         }
 
@@ -163,11 +191,21 @@ namespace GameCore
         /// </summary>
         public bool IsGameplayActionBlocked(EGameplayInputAction action)
         {
+            if (!m_isInitialized)
+            {
+                return false;
+            }
+
             return IsBlocked(GetGameplayAction(action));
         }
 
         public bool IsUIActionPressed(EUIInputAction action)
         {
+            if (!m_isInitialized)
+            {
+                return false;
+            }
+
             return GetUIAction(action).IsInProgress();
         }
 
@@ -217,7 +255,7 @@ namespace GameCore
             m_currentActionMap = actionMap;
             m_playerInput.SwitchCurrentActionMap(actionMap.ToString());
             ArmActionMapReleaseGate(actionMap);
-            UpdateEventSystemUiModuleGate(resetActionsForMapSwitch: true);
+            UpdateEventSystemUiModuleGate();
         }
 
         /// <summary>
@@ -325,6 +363,8 @@ namespace GameCore
                 openGameMenu = actions.FindAction("OpenGameMenu"),
                 point = actions.FindAction("Point"),
                 click = actions.FindAction("Click"),
+                middleClick = actions.FindAction("MiddleClick"),
+                scrollWheel = actions.FindAction("ScrollWheel"),
                 toggleMovementControlMode = actions.FindAction("ToggleMovementControlMode")
             };
         }
@@ -369,6 +409,8 @@ namespace GameCore
                 EGameplayInputAction.OpenGameMenu => m_gameplayActions.openGameMenu,
                 EGameplayInputAction.Point => m_gameplayActions.point,
                 EGameplayInputAction.Click => m_gameplayActions.click,
+                EGameplayInputAction.MiddleClick => m_gameplayActions.middleClick,
+                EGameplayInputAction.ScrollWheel => m_gameplayActions.scrollWheel,
                 EGameplayInputAction.ToggleMovementControlMode => m_gameplayActions.toggleMovementControlMode,
                 _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
             };
@@ -493,6 +535,7 @@ namespace GameCore
             m_gameplayActions.interact.canceled += OnSharedActionReleased;
             m_gameplayActions.openGameMenu.canceled += OnSharedActionReleased;
             m_gameplayActions.click.canceled += OnSharedActionReleased;
+            m_gameplayActions.middleClick.canceled += OnSharedActionReleased;
 
             m_uiActions.navigate.canceled += OnSharedActionReleased;
             m_uiActions.submit.canceled += OnSharedActionReleased;
@@ -506,6 +549,7 @@ namespace GameCore
             m_gameplayActions.interact.canceled -= OnSharedActionReleased;
             m_gameplayActions.openGameMenu.canceled -= OnSharedActionReleased;
             m_gameplayActions.click.canceled -= OnSharedActionReleased;
+            m_gameplayActions.middleClick.canceled -= OnSharedActionReleased;
 
             m_uiActions.navigate.canceled -= OnSharedActionReleased;
             m_uiActions.submit.canceled -= OnSharedActionReleased;
@@ -530,7 +574,8 @@ namespace GameCore
                         m_gameplayActions.move,
                         m_gameplayActions.interact,
                         m_gameplayActions.openGameMenu,
-                        m_gameplayActions.click);
+                        m_gameplayActions.click,
+                        m_gameplayActions.middleClick);
                     break;
                 case EActionMap.UI:
                     m_actionMapReleaseGate.ArmIfPressed(
@@ -542,7 +587,7 @@ namespace GameCore
             }
         }
 
-        private void UpdateEventSystemUiModuleGate(bool resetActionsForMapSwitch = false)
+        private void UpdateEventSystemUiModuleGate()
         {
             EventSystem eventSystem = GameManager.EventSystem;
             if (eventSystem == null)
@@ -559,23 +604,38 @@ namespace GameCore
                 return;
             }
 
-            bool canProcessUiInputs = !m_actionMapReleaseGate.HasBlockedActions;
+            bool canProcessUiNavigation = !m_actionMapReleaseGate.HasBlockedActions;
             eventSystem.sendNavigationEvents =
-                m_currentActionMap == EActionMap.UI && canProcessUiInputs;
-            if (!canProcessUiInputs)
-            {
-                inputModule.enabled = false;
-                return;
-            }
-
-            // PlayerInput 切图会停用前一张图的 UI 动作；常驻 HUD 仍需要同一资产的鼠标动作。
-            // 只在明确切换图时重启模块，避免鼠标抬起回调中重置正在处理的 UI 点击。
-            if (resetActionsForMapSwitch && inputModule.enabled)
-            {
-                inputModule.enabled = false;
-            }
-
+                m_currentActionMap == EActionMap.UI && canProcessUiNavigation;
             inputModule.enabled = true;
+            EnsureUiPointerActionsEnabled(inputModule);
+        }
+
+        private static void EnsureUiPointerActionsEnabled(InputSystemUIInputModule inputModule)
+        {
+            // Gameplay 状态也有常驻 HUD；PlayerInput 切到 Gameplay 会禁用 UI map，
+            // 这里仅保留指针点击链，导航/Submit 仍由 EventSystem.sendNavigationEvents 限制。
+            EnableRequiredInputAction(inputModule.point, "UI Point");
+            EnableRequiredInputAction(inputModule.leftClick, "UI Click");
+            EnableOptionalInputAction(inputModule.rightClick);
+            EnableOptionalInputAction(inputModule.middleClick);
+            EnableOptionalInputAction(inputModule.scrollWheel);
+        }
+
+        private static void EnableRequiredInputAction(InputActionReference actionReference, string displayName)
+        {
+            if (actionReference == null || actionReference.action == null)
+            {
+                throw new InvalidOperationException(
+                    $"正式 UI 输入模块缺少 {displayName} 动作引用，常驻 HUD 无法接收鼠标输入。");
+            }
+
+            actionReference.action.Enable();
+        }
+
+        private static void EnableOptionalInputAction(InputActionReference actionReference)
+        {
+            actionReference?.action?.Enable();
         }
 
         /// <summary>

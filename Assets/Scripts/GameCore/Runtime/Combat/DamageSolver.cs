@@ -16,8 +16,8 @@ namespace GameCore
 
         internal static int CalculateDamageIn(int damage, float defense)
         {
-            float nonNegativeDefense = math.max(0.0f, defense);
-            return (int)math.floor(damage * (100.0f / (100.0f + nonNegativeDefense)));
+            int defensePower = (int)math.round(defense);
+            return math.max(1, damage - defensePower);
         }
 
         internal static int CalculateCriticalDamage(int damage, float criticalMultiplierPercent)
@@ -25,20 +25,28 @@ namespace GameCore
             return (int)math.round(damage * math.max(0.0f, criticalMultiplierPercent) / 100.0f);
         }
 
+        internal static int CalculateMatchupDamage(int damage, float multiplier)
+        {
+            if (float.IsNaN(multiplier) || float.IsInfinity(multiplier) || multiplier < 0.0f)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(multiplier),
+                    multiplier,
+                    "伤害克制倍率必须是非负有限数值。");
+            }
+
+            return (int)math.round(damage * multiplier);
+        }
+
         internal static bool EvaluateCritical(float criticalChancePercent, float rollPercent)
         {
-            return rollPercent < math.clamp(criticalChancePercent, 0.0f, 100.0f);
+            return rollPercent <= math.clamp(criticalChancePercent, 0.0f, 100.0f);
         }
 
         internal static bool EvaluateMiss(float accuracy, float dodge, float hitRollPercent)
         {
-            float nonNegativeAccuracy = math.max(0.0f, accuracy);
-            float nonNegativeDodge = math.max(0.0f, dodge);
-            float denominator = nonNegativeAccuracy + nonNegativeDodge;
-            float hitChance = denominator <= 0.0f
-                ? 0.0f
-                : nonNegativeAccuracy * 100.0f / denominator;
-            return hitRollPercent >= hitChance;
+            float hitChancePercent = math.clamp(accuracy - dodge, 5.0f, 95.0f);
+            return hitRollPercent > hitChancePercent;
         }
 
         internal static DamageOutputDescriptor SolveDamageOutput(
@@ -55,7 +63,9 @@ namespace GameCore
                     type = input.DamageType,
                     flags = EDamageFlag.None,
                     rolls = rolls,
+                    criticalBehavior = input.CriticalBehavior,
                     missBehavior = input.MissBehavior,
+                    matchupRules = input.MatchupRules,
                     ignoreDefense = input.IgnoreDefense,
                     silent = input.Silent
                 };
@@ -91,7 +101,18 @@ namespace GameCore
             CharacterBase defender,
             DamageOutputDescriptor output)
         {
-            return SolveDamageInput(defender.CreateCombatStatSnapshot(), output);
+            if (!defender)
+            {
+                throw new ArgumentNullException(nameof(defender));
+            }
+
+            AbilitySystemCell defenderAbilitySystem = null;
+            if (defender.TryGetFormalAbilitySystem(out AbilitySystemComponent abilitySystemComponent))
+            {
+                defenderAbilitySystem = abilitySystemComponent.Cell;
+            }
+
+            return SolveDamageInput(defender.CreateCombatStatSnapshot(), defenderAbilitySystem, output);
         }
 
         internal static DamageInputDescriptor SolveDamageInput(
@@ -103,7 +124,7 @@ namespace GameCore
                 throw new ArgumentNullException(nameof(defender));
             }
 
-            return SolveDamageInput(CreateCombatStatSnapshot(defender), output);
+            return SolveDamageInput(CreateCombatStatSnapshot(defender), defender, output);
         }
 
         internal static CombatStatSnapshot CreateCombatStatSnapshot(AbilitySystemCell abilitySystem)
@@ -132,24 +153,16 @@ namespace GameCore
                 input.FlatDamages,
                 input.ScalingFactor,
                 attackerCombatStats.GetOffensiveStat(input.DamageType));
-            bool canCriticalHit =
-                GameManager.Config.canCriticalHit &&
-                input.CriticalBehavior != EResolutionBehavior.Never;
-            bool criticalHit =
-                canCriticalHit &&
-                (input.CriticalBehavior == EResolutionBehavior.Always ||
-                 EvaluateCritical(attackerCombatStats.CriticalChance, rolls.CriticalRollPercent));
-
             return new DamageOutputDescriptor
             {
                 source = source,
-                damage = criticalHit
-                    ? CalculateCriticalDamage(damage, attackerCombatStats.CriticalMultiplier)
-                    : damage,
+                damage = damage,
                 type = input.DamageType,
-                flags = criticalHit ? EDamageFlag.Critical : EDamageFlag.None,
+                flags = EDamageFlag.None,
                 rolls = rolls,
+                criticalBehavior = input.CriticalBehavior,
                 missBehavior = input.MissBehavior,
+                matchupRules = input.MatchupRules,
                 ignoreDefense = input.IgnoreDefense,
                 silent = input.Silent
             };
@@ -157,6 +170,7 @@ namespace GameCore
 
         private static DamageInputDescriptor SolveDamageInput(
             CombatStatSnapshot defenderCombatStats,
+            AbilitySystemCell defenderAbilitySystem,
             DamageOutputDescriptor output)
         {
             if (!output.TryGetSourceCombatStatSnapshot(out CombatStatSnapshot attackerCombatStats))
@@ -166,6 +180,7 @@ namespace GameCore
                     source = output.source,
                     damage = output.damage,
                     flags = output.flags,
+                    matchupResult = DamageMatchupResult.None,
                     silent = output.silent
                 };
             }
@@ -179,18 +194,76 @@ namespace GameCore
             bool missed =
                 canMiss &&
                 (output.missBehavior == EResolutionBehavior.Always ||
-                 EvaluateMiss(
-                     attackerCombatStats.Accuracy,
-                     defenderCombatStats.Dodge,
-                     output.rolls.HitRollPercent));
+                     EvaluateMiss(
+                         attackerCombatStats.Accuracy,
+                         defenderCombatStats.Dodge,
+                         output.rolls.HitRollPercent));
+            DamageMatchupEvaluation matchup = missed
+                ? default
+                : EvaluateMatchup(output, defenderAbilitySystem);
+            if (matchup.HasMatch)
+            {
+                damage = CalculateMatchupDamage(damage, matchup.Multiplier);
+            }
+            bool canCriticalHit =
+                GameManager.Config.canCriticalHit &&
+                output.criticalBehavior != EResolutionBehavior.Never;
+            bool criticalHit =
+                !missed &&
+                canCriticalHit &&
+                (output.criticalBehavior == EResolutionBehavior.Always ||
+                 EvaluateCritical(attackerCombatStats.CriticalChance, output.rolls.CriticalRollPercent));
 
             return new DamageInputDescriptor
             {
                 source = output.source,
-                damage = missed ? 0 : damage,
-                flags = missed ? output.flags | EDamageFlag.Miss : output.flags,
+                damage = missed
+                    ? 0
+                    : criticalHit
+                        ? CalculateCriticalDamage(damage, attackerCombatStats.CriticalMultiplier)
+                        : damage,
+                flags = missed
+                    ? EDamageFlag.Miss
+                    : criticalHit
+                        ? EDamageFlag.Critical
+                        : EDamageFlag.None,
+                matchupResult = missed ? DamageMatchupResult.None : matchup.Result,
                 silent = output.silent
             };
+        }
+
+        private static DamageMatchupEvaluation EvaluateMatchup(
+            DamageOutputDescriptor output,
+            AbilitySystemCell defenderAbilitySystem)
+        {
+            if (output.matchupRules == null || output.matchupRules.Count == 0)
+            {
+                return default;
+            }
+            if (defenderAbilitySystem == null)
+            {
+                throw new InvalidOperationException(
+                    "正式伤害配置了克制规则，但目标缺少 EX-GAS ASC，无法读取目标战斗标签。");
+            }
+            if (output.source == null ||
+                !output.source.TryResolveAbilitySystem(out AbilitySystemCell sourceAbilitySystem) ||
+                sourceAbilitySystem == null)
+            {
+                throw new InvalidOperationException(
+                    "正式伤害配置了克制规则，但来源缺少 EX-GAS ASC，无法读取来源战斗标签。");
+            }
+
+            for (int ruleIndex = 0; ruleIndex < output.matchupRules.Count; ruleIndex++)
+            {
+                DamageMatchupRule rule = output.matchupRules[ruleIndex];
+                if (sourceAbilitySystem.HasTag(rule.SourceRequiredTag) &&
+                    defenderAbilitySystem.HasTag(rule.TargetRequiredTag))
+                {
+                    return new DamageMatchupEvaluation(rule.Multiplier, rule.Result);
+                }
+            }
+
+            return default;
         }
     }
 }

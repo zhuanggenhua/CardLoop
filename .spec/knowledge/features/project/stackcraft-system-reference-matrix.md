@@ -1,12 +1,289 @@
 ---
 name: stackcraft-system-reference-matrix
-description: StackCraft 架构吸收审查表：按依赖顺序重排模块，先建立 GamePlay 数据定义与内容契约，再逐块重构吸收 StackCraft，并纳入 UI 框架与联机约束。
+description: StackCraft 架构吸收审查表：按依赖顺序重排模块，先建立 Gameplay 数据定义与内容契约，再逐块重构吸收 StackCraft，并纳入 UI 框架与联机约束。
 metadata:
   type: feature
   status: 设计中
 ---
 
 # StackCraft 模块吸收审查表
+
+## 2026-08-18 表面 / 动画一致性纠偏
+
+- 当前“机制效果已通过”和“代表性业务竖切已通过”只覆盖规则、状态、参数、触发和自动化验证范围；它不覆盖卡面形状、材质分类、卡图比例、文字落点、进度条、命中 UI、拖拽手感、移动补间、受击闪烁 / 摇晃、投射物、烟雾粒子和镜头动画。
+- 阶段 C 新增专项表面 / 动画审计入口：[`stackcraft-visual-animation-parity.md`](stackcraft-visual-animation-parity.md)。该文档按参考 Prefab / 材质 / 脚本证据和当前 Gameplay 视图证据逐项标记 `已对齐 / 部分 / 缺失 / 明确排除`。
+- 在该审计表未收口前，不得再用“和模板一致”“完整复刻”“模板可以删除”描述当前状态。正确说法是：机制和代表性业务已有证据，表面与动画仍在对照和补齐。
+
+## 2026-08-17 当前一致性审计口径
+
+- 当前不能判定“StackCraft 模板全部业务内容已经完整迁移”。可判定的是：已纳入统一 Foundation / PlayMode 覆盖的 StackCraft 机制效果，已经由 Gameplay 自有框架接管并通过新鲜验证；Starter / Beginning 代表性业务竖切也已通过只读审计。
+- 新鲜代码级预检：`node .spec/tools/gameplay-static-preflight.mjs` 通过；该预检扫描 `Assets`、`ProjectSettings`、`Packages` 的正式文本配置，确认正式链路没有回流 `Assets/StackCraft` 旧路径、`CryingSnow` 命名空间、`Resources.LoadAll` 入口、旧 Manager / DTO / UI 名称和旧模板资产 GUID。
+- 新鲜 Unity 验证：`FoundationTestScenePlayModeTests` `26/26` 通过；全量 PlayMode `59/59` 通过；Unity 编译 `0` 错误，Console 在清理预期负向测试日志后 `0` 错误。
+- 当前保留 `Assets/StackCraft` 的意义仍是参考对照，不是正式运行依赖。正式素材使用 `Assets/Art/Sprites/StackCraft` 及其它自有资源目录；这些复制素材使用项目新 GUID，不复用模板 GUID。
+- 删除模板前已形成三张机制清单当前版，见本文“阶段 C 三张清单（当前版）”。清单只说明当前已登记的模板机制效果如何裁决；第一轮非破坏性静态删前审计已经由 `gameplay-static-preflight` 覆盖并通过。按当前“代表性业务验收”口径，剩余 StackCraft 原业务 `.asset` 是后续可选迁移范围，不阻塞当前阶段收口；真正删除 `Assets/StackCraft` 仍必须取得用户当轮授权，删除后必须重新跑 Unity 编译 / PlayMode 验证。
+
+## 2026-08-17 StackCraft 业务数据全量对账订正
+
+- 这次对账把“机制效果复现”“代表性业务验收”和“模板业务数据全量迁移”拆开：机制效果已有自动化覆盖，代表性业务已有只读审计，全量业务迁移不属于当前完成条件。
+- StackCraft 原业务数据仍集中在 `Assets/StackCraft/Resources`：卡牌 `103`、卡包 `11`、配方 `90`、任务 `66`、遭遇 `3` 个 `.asset`。
+- CardLoop 当前明确转换的是 Starter / Beginning 卡包竖切、相关卡牌 / 配方卡 / 商贩和若干地基测试内容；它们证明新框架能承接模板业务，不代表 273 个 StackCraft 原业务资产已经全量变成 CardLoop 作者源。
+- 新鲜代表性业务审计：`node .spec/tools/stackcraft-business-representative-audit.mjs` 通过，覆盖 Starter 固定槽位、Beginning 三次打开槽位、权重、5 个配方候选、10% 配方概率和 Beginning 商贩价格 / 解锁任务数；该脚本只读参考资产和当前作者源，不启动 Unity，也不证明全量业务迁移。
+- 因此当前正确结论是：机制地基已可继续承接模板业务，代表性业务验收已成立；模板业务尚未全量一致，但它已被明确降为后续可选迁移，不再阻塞当前阶段。下一步如果继续吸收更多 StackCraft 业务，应按业务数据迁移清单逐项转换，而不是继续扩原创《卡牌生存：无限》内容。
+
+## 2026-08-17 StackCraft 基础图片素材迁入结论
+
+- 本轮确认之前“完全复刻 / 模板可删”的口径过度：CardLoop 只是把少量 StackCraft 图片迁成地基测试卡图，并没有把 StackCraft 全部业务图片作为自有素材库接入。
+- 已把 StackCraft `Assets/StackCraft/Textures` 下 133 张图片复制到 CardLoop 自有素材目录 `Assets/Art/Sprites/StackCraft`，补齐目录 `.meta`，并把图片导入设置统一改成 Unity Sprite；复制出的 `.meta` 使用新 GUID，不复用参考模板 GUID。
+- YooAsset 当前配置新增 `Assets/Art/Sprites/StackCraft` 文件夹收集器，地址规则为 `AddressByFolderAndFileName`，避免 `Recipe.png`、`Grass.png` 等同名图片在不同子目录下发生地址冲突。
+- 该迁入只说明“基础图片素材已进入 CardLoop 自有资源目录并可被 ResourceSystem / YooAsset 收集”。它不说明 StackCraft 的 Cards / Recipes / Packs / Quests 业务数据已经转换完成，也不允许 Gameplay 正式链路直接读取 `Assets/StackCraft`。
+- 后续吸收 StackCraft 业务时，应把参考业务数据转换成 CardLoop 自己的 `CardDefinition`、`ActionDefinition`、`QuestDefinition`、`CardPackDefinition` 等作者源，并用这些迁入素材作为表现资源；不能继续把 Foundation 测试卡或模板原 SO 当成正式业务内容。
+
+## 2026-08-17 Starter 卡包业务竖切吸收结论
+
+- 本轮按“CardLoop 框架承接 StackCraft 业务”订正 Foundation 卡包竖切：运行时仍使用 `CardPackDefinition`、`OpenCardPackResultIntent`、`Tabletop`、`ScenarioRun`、`ResourceSystem` 和 YooAsset，不恢复 StackCraft `PackDefinition`、`CardManager`、`Resources.LoadAll` 或原 SO 直接读取。
+- StackCraft `00_Pack_Starter.asset` 的业务事实已映射到当前 CardLoop 作者源：显示名 `Starter`，描述 `A Starter card pack.`，4 个固定槽位依次为 `Villager`、`Berry Bush`、`Rock`、`Wood`，每槽权重 1 / 100%。
+- 对应卡牌从 StackCraft 原业务资产迁成 CardLoop 自有 `CardDefinition` / `FoodCardDefinition` / `CharacterCardDefinition`：`Villager`、`Wood`、`Berry`、`Berry Bush`、`Rock`、`Stone`、`Coin` 的显示名、描述、使用次数、营养和售价按参考资产写入当前测试作者源；模板本地战斗数值仍不回流，角色能力继续由 EX-GAS 接管。
+- 新增中文自有卡图 `Assets/Art/Sprites/CardArts/浆果丛.png` 和 `Assets/Art/Sprites/CardArts/岩石.png`，内容字节分别等同 StackCraft `BerryBush.png` 与 `Rock.png`，但 `.meta` 使用项目新 GUID，并已加入 YooAsset 精确收集项。
+- PlayMode 断言已从“两个测试奖励”改成四次打开 Starter：第一次生成 Villager，第二次生成 Berry Bush，第三次生成 Rock，第四次生成 Wood 并移除卡包。该改动只覆盖 Starter 包竖切，不代表 Beginning / 后续卡包、全部配方、任务链和商贩解锁序列已转换完成。
+
+## 2026-08-17 Beginning 卡包业务竖切吸收结论
+
+- 本轮继续按“CardLoop 自己框架承接 StackCraft 业务”吸收 `01_Pack_Beginning.asset`：正式运行链仍是 `CardPackDefinition`、`OpenCardPackResultIntent`、`PackVendorDefinition`、`Tabletop`、`ScenarioRun`、`ResourceSystem` / YooAsset，不恢复 StackCraft `PackDefinition`、`PackSlot.GetRandomCard`、`CraftingManager`、`CardManager.CreateRecipeCardDefinition` 或 `Resources.LoadAll`。
+- StackCraft Beginning 包业务事实已映射到 CardLoop 作者源生成器：显示名 `Beginning`，描述 `A Beginning card pack.`，3 个抽取槽位；每个槽位普通卡权重为 Stone 16、Wood 16、Berry Bush 14、Rock 14、Soil 14、Tree 14、Chicken 4、Slime 4、Golden Key 4；每个槽位另有 10% 概率从尚未发现的配方候选中抽取配方卡。
+- 5 个配方候选按模板动态配方卡规则静态化为 CardLoop 自有内容：`Growing Berry` / `Recipe: Berry Bush`、`Building House` / `Recipe: House`、`Making Love` / `Recipe: Baby`、`Making Timber` / `Recipe: Timber`、`Crafting Stick` / `Recipe: Wooden Stick`。配方卡描述按模板 `GetFormattedIngredients` 口径保留材料列表；真正配方执行仍留给后续行动 / 配方执行切片，不能因为出现配方卡就恢复旧制作系统。
+- StackCraft `buyPrice = 3`、`minQuests = 3` 在 CardLoop 中不污染卡包商品本体，而是映射为 `PackVendorDefinition` 的 Beginning 卡包商贩，售价 3，解锁所需完成任务数 3；同一个购买行动槽位允许 Starter 商贩和 Beginning 商贩，不新增第二套购买逻辑。
+- 新增中文自有素材 `开端卡包`、`土壤`、`树`、`鸡`、`史莱姆`、`金钥匙`、`鸡蛋`、`配方卡`，图片字节等同 StackCraft 对应素材，但 `.meta` 使用项目新 GUID，并由地基场景生成器加入 YooAsset 精确收集项。
+- Beginning 生物业务改由 `CharacterCardDefinition` 接管，不恢复 StackCraft `CombatStats`。StackCraft `Chicken` 映射为中立生物 ASC 预设 `1005`：内容静态标签只写 `Faction`，不写 `Faction.Enemy`；保留 `produceCard = Egg`、`produceInterval = 30`、自动移动间隔 5 秒和半径 1。StackCraft `Slime` 映射为敌对生物 ASC 预设 `1006`：写入 `Faction.Enemy`，保留自动移动、`aggroRadius = 5`、`attackRadius = 1.5` 和主动敌对行为。
+- StackCraft `Egg` 的 `nutrition = 0` 且描述为 `Cook it first before eating.`，因此在 CardLoop 中映射为普通 `CardDefinition`：保留售价 1、使用次数 1、卡图和容量计数，但不写成 `FoodCardDefinition`，避免把“不可直接吃的鸡蛋”纳入日终进食规则。
+- `1005` / `1006` 是 EX-GAS ASC 作者源 `#exgas.asc.xlsx` 的正式预设，均只包含 FightUnit 属性集和基础攻击 Ability `20005`；两者都不带 `Combat.Melee` / `Combat.Ranged` / `Combat.Magic` 标签，以对齐模板 `combatType = None`，避免把训练假人或战斗克制类型误当 StackCraft 生物业务。
+- StackCraft 生物战斗参数通过 `CharacterAttributeOverride` 覆盖 EX-GAS FightUnit 属性集：鸡为 Health/MaxHealth 5、Attack 1、Defense 1、AttackSpeed 100、Accuracy 95、Dodge 20、CriticalChance 5、CriticalMultiplier 150；史莱姆为 Health/MaxHealth 7、Attack 3、Defense 0、AttackSpeed 60、Accuracy 75、Dodge 5、CriticalChance 5、CriticalMultiplier 150。属性身份、钳制和运行时结算仍归 EX-GAS / GNS。
+- 该切片只覆盖 Beginning 卡包打开、可购买定义、配方卡发现候选、鸡周期产蛋 / 移动、史莱姆敌对索敌和模板生物基础数值映射；不代表 Beginning 配方真实执行、全部卡牌行为、完整怪物 AI、任务解锁提示和最终玩家画面已经完成。
+
+## 2026-08-16 卡牌悬浮信息 / 堆叠摘要吸收结论
+
+- StackCraft 的 `CardInstance.GetInfo` 证明：玩家悬浮卡牌时，信息面板不只显示单卡名称和描述；如果整堆正在制作 / 行动，会显示当前配方名与剩余时间；如果同一堆有多张卡，会按卡牌定义聚合显示每种卡的数量；如果是角色卡，会追加当前生命、战斗类型和模板本地战斗数值。
+- CardLoop 由现有 `TabletopCardInfoPanel` 接管上下文型悬浮信息，不恢复 StackCraft `InfoPanel` 优先级队列、`CraftingManager` 或旧 `CombatStats`。面板继续读取当前可读卡牌，并从所属 `TabletopCardStack` 追加牌堆聚合摘要，从 `Tabletop.ActiveActions` 与行动作者源追加进行中行动名、剩余回合和约合秒数。
+- `ActionInstance` 仅提供参与卡和剩余回合的只读查询；`TabletopView` 的行动进度锚点与详情面板复用该入口，避免表现层各自扫描绑定并形成重复算法。行动状态、牌堆成员和结算仍归 `Tabletop` / `ActionInstance`，UI 不保存第二份状态。
+- 角色生命仍由 `TabletopCardView` 直接显示。角色战斗明细如果后续要进详情文本，只能读取 GNS / EX-GAS 的正式公开属性，不能把 StackCraft 本地战斗数值系统迁回。
+- 本轮已完成源码接入与静态校验；Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待独占后重建 `FoundationTest` 并补跑相关 PlayMode。
+
+## 2026-08-16 卡包商贩解锁提示序列静态审计
+
+- StackCraft 的 `TradeManager.PlayActivationSequence` 证明：卡包商贩因完成任务数达标而解锁时，模板会临时锁输入、暂停时间、显示 `Pack Unlocked` 提示、镜头移动到商贩位置，并让商贩高亮约 2 秒。这是玩家“知道新商贩已可用”的反馈序列，不只是购买结算。
+- CardLoop 现有 `PackVendorDefinition` / `PackVendorCard` / `PurchaseCardPackResultIntent` 已覆盖解锁门槛、分批付款、满价生成卡包、付款归零、收藏进度和购买任务事实；`TabletopCardInfoPanel` 也能在玩家查看商贩时显示未解锁进度或已解锁后的售价 / 收藏状态。
+- 当前缺口是“一次性解锁反馈”：现有正式链路没有在 `QuestLog.CompletedQuestCount` 跨过某个商贩门槛时自动发出商贩解锁提示、镜头聚焦或高亮。现有 `TabletopPresentationCueKind.CameraFocus` 可承接镜头聚焦，但尚无商贩解锁触发者，也没有恢复模板 `InfoPanel` / `InputManager` / `TimeManager` 序列。
+- 后续若吸收该效果，正式 owner 应是当前单局 `ScenarioRun`：在任务事实提交后比较完成任务数是否跨过 `PackVendorDefinition.MinimumCompletedQuests`，对当前牌桌上刚解锁的商贩发只读表现事实。不得保存第二份 `isUnlocked`、不得恢复 `TradeManager` 队列或全局信息面板；文本提示与高亮只作为 UI 投影。
+- 本轮只完成静态审计并登记缺口，未改源码。Unity 自动化仍需等待同工程独占后重建 `FoundationTest` / `FoundationTitleTest` 并补跑相关 PlayMode。
+
+## 2026-08-16 菜单新内容标记吸收结论
+
+- StackCraft 的 `MenuView` / `RecipesView` / `QuestsView` 证明：任务和配方列表除了“可查看并刷新”外，还提供新内容红点、首次悬浮后标记已读、任务分组折叠、配方分类折叠和已完成任务勾选。
+- CardLoop 由 `ScenarioRun` 拥有日志条目已读事实：任务和已发现配方 / 行动使用各自唯一内容 ID 标记已读，并写入 `ScenarioRunSnapshot` 随单局保存 / 恢复。
+- `ScenarioJournalPanel` 只做 UI 投影：任务页读取 `QuestLog`，配方 / 行动页读取本局发现集合；未读条目在正文和隐藏页签上显示红点，当前可见页刷新后标记本页条目已读。
+- 当前不恢复 `QuestGroup`、`RecipeCategory`、`MenuView`、旧 `TextButton` 或旧 `GameData.SeenItems`。任务分组和配方分类折叠依赖旧枚举 / 旧 Manager 结构，已经被项目任务作者源与行动作者源替代，不能作为正式职责回流。
+- 已补单局快照回归和日志面板 PlayMode 断言；Unity 自动化仍需按 guard 补跑新鲜编译 / 测试后，才能把该切片标为验证完成。
+
+## 2026-08-16 GameplayPrefsUI 日长滑条吸收结论
+
+- StackCraft 的 `GameplayPrefsUI` 与 `Title.unity` 证明：标题页新局前有整天持续秒数滑条，范围 `60-180` 秒、默认 `120` 秒；开始新游戏时把滑条整数值写入 `GameplayPrefs.DayDuration`，`TimeManager` 再把它作为整天时长使用。
+- CardLoop 不恢复模板 `GameplayPrefs` 数据类、`TimeManager`、固定 `Title` 场景或旧标题 UI 结构。正式接管方式是 `ScenarioStartOptions.DayDurationSecondsOverride`：它是本局启动选项，随单局快照保存，不替代 `ScenarioDefinition.SecondsPerTurn` 这个剧本作者源默认值。
+- `ScenarioRun` 在创建 / 读档时把“整天秒数覆盖值”除以 `ScenarioDefinition.TurnsPerDay`，得到本局 `SecondsPerTurn`；这样标题入口仍给玩家设置整天长度，而单局内部继续只维护每回合秒数，不产生第二套时间真相。
+- 标题测试场景生成器已按模板参数生成中文“日长”滑条；新增 EditMode 回归覆盖日长换算和快照恢复，新增 PlayMode 回归覆盖标题滑条新局传参。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后重建场景并补跑。
+
+## 2026-08-16 InfoPanel / MenuToggle 菜单焦点吸收结论
+
+- StackCraft 的 `InfoPanel` 证明模板有“悬浮信息、流程提示、强制确认按钮”三类信息请求，并用全局单例、请求者字典和优先级决定最终显示；它证明的是玩家需要可读反馈，不证明 CardLoop 需要恢复一个全局信息仲裁面板。
+- CardLoop 不恢复 `InfoPanel`、`InfoPriority`、`InfoRequest`、`TextButton` 操作按钮或 `MenuView` 里的悬浮信息转发。卡牌悬浮信息已由 `TabletopCardInfoPanel` 接管，任务 / 配方已由 `ScenarioJournalPanel` 接管，日终 / 确认类提示由 `ScenarioTurnPanel` 和现有确认弹窗接管；这些 UI 都只读各自正式 owner，不保存第二份信息状态。
+- StackCraft 的 `MenuToggle` 证明日终开始时左侧菜单会自动收起，避免菜单遮挡日终流程。CardLoop 不恢复 DOTween 抽屉动画、`targetRect` 手填位移或 `TimeManager.OnDayEnded`；等价效果是 `ScenarioJournalPanel` 订阅当前单局日终阶段事件，进入非空闲日终阶段时关闭自身，把焦点交还给日终 HUD。
+- 已新增 PlayMode 回归 `ScenarioJournalPanelPlayModeTests.JournalClosesWhenDayCycleTakesOver`，用正式 `ScenarioDayCycleChangedEvent` 验证日志面板在日终阶段关闭。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后重建场景并补跑。
+
+## 2026-08-16 TitleScreen / SavedGamesUI 标题入口吸收结论
+
+- StackCraft 的 `TitleScreen` 只是标题页四个玩家命令的粘合层：新游戏打开开局偏好，读取打开存档列表，设置打开选项面板，退出打开确认弹窗。CardLoop 不恢复旧标题 MonoBehaviour、旧 `TextButton` 或旧 UI 面板引用；正式入口是 `ScenarioTitleScreen` 打开 UIKit `ScenarioTitlePanel`，再把请求交给 `ScenarioDirector`、`ScenarioSavePanel`、`UISettings` 和通用确认弹窗。
+- `SavedGamesUI` / `SavedGameSlot` / `ModalWindow` 证明模板有动态存档槽位、读取、删除单槽、删除全部、关闭和确认弹窗。该玩家流程已由 `ScenarioSavePanel`、`ScenarioSaveSlotView`、GameCore `SaveSystem` / SaveKit 和 `ConfirmationDialogPanel` 接管；槽位事实直接来自正式存档容器，不从 UI 列表保存第二份槽位状态。
+- 退出确认和删除确认都继续走 UIKit 对话框队列，不恢复模板 `ModalWindow` 的回调单例；标题页设置入口继续走当前 `UISettings` 和 `DisplaySettingsSystem` / `AudioSystem`，不接回模板 `GameOptionsUI` 结构。
+- 已有 PlayMode 回归覆盖标题四命令、设置 / 退出确认、标题新局、友好模式、日长滑条、动态存档列表、读取、删除、清空全部和保存退出。2026-08-16 后的日长滑条与日志焦点切片仍需等待 Unity 独占后补跑对应 PlayMode。
+
+## 2026-08-16 嵌套值对象与局部类型收口结论
+
+- `LootEntry` 是 `CardDefinition` 内部的加权掉落条目；玩家效果已经由当前行动 / 遭遇 / 卡包等正式产出链分开承接，不把旧卡牌定义上的通用掉落表迁成第二套产出系统。后续若需要怪物掉落，应作为行动结果或剧本规则作者源单独裁决。
+- `AnimatedEquipment` 只是旧 `EquipmentPanel` 内部的装备卡漂浮动画缓存；装备事实已由 `CharacterCard` 拥有，装备可读反馈由 `TabletopCardInfoPanel` 投影，不恢复漂浮装备卡状态。
+- `HitType`、`CombatTypeAdvantage`、`CombatState` 和 `HitResult` 是模板战斗任务内部的命中反馈 / 回合执行值对象。命中、暴击、优势 / 劣势反馈已经映射到 `TabletopCardView` 与 GNS / EX-GAS 战斗链，不新增同名枚举作为正式数值真相。
+- `QuestGroup` 只是旧 `QuestManager` 的 Inspector 分组；当前任务作者源和运行时进度由 `QuestTaskDefinition`、`QuestLog` 和单局 `ScenarioRun` 承担，不恢复进程级任务分组 Manager。
+- `QuestData`、`VendorData`、`TimeData` 和 `GameplayPrefs` 是旧 `GameData` 的保存 DTO；当前对应事实分别在整局 `ScenarioRunSnapshot`、商贩卡派生状态、回合 / 日程快照和 `ScenarioStartOptions`。这些 DTO 不单独迁入。
+- `ShadowPreset` 是模板 `GraphicsManager` 内部设置枚举，已由当前 `DisplaySettingsSystem` 接管；`CustomPass` 是模板 RendererFeature 的内部 URP pass，已由 `ScenarioScreenEffectView` + Volume 接管；`Styles` 只是旧堆叠矩阵编辑器 GUI 样式，随旧矩阵编辑器一起排除。
+
+## 2026-08-16 未登记辅助类与作者工具吸收结论
+
+- 本轮静态复扫了 StackCraft 脚本名覆盖情况，未在矩阵中点名的类主要是旧模板作者工具、空类型标记、局部值对象和接口，不是新的玩家运行效果；因此不能因为“没点名”就默认新增 Gameplay 模块。
+- `ChestDefinition` 的现实含义是箱子存币容量，已由 `ChestCardDefinition` / `ChestCard` 的容量和当前存币状态接管；不迁入旧 `CardDefinition` 派生类。
+- `GrowerDefinition` / `ResearchDefinition` 只是空类型标记，模板用 C# 类型判断行为。CardLoop 不吸收这种“空类即规则”做法；种植 / 研究效果必须通过正式 `CardDefinition` 字段、`ActionDefinition` 作者源和行动结算链表达。
+- `PackEntry` 的现实含义是卡包普通卡池的加权条目，已由 `CardPackEntry` 接管。权重在新框架中是相对权重，不要求归一化到 100；模板 `Normalize (100%)` 按钮只作为作者体验参考，不成为第二套权重真相。
+- `StatType`、`Stat`、`IStatModifier`、`StatModifier` 是 StackCraft 本地战斗数值和装备修正系统，已明确排除；正式属性、能力、持续效果和装备修正归 GNS / EX-GAS 与角色卡唯一 ASC。
+- `IClickable` / `IOnStackable` 只是模板旧输入直接调用卡牌组件的接口。CardLoop 正式入口是 `TabletopInteraction`、行动候选、行动请求和牌桌原子提交，不恢复点击 / 堆叠接口绕过行动链。
+- `InputManager` 的现实含义是全局输入锁，已由 `GameCore.InputSystem`、`GameStateSystem.Menu` 和正式 UI / 过场状态承担；不新增第二个输入锁集合。
+- `VectorExtensions.Flatten` 只是把 `Vector3.y` 置零的局部数学 helper，不拥有领域职责；需要时在具体算法内显式处理，不为它建立项目公共工具入口。
+- StackCraft 的 `AudioDataDrawer`、`CategoryEntryDrawer`、`CardDefinitionEditor`、`ChestDefinitionEditor`、`EnclosureDefinitionEditor`、`GrowerDefinitionEditor`、`LimitBoosterDefinitionEditor`、`ResearchDefinitionEditor`、`QuestEditor`、`QuestManagerEditor`、`RecipeDefinitionEditor`、`PackDefinitionEditor`、`StackingRulesMatrixEditor` 和 `EncounterDefinitionEditor` 大多服务旧枚举、旧 SO 字段和旧 Manager 结构。CardLoop 不迁入这些 Editor 脚本；可吸收的作者体验已经落到 Odin 中文标签、类型受限 `ContentIdReference`、内容校验、自动局部 key 和现有 SO Inspector。若后续需要卡包权重归一化或配方冲突可视化，应在当前作者源上做专用工具，而不是复活旧编辑器。
+- `RenderPipelineSwitcher` 直接改 `GraphicsSettings` 和全部 Quality 渲染管线，属于模板工具按钮，不是 Gameplay 地基职责；CardLoop 渲染管线以项目设置和 URP 正式资产为准。
+
+## 2026-08-16 EquipmentPanel 装备可读反馈吸收结论
+
+- StackCraft 的 `EquipmentPanel` 证明模板在装备卡离桌后仍向玩家展示已装备物品：面板可悬浮查看装备列表，可点击展开装备卡，并在日终期间禁止交互。
+- CardLoop 不恢复模板 `EquipmentPanel`、装备卡漂浮动画、`InfoPanel` 请求字典、`Camera.main` 点击检测、装备面板材质槽位或 `TimeManager` 日终锁。装备运行事实仍只由 `CharacterCard` 拥有，装备 / 卸装继续走正式行动结算和 EX-GAS GameplayEffect。
+- 当前正式玩家可读入口是 `TabletopCardInfoPanel`：选中或悬浮角色卡时，从角色只读装备事实枚举当前装备，按装备槽位与装备卡作者源显示“已装备”列表。UI 不保存第二份装备状态，也不直接修改装备。
+- 已有装备 EditMode 合同补充只读装备枚举断言；统一 Foundation PlayMode 仍需等 Unity 独占后补跑。完整角色侧栏和装备位布局属于后续原创 UI，不用模板面板结构冒充。
+## 2026-08-16 WorldCanvas / 候选高亮吸收结论
+
+- StackCraft 的 `WorldCanvas` 只证明模板有一个世界空间 Canvas，并在 `Awake` 里把 `Canvas.worldCamera` 设为 `Camera.main`；这不证明 CardLoop 需要恢复全局 `WorldCanvas.Instance` 或运行时查找主相机。
+- CardLoop 不恢复 `WorldCanvas` 单例、`Camera.main` 依赖或额外世界 UI 根。正式 owner 是当前 `TabletopView` 自身 Transform 和各自 UIKit / Canvas 作者入口：牌桌卡牌、行动进度、战斗区域、投射物和卡牌烟雾都挂在绑定的牌桌视图下，屏幕 UI 仍归 UIKit。
+- StackCraft 的 `Highlight` 证明卡牌可接受拖拽目标时会显示一个高亮子物体。CardLoop 已由 `TabletopCardDragInput` 更新候选目标，`TabletopView.SetDropTargetHighlight` 切换对应 `TabletopCardView` 的中文子节点“候选高亮”；该高亮是本地表现状态，不进入规则、存档、联机或第二事件链。
+- 统一测试场景生成器已在中文卡牌视图预制体中生成“候选高亮”子节点，PlayMode 已覆盖拖拽到候选卡牌时高亮开启、释放后关闭。当前无需新增代码；待 Unity 独占后随 FoundationTest 回归补跑。
+## 2026-08-16 暂停灰阶 / 日终暗角后处理吸收结论
+
+- StackCraft 的 `BuiltInPostProcess` / `CustomPostProcessFeature` / `CustomPostProcess.shader` 证明模板有两类全屏反馈：暂停时 `0.3s` 淡入灰阶，恢复时 `0.3s` 淡出；跨日结束时 `0.5s` 淡入暗角，新一天开始时 `0.5s` 淡出。
+- CardLoop 不恢复模板 `TimeManager`、DOTween、`OnRenderImage`、自定义 RendererFeature、模板 Shader / Material 或全局后处理单例。正式 owner 是 `ScenarioScreenEffectView`：它只读取 `GameStateSystem.Menu` 与当前 `ScenarioRun.DayCyclePhase`，不保存第二份暂停、天数或菜单状态。
+- 渲染实现改用项目当前 URP 能力：运行时根挂全局 `Volume`，Profile 含 `ColorAdjustments` 与 `Vignette`；主相机开启 URP 后处理。缺少 Volume、Profile 或必要 override 时直接中文报错，不运行时静默补默认资源。
+- `FoundationTest` 生成器会生成中文资源 `Assets/Gameplay/Tests/牌桌/剧本屏幕效果配置.asset` 与场景对象“剧本屏幕效果”；PlayMode 合同已覆盖暂停菜单灰阶进入 / 恢复、日终阶段暗角进入 / 新日恢复。当前 Unity 自动化被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后重建场景并补跑。
+
+## 2026-08-16 设置面板吸收结论
+
+- StackCraft 的 `GameOptionsUI`、`GraphicsManager` 和 `AudioManager` 证明模板设置面板包含五类图形按钮：分辨率、全屏、垂直同步、帧率上限、阴影预设；两类音量入口：SFX 与 BGM；以及 Reset 和 Close。
+- CardLoop 不恢复模板 `GraphicsManager` 单例、`AudioManager` 单例、模板 `PlayerPrefs` 键、模板文本按钮体系或 `PlayerPrefs.DeleteAll()`。`DeleteAll` 会误删存档、Mod 配置和其它系统偏好，不能作为正式重置语义。
+- 正式 owner 是进程级 `DisplaySettingsSystem`、现有 `AudioSystem` 和 UIKit `UISettings`：显示设置由 `DisplaySettingsSystem` 读写自己的偏好键并应用到 `Screen` / `QualitySettings` / 当前渲染管线；音频通道继续由 `AudioSystem` 管理；面板只做按钮映射和文案刷新。
+- `DisplaySettingsSystem` 同时接管模板 `GraphicsManager.Update` 中的 `_UnscaledTime` Shader 全局值，避免为了一个 Shader 变量恢复模板全局单例。
+- Reset 通过现有确认弹窗执行，只清理显示设置和音频系统拥有的键；Close 走现有菜单栈返回，不直接隐藏一套独立 GameObject 状态。
+- 测试场景生成器已补设置面板按钮、背景音乐 / 玩法音效 / 界面音效通道和运行时根 `DisplaySettingsSystem`。当前 Unity 自动化仍被同工程 Unity / ShaderCompiler 进程与 `Temp/UnityLockfile` 阻塞，待环境独占后重建场景并补跑 PlayMode。
+
+## 2026-08-16 日程 HUD 推进模式入口吸收结论
+
+- StackCraft 的 `DayTimeUI` 证明模板存在“玩家点击日程 HUD 切换时间推进”的操作入口；它证明玩家可见入口和 HUD 反馈，不证明必须恢复模板 `TimeManager.CycleTimePace`、`Paused / Normal / Fast` 或全局 `Time.timeScale` 时间系统。
+- CardLoop 正式 owner 仍是当前剧本单局 `ScenarioRun` 与当前牌桌 `Tabletop.ProgressionMode`：普通行动可在回合制和即时制之间切换；战斗始终按真实秒数推进，不受普通行动推进模式按钮影响。
+- `ScenarioTurnPanel` 新增推进模式按钮，只调用既有 `ScenarioRun.UseRealTimeProgression()` / `UseTurnBasedProgression()`。即时推进进入回合中途后，按钮禁用并显示“即时推进中”；日终阶段显示“日终处理中”。
+- 统一测试场景生成器已生成 `ProgressionMode` 按钮并绑定新字段，默认文案改为中文；PlayMode 链路改为真实点击 HUD 按钮，不再用直接方法调用冒充玩家操作。
+- 当前静态验证通过；现有 `ScenarioTurnPanel.prefab` 仍需 Unity 独占后由生成器重建新增按钮引用。Unity batch 与 UnitySkills 均被同工程两个 Unity Editor、两个 ShaderCompiler 和 `Temp/UnityLockfile` 阻塞，待环境收敛后补跑。
+## 2026-08-16 任务 / 配方菜单吸收口径订正
+
+- StackCraft 的 `QuestsView` / `RecipesView` 证明模板存在两项菜单玩家效果：查看当前任务进度，以及查看已发现配方；状态变化后菜单会刷新。
+- CardLoop 不恢复 `MenuView`、`QuestManager`、`CraftingManager`、配方分类折叠 UI 或旧文本按钮体系。正式 owner 是当前单局 `ScenarioRun` 和 UIKit 的 `ScenarioJournalPanel`：任务读取同一 `QuestLog`，配方 / 行动读取本局发现集合，未读提示读取并回写同一单局快照事实。
+- 当前地基里配方和可执行交互统一由 `ActionDefinition` 表达，因此 UI 语义改为“已发现配方 / 行动”，不把 StackCraft 的 Recipe 类层级重新并入正式链路。
+- 本轮不新增新 UI 系统、不保存第二份任务或发现状态；红点只是 `ScenarioRun` 已读事实的投影，当前可见页刷新后标记可见条目已读。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 牌桌相机平移 / 缩放 / 聚焦吸收结论
+
+- StackCraft 的 `CameraController` 证明模板存在三项牌桌相机玩家效果：中键拖拽平移、鼠标滚轮缩放，以及遭遇 / 解锁等空间反馈时聚焦到目标牌桌位置。
+- CardLoop 不恢复模板 `CameraController`、旧输入读取、`Board` 单例依赖或 DOTween 镜头链。正式 owner 是主相机上的 `TabletopCameraController`：输入只消费 `GameCore.InputSystem` 的 `MiddleClick` 和 `ScrollWheel`，牌桌边界只读取当前 `Tabletop.PlacementRules`。
+- 空间聚焦不由 `TabletopView` 播放，也不新建相机系统。规则 / 剧本只提交只读 `TabletopPresentationCueKind.CameraFocus` 和牌桌坐标，`TabletopCameraController` 订阅当前绑定牌桌后执行镜头目标移动。
+- 命中震动继续归现有 `CameraShake`；它已避免震动开始时重置相机 XY，防止玩家平移后的牌桌视角被命中反馈拉回原点。
+- `FoundationTest` 生成器已把唯一 `TabletopView` 写入主相机 `TabletopCameraController` 并保存后回读校验；PlayMode 回归已新增正式中键平移和 `CameraFocus` 聚焦断言。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 日终遭遇提示文本吸收结论
+
+- StackCraft 的 `EncounterDefinition.NotificationMessage` 与 `EncounterManager.ExecuteEncounter` 证明：遭遇不只是生成卡牌，也可以向玩家展示一段事件提示文本；为空时才静默生成。
+- CardLoop 不恢复 `EncounterManager`、`InfoPanel`、协程等待或独立遭遇系统。正式 owner 仍是剧本单局：`ScenarioDayEncounterRule` 声明提示文本，`ScenarioRun` 在日终遭遇提交时冻结到 `ScenarioDayEncounterResult`，`ScenarioTurnPanel` 显示提示文本和生成摘要。
+- 日终遭遇筛选仍沿用现有正式规则：最早 / 最晚 / 间隔覆盖模板的 SpecificDay、Recurring、Range、MinimumDay；优先级先比作者优先级，再比具体性；一次性记录、友好模式敌对过滤、牌桌卡牌上限和权威随机概率仍由 `ScenarioRun` 执行。
+- 现有 `FoundationTest` 日终测试剧本已写入遭遇提示文本，测试场景生成器和 PlayMode 断言同步更新。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 Board / LimitBooster 动态牌桌边界吸收结论
+
+- StackCraft 的 `Board` 监听卡牌统计快照：`TotalBoost` 变化时通过 BlendShape 扩大或缩小桌面视觉，并在收缩时调用 `CardManager.EnforceBoardLimits()` 把现有牌堆拉回新边界。`LimitBoosterDefinition` 的默认 `boostAmount` 为 `4`，玩家效果是“这张卡同时提高卡牌容量，并扩大可摆放桌面”。
+- CardLoop 不恢复 `Board` 单例、SkinnedMeshRenderer / BlendShape 权威逻辑、`CardManager` 或 Transform 反写状态。正式 owner 是当前地区的 `Tabletop`：基础边界仍来自剧本 / 地区作者源，当前边界由桌面上所有卡牌的 `CardDefinition.CardLimitBonus` 派生。
+- `Tabletop.PlacementRules` 现在返回当前派生放置规则；新增或移除卡牌后刷新边界，收缩时复用 `TabletopCards.ReflowPlacement()` 和既有放置解算把牌堆重新放回有效区域。剧本日终容量统计也读取 `tabletop.CardLimitBonus`，避免剧本和牌桌各算一套加成。
+- 当前只吸收规则边界与玩家可摆放范围，不复制模板的桌面形变表现；未来如果需要可见桌面扩张，应由 `TabletopView` 或正式牌桌背景资源表现同一 `Tabletop.PlacementRules`，不能再引入第二个 Board 状态。
+- 新增公开契约测试覆盖“放置边界随卡牌上限加成扩大，移除加成卡后收缩并重排”。当前静态校验通过；Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 日终 Game Over 吸收结论
+
+- StackCraft 文档 3.6 证明：日循环中如果牌桌上没有任何人物卡，显示 Game Over，并通过导演入口返回标题，同时清除当前活动存档。
+- CardLoop 已有正式 owner：`ScenarioRun` 在日终进食后统计当前所有地区的角色卡；没有幸存角色时进入 `ScenarioDayCyclePhase.GameOver`，不允许继续新日；`ScenarioTurnPanel` 只把按钮操作转交给 `ScenarioDirector.GameOverAsync()`。
+- 不恢复 `DayCycleManager`、模板 ModalWindow、直接切标题场景或旧 SaveSystem 静态入口。清除活动槽位和回标题由当前 `ScenarioDirector`、GameCore `SaveSystem` 与 `SceneSystem` 负责。
+- 本轮新增回归测试只锁定日终无角色进入 GameOver 且不能继续新日；Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 CardAI 拖拽中暂停自动行为吸收结论
+
+- StackCraft 的 `CardInstance.IsBeingDragged` 与 `CardAI.CanMove()` 证明：被玩家本地拖拽持有的卡牌不会推进自动行为；这里的效果不是全局暂停世界，而是只暂停这张卡的周期产出和自动移动计时。
+- CardLoop 不恢复 `CardAI`、旧协程或拖拽状态表。正式入口是新输入链：`TabletopCardDragInput` 在本地按下命中卡牌后通知当前 `Tabletop` 持有该卡，释放或取消时释放；牌桌只跳过该卡的自动行为计时，不修改其它卡牌和行动。
+- 该持有状态是本地输入姿态，不进入作者源、存档、联机协议或第二套事件总线；非法重复持有直接报错，避免静默兜底。
+- 当前已源码接入“拖拽中不累计周期产出 / 自动移动时间，释放后重新等待完整间隔”，并新增回归测试覆盖。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 CardAI 围栏容量吸收结论
+
+- StackCraft 的 `EnclosureDefinition` / `EnclosureLogic` / `CardAI.ShouldStayInEnclosure` 证明：围栏不是全局工位或牌桌容量，而是同一牌堆内的自动移动约束；非敌对自动移动卡如果位于围栏卡上方且距离不超过容量，会跳过本次自动移动。
+- CardLoop 不恢复 `EnclosureLogic`、特殊 `EnclosureDefinition` 运行组件或新的工位系统。正式 owner 是卡牌作者源和当前牌桌：`CardDefinition` 声明“自动移动留存容量”，`Tabletop.AdvanceRealTime` 在自动移动入队前按当前牌堆顺序判断。
+- 敌对角色卡继续忽略该约束；它们的追击、开战和增援仍走 EX-GAS 阵营标签与牌桌战斗正式入口。该规则不影响玩家拖拽拆堆，也不改变普通行动 / 战斗占用判断。
+- 当前已源码接入“容量内留存、容量外照常自动移动”，并新增 EditMode 合同与作者校验。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 CardAI 敌对追击与战斗加入吸收结论
+
+- StackCraft 的 `CardAI.MoveTowardsPlayer` / `HandleCombatBehavior` 证明：敌对可移动卡会优先靠近玩家相关战斗并加入；没有可加入战斗时，寻找最近玩家角色，进入攻击半径后发起战斗，未进入半径则向目标移动。
+- CardLoop 不恢复 `CardAI`、旧协程、`CombatManager`、固定 Player / Mob 分组或第二套阵营字段。敌对身份读取角色唯一 EX-GAS 标签，敌对行为半径落在 `CharacterCardDefinition`，运行时仍由 `Tabletop.AdvanceRealTime` 统一推进。
+- 敌对自动行为执行前同样先只抽出自身一张卡；加入战斗、开战和移动都走当前牌桌 / 战斗的正式入口，不绕过牌堆、战斗区域合并、权威随机或 GAS 能力结算。
+- 当前已源码接入敌对追击、进入攻击半径开战、靠近玩家战斗后增援加入，并用 EditMode 合同覆盖发起战斗和加入既有战斗。围栏容量已由后续 CardAI 子切片接入；拖拽中暂停仍按后续子切片对证。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 CardAI 非敌对随机巡逻吸收结论
+
+- StackCraft 的 `CardAI.AutoMove` / `MoveRandomly` 证明：非敌对可移动卡会按移动间隔周期性选择随机方向，在固定半径处尝试移动；无效候选点不会被夹回有效区，而是继续尝试下一次。
+- CardLoop 不恢复 `CardAI`、旧协程、`Board.Instance`、`CardManager.ResolveOverlaps` 或新的 AI 总管。正式 owner 是卡牌作者源和当前牌桌：`CardDefinition` 声明自动移动间隔、半径和尝试次数，`Tabletop.AdvanceRealTime` 使用牌桌权威随机推进。
+- 自动巡逻执行前复用当前牌桌占用规则：参与普通行动或战斗的卡牌不会移动；移动提交走 `Tabletop.TryPlaceSingleCard`，因此会先只抽出自身一张卡，再由牌桌唯一放置解算处理重叠。
+- 自动移动候选先按当前牌桌边界和禁放区做源码等价校验；候选点无效时重试，不让放置解算把无效随机点自动夹回桌面。
+- 当前只吸收非敌对随机巡逻。敌对追击、加入已有战斗和围栏容量已由后续 CardAI 子切片接入；拖拽中暂停仍按后续子切片对证。Unity 自动化仍被同工程 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待环境独占后补跑。
+
+## 2026-08-16 CardAI 自动移动前置吸收结论
+
+- StackCraft 的 `CardAI.EnsureDetachedFromStack` / `DetachFromStack` 证明：自动移动卡牌如果处于多卡牌堆中，会先只把自身抽成新牌堆；这不同于玩家拖拽从选中卡开始带走上方尾段的行为。
+- CardLoop 不恢复 `CardAI`、旧协程、`CardManager.RegisterStack` 或新的 AI 总管。本次正式吸收的是牌桌对象能力：`Tabletop.TryPlaceSingleCard` 只移动指定卡牌本身，仍由 `TabletopCards` 和 `TabletopCardStack` 维护牌堆成员关系。
+- 单卡抽出保留局内卡牌 ID、内容 ID、角色卡 EX-GAS 状态、装备状态和周期产出累计秒数；剩余牌堆保持相对顺序，放置仍走当前牌桌唯一空间解算，不新增第二位置状态。
+- 当前只完成自动移动前置能力和 EditMode 合同；非敌对随机巡逻、敌对追击、加入战斗和围栏容量仍按后续 CardAI 子切片继续对证。
+- Unity 自动化仍被当前同工程多个 Unity / ShaderCompiler 进程和 `Temp/UnityLockfile` 阻塞，待编辑器环境收敛后补跑。
+
+## 2026-08-16 CardAI 周期产出吸收结论
+
+- StackCraft 的 `CardAI.StartAI` / `ProduceLoop` / `SpawnProduce` 证明存在“非敌对卡按间隔在自身位置生成另一张卡，并播放卡牌烟雾粒子”的玩家效果；源码在卡牌忙于拖拽、制作或战斗时跳过本次产出。
+- CardLoop 不恢复 `CardAI`、旧协程、`CardManager.CreateCardInstance` 或 AI 总管。正式 owner 是卡牌作者源和当前牌桌：`CardDefinition` 声明周期产出卡牌与间隔，`Tabletop.AdvanceRealTime` 统一推进并提交产物。
+- 产物创建仍走 `Tabletop.CreateCard`、放置预检和正式内容索引；空间反馈仍走 `TabletopPresentationCueKind.CardSmoke`，由 `TabletopView` 通过 `SoftAssetReference` / `ResourceSystem` 实例化中文素材路径下的 `卡牌烟雾粒子.prefab`。
+- 周期产出累计秒数是卡牌实例状态，保存在 `TabletopCard` 并进入 `TabletopCardSnapshot`；角色卡继承同一状态，不复制第二套计时器。
+- 当前已实现活动行动和战斗占用下跳过产出。拖拽是输入 / 视图层瞬时状态，尚无规则层正式 owner；要等输入层与单局实时推进的交互暂停策略裁决后再补，不在 `Tabletop` 增加临时拖拽锁或第二状态。
+- 当前静态验证确认构造调用点已同步，新增周期产出 EditMode 用例尚未运行。Unity 自动化被当前同工程多个 Unity / ShaderCompiler 进程阻塞，待编辑器环境收敛后补跑。
+
+## 2026-08-15 卡牌烟雾粒子反馈吸收结论
+
+- StackCraft 的 `PuffParticle`、`CardInstance.PlayPuffParticle`、`RecipeDefinition`、`ChestLogic`、`TradeZone`、`EncounterManager` 和 `CardAI` 证明卡牌烟雾是“空间粒子 + 原 `Puff.wav` 音效”的反馈，不是单纯音频枚举。
+- CardLoop 不恢复 `PuffParticle`、`AudioId.Puff`、`AudioManager`、`TradeZone` VFX 脚本或新的 VFX Manager。正式 owner 是 `TabletopView`：规则和剧本只发只读 `TabletopPresentationCue`，有空间反馈时携带牌桌坐标。
+- `TabletopViewSettings` 保存卡牌烟雾粒子预制体、卡牌烟雾反馈音效和排序值；图片、材质、粒子预制体和音频统一落到 `Assets/Art/Sprites`、`Assets/Art/Textures`、`Assets/Art/Materials`、`Assets/Art/Prefabs`、`Assets/Audio/SFX` 标准资源目录，粒子 prefab 已迁入为 `Assets/Art/Prefabs/卡牌烟雾粒子.prefab`，运行时仍通过 `SoftAssetReference` / `ResourceSystem` 实例化并释放句柄。
+- 正式代码语义使用 CardLoop 领域名 CardSmoke；PuffParticle、Puff.wav 和 AudioId.Puff 只作为 StackCraft 来源证据，不进入正式资产名或正式表现提示枚举。
+- 当前已接入行动产物 / 卡牌耗尽 / 普通移除、购买卡包、箱子存取币、售卖锚点、战斗死亡、日终进食耗尽、日终遭遇生成和非敌对卡周期产出的卡牌烟雾反馈。
+- 当前静态验证确认没有恢复 `AudioManager`、`AudioId`、`PlaySFX`、`CombatManager`、`ProjectileManager`、`HitUI` 或 DOTween 调用；中文粒子 prefab 已登记进 YooAsset 测试收集配置。Unity 自动化被当前同工程多个 Unity / ShaderCompiler 进程阻塞，待编辑器环境收敛后补跑场景重建与 PlayMode。
+
+## 2026-08-15 非战斗反馈音效吸收结论
+
+- StackCraft 的 `CardController`、`RecipeDefinition`、`ChestLogic`、`PackVendor`、`CardBuyer` 和 `AudioManager` 证明模板存在通用反馈音效：拿起卡牌、释放卡牌、日终进食滑动、进食、制作 / 生成、取币、存币 / 出售和购买成交。
+- CardLoop 不恢复 `AudioManager`、`AudioId`、`PlaySFX` 或输入回调直接执行业务。拖拽输入只在真实按下 / 释放后请求 `TabletopView` 播放反馈；日终进食由 `ScenarioRun` 发布只读表现事实；行动结算只返回牌桌表现提示，任务事实、规则结算和音频播放仍分属各自 owner。
+- `TabletopViewSettings` 保存 8 个非战斗牌桌反馈 `AudioClipResolver` 作者引用；测试场景生成器使用已迁入 `Assets/Audio/SFX` 的中文项目音效生成 Resolver，并继续走现有 `AudioPlaybackRequestedEvent` -> GameCore `AudioSystem`。
+- 原 `Puff` 当时不纳入纯音效切片：它是粒子 VFX + 音效，需要对照 StackCraft 源码与当前正式表现 owner 单独裁决；随后已由上方卡牌烟雾粒子反馈切片接入。
+- 当前静态验证确认没有恢复 `AudioManager`、`AudioId`、`PlaySFX`、`CombatManager`、`ProjectileManager`、`HitUI` 或 DOTween 调用。Unity 自动化被当前同工程多个 Unity / ShaderCompiler 进程阻塞，待编辑器环境收敛后补跑场景重建与 PlayMode。
+
+## 2026-08-15 战斗 HitUI 命中反馈吸收结论
+
+- StackCraft 的 `HitUI.Initialize` 证明命中反馈由三类命中图标、两类克制图标、伤害数字和 `DOPunchScale(0.15, 1s)` 组成；Miss 不显示伤害数字。
+- CardLoop 不恢复 `HitUI`、`CombatManager.SpawnHitUI`、DOTween 依赖或独立弹窗生命周期。`TabletopCardView` 作为目标卡牌视图直接显示命中图标、伤害数字、克制图标，并用 `Time.unscaledDeltaTime` 播放 1 秒 punch 缩放。
+- 测试场景生成器使用已迁入 `Assets/Art/Sprites` 的五张命中图标序列化到测试卡牌视图；正式资源加载仍归 `ResourceSystem` / YooAsset，运行时代码不按 StackCraft 路径找图。
+- 当前静态验证确认没有恢复 `HitUI`、`CombatManager`、`AudioManager`、`AudioId`、`CombatType` 或 DOTween 调用。Unity 自动化被当前同工程多个 Unity / ShaderCompiler 进程阻塞，待编辑器环境收敛后补跑场景重建与 PlayMode。
+
+## 2026-08-15 战斗音效吸收结论
+
+- StackCraft 的 `CombatTask.AttackSequenceCoroutine` 和 `AudioManager` 证明战斗音效时序是：攻击起手播放 Attack；命中后播放对应类型 Hit；暴击额外播放 Critical；未命中播放 Miss。
+- CardLoop 不恢复 `AudioManager`、`AudioId`、`CombatType` 或音频总管。`Battle` 只暴露攻击开始表现事实，`TabletopView` 读取当前攻击类型并通过既有 `AudioPlaybackRequestedEvent` 交给 GameCore `AudioSystem`。
+- `TabletopViewSettings` 只保存各战斗音效的 `AudioClipResolver` 作者引用；测试场景生成器用 StackCraft SFX 临时生成 8 个 Resolver，并配置现有 `GameplaySoundFX` 通道。资源加载和音频播放仍归 `ResourceSystem` / `AudioSystem`，不建立第二套音频 ID。
+- 静音伤害结算不播放 Miss / Hit / Critical，和现有 GameCore 静音表现语义一致；`NoFloatingText` 只屏蔽浮字，不屏蔽音效。
+- 当前静态验证确认没有恢复 `CombatManager`、`CombatType`、`AudioId`、`AudioManager` 或 `ProjectileManager`。Unity 自动化验证被当前同工程多个 Unity / ShaderCompiler 进程阻塞，待编辑器环境收敛后补跑。
+- 战斗表现中的投射物、音效和 HitUI 式命中反馈均已完成源码接入；Unity 场景重建与 PlayMode 验证待编辑器空闲后补跑。
+
+## 2026-08-15 战斗投射物前摇吸收结论
+
+- StackCraft 的 `CombatTask.AttackSequenceCoroutine` 与 `CombatProjectile` 证明远程 / 魔法攻击需要在伤害前播放 `0.6s` 线性投射物；该效果属于战斗表现时序，不属于伤害公式。
+- CardLoop 由 `Battle` 保存只读攻击前摇表现事实，`Tabletop` 在前摇结束后才激活 EX-GAS Ability。伤害、命中、暴击和克制继续由正式 GNS/EX-GAS 链路结算。
+- `TabletopView` 通过现有 `ResourceSystem` 和 `TabletopViewSettings` 实例化 `TabletopProjectileView`，不新增投射物总管、第二事件总线或 YooAsset 封装。
+- 当前静态验证已确认没有恢复 `CombatManager`、`CombatStats`、`CombatType` 或 `ProjectileManager`。Unity 自动化验证被当前同工程多个 Unity / ShaderCompiler 进程阻塞，待编辑器环境收敛后补跑。
+- 战斗表现中的投射物、音效和 HitUI 式命中反馈均已完成源码接入；Unity 场景重建与 PlayMode 验证待编辑器空闲后补跑。
 
 ## 2026-08-11 模块 3.4 牌桌视图吸收结论
 
@@ -90,7 +367,7 @@ metadata:
 - 工位定义必须前置：固定工位、可移动圆形工位、连通节点和卡牌工位会直接决定第三模块牌桌投放、第四模块行动解析和第五模块世界流程，因此不能等到场景/UI 阶段再临时补。
 - NPC 意图、领袖投票、回合确认、成长带出和职业/技能关系只进入引用关系边界：第一模块记录“谁引用谁、用什么 ID/Tag/条件引用”，不实现 AI、投票、好感、教程流程、职业系统或联机同步。
 - 局外准备和成长带出要求内容 ID 从第一天就跨局稳定：可购买职业/道具/变异、剧本内掉落、带出成本和经历记录都必须引用同一个内容身份体系，不能局内一套、局外一套。
-- 本表后续吸收 StackCraft 时，以玩家可见功能对照为主：参考拖拽手感、跨阶段行动、目标监听、日结节奏、UI 反馈和编辑器校验，但每项都要重新裁决是否进入当前游戏。参考类、字段和流程不自动保留；大一统 `CardDefinition`、枚举分类、`Resources.LoadAll`、直接副作用执行、固定场景名和 RPS 战斗规则明确排除。
+- 本表后续吸收 StackCraft 时，以玩家可见功能对照为主：参考拖拽手感、跨阶段行动、目标监听、日结节奏、UI 反馈和编辑器校验，但每项都要重新裁决是否进入当前游戏。参考类、字段和流程不自动保留；大一统 `CardDefinition`、枚举分类、`Resources.LoadAll`、直接副作用执行、固定场景名和 RPS 的固定枚举结构明确排除；RPS 玩家效果只能通过 EX-GAS Tag / GameplayEffect 等正式职责吸收。
 
 按依赖顺序，GamePlay 吸收 StackCraft 时应拆成 10 个一级审查模块；一级模块只用于排序，真正开工时必须继续拆成可逐项判断的小子模块：
 
@@ -102,7 +379,7 @@ metadata:
 | 4 | 行动选择 / 配方条件 / 桌面行动进度 | 依赖内容定义和牌桌投放事件，解释“谁对什么对象做什么行动”，以及这段行动如何计时、暂停、取消和完成。 | `CraftingManager`、`CraftingTask`、`RecipeDefinition`、`ExplorationRecipe`、`ResearchRecipe`、`TravelRecipe`、`GrowthRecipe`。 | **4.1-4.12 功能切片已验证；行动聚合、配方归属和 Mod 结果扩展入口尚未裁决。** |
 | 5 | 剧本 / 目标 / 时间 / 世界流程 | 依赖行动结果和内容事件，组织胜负条件、危机、日结和多世界规则；模板 Encounter 只作为剧本事件触发问题的参考片段。 | `QuestManager`、`EncounterManager`、`DayCycleManager`、`TimeManager`、`GameDirector` 的流程片段。 | **先建立父级归属，再改造吸收流程；不照搬 Manager 或类型枚举。** |
 | 6 | 交易 / 卡包 / 经济闭环 | 这是 StackCraft 成品闭环的一部分，但在 GamePlay 中属于剧本可选规则，不能抢内容包和商店职责。 | `PackDefinition`、`PackSlot`、`PackVendor`、`TradeManager`、`CardBuyer`、`TradeZone`。 | **参考闭环，延后接管。** |
-| 7 | 战斗 / 冲突区 / Stats / 装备 / 职业变化 | 这里审查的是 StackCraft 现有战斗和装备架构，不是实现 GamePlay 的职业技能系统。 | `CombatManager`、`CombatTask`、`CombatRect`、`CardCombatant`、`CombatStats`、`StatModifier`、`classChangeResult`。 | **规则排除，表现参考；EX-GAS 属性与基础 GE 伤害接入切片已验证，完整战斗仍未吸收。** |
+| 7 | 战斗 / 冲突区 / Stats / 装备 / 职业变化 | 这里审查的是 StackCraft 现有战斗和装备架构，不是实现 GamePlay 的职业技能系统。 | `CombatManager`、`CombatTask`、`CombatRect`、`CardCombatant`、`CombatStats`、`StatModifier`、`classChangeResult`。 | **旧结构排除，效果吸收；GNS/EX-GAS 承担正式数值、属性和效果，StackCraft 的攻防、攻速、命中、闪避、暴击参数可作为模板复现的临时数值。** |
 | 8 | UI 框架 / 界面状态绑定 / 作者工具 | UI 框架本身属于架构：它决定反馈如何订阅状态、行动如何确认、作者如何发现配置冲突。 | `InfoPanel`、`ProgressUI`、`CardStatsUI`、`QuestsView`、`RecipesView`、`ModalWindow`、各 Definition Editor。 | **吸收模式和工具体验，重做数据绑定。** |
 | 9 | 存档 / 运行时状态恢复 | 存档应在运行时边界清楚后接入，否则会把 StackCraft 的场景名、卡牌 ID 和 JSON 扫档固化成债务。 | `GameData`、`SceneData`、`StackData`、`CardData`、`SaveSystem`。 | **只参考状态范围，重做存档职责。** |
 | 10 | 联机适配约束 | StackCraft 没有联机模块，但 GamePlay 明确支持联机；搬架构时必须预留控制权、同步、随机、可见性和秘密目标边界。 | 无直接模块；反向审查单例、随机、全局可见状态和直接副作用。 | **新增硬约束，不做玩法实现。** |
@@ -518,7 +795,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 | 牌桌交互与卡牌表现 | `Board`、`CardController`、`CardInstance`、`CardStack`、`CardManager`、`CardPhysicsSolver`、`StackingRulesMatrix` | 卡牌拖拽、拆堆、合堆、边界夹取、重叠解算、目标高亮、卡牌表面显示。 | `CardInstance` 同时拥有表现、生命、食物、装备、战斗和存档状态；堆叠规则依赖枚举矩阵。 |
 | 行动 / 配方 / 桌面行动进度 | `RecipeDefinition`、`CraftingManager`、`CraftingTask`、`ExplorationRecipe`、`ResearchRecipe`、`TravelRecipe`、`GrowthRecipe` | 堆叠满足配方后创建带进度的桌面行动，支持消耗模式、持续任务、随机权重、研究蓝图、探索产出和旅行。 | 配方按具体 `CardDefinition` 匹配；`RecipeDefinition.Execute` 直接改世界；规则解释和作者校验能力不足。 |
 | 剧本目标 / 事件 / 日结节奏 | `Quest`、`QuestManager`、`EncounterDefinition`、`EncounterManager`、`DayCycleManager`、`TimeManager`、`GameDirector` | 监听卡牌、配方、交易、时间等事件推进目标；按日期触发遭遇；日结串联喂食、卖超额卡、遭遇、新一天。 | 目标类型、日结阶段和事件结果都偏硬编码；固定场景名和固定流程不适合多世界剧本。 |
-| 战斗 / 冲突区 | `CombatManager`、`CombatTask`、`CombatRect`、`CardCombatant`、`CombatStats`、`HitResult` | 把敌我卡牌拖入战斗矩形，按攻速、命中、暴击和三系克制持续结算。 | 战斗规则是 StackCraft 自己的小系统；与 GamePlay 的 GAS 能力、效果、Tag 和 TargetCatcher 职责重叠。 |
+| 战斗 / 冲突区 | `CombatManager`、`CombatTask`、`CombatRect`、`CardCombatant`、`CombatStats`、`HitResult` | 把敌我卡牌拖入战斗矩形，按攻速、命中、暴击和三系克制持续结算。 | 战斗 Manager、卡牌自持 `CombatStats` 和枚举克制结构不吸收；攻防、攻速、命中、闪避、暴击这些模板数值可临时映射到 GNS/EX-GAS 参数以复现效果。 |
 | 存档 / 运行时状态 | `GameData`、`SceneData`、`StackData`、`CardData`、`SaveSystem` | 保存卡堆、卡牌动态数值、装备、任务、战斗、商店、遭遇和时间。 | 直接写 `persistentDataPath` JSON 并全目录扫档；缺 Mod 依赖、内容版本、局内/局外分层和迁移策略。 |
 | UI / 作者工具 / 原型素材 | `InfoPanel`、`ProgressUI`、`QuestsView`、`RecipesView`、各 Definition Editor、`RecipeDefinitionEditor`、`StackingRulesMatrixEditor`、Prefab/Resources/URP 设置 | 提供完整反馈闭环、进度条、任务列表、卡牌详情、配方冲突提示、矩阵编辑器和可用素材。 | UI 文案偏模板教程；编辑器只服务 StackCraft 数据结构；URP/设置不应接管 GamePlay 全局配置。 |
 
@@ -634,7 +911,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 | 类型 | 唯一职责 | 关键边界 |
 |------|----------|----------|
 | `TabletopCardId` | 当前标识一局可堆叠卡牌状态中的一张卡牌。 | 由当前状态从 `1` 开始自动分配，`0` 无效；作者不填写，不替代 `ContentId`，不复用 Unity InstanceID 或随机 GUID。是否成为未来其它桌面形态的共享实例 ID，要等非卡牌消费者出现后裁决。 |
-| `TabletopCard` | 保存当前局内卡牌 ID、静态内容 ID 和所属牌堆；通过牌堆回答逻辑位置与锁定状态。 | 不重复保存牌堆位置，不保存装备、行动、战斗、存档块或视图引用；固定工位和圆形节点不能因位于牌桌上就塞进本类型。 |
+| `TabletopCard` | 保存当前局内卡牌 ID、静态内容 ID、剩余使用次数和所属牌堆；通过牌堆回答逻辑位置与锁定状态。 | 使用次数是卡牌实例自身状态，最后一次使用由所属 `Tabletop` 直接移除，不建立耐久管理器；不重复保存牌堆位置，不保存装备、行动、战斗、存档块或视图引用。 |
 | `TabletopCardStack` | 保存一个卡牌堆栈的底到顶顺序、牌桌二维位置、位置锁定状态，并唯一维护成员归属。 | 顺序唯一规定为索引 `0` 是底部、最后一个是顶部；成员列表对外只读，位置没有公开 setter；构造、合堆、拆堆和移除同步更新卡牌对象的所属牌堆。 |
 | `TabletopCards` | `Tabletop` 直接拥有的卡牌 / 牌堆集合与局内 ID 索引。 | 不再维护“卡牌属于哪个堆”的派生字典；纯 C#、非单例、不继承 `AGameSystem`。写方法为程序集内部，正式调用继续由 `Tabletop` 对外收口。 |
 
@@ -783,7 +1060,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 
 - 统一测试场景仍是 `Assets/Scenes/FoundationTest.unity`，没有新增正式启动场景、StackCraft `Title` 入口或第二套测试框架。
 - 场景当前装配 `PlayerInput`、`GameCore.InputSystem`、`ScenarioDirector`、`TabletopView`、`TabletopCardDragInput`、正交相机和卡牌 `BoxCollider`；内容索引由测试流程开始单局后从 `ScenarioRun` 取得。
-- 新增真实测试作者资产 `Assets/Gameplay/Tests/牌桌/牌桌测试视图设置.asset` 与 `Assets/Gameplay/Tests/牌桌/牌桌测试卡牌视图.prefab`；卡面临时复用 StackCraft 的 `Assets/StackCraft/Sprites/Square.png`，只作为可替换原型素材，不成为 Gameplay 内容身份或正式美术路径规范。
+- 新增真实测试作者资产 `Assets/Gameplay/Tests/牌桌/牌桌测试视图设置.asset` 与 `Assets/Gameplay/Tests/牌桌/牌桌测试卡牌视图.prefab`；卡面使用已迁入项目素材目录的 `Assets/Art/Sprites/卡牌占位图.png`，只作为测试卡面占位，不成为 Gameplay 内容身份或正式美术风格规范。
 - 场景、测试 Prefab 和临时图片都由现有 YooAsset Collector 收集；运行时仍通过 `SoftAssetReference` / `ResourceSystem` 创建视图和加载图片，没有新增 GamePlay 资源加载封装。
 - `GamePlay/地基/重建测试场景` 会重建固定测试场景和资产、写入 Build Settings 与 YooAsset 测试收集项，并在保存后回读关键引用；它只服务地基验收，不是关卡编辑器或正式剧本入口。
 
@@ -816,7 +1093,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 
 - 第三模块 3.1-3.6 已完成 StackCraft 可堆叠卡牌能力的拆解、改造吸收和真实运行验收；正式 GamePlay 代码不依赖 `CardManager`、`CardController`、`StackCraftInput`、`Resources.LoadAll`、固定场景名或模板单例链。
 - 本模块只建立内容到可堆叠卡牌状态、表现和输入意图的地基。候选是否可接受、释放后执行什么、是否消耗材料或施加效果，仍必须留给后续行动解析与效果结算模块裁决；固定工位、圆形节点和连通节点不由当前堆栈状态代替。
-- `Assets/StackCraft/` 继续作为参考源码和临时原型素材区；是否删除参考脚本要在正式能力覆盖与素材依赖清单完成后单独裁决，不能因 3.6 通过直接整目录删除。
+- `Assets/StackCraft/` 继续作为参考源码和未迁入原件区；是否删除参考脚本要在正式能力覆盖与素材依赖清单完成后单独裁决，不能因 3.6 通过直接整目录删除。
 
 ## 模块 1-3 回审裁决（2026-08-05）
 
@@ -865,7 +1142,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 | `CraftingTask` | 保存配方引用、目标卡堆、秒数进度和暂停/取消布尔值；完成条件是进度达到配方持续时间。 | 模板证明某些玩家行为可能不是立即完成，并可能被打断或恢复；它不能证明本项目也应以秒数作为行动作者真相。 | 整个类型、秒数作者数据和直接按 `Time.deltaTime` 累加的结构不保留；只吸收可见进度、暂停、恢复、取消和完成语义。普通行动在 4.6 改为回合消耗，切即时制时由回合规则换算。 | 4.6 时间模型与作业状态。 |
 | `CardController` / `CardInstance` / `CardAI` 触发链 | 每次拆堆、放下、合堆、AI 移牌或销毁卡牌时直接暂停、恢复、停止或重新扫描配方。 | 模板证明参与对象变化可能影响正在进行的行为。 | 触发结构全部删除。“任何合堆都自动开始制作”不作为等价功能保留；是否出现按钮、默认执行或自动执行必须由 GamePlay 行动规则明确声明。 | 4.4 行动候选与选择；4.9 中断/重复策略。 |
 | `ExplorationRecipe` | 从卡堆找 `Area` 枚举卡，读取地点 Loot，随机生成卡并发探索完成事件。 | 模板证明探索可以从地点状态或结果池得到产出。 | 特殊子类不保留；类别判断、随机读取、直接生成卡牌和 Manager 通知全部删除。是否吸收探索结果池功能由第四模块功能清单决定，若吸收则用通用条件/结果组合实现。 | 4.3 目标条件；4.7 结果意图；4.8 权威随机。 |
-| `ResearchRecipe` | 从全局配方列表排除三个具体子类，随机挑未发现配方，生成配方卡并写发现集合。 | 模板证明研究可能与“未发现内容池”发生关系。 | 特殊子类、类型排除列表、全局单例和直接写发现状态全部删除。4.10 只吸收发现状态过滤；研究/蓝图业务归后续世界规则、目标或作者工具裁决。 | 蓝图/发现候选边界归 4.10 与后续目标/存档模块；随机归 4.8。 |
+| `ResearchRecipe` | 从全局配方列表排除三个具体子类，随机挑未发现配方，生成配方卡并写发现集合。 | 模板明确提供“研究完成后随机解锁一项尚未发现配方”的玩家效果。 | 特殊子类、类型排除列表、全局单例和直接写发现状态全部删除；效果改由通用行动结果声明候选行动与配方卡，完成时读取 `ScenarioRun` 的唯一发现集合并使用牌桌权威随机流选择。 | 行动作者源与结果冻结归模块 4；发现事实归 `ScenarioRun`；随机归牌桌权威随机流。 |
 | `TravelRecipe` | 保存场景名字符串列表，完成后消费输入并调用 `GameDirector.InitiateTravel`。 | 模板证明某种行动结果可能请求地区迁移并携带参与者。 | 特殊子类、固定场景名循环和 SO 直接切场景全部删除。只有“行动可产生旅行请求”被选入功能清单时，才接入现有 `MapSystem` / `SceneKit`。 | 4.7 旅行请求候选；正式执行复用 `MapSystem` / `SceneKit`。 |
 | `GrowthRecipe` | 用具体子类和结果卡识别种植设施/种子，直接消耗、拆堆、平移、解重叠并生成结果。 | 模板证明一次结果可能包含多个状态变化。 | 特殊子类和直接牌桌操作全部删除。成长功能若被选中，只能作为通用结果组合的验收案例，不能为它恢复 Recipe 继承树。 | 4.7 组合结果候选，由各正式状态系统提交。 |
 | `ProgressUI` / `RecipesView` | Manager 创建世界进度条；UI 直接读取任务、配方和发现集合。 | 模板证明玩家需要知道当前行为、剩余阶段或发现内容，并且世界锚点反馈有体验价值。 | UI 类型、Manager 数据绑定和枚举栏目全部不保留。若第四模块最终没有通用进度，就不为了复刻 `ProgressUI` 创建一套进度状态。 | 第 8 模块表现投影；第四模块只提供最终被证明需要的可观察状态。 |
@@ -899,7 +1176,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 7. **条件查询与结果结算必须分开。** “现在能不能做”不能在成功后顺便扣材料；只有真实消费需求和状态修改入口成立时才设计提交，并由对应状态系统执行。不得因为想象中的重复消费风险提前建立预留表或影子状态。
 8. **EX-GAS 只承担它已经拥有的职责。** 角色技能生命周期、Cost、Cooldown、标签和 GameplayEffect 归 EX-GAS；GamePlay 不复制，也不把所有桌面行动强行包装成 AbilityTask。
 9. **随机和表现都不能成为状态真相。** 正式随机由权威结算提供；按钮、高亮、进度和冲突提示只投影正式查询/运行状态。
-10. **功能等价验收是一级模块门禁。** 第四模块全部子模块完成后，必须先在 `FoundationTest` 用新框架复现最终明确选择吸收的 StackCraft 玩家可见功能，并证明已排除的旧结构没有进入正式链路；通过后才能开始第五模块。
+10. **功能等价验收是一级模块门禁。** 第四模块全部子模块完成后，必须先在 `FoundationTest` 用新框架复现 StackCraft 玩家可见功能，并证明已排除的旧结构没有进入正式链路；只有用户明确作出产品排除裁决的效果可以不复现，通过后才能开始第五模块。
 
 #### 第四模块后续拆分
 
@@ -1084,7 +1361,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 - 删除 `TabletopCardActionReservations.cs` 及其 `.meta`，同时删除六个只证明预留体系自身行为的 EditMode 测试。
 - `TabletopCardActionCandidate` 删除来源牌桌引用；候选恢复为一次无副作用查询结果，不承担授权、锁定或占用状态。
 - `ActionSlotDefinition` 删除独占/共享开关；`MaximumParticipants = 0` 只表示同一次行动内该槽位参与人数不限，不再冒充工位数量或并行行动数量。
-- 遵循全局 `D:\codex-home\AGENTS.md` 的“禁止无依据防护性架构”红线；具体裁决见 `D:\codex-home\skills\improve-codebase-architecture\SKILL.md`。
+- 遵循系统 AGENTS `D:\codex-home\AGENTS.md` 的“禁止无依据防护性架构”红线；具体裁决见系统 skill `D:\codex-home\skills\improve-codebase-architecture\SKILL.md`。
 
 #### 验收
 
@@ -1147,10 +1424,11 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 
 #### 4.7 牌桌卡牌结果切片（2026-08-06）
 
-当前只吸收 StackCraft 已证明且本项目已有真实状态 owner 的两种结果：移除本次参与槽位中的牌桌卡牌，以及在参与槽位位置生成指定内容 ID 的卡牌。`RecipeDefinition.Execute()`、特殊 Recipe 子类、直接访问 Manager、直接切场景、库存入包、蓝图发现、随机池和 GameplayEffect 均未吸收。
+当前吸收 StackCraft 已证明且本项目已有真实状态 owner 的卡牌结果：保留参与卡牌、整张移除、使用一次并在耗尽时移除，以及在参与槽位位置生成指定内容 ID 的卡牌。`RecipeDefinition.Execute()`、特殊 Recipe 子类、直接访问 Manager、直接切场景、库存入包、蓝图发现、随机池和 GameplayEffect 均未吸收。
 
-- `ActionDefinition.ResultIntents` 是 SO 作者源中的可序列化参数，不执行副作用；当前内置 `TabletopCardRemoveResultIntent` 与 `TabletopCardCreateResultIntent` 两种具体结构，没有结果类型枚举、结果标签或万能参数字典。
-- `TabletopCardActionResultSettlement` 先建立完整计划并校验空意图、未知类型、槽位、失效卡牌、重复移除、产物内容 ID、数量和牌桌 ID 容量；全部通过后才由唯一 `TabletopCards` 删除和创建，非法作者配置直接抛出异常，不提交半份结果。
+- `ActionDefinition.ResultIntents` 是 SO 作者源中的可序列化参数，不执行副作用；当前内置 `RemoveCardsResultIntent`、`UseCardsResultIntent` 与 `CreateCardsResultIntent`。保留不需要额外意图；没有结果类型枚举、结果标签或万能参数字典。
+- `ActionResultSettlement` 先冻结并校验完整计划：空意图、未知类型、槽位、失效卡牌、重复修改、剩余次数、产物内容 ID、数量、牌桌 ID 容量与最终空间占用全部通过后，才由唯一 `Tabletop` 提交。最后一次使用直接走正式移除链，不留下零次数卡牌。
+- `CardDefinition.InitialUses` 是每个新卡牌实例的作者初值，默认 `1` 表示一次性材料；`TabletopCard.RemainingUses` 是唯一运行事实。旅行保留同一卡牌对象；牌桌快照保存剩余次数，活动行动快照保存开始时冻结的使用目标。剩余次数的正式卡面 / 详情表现不照搬旧 UI 结构；若模板剩余次数表面承载玩家效果，仍需进入表面 / 动画审计。
 - 零回合行动在创建作业后立即提交；有耗时行动只在进度完成时提交。候选是输入查询快照，结果行动开始前必须确认绑定卡仍属于当前牌桌，过期快照直接要求重新查询，不创建影子占用表。
 - Mod 目前不能仅靠继承结果意图就获得执行能力；未知类型会明确报错。只有正式 Mod API、注册权限和唯一结算 owner 确定后，才开放新增结果类型，文档不冒充当前已经支持。
 - 定向 EditMode `Logs/TestResults-GamePlay-4.7-EditMode-Final.xml` 为 `5/5`；统一场景 PlayMode `Logs/TestResults-GamePlay-4.7-AllPlayMode-Final.xml` 为 `6/6`，已验证新框架真实产物结果、牌桌状态、视图刷新和过期候选拒绝。
@@ -1239,9 +1517,9 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 - **日期唯一真相**：`ScenarioRun` 只保存总确认回合，当前日与当日进度由 `TurnsPerDay` 推导；回合制和即时制跨越同一日界，不保存第二份当前日期。
 - **提交顺序**：跨日回合先推进牌桌，再把新日期事实交给所属 `QuestLog`，最后发布已有 `ScenarioTurnConfirmedEvent`。订阅者读取到新日期时，按天任务已经完成提交。
 - **真实消费者**：当前只有任务日志和 HUD。已有回合事实已经携带当前日与日内进度，不需要再造 `DayStartedEvent`、`DayEndedEvent` 或事件包装。
-- **不建立日程系统**：当前没有需要暂停、等待、玩家确认或异步串行结算的跨日规则，也没有对应作者源与运行状态。因而不新增阶段枚举、规则注册表、空 pipeline、输入锁、遭遇、天气、饥饿或自动存档。
-- **未来裁决门槛**：首个真实跨日规则出现时，先判断直接消费回合事实是否足够；只有多个步骤确实形成可中断的同一日程生命周期时，才在 `ScenarioRun` 内建立对应运行对象，不能恢复模板的并列 Manager 链。
-- **代码结论**：现有实现已经满足当前边界，本切片不修改生产代码。新鲜验证为 `ScenarioRunEditModeTests` `9/9`、统一 `FoundationTestScenePlayModeTests` `13/13`，均零失败；证据为 `Logs/TestResults-Gameplay-Module52-DayBoundary-R2.xml` 与 `Logs/TestResults-Gameplay-Module52-Foundation-PlayMode-R1.xml`。
+- **历史边界订正**：这一切片当时只证明日期派生，不等于完整复现 StackCraft 日程。模板已经提供日终通知、进食、超限处理、最多一个遭遇、新日确认和自动保存的真实顺序，因此这些玩家效果必须先用新框架复现并试玩，不能再因 CardLoop 临时策划尚未定案而排除。
+- **实现约束**：不恢复模板的并列 Manager / 单例链，也不把模板数值写死成最终产品规则；日终效果作为可配置测试内容进入 `ScenarioRun` 的同一跨日生命周期，自动保存复用现有 `ScenarioDirector` 与 `SaveSystem`。
+- **代码结论**：既有验证只覆盖日期派生与回合事实，不能证明完整日终已完成。原证据 `Logs/TestResults-Gameplay-Module52-DayBoundary-R2.xml` 与 `Logs/TestResults-Gameplay-Module52-Foundation-PlayMode-R1.xml` 保留其直接覆盖范围。
 
 #### 当前 5.3 任务日志与内容发现事实（2026-08-11）
 
@@ -1349,19 +1627,27 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 | StackCraft 玩家效果 | StackCraft 实现 | 正式职责归属 | 等效实现路径与当前状态 |
 |---|---|---|---|
 | 进入战斗、敌我分组、战斗结束 | `CombatManager / CombatTask` 持有两组 `CardInstance` 并直接回桌 | 牌桌聚合 + `Battle` | `Tabletop` 唯一持有活动战斗，`Battle` 直接拥有多个 `BattleSide`，每方只保存本场参战卡牌 ID；角色 GAS 阵营与敌我关系不复制进战斗。活动参战牌不能绕过牌桌移除，只剩一个有成员的战斗方时结束；不建立 `CombatSystem` 空壳。 |
-| 实时行动进度和攻速排序 | `CombatTask.Update` 每帧累积 `AttackSpeed` 并选最高者 | 战斗运行时调度 + EX-GAS Attribute | 战斗始终即时；调度读取 GAS 攻速 / 行动速度属性，生成可激活攻击意图，不复用普通牌桌行动的回合换算。**等待角色卡与运行时 ASC 正式归属前置**。 |
-| 普攻、技能、前后摇、取消 | 协程直接播放动画后调用 `ResolveAttack` | EX-GAS Ability + Timeline / AbilityTask | 普攻也作为 Ability；Timeline 配置前后摇、命中帧、Cost、Cooldown 和取消窗口。**插件正式能力已存在，Gameplay 战斗接入待实现**。 |
-| 目标选择、随机目标、范围目标 | `CombatTask` 直接从敌方列表 `Random.Range` | 战斗 AI / 权威随机 + Ability ActivationContext / TargetCatcher | AI 或玩家命令选择意图；一次激活目标放进 ActivationContext，几何范围交给 TargetCatcher。不得使用 Unity 全局随机作为联机真相。**待实现**。 |
-| 命中、闪避、暴击 | `ResolveAttack` 写死公式并直接读 `CombatStats` | 正式规则未定；若后续采用则归属 EX-GAS Ability / GameplayEffect 扩展与权威随机 | 当前 Foundation 关闭闪避和暴击，只验证固定基础伤害。闪避暂不从角色属性提供；正式属性和判定规则明确前不接入，也不把现有通用计算代码视为本游戏规则。**产品规则待定，不阻塞当前地基**。 |
-| 伤害、防御、护盾、死亡 | `TakeDamage` 直接改 `CurrentHealth` | GameplayEffect + MMC + Attribute；角色状态处理死亡 | 当前正式伤害集成点从正式 GE 配置构造程序集内部执行数据，在 ECS 查询结束后修改 GAS `Health` 基础值；`MaxHealth` 独立保存。旧直接伤害入口和第二效果系统已删除。StackCraft 战斗父级、护盾和完整命中链仍**待接入**。 |
-| 近战 / 远程 / 魔法克制 | `CombatType` 枚举和固定 RPS 分支 | EX-GAS GameplayTag + GE 标签条件 / MMC | 攻击、伤害、护甲、抗性用分组 Tag 表达；MMC 根据来源 / 目标标签和属性计算倍率，可复现 RPS，也可支持 DND、COC 或 Mod 新规则。**内置内容可实现；Mod 动态标签合并仍是已登记缺口**。 |
-| 近战突进、投射物、命中图标、飘字、音效、镜头 | `CombatTask / CombatManager / HitUI` 直接执行 | Timeline + GameplayCue + 牌桌表现 | Timeline 在命中帧触发 Cue；Cue 只播放动画、Prefab、音频、镜头和 UI，不修改伤害。**插件能力已有，视觉资产和牌桌接入待实现**。 |
-| 战斗冲突区和队列布局 | `CombatRect` 同时布局、碰撞、合并和清理 | `ScenarioDefinition` 的阵型规则 + `TabletopView` | 已吸收“战斗参与者进入阵列”的玩家可见效果：阵型规则由剧本声明，牌桌派生位置，唯一牌桌视图写入 Transform；不吸收 `CombatRect` 的矩形碰撞、堆栈推动和直接状态修改。拖拽加入、逃跑、合并仍必须走正式战斗命令。**当前切片已验证**。 |
-| 逃跑、加入战斗、战斗合并 | `CombatTask.Flee / AddCombatants` 直接改列表和卡堆 | 战斗命令 + 规则判定 + GAS Ability / GE | 逃跑可作为 Ability 或战斗命令，使用属性检定、标签和状态效果；加入 / 合并由战斗运行时提交参与者变化，再由表现区更新。**待实现**。 |
-| 装备加属性、标签和技能 | `CardEquipper` 将 `StatModifier` 写入本地 `CombatStats` | 角色装备模块 + GameplayEffect / GrantedAbility / GrantedTag | 装备模块拥有槽位和物品来源；穿戴时施加来源可追踪的持续 GE、技能和标签，卸下时撤销同一来源。**GAS 能力已有，装备 owner 待建立**。 |
+| 实时行动进度和攻速排序 | `CombatTask.Update` 每帧累积 `AttackSpeed` 并选最高者 | `Battle` + EX-GAS Attribute | `Battle` 始终按真实秒数累积角色 ASC 的 `AttackSpeed`，每秒选择进度最高且配置了自动能力的角色；Ability 完成或取消后才重置该角色进度。普通牌桌行动仍独立选择回合制或即时制。**当前效果已验证**。 |
+| 普攻、技能、前后摇、取消 | 协程直接播放动画后调用 `ResolveAttack` | EX-GAS Ability + Timeline / AbilityTask | `CharacterCardDefinition` 只引用 ASC 已授予的自动战斗 Ability，不复制技能数据；自动与手动请求都进入现有牌桌 Ability 激活链，前后摇、命中帧、Cost、Cooldown、结束和取消继续由 EX-GAS 承担。**基础攻击已接入**。 |
+| 目标选择、随机目标、范围目标 | `CombatTask` 直接从敌方列表 `Random.Range` | `Battle` 权威随机 + Ability ActivationContext / TargetCatcher | 自动行动用战斗权威随机从其它战斗方参与者中选择一个目标，并写入本次 `AbilityActivationContext`；几何范围继续归 TargetCatcher，不使用 Unity 全局随机。**模板随机单目标已接入，复杂 AI / 范围规则按具体 Ability 扩展**。 |
+| 命中、闪避、暴击 | `ResolveAttack` 写死公式并直接读 `CombatStats` | GNS/EX-GAS Attribute、Ability、GameplayEffect 与权威随机 | 模板确认存在命中、闪避和暴击玩家效果。当前已按 StackCraft 源码公式接入 `DamageSolver`；数值输入落在 GNS/EX-GAS 属性或效果参数，随机由当前战斗权威随机提供，不恢复 `CombatStats`。 |
+| 伤害、防御、护盾、死亡 | `TakeDamage` 直接改 `CurrentHealth` | GameplayEffect + Attribute；牌桌处理角色离场 | 伤害由正式 GE 修改 GAS `Health`，`MaxHealth` 独立保存；自动 Ability 完成后，牌桌移除生命归零的角色卡，只剩一个有效战斗方时结束战斗。旧直接伤害入口和第二效果系统已删除；护盾仍待对应模板效果切片。 |
+| 近战 / 远程 / 魔法克制 | `CombatType` 枚举和固定 RPS 分支 | EX-GAS GameplayTag + `FormalDamage.Matchups` | RPS 玩家效果已通过 `Combat.Melee / Combat.Ranged / Combat.Magic` 标签和 GE 内 `FormalDamage.Matchups` 接入：Melee > Ranged、Ranged > Magic、Magic > Melee，优势 `1.5x`，劣势 `0.75x`。旧 `CombatType` 枚举和固定战斗结构不恢复；Mod 动态标签合并仍是已登记缺口。 |
+| 近战突进、投射物、命中图标、飘字、音效、镜头 | `CombatTask / CombatManager / HitUI` 直接执行 | Timeline + GameplayCue + 牌桌表现 | Timeline 在命中帧触发 Cue；Cue 只播放动画、Prefab、音频、镜头和 UI，不修改伤害。当前牌桌文本飘字已显示伤害、Miss、暴击、优势和劣势；镜头 shake 已由现有 `CameraShake` 接入纯 ASC 命中表现事件；投射物前摇、战斗音效和 `HitUI` 式图标 / punch 缩放均已完成源码接入，Unity 场景重建与 PlayMode 待编辑器空闲后补跑。 |
+| 战斗冲突区和队列布局 | `CombatRect` 同时布局、碰撞、合并和清理 | `Battle` 区域状态 + `ScenarioDefinition` 阵型规则 + `TabletopView` | 战斗参与者按剧本阵型进入阵列；`Battle` 保存唯一权威区域中心，区域尺寸由阵型和参与人数派生，`TabletopBattleAreaView` 只读显示。区域重叠判断不依赖 Physics、Collider 或 UI Transform；模板的堆栈推动和直接状态修改不进入正式链路。**阵型、可见区域与自动合并已验证**。 |
+| 逃跑、加入战斗、战斗合并 | `CombatTask.Flee / AddCombatants` 直接改列表和卡堆 | 战斗命令 + 规则判定 + GAS Ability / GE | `Tabletop.JoinBattle` 已支持把角色加入既有战斗的指定战斗方；`LeaveBattle` 已支持主动离开并在仅剩一方时结束战斗；参战卡通过正式拖拽释放入口落到战斗区域外时，会先预演牌桌放置，再离战并回桌放置；新战斗创建前及增援扩张后都会按派生区域重叠自动合并，默认按战斗方索引映射；`MergeBattles` 仍支持调用方为剧情和特殊规则明确映射。目标战斗身份与权威随机流保留，牌桌不根据固定 Player/Mob 或 GAS 标签猜测分组。带属性判定的逃跑仍待正式规则与操作入口。 |
+| 装备加属性、标签和技能 | `CardEquipper` 将 `StatModifier` 写入本地 `CombatStats` | `CharacterCard` 装备状态 + `EquipmentCardDefinition` + GameplayEffect；Ability / Tag 等待真实装备语义 | 装备槽位和装备来源已由角色卡直接拥有：装备卡离桌、同槽替换、卸下回桌和快照恢复后重施加持续 GE 已验证；不恢复 `CardEquipper`、`CardEquipment` 或本地 `StatModifier`。装备授予 Ability / Tag 尚无已成立玩家效果，不提前接入。 |
 | 武器触发职业变化 | `classChangeResult` 直接替换卡牌定义 | 角色 / 职业系统 + GAS 授予能力 | 职业系统校验转职并持有唯一当前职业，再授予属性集、标签、技能和被动；装备只能发起转职请求。**职业系统尚未设计，当前不得照搬**。 |
 | 保存和联机恢复进行中的战斗 | `CombatData` 只保存双方卡牌和战斗区域，读档时重建战斗任务 | 不吸收 | CardLoop 战斗过程不进入存档，不保存参与者、调度进度、激活 Ability、临时效果或随机流。未来联机只按活动会话的真实需求设计权威同步与连接策略，不以战斗读档恢复为前提。**按产品裁决明确排除**。 |
 
+#### 战斗命中 / 闪避 / 暴击 / 飘字源码对照吸收（2026-08-15）
+
+- **StackCraft 源码事实**：`CombatTask.ResolveAttack` 先用 `(Accuracy - Dodge) / 100` 并钳制到 `5% - 95%` 判定命中；Miss 直接返回 `HitResult(Miss, 0)`，不会继续判暴击。命中后用 `CriticalChance / 100` 判暴击；基础伤害是 `Max(1, Attack - Defense)`；RPS 优劣倍率在暴击前生效；暴击最终用 `RoundToInt(damage * CriticalMultiplier / 100)`。
+- **CardLoop 规则映射**：攻击力来源不恢复 `CombatStats`，而是 EX-GAS / GNS 的 `FlatDamage + Attack * ScalingFactor` 作为本次命中的攻击力输入；`DamageSolver` 现在按 StackCraft 的减法防御、命中差值钳制、RPS 克制倍率和命中后暴击顺序结算。`Ability 20005 -> Timeline -> GE 2003` 仍是正式执行链。
+- **RPS 规则映射**：GE 通过 `FormalDamage.Matchups` 声明来源标签、目标标签、倍率和表现语义；当前内置内容配置 `Melee > Ranged`、`Ranged > Magic`、`Magic > Melee`，优势 `1.5x`、劣势 `0.75x`。规则只查询来源 / 目标唯一 ASC 的 EX-GAS 标签，不在卡牌、战斗状态或本地枚举中复制战斗类型。
+- **CardLoop 表现映射**：纯 ASC 角色没有 `CharacterBase` 场景对象时，`GameplayEffectDamageSystem` 在写回 GAS `Health` 后发布 `AbilitySystemDamageResolvedPresentationEvent`；`TabletopView` 只把属于当前牌桌的目标 ASC 投影到对应 `TabletopCardView`；`TabletopCardView` 临时显示 `Miss`、实际伤害数字、暴击颜色，以及 RPS 优势 / 劣势文本和颜色；同一事件在 `ECameraShakeSources.AbilitySystemDamageResolved` 开启时由现有 `CameraShake` 播放命中镜头震动，Miss、静默伤害和 `NoCameraShake` 不触发。
+- **明确不恢复项**：`CombatManager`、`CombatStats`、`CombatType` 枚举、独立 `HitUI` 生命周期、DOTween 运行时依赖和旧音频总管不进入正式链路。RPS 固定枚举结构不恢复；玩家效果通过 GNS/EX-GAS、`Battle`、`TabletopView` 和 GameCore `AudioSystem` 吸收。
+- **证据口径订正**：本切片的主证据是 `CombatTask.ResolveAttack` / `HitUI.Initialize` 与 `DamageSolver` / `GameplayEffectDamageSystem` / `TabletopView` / `TabletopCardView` 的源码映射。EditMode 测试只防止公式和事件接线漂移；Foundation PlayMode 只算牌桌表现接线 smoke，不能证明模板视觉完全一致。
 #### 6.1 子模块顺序
 
 1. EX-GAS 属性作者源、属性身份投影和生命/法力资源语义。
@@ -1370,9 +1656,9 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 4. 冲突区 / 战斗表现区与牌桌投影。
 5. 先确立角色卡与运行时 ASC 的正式归属，再进入战斗能力调用。
 6. 实时调度与普攻 Ability 激活。
-7. 固定基础伤害的 GAS 结算链；命中 / 闪避 / 暴击等待正式规则定案。
+7. 固定基础伤害的 GAS 结算链；命中 / 闪避 / 暴击已确认属于模板效果候选，后续按 GNS/EX-GAS 数值链复现，StackCraft 数值只作临时参数。
 8. GameplayCue 战斗表现。
-9. 装备授予 GE / Ability / Tag。
+9. 装备槽位、穿脱、持续 GE 与装备任务事实；Ability / Tag 等待真实装备语义。
 10. 职业系统和转职请求。
 11. 联机活动会话、隐藏信息和连接策略；不建立战斗存档恢复。
 
@@ -1394,7 +1680,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 - **删除项**：`GameplayEffectDamageApplier`、`AEffect`、`IEffect` 与绕过 GameplayEffect 的 `HealOrDamagePlayer` 已删除。伤害、治疗和效果不再存在第二条可写执行链。
 - **资源入口订正**：旧 `AddOrRemoveMana` 命令也已删除。技能的消耗与恢复由 EX-GAS Ability Cost / GameplayEffect Modifier 表达；角色只在自身复活、升级等生命周期内部调整资源，不能作为内容作者的第二条效果入口。
 - **属性恢复前置（订正）**：EX-GAS 2.0.4 当前没有运行时 ASC 快照、属性集枚举或正式恢复门面；Gameplay 不得直接读取 ECS Buffer。角色长期状态恢复必须先在 EX-GAS 正式 OOP 门面建立快照 / 恢复能力，再由角色卡调用；不能把“未来应重算”写成当前已有能力。
-- **当前缺口**：伤害掷值不再使用 Unity 全局随机，但目前由 ECS Entity 索引派生本地种子，不保证联机或回放确定性。战斗/单局的权威随机 owner 尚未存在，故本切片只登记缺口，不提前新造随机服务。固定伤害枚举的 Mod 扩展裁决也仍未完成。
+- **后续订正**：该缺口已由 6.4 正式链路解决。`ScenarioDirector` 为单局提供非零根种子，`ScenarioRun` 为各地区派生独立牌桌随机流，`Tabletop` 为战斗派生种子，`Battle` 再为每次 Ability 激活提供种子，EX-GAS Timeline 为每个 GameplayEffect 派生种子。牌桌战斗不再依赖 ECS Entity 索引决定正式掷值。旧 2D 场景能力仍保留无权威种子时的实体索引兼容路径，但它不属于牌桌联机链；未来若迁入同一正式战斗入口，必须删除该兼容分支。固定伤害类型的 Mod 扩展裁决仍未完成。
 
 #### 6.1.3 牌桌战斗参与与生命周期边界（2026-08-10 已验证）
 
@@ -1404,16 +1690,25 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 - **存档边界**：旧活动战斗快照已删除。它只能和不含角色 GAS 的普通卡牌快照组合，而普通卡在 6.2 后没有参战资格；该恢复链是假闭环。按后续产品裁决，战斗过程不进入存档，不再重建战斗恢复。
 - **GAS 标签边界**：角色所属阵营与关系是 GAS / 剧本规则事实，战斗方只是一次战斗的临时分组。后续开战入口必须从角色 `AbilitySystemCell` 与剧本关系规则解析分组，再提交给 `Tabletop.StartBattle`；战斗不建立本地阵营枚举、字符串表、标签副本或标签查询器。
 - **旧阵营枚举的裁决**：`GameCore.EAlignment` 仍被 `CharacterSheet`、`CharacterAlterationRule`、`CharacterBase` 和 `CombatSolver` 共同使用；当前角色 ASC 初始化传入空基础标签，而 EX-GAS 作者表也只有 `Faction.Player` / `Faction.Enemy`，不能等价替换旧的善恶中立。此时新增一个 `FactionTagCode` 字段会制造第二份阵营真相，因此本子模块不迁移。后续必须先由剧本拥有阵营关系规则，并让角色基础阵营和临时变更分别进入 ASC 固有标签与来源可追踪的 GameplayEffect 标签生命周期，再删除旧枚举链。
-- **冲突区裁决**：StackCraft `CombatRect` 同时写死两排布局、直接修改卡牌 Transform、夹取桌面边界并推动其它卡堆。CardLoop 保留其“参战者进入战斗阵列”的玩家可见效果，但由 `ScenarioDefinition` 内嵌 `BattleFormationRules` 按战斗方顺序声明队列，由 `Tabletop` 根据活动 `Battle` 和既有牌堆位置派生姿态，再由唯一 `TabletopView` 写入 Transform；不创建 `BattleView`、布局服务或冲突区 Prefab，也不保存第二套卡牌坐标。阵型支持每排容量、前后多排和剧本级偏移，Mod 新增阵营无需修改阵型。
-- **作者源与刷新边界**：阵型不是独立内容，不新增 ID；牌桌视图只绑定一个 `Tabletop`，同时观察卡牌修订和活动战斗修订。战斗基础渲染排序只在 `TabletopViewSettings` 配置一次，阵型只产生相对顺序。测试场景生成器通过正式菜单写入测试剧本的两阵营阵型，不手改场景 YAML。
-- **验证**：`BattleEditModeTests` 为 `5/5`，`BattleFormationEditModeTests` 为 `3/3`，统一 `FoundationTestScenePlayModeTests` 为 `7/7`；后两轮测试前的 Unity 编译状态为 `0` 错误，控制台错误数为 `0`。统一场景新增用例验证开战后卡牌进入阵型位置、战斗基础排序生效、权威牌堆位置不变，以及结束战斗后视图回到原牌堆位置。这些证据只覆盖冲突区 / 阵型表现切片，不证明实时调度、普攻、命中、逃跑、战斗合并、完整存档、联机、回放或 Mod 动态标签已经完成。
+
+#### 战斗实时调度补充审计（2026-08-14）
+
+- StackCraft 的 `CombatTask.Update` 为全部参战者累积攻击进度，每秒选择进度最高者并随机攻击对方单位；攻击完成后清零该角色进度。该实现同时写死自动攻击、时间片、随机目标和表现协程，不作为正式结构吸收。
+- Gameplay 继续使用已有 `Tabletop.RequestBattleAbilityActivation` 把施法者、目标、Ability 码和独立随机种子交给 EX-GAS，真实伤害由 Ability -> Timeline -> GameplayEffect 结算；没有恢复模板的直接伤害分支。
+- `CharacterCardDefinition.AutomaticBattleAbilityCode` 是角色对 ASC 已授予 Ability 的必要引用，不是第二套技能定义。0 表示该角色不自动行动；负数或 ASC 未授予的引用在作者校验和角色创建时直接报错。测试内容明确引用 `TabletopBasicAttack(20005)`，没有把旧 `XAbility.ABILITY_Attack` 或测试常量写死进战斗。
+- `Battle` 直接拥有各参战者行动进度、每秒选择窗口和当前执行 Ability 生命周期；`Tabletop` 读取 GAS 攻速、用战斗权威随机选择其它战斗方目标，并调用现有激活入口。EX-GAS 的结束 / 取消回调是进度重置的唯一时刻，不另存 Ability 时长。
+- `ScenarioRun` 在平时回合制下仍把真实秒数交给活动战斗；只有普通牌桌行动受 `ProgressionMode` 控制。因此“战斗始终即时，平时可回合或即时”不再依赖两套时间配置。
+- **验证**：自动攻击单条从 `0/1` RED 转为 `1/1` GREEN；统一 Foundation `23/23` 覆盖回合制世界实时战斗、攻速较高者先行动、正式 GAS 伤害、生命归零离场和战斗结束。战斗合同 `15/15`、剧本单局 `19/19`、全量 EditMode `504/505`（零失败、1 条环境条件跳过）、全量 PlayMode `47/47`。
+- **冲突区裁决**：StackCraft `CombatRect` 同时写死两排布局、直接修改卡牌 Transform、夹取桌面边界并推动其它卡堆。CardLoop 由 `ScenarioDefinition` 内嵌 `BattleFormationRules` 按战斗方顺序声明队列，`Battle` 保存区域中心，`Tabletop` 根据参与人数、卡牌尺寸和阵型边距派生区域与卡牌姿态，再由唯一 `TabletopView` 投影 Transform 和 `TabletopBattleAreaView`。不保存第二套卡牌坐标，不让 UI / Physics 决定玩法碰撞。阵型支持每排容量、前后多排和剧本级偏移，Mod 新增阵营无需修改阵型。
+- **作者源与刷新边界**：阵型和战斗区域都不是独立内容，不新增 ID；牌桌视图只绑定一个 `Tabletop`，同时观察卡牌修订和活动战斗修订。战斗基础渲染排序和区域视图预制体只在 `TabletopViewSettings` 配置一次；测试场景生成器通过正式菜单写入测试剧本阵型和区域视图资源，不手改场景 YAML。
+- **验证订正**：本段最初的 `5/5` 战斗合同与 `7/7` Foundation 只证明阵型投影，不能证明自动合并。补齐区域和两个自动触发点后，`BattleEditModeTests` 为 `15/15`、`BattleFormationEditModeTests` 为 `3/3`；随后实时调度接入后的完整 `FoundationTestScenePlayModeTests` 为 `23/23`。统一场景同时验证区域重叠自动合并和实时自动攻击；正式命中规则与带判定逃跑仍是独立未完成效果。
 
 #### 6.1.4 角色卡 GAS 归属与实时调度前置审查（2026-08-10）
 
 - StackCraft 的 `CardInstance` 将 `CombatStats`、`CardCombatant`、生命和战斗 Transform 状态直接挂在同一个 Unity 卡牌对象上，所以 `CombatTask` 可以直接选择攻击者并调用其战斗状态。
 - `CharacterCardDefinition : CardDefinition` 只引用一个 EX-GAS ASC 预设；`Tabletop.CreateCard` 根据内容定义自动创建直接持有唯一 `AbilitySystemCell` 的 `CharacterCard`。普通物品、地点和事件定义仍创建普通 `TabletopCard`，不会得到 ASC，也不能加入战斗。公开手工 `CreateCharacterCard(..., AbilitySystemCellConfig)` 已删除，行动候选和运行复核直接读取角色卡自身状态。
 - GameCore `CharacterBase` 虽然也拥有一个 `AbilitySystemComponent`，但它是 `Movable` / Unity 场景角色，依赖 Transform、Rigidbody2D、控制器、动画、交互和旧角色数据。它与 `CharacterCard` 可以作为不同逻辑角色同时存在；但同一逻辑角色不得同时以两者实现，否则才会产生双 ASC。当前牌桌不引用 `CharacterBase`，不建立桥接器。
-- 生成的 `XAbility` 中存在 `ABILITY_Attack` 常量，但生成常量不是攻击作者配置；EX-GAS 的正式激活还要求 ASC 持有 AbilitySpec，并通过 `AbilityActivationContext` 提供本次目标。当前“参战卡 -> 角色 ASC”已成立，但 AbilitySpec 作者配置、目标上下文、攻击时钟、命中和结算尚未成立。
+- 生成的 `XAbility` 中存在 `ABILITY_Attack` 常量，但生成常量不是攻击作者配置；EX-GAS 的正式激活还要求 ASC 持有 AbilitySpec，并通过 `AbilityActivationContext` 提供本次目标。该前置缺口后来由正式 `TabletopBasicAttack(20005)` 作者链、角色卡自动能力引用和 `Battle` 即时进度解决，不再是当前缺口。
 - **6.3 前置证据**：EX-GAS 存在 `Attack(20001)`，但其 Timeline 使用 `CatchAreaPolygon2D`，命中链依赖 2D 场景角色的 `Movable`、姿态和物理层；纯 `CharacterCard` 只有 `AbilitySystemCell`。当前 ASC 预设也没有授予该 Ability，因此它不能作为牌桌攻击假装复用。
 - **裁决**：本子模块不新增手写攻击状态机、伤害调用、Ability 转发层或用 `Battle.Update` 复制 Cost / Cooldown / Timeline。下一步先通过 EX-GAS 正式作者表建立使用 `AbilityActivationContext.MainTarget + CatchTarget` 的牌桌攻击 Ability，再让战斗聚合提交施法者卡、目标卡与 Ability 码；普通牌桌行动继续使用自身回合 / 即时换算，战斗保持独立即时时钟。
 
@@ -1442,29 +1737,29 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 - **UIKit 边界**：新增 `TabletopCardInfoPanel` 作为当前牌桌的常驻只读投影。面板直接绑定 `TabletopView`，名称与描述来自正式 `CardDefinition`，局内对象来自当前 `TabletopCard`；没有新增 `InfoSystem`、UI Context、事件包装或第二套资源入口。
 - **旧 UI 裁决**：GameCore `UISystem/UIManager` 仍承担旧 2D RPG 菜单与存档生命周期候选，不接管牌桌 hover/selection。UIKit 继续是唯一面板宿主；测试 HUD 和本次生成的详情布局只是统一场景验收夹具，不冒充最终美术方案。
 - **生命周期**：卡牌被权威牌桌移除时，`TabletopView` 在同一次视图刷新中清理悬浮/选择；详情面板清空标题、描述和显示卡牌 ID。解绑或关闭面板时解除直接订阅，不保留旧卡牌引用。
-- **验证**：可读状态 RED 精确命中缺少 `HoveredCardId` / `SelectedCardId` / `ReadableCardId`；悬浮覆盖选择与 UIKit 作者文本链 `1/1` 通过；移除可读卡牌的旧文本 RED `0/1`，修正后 `1/1`；最终 Foundation 全组 `17/17` 通过。证据分别见 `Logs/TestResults-Gameplay-Module71-ReadableCard-RED.log`、`Logs/TestResults-Gameplay-Module71-CardInfo-GREEN-R1.xml`、`Logs/TestResults-Gameplay-Module71-RemoveReadable-RED.xml`、`Logs/TestResults-Gameplay-Module71-RemoveReadable-GREEN.xml` 与 `Logs/TestResults-Gameplay-Module71-Foundation-PlayMode-Final.xml`。真实入口最终截图为 `Logs/Gameplay-Module71-CardInfo-PASS-Candidate.png`，AI 视觉审计 `PASS 91/100`；该图只证明测试详情投影可读且不遮挡，不代表正式 UI 美术完成。
+- **验证**：可读状态 RED 精确命中缺少 `HoveredCardId` / `SelectedCardId` / `ReadableCardId`；悬浮覆盖选择与 UIKit 作者文本链 `1/1` 通过；移除可读卡牌的旧文本 RED `0/1`，修正后 `1/1`；最终 Foundation 全组 `17/17` 通过。证据分别见 `Logs/TestResults-Gameplay-Module71-ReadableCard-RED.log`、`Logs/TestResults-Gameplay-Module71-CardInfo-GREEN-R1.xml`、`Logs/TestResults-Gameplay-Module71-RemoveReadable-RED.xml`、`Logs/TestResults-Gameplay-Module71-RemoveReadable-GREEN.xml` 与 `Logs/TestResults-Gameplay-Module71-Foundation-PlayMode-Final.xml`。`Logs/Gameplay-Module71-CardInfo-PASS-Candidate.png` 只保留为当时确认测试详情可读的诊断图，不是现行视觉门禁证据。
 
 #### 7.2 行动选择与填槽 UI（2026-08-12 已验证）
 
 - **参考职责**：吸收 StackCraft 从牌桌交互得到可执行操作、显示进度和让玩家明确确认的效果；不吸收“合堆即自动制作”、`InfoPanel` 操作按钮或 UI 直接调用全局制作管理器。
 - **正式 owner**：`TabletopInteraction` 解释一次牌桌释放并打开 UIKit；`TabletopActionChoicePanel` 只回传候选选择。未完整候选由牌桌拥有的 `ActionPlan` 保存绑定，`TabletopActionPlanPanel` 只投影和提交，UI 不保存第二份槽位状态。
 - **扩展与生命周期**：同一牌桌可拥有多个计划，但 UIKit 只使用一个计划面板切换投影；移除卡牌会同步解除所有计划绑定，待计划参与者不能跨地区旅行。行动、内容、EX-GAS 条件和卡牌归属均在提交时由正式 owner 复核。
-- **验证**：最终 Foundation `19/19`、相关 EditMode `23/23`。当前代码版选择态 `Logs/Gameplay-Module72-Choice-GameView-R2.png` 与缺员填槽态 `Logs/Gameplay-Module72-Plan-GameView-R4.png` 分别通过 `92/100` 与 `91/100` 视觉审计。
+- **验证**：最终 Foundation `19/19`、相关 EditMode `23/23`。选择态与缺员填槽态的既有 GameView 图片只证明当时测试入口可读，不参与模块完成裁决。
 
 #### 7.3 角色卡状态投影（2026-08-12 已验证）
 
 - **参考职责**：StackCraft `CardInstance` 在角色卡面显示 `CurrentHealth`，并在受伤后刷新。吸收“玩家在牌桌上直接读到角色当前生命”的效果；不吸收卡牌自身持有生命、`CombatStats`、直接扣血、装备组件或卡牌销毁副作用。
 - **唯一状态来源**：`CharacterCard` 直接读取自身唯一 EX-GAS `AbilitySystemCell` 中 `FightUnit/Health` 与 `MaxHealth`。`TabletopCardView` 只比较并投影这两个当前值，不建立生命副本、属性表、伤害链或 Gameplay 事件包装。
-- **牌堆与战斗表现**：普通牌堆只显示顶牌角色状态，避免同堆文字重叠；进入战斗阵型的参战卡显示自身状态。普通卡牌不显示角色状态。测试状态条由正式测试场景作者源生成，最终图 `Logs/Gameplay-Module73-CharacterHealth-GameView-R6.png` 显示顶牌 `100/100` 与独立牌动态 `73/100`，视觉审计 `PASS 91/100`。
+- **牌堆与战斗表现**：普通牌堆只显示顶牌角色状态，避免同堆文字重叠；进入战斗阵型的参战卡显示自身状态。普通卡牌不显示角色状态。测试状态条由正式测试场景作者源生成；既有 GameView 图片只记录顶牌 `100/100` 与独立牌动态 `73/100` 在当时可读，不是正式视觉验收。
 - **延期范围**：模板没有 CardLoop 设计稿所需的职业、技能、经历侧栏；模板装备面板也依赖尚未成立的装备领域。完整角色侧栏必须等待对应领域对象、作者源和唯一写入口成立，不能由 UI 先创造临时数据。
 - **验证**：RED 精确命中视图缺少角色状态契约；单条 GREEN `1/1`，最终 Foundation `20/20`，卡牌视图 EditMode `2/2`，均零失败、零跳过。证据为 `Logs/TestResults-Gameplay-Module73-CharacterHealth-GREEN-R4.xml`、`Logs/TestResults-Gameplay-Module73-Foundation-Final-R1.xml` 与 `Logs/TestResults-Gameplay-Module73-CardView-EditMode-Final-R1.xml`。
 
 ### 7.4 HUD 与交互反馈
 
-- **参考职责裁决**：StackCraft `ProgressUI` 已由模块 4 的行动进度视图吸收，`ScreenFader` 已由模块 0.4 的转场职责承担，行动选择 / 确认已由 7.2 承担。`CardStatsUI` 的营养、货币和卡牌容量属于尚未确认的业务规则，不进入地基；`ModalWindow` 不另建第二弹窗系统，UIKit 继续作为唯一面板宿主。本切片只吸收 `DayTimeUI` 的日内进度可读反馈。
+- **参考职责裁决**：StackCraft `ProgressUI` 已由模块 4 的行动进度视图吸收，`ScreenFader` 已由模块 0.4 的转场职责承担，行动选择 / 确认已由 7.2 承担。`CardStatsUI` 的营养、货币和卡牌容量在阶段 C 已重新裁决为必须复现的玩家可见 HUD 效果；当前由 `ScenarioRun.GetTabletopStats()` 与 `ScenarioTurnPanel` 承担，不恢复 `StatsSnapshot` 管理器、`CardManager.OnStatsChanged` 或 `CardCategory.Currency`。`ModalWindow` 不另建第二弹窗系统，UIKit 继续作为唯一面板宿主。
 - **正式归属**：日期、确认回合和即时流逝仍只属于当前 `ScenarioRun`。`TurnsPerDay`、推进模式和 `NormalizedDayProgress` 都是同一单局事实的只读投影；回合制与即时制共享每日回合和每回合秒数配置，不建立 `TimeSystem` 或 HUD 自持计时器。
 - **玩家可见效果**：常驻 `ScenarioTurnPanel` 显示“第 N 天  x/y”和日内进度。回合制显示可点击的“推进回合”；即时制显示不可点击的“即时推进中”，进度随正式剧本时间更新。禁用态使用明确的中性深灰，与回合制青色主操作区分。
-- **验证**：完整统一场景 `Logs/TestResults-Gameplay-Module74-Foundation-PlayMode-Final.xml` 为 `21/21`，零失败、零跳过；同轮日志没有内存泄漏、悬空引用、未处理异常或编译错误。真实 Game View 证据为 `Logs/Gameplay-Module74-TurnBased-PASS.png` 与 `Logs/Gameplay-Module74-RealTime-MidProgress-PASS.png`，功能性视觉审计通过。截图只证明当前地基测试投影可读，不代表正式美术或未确认的资源统计 UI 已完成。
+- **验证**：完整统一场景 `Logs/TestResults-Gameplay-Module74-Foundation-PlayMode-Final.xml` 为 `21/21`，零失败、零跳过；同轮日志没有内存泄漏、悬空引用、未处理异常或编译错误。既有回合制与即时制 GameView 图片只作为测试投影可读性的历史诊断记录，不是模块门禁。
 - **模块结论**：7.1-7.4 当前地基范围完成；下一步进入模块 8 单局快照与存档恢复。阶段 C 仍需等待模块 8-9，不能据此宣称 StackCraft 完整吸收完成。
 
 ### 8.1-8.2 内容集合与整局领域快照
@@ -1476,22 +1771,179 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 - **中间状态边界**：未提交填槽计划是本地临时交互，读档后取消；活动战斗不存档，存在时直接拒绝；旅行事务尚未提交时也拒绝。当前不会把临时 UI、半场战斗或异步场景事务伪装成可恢复事实。
 - **任务 Mod 扩展**：每个 `QuestTaskRuntimeState` 自己生成 / 恢复派生快照，`QuestLog` 不按类型中央分发。代码 Mod 可扩展任务状态；若未实现存档契约，生成快照时直接报出类型，不静默清零。
 - **验证**：整局 JSON 往返 `1/1`，`ScenarioRun` 全组 `13/13`，任务 / 活动行动 / 牌桌 / 内容相关回归 `42/42`，活动战斗存档边界 `8/8`；全量 EditMode `441/442`（零失败、1 条既有忽略），统一 Foundation PlayMode `21/21`。证据分别为 `Logs/TestResults-Gameplay-Module82-ScenarioSnapshot-GREEN-R6.xml`、`Logs/TestResults-Gameplay-Module82-ScenarioRun-R1.xml`、`Logs/TestResults-Gameplay-Module82-Related-R1.xml`、`Logs/TestResults-Gameplay-Module82-BattleSaveBoundary-R1.xml`、`Logs/TestResults-Gameplay-Module82-AllEditMode-R1.xml` 和 `Logs/TestResults-Gameplay-Module82-Foundation-PlayMode-R1.xml`。
-- **8.3 集成缺口**：角色卡长期状态仍由唯一 EX-GAS ASC 持有。EX-GAS 2.0.4 当前没有公开 ASC 快照 / 枚举 API，且官方项目文档禁止 Gameplay 直接读 ECS Buffer。因此不能在 Gameplay 复制属性、固有标签、已授予技能或持续效果；必须先建立 EX-GAS 正式门面并验证恢复与失败清理。
+- **8.3 历史判断订正**：此前“必须先给 EX-GAS 增加完整 ASC 导出门面”的判断已废止。按 UE GAS 职责校准后，ASC 是运行时能力聚合，不是通用 SaveGame；当前产品又不保存战斗中状态。角色快照只保存已成立的长期事实：ASC 等级与当前预设声明属性的 `BaseValue`，恢复时用现行 `CharacterCardDefinition` 的 ASC 预设重建并校验结构。没有修改 EX-GAS，没有读取 ECS Buffer，也没有复制标签、效果或 Ability 状态。
 
 ### 8.4 GameCore 槽位与模板存档 UI 吸收裁决
 
 - **模板玩家流程**：标题界面提供 `Load Saved Games`，列表按槽位显示场景、任务进度和最后保存时间；每条有 `[Load]`、`[Delete]`，删除前弹确认；列表有删除全部与关闭；局内提供 `Quit to Title & Save`。这组流程来自 `Title.unity`、`SavedGamesUI`、`SavedGameSlot`、`ModalWindow` 和 `UIRoot.prefab`，不是整个正式游戏 UI。
-- **视觉等价范围**：`SavedGameSlot.prefab` 没有专属位图，主要由 `760x100` 槽位尺寸、低透明浅色底、TMP 文本和方括号文本按钮构成。可以直接复用模板 prefab 的尺寸、颜色、字体层级和布局；脚本与旧 `GameDirector` 引用必须替换。确认弹窗同样复现模板布局与交互，不复制其全局单例。
+- **UI 验收范围**：模板存档界面只用于确认玩家需要看到槽位摘要、读取、删除、清空、关闭和确认反馈。CardLoop 不复刻模板的具体尺寸、颜色、字体或布局；UIKit 只要通过正式职责完整承载相同操作结果、信息可读且交互可用即可。脚本与旧 `GameDirector` 引用必须替换，确认弹窗也不复制其全局单例。
 - **槽位显示事实**：模板场景名改为剧本显示名 / 当前地区显示名；模板 `QuestProgress` 百分比不能伪造为通用任务完成度。只有当前剧本定义出正式进度口径后才显示百分比，否则槽位只显示剧本、地区和最后保存时间。槽位编号与保存时间直接来自 SaveKit `SaveMeta`，不要求玩家手填文件名。
 - **正式职责**：GameCore `SaveSystem` / SaveKit 只拥有文件、槽位、版本、元数据和模块容器；`ScenarioDirector` 拥有活动单局快照创建、内容加载、场景切换和恢复发布。GameCore 不引用 Gameplay，Gameplay 不直接操作文件路径。
 - **现有 GameCore 订正方向**：当前 `SaveSystem` 把旧 RPG `SaveDataBlock` 当作唯一模块，并把地图 / 标记 / 玩家 / 持久对象加载顺序写死。应重构为可保存 / 读取 SaveKit `SaveData` 模块容器；旧 RPG 世界块只是可选模块，不再抢占整个游戏存档根。不得新增 `GameplaySaveSystem`、第二文件格式或通用参与者注册表。
 - **加载事务**：`ScenarioDirector` 先从槽位读取 `ScenarioRunSnapshot`，校验内容集合与剧本定义，再通过正式 `SceneSystem` 切换到快照当前地区，最后原子发布恢复后的 `ScenarioRun`。校验或场景切换失败时保持原活动单局不变；不能先销毁当前局再尝试恢复。
 - **UIKit**：存档列表、槽位项和确认弹窗都由 UIKit 承载。UI 只读取 SaveKit 元数据和单局快照摘要，Load / Delete / Clear / Close 通过正式命令入口执行；UI 不保存第二份槽位集合、剧本状态或文件路径。
-- **当前实施状态**：GameCore 槽位容器和 `ScenarioDirector` 原子读档已先完成，并已在统一场景用普通卡验证真实文件、YooAsset 内容加载、候选单局、场景和可见牌桌改绑链路。8.3 角色 ASC 长期状态快照仍未完成，因此尚不能实现或验收完整模板存档 UI；不得用普通卡牌存档界面冒充完整效果。
+- **当前实施状态**：GameCore 槽位容器、`ScenarioDirector` 原子读档和角色 ASC 长期状态快照均已完成当前地基范围；统一场景已用角色卡验证真实文件、YooAsset 内容加载、候选单局、场景和可见牌桌改绑链路。`ScenarioSavePanel` 已用 UIKit 复现动态列表、覆盖 / 读取、删除确认、清空全部、关闭和保存并退出；端到端 `2/2`，功能链通过后模块 8 当前地基范围关闭。空列表、已有槽位和删除确认的既有 GameView 图片只作为过程诊断记录。活动战斗不保存。
 - **文件层实施结果**：GameCore `SaveSystem` / `SaveFileStorageRuntime` 已改为创建、保存、读取 SaveKit `SaveData` 模块容器和槽位 `SaveMeta`；旧 RPG `SaveDataBlock` 只是一个模块。槽位 API 统一使用整数 `slotId`，删除 `SAVEFILE_A/B/C`、文件名后缀解析和哈希分配，UI 不再手填字符串 key。独立领域模块与旧世界块同槽往返 `1/1`，GameCore 全组 `96/96`；证据为 `Logs/TestResults-Gameplay-Module84-SaveContainer-GREEN-R2.xml` 与 `Logs/TestResults-Gameplay-Module84-GameCore-R1.xml`。
 - **导演接入结果**：`ScenarioDirector` 负责活动单局快照注册、槽位读取、内容校验、候选单局构造、目标地区场景切换和最终活动单局替换。槽内其它模块保留；加载失败不销毁旧单局。活动单局提交变化后通过 YokiFrame `EventKit.Type` 发布 `ScenarioRunChangedEvent`，场景级牌桌表现 owner 统一改绑视图、交互与输入，不建立第二套运行状态。
-- **验证边界**：导演 EditMode `7/7`、整局与文件回归 `14/14`、剧本内容 PlayMode `8/8`、统一地基 PlayMode `21/21`。其中端到端文件用例只保存普通卡，因为角色卡当前会正确拒绝不完整快照；角色 GAS 快照和模板等价 UIKit 存档界面仍是模块 8 未完成项。
+- **验证边界**：导演 EditMode `7/7`、整局与文件回归 `14/14`、剧本内容 PlayMode `8/8`、统一地基 PlayMode `21/21` 是模块 8 中途证据；最终角色长期 GAS 快照、角色文件读档和模板等价 UIKit 存档界面均已完成，当前完整证据见本节“当前实施状态”和 `progress.md` 的模块 8 收口记录。
 - **列表文件能力**：模板动态存档列表所需的有效槽位元数据、单槽删除和删除全部直接复用 SaveKit 正式 API，由 GameCore 文件 owner 暴露按整数槽位排序的只读结果。不存在槽位的删除返回失败，清空全部返回实际删除数量；不维护第二份存档字典、字符串文件名或目录扫描器。槽位合同 `2/2`，GameCore 回归 `97/97`。
+
+#### 8.5 PauseMenu 暂停菜单补充吸收（2026-08-16）
+
+- **参考职责**：StackCraft `PauseMenu` 在 `CancelWasPressedThisFrame` 且非日终结算时切换 CanvasGroup 显隐，继续按钮恢复，设置按钮打开 `GameOptionsUI`，返回标题按钮调用 `GameDirector.Instance.BackToTitle`；真实暂停通过 `TimeManager.SetExternalPause` 写入。
+- **正式等效实现**：CardLoop 不恢复旧 `PauseMenu`、`TimeManager`、固定标题场景或 `GameDirector` 单例。`ScenarioPauseInput` 只把正式 `GameCore.InputSystem.OpenGameMenu` 转成 `EMenu.Pause` 菜单请求；`ScenarioPausePanel` 通过 `UISystem/UIManager` 菜单栈执行继续、设置和保存退出；暂停状态由既有 `GameStateSystem.Menu` 统一压栈，`Time.timeScale` 由同一个状态层负责。
+- **设置与保存边界**：设置面板继续复用 GameCore `UISettings`，作为同一 UIKit 菜单栈的上层面板，不保存第二份暂停状态。保存并退出复用 `ScenarioDirector.SaveActiveRunToSlot(activeSlot)` 和 `EndScenarioAsync()`，不直接 `SceneManager.LoadScene`。
+- **当前验证状态**：新增 `FoundationMenu_PauseSettingsAndContinueUseFormalMenuStack` 覆盖 Esc 打开、设置压栈、设置关闭、Esc 关闭、再次打开和继续恢复；本轮已完成源码与定向 diff 静态检查，Unity 场景重建和 PlayMode 仍待 guard 允许后执行。
+
+### 9. 作者工具与关卡编辑支撑吸收结果
+
+- **参考真实范围**：StackCraft 没有独立关卡编辑器。它的作者工具由各 Definition Inspector、配方同材料提示、枚举堆叠矩阵、任务辅助 Inspector 和资源管线切换菜单组成。
+- **内容校验**：CardLoop 继续以 `ContentValidator` 为唯一规则校验入口；Unity 菜单扫描全部 `ContentAsset`，问题携带来源对象供 Console 定位。当前 Unity 扫描 11 个作者资产零错误零警告。没有新增第二个校验窗口或编辑器索引真相。
+- **配方冲突裁决**：相同参与条件的多个行动是玩家可选项，不是冲突；随机概率只属于单个行动内部结果分支。因此不恢复 StackCraft 的“同材料即冲突”签名和概率表，只保留断裂引用、无效权重、重复隐藏 key 等真正作者错误的校验。
+- **剧本与地区作者入口**：剧本 SO 通过类型受限选择器组合地区和任务；地区 SO 唯一拥有 YooAsset 场景地址、牌桌规则和抵达位置。现有 Inspector 已是正式作者入口，不另建重复窗口。
+- **牌桌作者入口**：地区内嵌的牌桌边界、禁放区域、卡牌尺寸和堆叠步进已具备中文字段名与说明。StackCraft 的 `StackingRulesMatrix` 依赖已排除的分类枚举，不进入正式架构；卡牌结构合并与行动可用性继续由牌桌对象和行动条件分别负责。
+- **扩展边界**：YooAsset 按 `ContentAsset` 派生类型收集；代码 Mod 派生内容、行动结果和任务子项可通过各自校验 / 运行 / 快照入口接入，中央索引不按具体类型分发。本模块只证明 Unity 专业作者路径与代码扩展边界，不把未来游戏内编辑器、Mod 包协议、构建发布或创意工坊说成已完成。
+
+### 阶段 C：StackCraft 全部玩家效果等价验收
+
+- **已由新框架复现 / 接管**：`FoundationTitleTest -> FoundationTest` 已覆盖标题页新游戏、读取存档、设置、退出确认和友好模式开局，并通过唯一进程根进入统一地基场景。统一 `FoundationTest` 已覆盖内容加载、卡牌创建与拖拽、行动选择 / 填槽 / 推进 / 结算、按槽位打开卡包、完整日终与自动保存、日程 HUD、任务推进、地区旅行、EX-GAS 战斗、卡牌详情、角色生命、动态存档列表与恢复、内容校验和 SO 作者入口。完整日终 / 新日与跨日自动保存、战斗区域重叠自动合并、实时自动战斗、卡包逐槽打开、卡包商贩购买与任务完成数达标解锁提示、Buy 任意卡包任务事实、Sell 任意卡牌任务事实、箱子存币 / 取币 / 付款、装备穿脱 / 替换 / GE 效果和装备任务事实、行动与日终遭遇生成卡牌任务事实、战斗击败任务事实、当前牌桌状态任务事实、探索任务事实、研究发现任务事实、当前天数任务事实和时间切换任务事实均已由新框架接管。命中 / 闪避 / 暴击 / RPS 克制规则结算、牌桌必要文本飘字、投射物前摇、战斗音效、非战斗通用反馈音效、`HitUI` 式命中反馈、卡牌烟雾，以及牌桌相机中键平移 / 滚轮缩放 / 空间反馈聚焦已经接入正式链路。StackCraft `QuestsView` 的玩家效果由 `ScenarioJournalPanel` 任务页复现；`RecipesView` 不恢复独立配方系统，而由同一面板的“已发现配方 / 行动”页读取 `ScenarioRun` 的发现事实；新内容红点和首次查看已读状态由 `ScenarioRunSnapshot` 保存。
+- **明确排除并说明理由**：固定 `CardCategory` / `QuestType` / `CombatType`、全局 Manager / 单例链、固定场景名、`Resources.LoadAll`、未种子化随机、JSON 目录扫档、模板旧输入、模板 UI 外观克隆、模板 `AudioManager` / `AudioId`、`CombatManager` / `CombatStats`、DOTween 运行时依赖、旧 Editor 抽屉和同材料配方冲突签名不进入新架构，因为它们会制造第二套身份、第二套资源 / 事件 / 数值真相或限制 Mod 扩展。战斗存档是用户已明确排除的玩家效果；活动战斗不进入普通单局存档。
+- **尚未完成 / 阻止阶段通过**：`node .spec/tools/gameplay-static-preflight.mjs` 当前通过，没有发现未登记的 StackCraft 运行脚本，也没有发现正式 `Gameplay` / 测试 / 项目素材直接依赖 StackCraft 旧运行时或旧素材路径；2026-08-16 后补的屏幕效果、设置面板、推进模式按钮、任务 / 配方菜单、牌桌相机、卡牌烟雾、音效、自动移动和相关回归用例已经由 Unity 独占后的 `FoundationTestScenePlayModeTests`、`ScenarioContentPlayModeTests`、`ScenarioTitleScreenPlayModeTests` 与全量 PlayMode 覆盖。阶段 C 三张清单当前版已收口；当前没有已登记的“必须继续编码后才能覆盖 StackCraft 玩家效果”的缺口。原创主菜单业务、原创任务与配方内容、游戏内关卡编辑器、Mod 包协议、创意工坊和联机不属于 StackCraft 等价验收完成条件，只作为后续阶段扩展目标。
+
+#### 阶段 C 三张清单（当前版）
+
+| 清单 | 当前条目 | 证据口径 |
+|---|---|---|
+| 已复现 / 已接管 | 标题入口四命令、友好模式开局、日长滑条、场景进入、内容加载、卡牌创建、拖拽、拆堆 / 合堆 / 放置、候选高亮、行动选择、填槽、进度、暂停 / 恢复、行动结算、材料使用次数、Research 随机发现、Travel 地区切换、日程 HUD、回合 / 即时推进切换、完整日终、进食、超限售卡、遭遇、新日确认、自动保存、Game Over、动态存档列表、读取 / 删除 / 清空 / 保存退出、设置面板、暂停菜单、灰阶 / 暗角反馈、卡牌详情、行动剩余时间、牌堆摘要、角色生命、装备可读反馈、任务 / 配方日志、新内容红点、卡包逐槽打开、商贩解锁提示、购买 / 出售 / 存币 / 取币 / 付款、装备穿脱 / 替换 / GE 效果、任务事实 Have / Food / Coins / Capacity / Obtain / Craft / Defeat / Explore / Discover / Day / Time / Buy / Sell、实时战斗、增援、离战、战斗区域重叠合并、GAS 攻击结算、命中 / 闪避 / 暴击 / RPS 克制、投射物、HitUI 式反馈、战斗音效、非战斗音效、卡牌烟雾、牌桌相机平移 / 缩放 / 聚焦、CardAI 非敌对周期产出、随机巡逻、敌对追击、攻击半径开战、围栏容量、LimitBooster 容量扩展。 | 矩阵逐项记录 + 统一测试场景 + `FoundationTestScenePlayModeTests` `26/26` + 全量 PlayMode `59/59` + 静态预检。 |
+| 明确排除 | 模板 UI 外观克隆、旧 `Manager` / 单例链、固定场景名、`Resources.LoadAll`、旧输入系统、未种子化随机、JSON 全目录扫档、模板枚举标签体系、同材料配方冲突签名、模板本地战斗数值系统、模板 `AudioManager` / `AudioId`、DOTween 运行时依赖、旧 Editor 抽屉、旧 `InfoPanel` 队列、旧装备面板漂浮卡、旧 `WorldCanvas` 单例、旧 `GameData` DTO、战斗存档。 | 结构冲突裁决 + 用户已裁决战斗不存档 + 当前正式 owner 已接管玩家效果。 |
+| 仍缺失 / 后续可选迁移 | 当前没有已登记的“必须继续编码后才能覆盖 StackCraft 已审计机制效果”的缺口；剩余 StackCraft 卡牌 / 卡包 / 配方 / 任务 / 遭遇 `.asset` 尚未全部转换成 CardLoop 作者源，但按当前用户口径不属于代表性验收完成条件。 | 源码脚本名覆盖对账全部命中；静态预检无旧路径依赖，并已自动检查整个 `Assets` 根、ProjectSettings 和 Packages 不得引用 StackCraft 资产 GUID、`Assets/StackCraft` 资源路径或 `CryingSnow` 源码命名空间；额外 GUID 扫描确认 `Assets/StackCraft` 下 708 个旧模板 GUID 没有被参考目录外正式文本资源引用；代表性业务审计覆盖 Starter / Beginning 竖切。自动化只能证明机制覆盖项和代表性业务参数，不替代玩家试玩、用户删除授权和删除后 Unity 编译 / PlayMode 验证。 |
+
+#### 卡包逐槽打开补充吸收（2026-08-14）
+
+- StackCraft 的 `PackDefinition` 按槽位保存普通加权卡池、配方候选与配方概率；`PackInstance` 每次点击只抽取下一个槽位，优先尝试尚未发现的配方，未命中或没有可用配方时回退普通卡池，最后一次后移除卡包。
+- `CardPackDefinition` 作为明确的 `CardDefinition` 子类拥有有序槽位。卡包初始使用次数直接由槽位数量派生，作者不再同步维护第二份次数；普通条目、配方行动和配方卡都使用现有唯一内容 ID 与内容校验。
+- `OpenCardPackResultIntent` 只声明使用哪张参与卡包。真正抽取由牌桌行动结算读取当前槽位，使用牌桌权威随机选择结果，并复用既有卡牌生成、使用次数和单局内容发现提交；没有 `PackManager`、第二随机源、卡包运行时子类或直接修改牌桌的 SO。
+- `ActionDefinition.CanStartFromClick` 是显式作者能力：只有开启的行动会响应卡牌点击，普通卡牌点击继续用于选择和详情，拖拽行动保持原入口。测试卡包的点击仍先经过新输入系统、行动候选和 UIKit 选择，不因单候选自动执行。
+- 本切片只完成卡包打开；卡包商贩的解锁、分批付款、成交生成、收藏显示和购买任务事实在紧随其后的交易子模块中接管。
+- **验证**：缺少卡包类型与结果意图的编译 RED 成立；卡包领域 `3/3` 覆盖槽位顺序、同种子加权重放和未发现配方筛选；玩家点击入口从候选 `0` 的 RED 转为 `1/1` GREEN。行动结算回归 `15/15`、统一 Foundation `24/24`、全量 EditMode `507/508`（零失败、1 条环境条件跳过）、全量 PlayMode `48/48`。
+
+#### 卡包商贩购买补充吸收（2026-08-14）
+
+- StackCraft 的 `PackVendor` 解锁门槛、分批投入货币、付款状态保存、满价后生成卡包、付款归零、收藏进度和购买任务事实已拆为 Gameplay 的 `PackVendorDefinition` / `PackVendorCard`、现有牌桌行动和现有 `QuestLog` 事实。
+- 售卖关系拥有价格、出售卡包和完成任务数门槛；商品 `CardPackDefinition` 只拥有自己的抽取内容，不保存商贩价格。`PackVendorCard` 作为 `TabletopCard` 派生对象拥有唯一付款进度，解锁状态由任务日志完成数和作者门槛实时推导，不保存 `isUnlocked` 副本。
+- `PurchaseCardPackResultIntent` 只声明商贩槽位和付款槽位。现有 `ActionResultSettlement` 在行动计划中冻结付款事实，提交前复核商贩和货币仍有效；非满价只移除本次货币并累计付款，满价才生成卡包并清零付款。没有 `TradeManager`、商店单例、第二经济系统或第二事件总线。
+- StackCraft `TradeManager.PlayActivationSequence` 的解锁提示序列不恢复旧输入锁定、时间暂停和全局信息队列。当前由 `ScenarioRun.RefreshQuestState` 在任务完成数跨过商贩门槛时发布只读牌桌表现提示：先聚焦商贩位置，再对局内商贩卡短暂高亮。
+- 卡牌派生类型通过 `CardDefinition` 的运行时工厂和 `TabletopCardRuntimeStateSnapshot` 自己创建 / 恢复状态；牌桌不再中央硬编码角色类型，Mod 派生卡牌可沿同一入口接入自己的实例状态。
+- `CardPackDefinition.GetCollectionProgress` 读取现有 `ScenarioRun` 内容发现集合；行动首次生成卡牌内容时一并提交发现事实，因此购买后打开卡包会真实推进收藏，而不是由 UI 私自计数。
+- **验证**：商贩领域与完整单局快照 `8/8`；行动结算回归 `15/15`；统一 Foundation 真实拖拽购买 `1/1`；全量 EditMode `515/516`（零失败、1 条既有环境跳过）；全量 PlayMode `49/49`；`spec-lint` 与规范测试 `2/2`。2026-08-16 补充解锁提示后，新鲜 `PackVendorEditModeTests` `10/10` 通过；该验证覆盖商贩门槛、购买链和提示代码编译，不代表阶段 C 完成。
+
+#### Buy 任意卡包任务事实补充吸收（2026-08-15）
+
+- StackCraft 的 `QuestType.Buy` 在 `TargetCard` 为空时统计任意已购买卡包，非空时只统计指定卡包。Gameplay 保留这个玩家效果，不恢复 `QuestType` 枚举、`QuestManager` 或全局交易事件。
+- `CardPackPurchaseQuestTaskDefinition` 仍是现有 `QuestLog` 的任务子项：目标卡包 ID 留空表示任意卡包，填写时必须解析为 `CardPackDefinition`。运行时只解释 `CardPackPurchasedQuestTaskFact`，事实仍由正式购买结算提交。
+- **验证**：新增任意卡包运行时测试 `1/1`、新增作者源校验测试 `1/1`、`PackVendorEditModeTests` `10/10`、`QuestLogEditModeTests` `16/16`、`ScenarioRunEditModeTests` `25/25`；Unity 编译空闲且 Console `0` 错误。该验证只覆盖 Buy 任务的任意卡包语义，不代表阶段 C 完成。
+
+#### Sell 出售任务事实补充吸收（2026-08-15）
+
+- StackCraft 的 `QuestType.Sell` 在 `TargetCard` 为空时统计任意已售卡牌，非空时只统计指定已售卡牌。Gameplay 保留这个玩家效果，不恢复 `QuestType` 枚举、`QuestManager`、`TradeManager` 或全局售卡事件。
+- `CardSaleQuestTaskDefinition` 仍是现有 `QuestLog` 的任务子项：目标卡牌 ID 留空表示任意卡牌，填写时必须解析为 `CardDefinition`。运行时只解释 `CardsSoldQuestTaskFact`，事实仍由正式出售行动结算提交。
+- 正式出售行动链由 `SellCardsResultIntent` 和 `ActionResultSettlement` 承担：结算成功后移除出售槽位内的卡牌，按卡牌 `SellValue` 生成货币，并把本次已售内容 ID 返回给所属 `ScenarioRun`。失败、取消、非正式移除和测试夹具清理不会发布出售事实。
+- **验证**：刷新 AssetDatabase 后新增测试进入 Unity TestRunner；`ScenarioRunEditModeTests.CompletedSaleAction_AdvancesCardSaleQuest` `1/1`、完整 `ScenarioRunEditModeTests` `27/27` 通过；Unity 编译空闲且 Console `0` 错误。该验证覆盖正式出售行动推进 Sell 任务，不代表阶段 C 完成。
+
+#### Discover 与 Day 任务事实补充吸收（2026-08-15）
+
+- StackCraft 的 `QuestType.Discover` 由 `QuestManager.HandleRecipeDiscovered(recipeId)` 推进，本质是“配方被发现后完成任务”。Gameplay 不恢复独立 Recipe 系统或 `CraftingManager` 全局事件，改由研究行动成功提交发现内容事实。
+- `ResearchDiscoveryResultIntent` 在行动开始时冻结研究候选；行动完成后从尚未发现的候选中用牌桌权威随机选择，生成对应配方卡，并由 `ScenarioRun.DiscoverContent` 写入当前单局发现集合。`ContentDiscoveryQuestTaskDefinition` 只读取 `ContentDiscoveredQuestTaskFact`，不关心发现来源。
+- StackCraft 的 `QuestType.Day` 由 `QuestManager.HandleDayChanged(currentDay)` 推进，本质是“当前天数达到目标后完成任务”。Gameplay 的当前天数由 `ScenarioRun` 的确认回合 / 日终流程唯一推导，并在 `RefreshQuestState` 中提交 `DayReachedQuestTaskFact`；后继任务激活时也会立即读取当前日期事实。
+- **验证**：新增研究完成推进发现任务回归 `ScenarioRunEditModeTests.CompletedResearchAction_AdvancesContentDiscoveryQuest` `1/1`，完整 `ScenarioRunEditModeTests` `27/27`；Unity 编译空闲且 Console `0` 错误。该验证结合既有日期边界测试，覆盖 Discover / Day 任务事实，不代表阶段 C 完成。
+
+#### 箱子存币与付款补充吸收（2026-08-15）
+
+- StackCraft 的箱子存币效果吸收为 Gameplay 的 `ChestCardDefinition` / `ChestCard`。箱子是 `TabletopCard` 派生对象，唯一拥有本局存币数量和容量；它不是通用库存、背包、局外仓库或第二经济系统。
+- 存币、取币和用箱子付款全部进入现有牌桌行动链。`DepositCurrencyIntoChestResultIntent` 将货币卡移除并增加箱子存币；`WithdrawCurrencyFromChestResultIntent` 从箱子取出一张货币卡；`PurchaseCardPackResultIntent` 可从非空箱子扣款，箱子自身不被移除。
+- 付款来源仍由购买行动的付款槽位声明，普通货币卡和箱子共用同一槽位；`CardPaymentSourceAvailableCondition` 只判断付款来源是否可用，不保存付款状态。没有新增 `TradeManager`、库存系统、经济总管、事件包装或第二付款状态。
+- UI 必要反馈只读投影箱子状态：`TabletopCardInfoPanel` 显示“存币：当前/容量”。详情面板不拥有存币状态，也不参与结算。
+- 候选条件语义订正：候选探测中槽位未填或对象不匹配属于正常不可用，返回 false；只有绑定了不存在的牌桌卡才抛出异常。这样避免无关购买行动在“货币拖到箱子”时污染候选，同时保留内部状态损坏的快速暴露。
+- 统一 `FoundationTest` 真实玩家链已覆盖：创建箱子和货币 -> 拖拽货币到箱子 -> 通过行动选择面板存币 -> 单击箱子取币 -> 再存满 -> 拖拽箱子到卡包商贩 -> 用箱子存币付款生成卡包 -> 箱子仍在且存币归零 -> 详情面板显示 `0/2`。
+- 新鲜验收：`ChestCardEditModeTests` `4/4`，`PackVendorEditModeTests` `8/8`，新增 Foundation 箱子玩家链 `1/1`，完整 `FoundationTestScenePlayModeTests` `26/26`。源码定向 `git diff --check` 通过；Unity 生成器已重建箱子、存币行动、取币行动和 Foundation 测试场景。
+
+#### 装备穿脱与装备任务事实补充吸收（2026-08-15）
+
+- StackCraft 的装备玩家效果拆为两部分吸收：一是装备卡离桌、占用角色槽位、同槽替换、卸下回桌和装备效果影响角色；二是 `QuestType.Equip` 在装备指定卡牌后推进任务进度。
+- Gameplay 的作者源是 `EquipmentSlotDefinition` 和 `EquipmentCardDefinition`。装备槽位是内容 ID，可由内容包扩展，不使用枚举；装备卡只引用 EX-GAS `GameplayEffect` 表达当前已成立的持续效果，不复制 `CombatStats`、`StatModifier`、Ability 配置或标签表。
+- 运行时装备状态由 `CharacterCard` 直接拥有。`Tabletop` / `TabletopCards` 负责装备卡离桌、替换旧装备回桌、卸下回桌和快照恢复后重施加装备 GE；装备 / 卸装仍通过正式行动候选、行动计划、结算和快照链执行。
+- 装备任务事实不恢复 `QuestManager`、`QuestType` 枚举或全局事件链。`ActionResultSettlement` 在装备提交成功后返回被装备内容 ID，`ScenarioRun` 把 `CardEquippedQuestTaskFact` 交给当前单局 `QuestLog`，`CardEquipQuestTaskDefinition` 自己累计指定装备卡次数。
+- **验证**：装备效果定向从 `4/4` 扩展到装备任务事实 `5/5`；`QuestLogEditModeTests` `11/11`、`ScenarioRunEditModeTests` `19/19`、`ActionResultSettlementEditModeTests` `15/15`、完整 `FoundationTestScenePlayModeTests` `26/26`；Unity 编译完成且 Console `0` 错误。
+
+#### 生成卡牌任务事实补充吸收（2026-08-15）
+
+- StackCraft 的 `QuestType.Obtain` 监听 `CardManager.OnCardCreated`，`QuestType.Craft` 监听 `CraftingManager.OnCraftingFinished(resultCard)`。CardLoop 吸收“成功产出指定卡牌后推进任务”的玩家效果，不恢复固定任务枚举、全局卡牌创建事件、制作管理器事件或任务中央分发器。
+- `CardsCreatedQuestTaskFact` 只由成功提交的行动结果产生。`ActionResultSettlement` 在真实创建卡牌后返回本次创建的内容 ID，`ScenarioRun` 将该事实交给当前单局 `QuestLog`，`CardCreationQuestTaskDefinition` 自己按指定卡牌内容 ID 累计数量。
+- 该切片明确不把所有 `Tabletop.CreateCard` 都视为 Obtain：购买、日终遭遇、手动创建和测试夹具生成各有不同现实来源，若要作为任务事实，必须沿对应来源单独提交，而不是恢复 StackCraft 的全局 `OnCardCreated`。
+- **验证**：`QuestLogEditModeTests` `11/11`、`ScenarioRunEditModeTests` `19/19`、`ActionResultSettlementEditModeTests` `15/15` 通过；Unity Console `0` 错误。该验证覆盖行动产物推进任务，不代表其它 Quest 事实或阶段 C 已完成。
+
+#### 日终遭遇生成任务事实补充吸收（2026-08-15）
+
+- StackCraft 的 `QuestType.Obtain` 由 `CardManager.OnCardCreated` 推进，因此日终遭遇等正式游戏来源创建出的普通卡，也属于“获得指定卡牌”的玩家效果。CardLoop 保留该效果，但不恢复全局卡牌创建事件，不把测试夹具、读档恢复或手动布景混算进任务。
+- `ScenarioRun.ResolveDayEncounter` 是日终遭遇卡牌创建的唯一正式来源。它在真实创建遭遇卡后收集本次创建内容 ID，提交 `CardsCreatedQuestTaskFact` 给当前单局 `QuestLog`，再刷新状态型任务。日终流程仍归 `ScenarioRun`，没有新增 `DayCycleManager`、事件包装或第二任务系统。
+- **验证**：刷新 AssetDatabase 后新增测试进入 Unity TestRunner；`ScenarioRunEditModeTests.DayCycle_CreatedEncounterCardsAdvanceCardCreationQuest` `1/1`、`ScenarioRunEditModeTests` `26/26`、`QuestLogEditModeTests` `16/16`、`ActionResultSettlementEditModeTests` `15/15` 通过；Unity 编译空闲且 Console `0` 错误。第一次单条执行曾因新增测试尚未被发现而卡在 `starting` 90 秒，刷新后已恢复。该验证只覆盖日终遭遇生成推进 Obtain / Craft 任务事实，不代表阶段 C 完成。
+
+#### 击败卡牌任务事实补充吸收（2026-08-15）
+
+- StackCraft 的 `QuestType.Defeat` 由 `QuestManager.HandleCardKilled(CardInstance killedCard)` 推进，它监听战斗击杀事实。CardLoop 吸收“战斗死亡清理后指定卡牌被击败会推进任务”的玩家效果，不恢复 `QuestManager`、固定 `QuestType`、全局 `CardKilled` 事件或把所有卡牌移除都混成击败。
+- `Tabletop.ResolveDefeatedParticipants` 只在战斗结算发现角色生命归零、并由死亡清理正式移除角色卡后，收集被击败卡牌内容 ID。普通 `RemoveCard`、出售、旅行、测试夹具清理和非战斗移除不会提交该事实。
+- `ScenarioRun` 是任务日志所属的单局 owner，接收 `ScenarioRegion` / `Tabletop` 透传的击败事实后，将 `CardsDefeatedQuestTaskFact` 提交给当前 `QuestLog`。`CardDefeatQuestTaskDefinition` 自己按指定 `CardDefinition` 内容 ID 与目标数量累计进度。
+- `Tabletop` 构造入口显式要求击败事实回调，没有可选空兜底；如果某个单局牌桌不能把击败事实接回剧本，应在构造时暴露，而不是静默丢任务进度。测试夹具显式传入空回调，表示该测试不验证任务事实。
+- **验证**：`QuestLogEditModeTests` `11/11`、`ScenarioRunEditModeTests` `19/19`、`BattleEditModeTests` `15/15`、`BattleFormationEditModeTests` `3/3`、`ActionCandidateEditModeTests` `8/8`、`ActionInstanceEditModeTests` `16/16`、`TabletopCardsEditModeTests` `12/12`、`ActionResultSettlementEditModeTests` `15/15` 通过；Unity 编译空闲且 Console `0` 错误。该验证覆盖战斗击败推进 Defeat 对应任务，不代表其它 Quest 事实或阶段 C 已完成。
+
+#### 当前牌桌状态任务事实补充吸收（2026-08-15）
+
+- StackCraft 的 `QuestType.Have / Food / Coins / Capacity` 由 `QuestManager.HandleStatsChanged(StatsSnapshot stats)` 推进。`StatsSnapshot` 来自 `CardManager.GetStatsSnapshot()`，会统计当前所有卡牌、食物营养、货币、箱内存币和卡牌上限。
+- CardLoop 吸收“当前牌桌状态达到要求后推进任务”的玩家效果，但不恢复 `StatsSnapshot` 管理器、`CardManager.OnStatsChanged`、`CardCategory.Currency` 枚举或任务中央分支。状态事实由当前单局 `ScenarioRun` 在 `RefreshQuestState` 中从全部地区牌桌即时生成。
+- `TabletopStateQuestTaskFact` 重复记录当前卡牌内容 ID，统计 `FoodCardDefinition.NutritionPerUse * RemainingUses`，读取 `ChestCard` 中按 `ChestCardDefinition.CurrencyCardId` 存储的货币数量，并用剧本基础容量加所有卡牌 `CardLimitBonus` 得到当前容量。
+- 对应任务子项为 `CardPossessionQuestTaskDefinition`、`FoodNutritionQuestTaskDefinition`、`CurrencyAmountQuestTaskDefinition` 和 `CardCapacityQuestTaskDefinition`。货币任务必须指定具体货币卡内容 ID，避免把金币变成项目全局单例真相；箱中货币和牌桌上同内容卡牌会合并统计。
+- 状态型任务未完成前按当前状态刷新进度，完成后不回退。后继任务被激活后，`ScenarioRun.RefreshQuestState` 会在同一刷新循环重新提交当前状态事实，因此不需要第二事件总线或防重复表。
+- **验证**：RED 为新增测试首次编译失败，缺少 `TabletopStateQuestTaskFact` 与四个任务子项；GREEN 为 `QuestLogEditModeTests.TabletopStateQuestTasks_SetProgressFromCurrentStateFact` `1/1`、`ScenarioRunEditModeTests.ActivateInitialQuests_EvaluatesCurrentTabletopStateTasks` `1/1`、既有 `QuestLogEditModeTests` `11/11`、既有 `ScenarioRunEditModeTests` `19/19` 通过；Unity 编译空闲且 Console `0` 错误。该验证覆盖状态型任务事实，不代表阶段 C 完成。
+
+#### 探索与时间任务事实补充吸收（2026-08-15）
+
+- StackCraft 的 `QuestType.Explore` 由 `QuestManager.HandleExplorationFinished(CardDefinition areaCard)` 推进，只在目标卡牌与被探索区域 / 地点一致时完成。CardLoop 保留“指定卡牌被探索后推进任务”的玩家效果，不恢复 `QuestManager`、`CraftingManager` 全局回调、专用 `ExplorationRecipe` 子类或固定 `QuestType` 枚举。
+- `ExploreCardsResultIntent` 只声明行动成功后哪个参与槽位代表“已探索卡牌”。行动开始时 `ActionResultSettlement` 从牌桌读取绑定卡牌并冻结内容 ID；行动成功提交后，`ScenarioRun` 才把 `CardsExploredQuestTaskFact` 写给当前 `QuestLog`，失败、取消、参与对象失效都不会发布事实。
+- 冻结的探索内容进入 `ActionResultPlanSnapshot`。未完成探索行动读档后恢复同一探索事实，不重新读取已经可能变化的行动作者资产；旧快照缺少该字段时按空集合兼容，不破坏既有存档。
+- StackCraft 的 `QuestType.Time` 由 `TimeManager.CycleTimePace` 推进，它表达的是玩家切换时间速度后的任务反馈。CardLoop 不复制 `Paused / Normal / Fast` 速度枚举；正式吸收为 `ScenarioRun.UseRealTimeProgression()` / `UseTurnBasedProgression()` 切换普通行动推进模式后发布 `ProgressionModeChangedQuestTaskFact`。
+- 时间任务不会因初始默认回合制或快照恢复自动完成；只有玩家通过正式入口完成一次模式切换才推进任务。这保持模板“切换动作触发”的效果，同时不建立第二时间系统或速度枚举真相。
+- **验证**：`QuestLogEditModeTests` `16/16`、`ScenarioRunEditModeTests` `25/25`、`ActionResultSettlementEditModeTests` `15/15` 通过；Unity 编译空闲且 Console `0` 错误；`.spec` lint 通过，规范测试 `2/2` 通过。该验证覆盖 Explore / Time 任务事实，不代表阶段 C 完成。
+
+#### 完整日结效果补充审计（2026-08-14）
+
+- StackCraft 的 `DayCycleManager` 顺序执行日终通知、喂食、强制出售超限卡牌、最多一个遭遇、新日确认和自动保存。该顺序证明“跨日不是只改一个整数”，但它的饥饿数值、容量经济、遭遇筛选和单槽存档策略不属于通用时间对象。
+- 当前 `ScenarioRun.AdvanceWorldTurn` 已统一推进所有地区行动，跨日后更新按天任务，并发布同一单局的回合事实；回合制确认和即时制换算都进入这一个入口。因此日数、回合边界和新日事实已经复现。
+- 强制处理超限卡牌、进食、遭遇与新日确认都先作为模板实验效果复现；模板参数只属于测试内容，不自动成为 CardLoop 最终规则。实现必须回到 `ScenarioRun` 的同一跨日生命周期，不能新增空 `DayCycleManager`、事件包装或平行状态。
+- 自动保存复用现有 `ScenarioDirector` 与 `SaveSystem`。先按模板效果建立可配置的自动槽位覆盖策略并验证跨日后可读取恢复，再由试玩决定最终产品策略；不能用“临时策划尚未确定”继续延期。
+- **实现结果**：`ScenarioRun` 持有单次日终运行对象与阶段，食物恢复通过 EX-GAS GE `2005` 结算；超限卡牌只能通过现有行动链处理，售卡行动原子移除被售卡并生成货币。货币不计入上限，卡牌可提供上限加成；超限归零后生成最多一个遭遇并进入新日确认，没有新增日终 Manager、交易 Manager 或第二套容量状态。
+- **自动保存结果**：新日确认继续走 `ScenarioDirector.ContinueDayCycle`，阶段结束后由现有 `SaveSystem` 覆盖当前活动整数槽位。日终规则与保存职责仍分属单局和导演，没有把文件存储塞回日终对象。
+- **真实链路验收**：统一 `FoundationTest` 已通过“进食 -> EX-GAS 生命 `20 -> 70` -> 超限 -> 拖拽售卡 -> 行动选择 -> 生成 2 枚货币 -> 生成遭遇卡 -> HUD 摘要 -> 开始第 2 天并自动保存”。全量 EditMode `500/501`（零失败、1 条环境条件跳过），全量 PlayMode `46/46`；HUD 布局返工后的日终定向 PlayMode `1/1`。
+- **过程诊断证据**：`Assets/Screenshots/StackCraft-DayCycle-Sell-Encounter-Final.png` 只记录货币卡详情、遭遇摘要和新日入口在当前测试界面可读。它不是正式视觉验收图，不参与日终模块完成裁决，也不代表测试皮肤、临时素材或整体 UI 已进入稳定候选。
+- **新鲜验收**：既有全量 EditMode `452` 条中 `451` 通过、`0` 失败、`1` 条环境条件跳过；既有全量 PlayMode `42/42` 通过。标题入口定向 PlayMode 已复验为 `4/4`，覆盖标题命令和友好模式开局；清空控制台后的真实 Play -> Ready -> Stop 为 `0` 错误。标题、设置、读取存档和退出确认的既有 GameView 图片只保留为当时测试入口可读的诊断记录，不是地基完成条件。
+- **后续验收口径**：继续吸收模板时以玩家操作产生的规则结果为主，例如卡牌生成 / 消耗、行动开始 / 暂停 / 完成、状态变化、旅行、战斗和存档恢复；旧 UI 结构和皮肤不照搬，但入口、反馈、卡面表面和动作动画中承载模板玩家效果的部分必须进入专项对账，不再用“只要能操作”替代表面 / 动画一致性。
+
+#### 战斗区域重叠自动合并补充吸收（2026-08-14）
+
+- StackCraft 在创建新战斗前检查潜在战斗区域，并在已有战斗加入成员、区域扩张后再次检查；矩形相交时清理两块旧区域，再按固定 Player / Mob 阵营重建第三场战斗。CardLoop 完整保留“可见战斗区域重叠后自动成为一场并重新排阵”的玩家效果，不吸收全局 `CombatManager`、固定两阵营、物理碰撞真相或重建随机状态。
+- `Battle` 直接拥有唯一权威区域中心 `AreaCenter`；区域尺寸由战斗方数量、各方参战人数、牌桌卡牌尺寸和阵型边距派生。`Tabletop.StartBattle` 在创建前检查潜在区域，`Tabletop.JoinBattle` 在提交增援前检查扩张后的区域；多个重叠目标按活动战斗集合顺序确定性合并。
+- 自动合并按战斗方索引建立映射，不读取或猜测 GAS 阵营标签；战斗方数量不一致时直接报错。`Tabletop.MergeBattles(destination, source, sourceSideToDestinationSide)` 仍是同一正式原子命令，供剧情、Ability 和特殊规则显式指定其它分组。
+- 目标 `Battle` 对象、战斗 ID 和已推进的权威随机流保持不变；来源战斗结束并移除，没有创建第三场战斗、第二套阵营状态、合并管理器或新事件。`TabletopBattleAreaView` 只读投影派生区域，不参与重叠判定，也不保存第二份玩法状态；`TabletopView` 按战斗投影版本创建、刷新和释放区域视图。
+- 两条有效 RED 分别证明新战斗创建前不会自动合并、增援扩张后仍保留两场战斗。GREEN 后自动创建合并 `1/1`、扩张后自动合并 `1/1`、`BattleEditModeTests` `15/15`、`BattleFormationEditModeTests` `3/3`；统一 `FoundationTest` 真实显示两个战斗区域，经连续增援扩张发生重叠后自动合并为一个区域，战斗结束后区域清空并恢复原牌堆表现，定向 `1/1`、完整 Foundation `22/22`。最终全量 EditMode `504/505`（零失败、1 条环境条件跳过），全量 PlayMode `46/46`。
+
+#### 行动中断、战斗占用与特殊配方补充审计（2026-08-14）
+
+- StackCraft 在拖拽开始时立即拆堆，所以需要暂停制作，放回原堆后恢复，落到别处则重新校验或取消。Gameplay 拖拽期间不修改牌桌权威卡牌 / 牌堆，只在释放后提交放置或行动意图，因此不需要复制 `OriginalCraftingStack`、拖拽暂停标记或自动恢复分支。
+- 参与对象真的被移除时，Gameplay 已在行动推进前复核参与条件，以 `ParticipantInvalidated` 取消，且不推进、不提交结果、不发布行动完成事实。显式暂停 / 恢复 / 取消继续由同一 `ActionInstance` 生命周期承担。
+- 审计发现原公开入口允许同一角色一边执行普通行动一边加入即时战斗。现由 `Tabletop.StartBattle`、`JoinBattle` 和行动启动入口直接读取现有活动集合并拒绝冲突；不新增占用表、忙碌标签、影子状态或自动取消。调用方必须先明确完成 / 取消行动或离开 / 结束战斗。定向战斗合同 `11/11`、行动实例 `16/16`、统一 Foundation `21/21` 通过。
+- `GrowthRecipe` 的玩家结果可由现有保留参与卡、使用次数和生成卡牌结果组合表达；`ExplorationRecipe` 可由地点参与条件、权威随机结果分支与生成结果表达。两者不需要恢复专用配方子类、类别枚举或直接世界副作用。
+- `ResearchRecipe` 的候选池现在由行动作者源显式声明“待解锁行动 + 对应配方卡”，不扫描全局类型，也不恢复特殊 Recipe 子类。行动开始时冻结候选池，完成时从 `ScenarioRun` 当前尚未发现项中使用牌桌权威随机流选择，生成配方卡并写回唯一发现集合；全部发现后行动照常结算但不再生成新配方卡。模板其它自动发现入口仍需按实际效果继续复现和验证，不能因临时蓝图设想直接排除。
+- **Research 验收**：行为用例覆盖已发现项过滤、活动行动快照冻结候选、对应配方卡生成、发现事实写入和全部发现后不再生成；行动结算 `14/14`、行动实例 `16/16`、剧本单局 `14/14`、全量 EditMode `493/494`（零失败、1 条环境条件跳过）、全量 PlayMode `45/45`。
+- **新鲜验收**：战斗合同 `11/11`、行动实例 `16/16`、发现合同 `8/8`、统一 Foundation `21/21`；最终全量 EditMode `492/493`（零失败、1 条环境条件跳过），最终全量 PlayMode `45/45`。PlayMode 首轮的一次真实鼠标点击超时未在单条 `1/1` 和随后全量 `45/45` 中复现，因此只登记为测试输入稳定性观察项，不宣称已定位或修复根因。
 
 ## 激进重构优先清单
 
@@ -1537,7 +1989,7 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 | 不吸收对象 | 原因 | 正式职责归属 |
 |------------|------|------------|
 | StackCraft 的 tag-like 枚举体系 | `CardCategory` / `QuestType` / `CombatType` 等不是可扩展标签系统，Mod 会被迫改代码。 | EX-GAS GameplayTag + Gameplay GAS 标签查询 / 内容标签。 |
-| StackCraft 战斗规则 | RPS、命中、暴击、攻速和战斗状态会与 GAS 的 Ability / GameplayEffect / Tag 职责冲突。 | EX-GAS + Gameplay 冲突规则模块。 |
+| StackCraft 战斗结构 | `CombatManager`、`CombatStats`、`CombatType`、本地命中 / 暴击结算和战斗状态会与 GNS/EX-GAS 的属性、Ability、GameplayEffect、Tag 和 Cue 职责冲突。 | GNS/EX-GAS 数值与效果链 + Gameplay 牌桌战斗对象；模板数值可临时映射，旧结构不吸收。 |
 | `Resources.LoadAll` 内容入口 | 不支持 YooAsset 内容包、Mod 依赖、覆盖顺序、版本和热更边界。 | YooAsset 内容包加载 + 内容作者源清单。 |
 | 大一统 `CardDefinition` | 字段混合身份、显示、战斗、食物、装备、交易、职业变化，未来 100 个剧本会互相污染。 | 组合式内容 schema。 |
 | `RecipeDefinition.Execute` 直接改世界 | 作者源配置直接执行运行时副作用，不利于校验、联机、回放和解释。 | 行动条件解释小模块产生命令 / 事件 / GAS 效果请求。 |
@@ -1554,9 +2006,16 @@ StackCraft 是一个完整小型 Stacklands 式成品模板，不是通用 Mod �
 - 第一模块的回审订正已完成：通用内容基类不再提供卡面，`GameplayInteractableDefinition` 已删除，卡牌专用卡面只属于 `CardDefinition`；基础包全量加载和跨包重复 ID 仍是后续资源 / Mod 职责的明确缺口。
 - 第三模块当前 3.1-3.4 已按最新执行卡完成回审；现有测试只证明可堆叠卡牌状态、空间解算、牌桌视图、正式输入拖拽和真实 YooAsset 链路成立，不越权解释成全部牌桌形态模型。
 - 第四模块 4.1-4.12 已完成当前吸收切片：已经形成单一行动作者源、参与条件、显式候选选择、唯一请求启动入口、回合消耗唯一进度真相、牌桌状态原子结果、权威随机、参与条件失效中断、发现状态过滤、行动作者源校验，以及普通运行 / 暂停行动的可恢复快照；战斗实时链保持独立。完整能力边界与角色 GAS 快照限制以 `gameplay-foundation-reaudit.md` 的“活动行动快照恢复实施结果”为准。库存、完整蓝图系统、地图、EX-GAS 结果、正式文件存档、网络传输、玩家授权和 Mod API 仍需按真实 owner 逐项裁决，不能从现有卡牌切片越权推导。
-- 第四模块统一测试场景已使用新框架和唯一请求入口复现最终选择吸收的功能，并通过定向与全量回归；明确排除的自动制作、旧候选直接执行、固定场景名、`CraftingManager`、`CraftingTask` 和 `isContinuous` 没有进入正式链路。第五模块当前重排的 5.1 世界回合时间线与 5.2 天数 / 日程边界已完成回审；文中旧 5.2-5.9 记录的是任务生命周期、状态事实、剧本归属、按天任务、内容发现和任务子项自建状态的历史实施切片，统一等待现行 5.3 回审。错误的独立遭遇系统和任务中央类型工厂均已删除；其它任务事实、剧本事件、一次性历史、真实跨日规则与 Mod API 仍未吸收。
+
+### 模块 10.3 权威随机复审（2026-08-13）
+
+- 不建立新的网络随机服务。权威随机已经属于 `ScenarioRun`、地区 `Tabletop`、活动 `Battle` 和行动实例各自的真实生命周期，不应再由模块 10 复制一套全局随机状态。
+- 行动随机分支在行动开始时选定并写入行动实例；牌桌快照保存地区随机流状态，恢复后继续同一序列。战斗从牌桌随机流派生独立种子，并为每次 Ability / GameplayEffect 提供确定性种子；战斗按产品裁决不进入存档。
+- FishNet 接入后由服务器 / 主机推进这些随机流并提交正式结果。公开结果可发送给所有可见客户端；秘密目标、叛徒信息或隐藏检定只发送给有权查看的席位。客户端不得通过同步根种子自行重演隐藏规则，也不得用本地预测决定正式结果。
+- 当前代码已经满足单机、确定性测试、非战斗存档恢复和未来服务器权威接管所需的 owner 边界，因此 10.3 当前地基范围完成。真正尚未实现的是 10.2 的席位 / 可见性事实和 10.4 的 FishNet 消息、快照与重连协议。
+- 第四模块统一测试场景已使用新框架和唯一请求入口复现当前已审计的模板功能，并通过定向与全量回归；模板结构中的自动制作、旧候选直接执行、固定场景名、`CraftingManager`、`CraftingTask` 和 `isContinuous` 没有进入正式链路，但对应玩家效果仍须按模板完整清单逐项验证，不能因旧结构被排除而自动删除。第五模块当前重排的 5.1 世界回合时间线与 5.2 天数 / 日程边界已完成回审；文中旧 5.2-5.9 记录的是任务生命周期、状态事实、剧本归属、按天任务、内容发现和任务子项自建状态的历史实施切片，统一等待现行 5.3 回审。错误的独立遭遇系统和任务中央类型工厂均已删除；其它任务事实、剧本事件、一次性历史、真实跨日规则与 Mod API 仍未吸收。
 - Gameplay 正式卡牌、行动和后续节点模块不得直接依赖 StackCraft 的 `CardManager`、旧单例链、固定场景名或 `Resources` 作为真相。
 - 当前主线是 **StackCraft 架构搬迁 / 吸收审查**；Gameplay 的职业、技能树、叛徒和原创生存内容只作为边界约束，不作为本阶段实现目标。
-- 需要临时原型素材时，只能通过有删除条件的适配层读取，不能把旧路径写成长期事实。
+- 需要吸收参考模板素材时，必须先迁入项目自有资源目录并改成中文现实名称；只有仍留在参考区的原件才允许保留旧路径，且不能被正式 Gameplay 链路直接读取。
 - 每个模块开工前，都要补一份“旧实现替换清单”：参考来源、重构范围、删除/隔离对象、临时适配删除条件、验收方式。
 - 参考模板可以保留在 `Assets/StackCraft/` 用来对照手感，但 Gameplay 正式实现必须迁入自己的正式职责入口。

@@ -21,15 +21,6 @@ MonoBehaviour:
   m_gameTerms:
     m_keys: []
     m_values: []
-  m_statTermsBinding:
-    m_keys: 
-    m_values: []
-  m_statIncreaseTermsBinding:
-    m_keys: 
-    m_values: []
-  m_statDecreaseTermsBinding:
-    m_keys: 
-    m_values: []
   m_damageTypesBinding:
     m_keys: 
     m_values: []
@@ -82,7 +73,7 @@ MonoBehaviour:
     maxDepth: 0
     minNormalAngle: 0
     maxNormalAngle: 0
-  m_cameraShakeSources: 0
+  m_cameraShakeSources: 4
   m_maxEquippableAbilities: 5
   m_canCriticalHit: 0
   m_canMissHit: 0
@@ -92,7 +83,7 @@ MonoBehaviour:
   m_allowPushOnSilentHit: 0
   m_navigationSelectSound: {fileID: 0}
   m_pointerSelectSound: {fileID: 0}
-  m_submitSound: {fileID: 0}
+  m_submitSound: {fileID: 11400000, guid: 1fdd7c55f8abee941bce81a8223768b7, type: 2}
   references:
     version: 2
     RefIds:

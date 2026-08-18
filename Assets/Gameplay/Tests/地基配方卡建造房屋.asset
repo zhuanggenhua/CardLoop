@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 732affab875846bba73045887651397f, type: 3}
+  m_Name: "\u5730\u57FA\u914D\u65B9\u5361\u5EFA\u9020\u623F\u5C4B"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
+  m_contentId:
+    m_value: test.foundation.recipe-card.building-house
+  m_tagCodes: e9030000
+  m_displayName: 'Recipe: House'
+  m_description: Stone x1, Wood x2, Villager x1.
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_initialUses: 1
+  m_sellValue: 1
+  m_countsTowardCardLimit: 1
+  m_cardLimitBonus: 0
+  m_periodicProductionCardId:
+    m_value: 
+  m_periodicProductionIntervalSeconds: 0
+  m_automaticMovementIntervalSeconds: 0
+  m_automaticMovementRadius: 0
+  m_automaticMovementMaxAttempts: 0
+  m_automaticMovementRetentionCapacity: 0
+  m_cardArt:
+    Address: "\u914D\u65B9\u5361"
+    Guid: 130c5913e832432388df46f44e84d30d
+    Locked: 1
+  m_cardSurface:
+    Address: "\u5361\u724C\u8868\u9762_\u914D\u65B9"
+    Guid: dccf24b24bba463caee5777b021086e0
+    Locked: 1

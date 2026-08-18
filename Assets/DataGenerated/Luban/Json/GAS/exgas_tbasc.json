@@ -7,7 +7,8 @@
     "Tag": [
       1001,
       400,
-      2001
+      2001,
+      7001
     ],
     "AttrSet": [
       1
@@ -47,11 +48,44 @@
     "Desc": "引导阶段的假人",
     "Level": 1,
     "Tag": [
+      1002,
+      7002
+    ],
+    "AttrSet": [
+      1
+    ],
+    "Ability": [
+      20005
+    ]
+  },
+  {
+    "ID": 1005,
+    "Name": "中立生物",
+    "Desc": "CardLoop 牌桌中立生物，承接 StackCraft 非主动敌对 Mob。",
+    "Level": 1,
+    "Tag": [
+      1000000
+    ],
+    "AttrSet": [
+      1
+    ],
+    "Ability": [
+      20005
+    ]
+  },
+  {
+    "ID": 1006,
+    "Name": "敌对生物",
+    "Desc": "CardLoop 牌桌敌对生物，承接 StackCraft 主动敌对 Mob。",
+    "Level": 1,
+    "Tag": [
       1002
     ],
     "AttrSet": [
       1
     ],
-    "Ability": []
+    "Ability": [
+      20005
+    ]
   }
 ]

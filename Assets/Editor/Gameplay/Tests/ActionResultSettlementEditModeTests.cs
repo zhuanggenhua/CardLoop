@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gameplay.Actions;
 using Gameplay.Content;
 using Gameplay.Scenarios;
@@ -105,11 +106,78 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void StartAction_UsingCardsConsumesOneUseAndRemovesThemOnlyWhenDepleted()
+		{
+			using ResultTestContext context = CreateContextCore(
+				0,
+				null,
+				new ActionResultIntent[] { CreateUseIntent() },
+				Array.Empty<ResultBranchDefinition>(),
+				participantInitialUses: 2);
+
+			context.Tabletop.StartAction(ActionRequest.FromCandidate(context.Candidate));
+
+			Assert.That(context.State.TryGetCard(context.Source.Id, out TabletopCard source), Is.True);
+			Assert.That(context.State.TryGetCard(context.Target.Id, out TabletopCard target), Is.True);
+			Assert.That(source.RemainingUses, Is.EqualTo(1));
+			Assert.That(target.RemainingUses, Is.EqualTo(1));
+
+			context.Tabletop.StartAction(ActionRequest.FromCandidate(context.Candidate));
+
+			Assert.That(context.State.TryGetCard(context.Source.Id, out _), Is.False);
+			Assert.That(context.State.TryGetCard(context.Target.Id, out _), Is.False);
+		}
+
+		[Test]
+		public void CardSnapshot_PreservesRemainingUses()
+		{
+			using ResultTestContext context = CreateContextCore(
+				0,
+				null,
+				new ActionResultIntent[] { CreateUseIntent() },
+				Array.Empty<ResultBranchDefinition>(),
+				participantInitialUses: 3);
+			context.Tabletop.StartAction(ActionRequest.FromCandidate(context.Candidate));
+			TabletopCardStateSnapshot snapshot = JsonUtility.FromJson<TabletopCardStateSnapshot>(
+				JsonUtility.ToJson(context.State.CreateSnapshot()));
+			TabletopCards restored = TabletopCards.Restore(
+				snapshot,
+				new TabletopCardIdSequence(context.State.CardIdSequence.NextValue));
+
+			Assert.That(restored.TryGetCard(context.Source.Id, out TabletopCard restoredSource), Is.True);
+			Assert.That(restoredSource.RemainingUses, Is.EqualTo(2));
+			Assert.That(restored.TryGetCard(context.Target.Id, out TabletopCard restoredTarget), Is.True);
+			Assert.That(restoredTarget.RemainingUses, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void ActiveActionSnapshot_PreservesFrozenCardUseResults()
+		{
+			using ResultTestContext context = CreateContextCore(
+				2,
+				null,
+				new ActionResultIntent[] { CreateUseIntent() },
+				Array.Empty<ResultBranchDefinition>(),
+				participantInitialUses: 3);
+			context.Tabletop.StartAction(ActionRequest.FromCandidate(context.Candidate));
+			ActionInstanceSnapshot snapshot = JsonUtility.FromJson<ActionInstanceSnapshot>(
+				JsonUtility.ToJson(context.Tabletop.CreateActiveActionSnapshots()[0]));
+
+			ActionResultPlan restoredPlan = snapshot.RestoreResultPlan();
+
+			CollectionAssert.AreEquivalent(
+				new[] { context.Source.Id, context.Target.Id },
+				restoredPlan.UseCardIds);
+		}
+
+		[Test]
 		public void StartAction_WhenAllProductsCannotFitRejectsBeforeRemovingParticipants()
 		{
 			using ResultTestContext context = CreateConstrainedContext(
 				CreateRemoveIntent(),
-				CreateProductIntent(ProductContentId, 3));
+				CreateProductIntent(ProductContentId, 1),
+				CreateProductIntent(ProductContentId, 1),
+				CreateProductIntent(ProductContentId, 1));
 			ulong originalRevision = context.State.Revision;
 
 			InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
@@ -179,6 +247,23 @@ namespace Gameplay.Tests
 			context.ScenarioRun.ConfirmTurn();
 			Assert.That<ActionInstanceState>(actionInstance.State, (IResolveConstraint)(object)Is.EqualTo((object)ActionInstanceState.Completed));
 			AssertSettled(context, 1);
+		}
+
+		[Test]
+		public void SellCards_FreezesSellValueAtActionStartAndCreatesCurrencyCards()
+		{
+			using ResultTestContext context = CreateContext(
+				1,
+				CreateSellIntent("test.result.product"));
+			SetSellValue(context.Participant, 2);
+
+			ActionInstance actionInstance = context.Tabletop.StartAction(
+				ActionRequest.FromCandidate(context.Candidate));
+			SetSellValue(context.Participant, 9);
+			context.ScenarioRun.ConfirmTurn();
+
+			Assert.That(actionInstance.State, Is.EqualTo(ActionInstanceState.Completed));
+			AssertSettled(context, 4, 1);
 		}
 
 		[Test]
@@ -288,6 +373,104 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void Research_SelectsOnlyUndiscoveredContentAndStopsCreatingCardsWhenComplete()
+		{
+			CardDefinition participant = CreateCardDefinition(ParticipantContentId);
+			CardDefinition firstRecipeCard = CreateCardDefinition("test.research.recipe-card.first");
+			CardDefinition secondRecipeCard = CreateCardDefinition("test.research.recipe-card.second");
+			ActionDefinition firstUnlockedAction = CreateEmptyActionDefinition("test.research.unlocked-action.first");
+			ActionDefinition secondUnlockedAction = CreateEmptyActionDefinition("test.research.unlocked-action.second");
+			ResearchDiscoveryResultIntent researchIntent = CreateResearchIntent(
+				(firstUnlockedAction.ContentId, firstRecipeCard.ContentId),
+				(secondUnlockedAction.ContentId, secondRecipeCard.ContentId));
+			ActionDefinition researchAction = CreateActionDefinition(
+				2,
+				new ActionResultIntent[] { researchIntent });
+			ScenarioDefinition scenario = ScriptableObject.CreateInstance<ScenarioDefinition>();
+			ScenarioRegionDefinition region = ScriptableObject.CreateInstance<ScenarioRegionDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.scenario.research.region\"}}",
+				region);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.scenario.research\"}," +
+				"\"m_initialRegionId\":{\"m_value\":\"test.scenario.research.region\"}," +
+				"\"m_regionIds\":[{\"m_value\":\"test.scenario.research.region\"}]}",
+				scenario);
+
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[]
+				{
+					participant,
+					firstRecipeCard,
+					secondRecipeCard,
+					firstUnlockedAction,
+					secondUnlockedAction,
+					researchAction,
+					region,
+					scenario
+				});
+				ScenarioRun run = new ScenarioRun(scenario, contentIndex, 12345u);
+				TabletopCard source = run.Tabletop.CreateCard(participant.ContentId, new Vector2(-1f, 0f));
+				TabletopCard target = run.Tabletop.CreateCard(participant.ContentId, new Vector2(1f, 0f));
+				TabletopCardPointerReleaseIntent pointerIntent = new(
+					source.Id,
+					new Vector2(-1f, 0f),
+					new Vector2(1f, 0f),
+					new Vector2(-1f, 0f),
+					isDrag: true,
+					target.Id);
+				ActionCandidate[] candidates = ActionCandidateResolver.FindCandidates(
+					pointerIntent,
+					run.Tabletop.Cards,
+					contentIndex,
+					new[] { researchAction });
+
+				Assert.That(candidates, Has.Length.EqualTo(1));
+				run.DiscoverContent(firstUnlockedAction.ContentId);
+				run.Tabletop.StartAction(ActionRequest.FromCandidate(candidates[0]));
+				ActionInstanceSnapshot snapshot = JsonUtility.FromJson<ActionInstanceSnapshot>(
+					JsonUtility.ToJson(run.Tabletop.CreateActiveActionSnapshots()[0]));
+
+				ActionResultPlan restoredPlan = snapshot.RestoreResultPlan();
+				Assert.That(restoredPlan.ResearchDiscoveries.Count, Is.EqualTo(1));
+				Assert.That(restoredPlan.ResearchDiscoveries[0].Entries.Count, Is.EqualTo(2));
+				run.ConfirmTurn();
+				run.ConfirmTurn();
+
+				Assert.That(run.IsContentDiscovered(secondUnlockedAction.ContentId), Is.True);
+				Assert.That(
+					run.Tabletop.Cards.Stacks.SelectMany(stack => stack.Cards)
+						.Count(card => card.ContentId == firstRecipeCard.ContentId),
+					Is.Zero);
+				Assert.That(
+					run.Tabletop.Cards.Stacks.SelectMany(stack => stack.Cards)
+						.Count(card => card.ContentId == secondRecipeCard.ContentId),
+					Is.EqualTo(1));
+
+				run.Tabletop.StartAction(ActionRequest.FromCandidate(candidates[0]));
+				run.ConfirmTurn();
+				run.ConfirmTurn();
+
+				Assert.That(
+					run.Tabletop.Cards.Stacks.SelectMany(stack => stack.Cards)
+						.Count(card => card.ContentId == secondRecipeCard.ContentId),
+					Is.EqualTo(1));
+			}
+			finally
+			{
+				Object.DestroyImmediate(participant);
+				Object.DestroyImmediate(firstRecipeCard);
+				Object.DestroyImmediate(secondRecipeCard);
+				Object.DestroyImmediate(firstUnlockedAction);
+				Object.DestroyImmediate(secondUnlockedAction);
+				Object.DestroyImmediate(researchAction);
+				Object.DestroyImmediate(region);
+				Object.DestroyImmediate(scenario);
+			}
+		}
+
+		[Test]
 		public void ContentIndexBuild_InvalidWeightedResultIsRejectedBeforeRuntimeRandom()
 		{
 			CardDefinition participant = CreateCardDefinition("test.result.participant");
@@ -342,9 +525,10 @@ namespace Gameplay.Tests
 			uint? seed,
 			IReadOnlyList<ActionResultIntent> resultIntents,
 			IReadOnlyList<ResultBranchDefinition> branches,
-			Action<ScenarioRegionDefinition> configureRegion = null)
+			Action<ScenarioRegionDefinition> configureRegion = null,
+			int participantInitialUses = 1)
 		{
-			CardDefinition participant = CreateCardDefinition("test.result.participant");
+			CardDefinition participant = CreateCardDefinition("test.result.participant", participantInitialUses);
 			CardDefinition product = CreateCardDefinition("test.result.product");
 			ActionDefinition action = CreateActionDefinition(turnCost, resultIntents, branches);
 			ScenarioDefinition scenario = ScriptableObject.CreateInstance<ScenarioDefinition>();
@@ -376,11 +560,12 @@ namespace Gameplay.Tests
 			return new ResultTestContext(participant, product, action, scenario, region, scenarioRun, state, source, target, sourcePosition, candidates[0]);
 		}
 
-		private static CardDefinition CreateCardDefinition(string contentId)
+		private static CardDefinition CreateCardDefinition(string contentId, int initialUses = 1)
 		{
 			CardDefinition definition = ScriptableObject.CreateInstance<CardDefinition>();
 			SerializedObject serializedDefinition = new SerializedObject((Object)(object)definition);
 			serializedDefinition.FindProperty("m_contentId").FindPropertyRelative("m_value").stringValue = contentId;
+			serializedDefinition.FindProperty("m_initialUses").intValue = initialUses;
 			serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
 			return definition;
 		}
@@ -417,6 +602,15 @@ namespace Gameplay.Tests
 			return action;
 		}
 
+		private static ActionDefinition CreateEmptyActionDefinition(string contentId)
+		{
+			ActionDefinition action = ScriptableObject.CreateInstance<ActionDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"" + contentId + "\"},\"m_turnCost\":0}",
+				action);
+			return action;
+		}
+
 		private static void SetResultIntents(ActionDefinition action, params ActionResultIntent[] resultIntents)
 		{
 			SerializedObject serializedAction = new SerializedObject((Object)(object)action);
@@ -441,11 +635,51 @@ namespace Gameplay.Tests
 			return intent;
 		}
 
+		private static UseCardsResultIntent CreateUseIntent()
+		{
+			UseCardsResultIntent intent = new UseCardsResultIntent();
+			JsonUtility.FromJsonOverwrite("{\"m_slotKey\":\"participant\"}", intent);
+			return intent;
+		}
+
 		private static CreateCardsResultIntent CreateProductIntent(string contentId, int count)
 		{
 			CreateCardsResultIntent intent = new CreateCardsResultIntent();
 			JsonUtility.FromJsonOverwrite("{\"m_contentId\":{\"m_value\":\"" + contentId + "\"}," + $"\"m_count\":{count}," + "\"m_anchorSlotKey\":\"participant\"}", (object)intent);
 			return intent;
+		}
+
+		private static ResearchDiscoveryResultIntent CreateResearchIntent(
+			params (ContentId ActionId, ContentId RecipeCardId)[] entries)
+		{
+			ResearchDiscoveryResultIntent intent = new ResearchDiscoveryResultIntent();
+			string entriesJson = string.Join(
+				",",
+				entries.Select(entry =>
+					"{\"m_actionId\":{\"m_value\":\"" + entry.ActionId.Value +
+					"\"},\"m_recipeCardId\":{\"m_value\":\"" + entry.RecipeCardId.Value + "\"}}"));
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_entries\":[" + entriesJson + "],\"m_anchorSlotKey\":\"participant\"}",
+				intent);
+			return intent;
+		}
+
+		private static SellCardsResultIntent CreateSellIntent(string currencyContentId)
+		{
+			SellCardsResultIntent intent = new SellCardsResultIntent();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_soldSlotKey\":\"participant\"," +
+				"\"m_currencyCardId\":{\"m_value\":\"" + currencyContentId + "\"}," +
+				"\"m_anchorSlotKey\":\"participant\"}",
+				intent);
+			return intent;
+		}
+
+		private static void SetSellValue(CardDefinition card, int sellValue)
+		{
+			SerializedObject serializedCard = new SerializedObject(card);
+			serializedCard.FindProperty("m_sellValue").intValue = sellValue;
+			serializedCard.ApplyModifiedPropertiesWithoutUndo();
 		}
 
 		private static void AssertUnchanged(ResultTestContext context)
@@ -456,12 +690,17 @@ namespace Gameplay.Tests
 			Assert.That<bool>(context.State.TryGetCard(context.Target.Id, out tabletopCard), (IResolveConstraint)(object)Is.True);
 		}
 
-		private static void AssertSettled(ResultTestContext context, int expectedProductCount)
+		private static void AssertSettled(
+			ResultTestContext context,
+			int expectedProductCount,
+			int? expectedProductStackCount = null)
 		{
 			Assert.That<bool>(context.State.TryGetCard(context.Source.Id, out var tabletopCard), (IResolveConstraint)(object)Is.False);
 			Assert.That<bool>(context.State.TryGetCard(context.Target.Id, out tabletopCard), (IResolveConstraint)(object)Is.False);
 			Assert.That<int>(context.State.CardCount, (IResolveConstraint)(object)Is.EqualTo((object)expectedProductCount));
-			Assert.That<int>(context.State.StackCount, (IResolveConstraint)(object)Is.EqualTo((object)expectedProductCount));
+			Assert.That<int>(
+				context.State.StackCount,
+				(IResolveConstraint)(object)Is.EqualTo((object)(expectedProductStackCount ?? expectedProductCount)));
 			int productCount = 0;
 			for (int stackIndex = 0; stackIndex < context.State.Stacks.Count; stackIndex++)
 			{

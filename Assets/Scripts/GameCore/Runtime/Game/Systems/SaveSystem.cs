@@ -26,6 +26,14 @@ namespace GameCore
             return SaveFileStorageRuntime.GetAllSaveMetadata();
         }
 
+        /// <summary>
+        /// 返回当前文件存档容器允许使用的槽位数量，供正式存档界面生成空槽位。
+        /// </summary>
+        public static int GetMaximumSaveSlots()
+        {
+            return SaveFileStorageRuntime.GetMaximumSaveSlots();
+        }
+
         public static int DeleteAllSaveData()
         {
             return SaveFileStorageRuntime.DeleteAllSaveData();

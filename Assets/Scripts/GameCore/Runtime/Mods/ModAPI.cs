@@ -66,32 +66,24 @@ namespace GameCore
             CancellationTokenSource initializationCancellation =
                 CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             s_initializationCancellation = initializationCancellation;
+            var loadedModInfos = new List<ModInfo>();
 
             try
             {
                 initializationCancellation.Token.ThrowIfCancellationRequested();
 
                 ModConfig config = modConfig ?? ModConfig.LoadOrCreate();
+                config.Validate();
                 modLoader ??= new ModLoader(config, new APIValidator(config.ApiVersion));
-                var loadedModInfos = new List<ModInfo>();
-
-                if (!await modLoader.LoadAllModsAsync(loadedModInfos))
+                if (!await modLoader.LoadAllModsAsync(
+                    loadedModInfos,
+                    initializationCancellation.Token))
                 {
                     throw new InvalidOperationException(
                         "Mod 内容扫描或加载失败，ModAPI 未进入已初始化状态。");
                 }
 
                 initializationCancellation.Token.ThrowIfCancellationRequested();
-
-                for (int i = config.States.Count - 1; i >= 0; i--)
-                {
-                    ModState state = config.States[i];
-                    if (loadedModInfos.All(info => info.FullName != state.fullName))
-                    {
-                        Debug.LogWarning($"[ModAPI] Missing mod {state.fullName}.");
-                        config.States.RemoveAt(i);
-                    }
-                }
 
                 config.Save();
                 initializationCancellation.Token.ThrowIfCancellationRequested();
@@ -104,6 +96,17 @@ namespace GameCore
             }
             catch
             {
+                if (ResourceSystem.Initialized)
+                {
+                    for (int i = loadedModInfos.Count - 1; i >= 0; i--)
+                    {
+                        ModInfo mod = loadedModInfos[i];
+                        if (!string.IsNullOrWhiteSpace(mod?.packageName))
+                        {
+                            await ResourceSystem.UnloadModPackageAsync(mod.packageName);
+                        }
+                    }
+                }
                 ResetRuntimeState();
                 throw;
             }
@@ -136,9 +139,9 @@ namespace GameCore
                 return;
             }
 
+            ModDependencyResolver.RequireCanDelete(modInfo, ModInfos, s_config);
             s_config.DeleteMod(modInfo);
             s_config.Save();
-            ModInfos.Remove(modInfo);
             NotifyRefreshed();
         }
 
@@ -167,82 +170,82 @@ namespace GameCore
             return ModInfos.ToArray();
         }
 
-        public static void UnZipAll(string path, bool allDirectories)
+        /// <summary>按当前启用状态和已加载 YooAsset 清单，生成可随单局存档的严格 Mod 集合事实。</summary>
+        public static ModPackageSetSnapshot CreateActivePackageSetSnapshot()
         {
-            if (!Directory.Exists(path))
+            EnsureInitialized();
+            var packages = new List<ModPackageSnapshot>();
+            for (int i = 0; i < ModInfos.Count; i++)
             {
-                return;
+                ModInfo mod = ModInfos[i];
+                if (!ResourceSystem.IsModPackageLoaded(mod.packageName))
+                {
+                    continue;
+                }
+                packages.Add(new ModPackageSnapshot(
+                    mod.modId,
+                    mod.version,
+                    ResourceSystem.GetModPackageHash(mod.packageName),
+                    ResourceSystem.GetModPackageVersion(mod.packageName)));
             }
-
-            foreach (string zip in Directory.GetFiles(path, "*.zip", allDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
-            {
-                ExtractAndDeleteArchive(zip);
-            }
-        }
-
-        public static async UniTask UnZipAllAsync(string path, bool allDirectories)
-        {
-            if (!Directory.Exists(path))
-            {
-                return;
-            }
-
-            string[] zips = Directory.GetFiles(path, "*.zip", allDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
-            UniTask[] tasks = zips.Select(zip => UniTask.RunOnThreadPool(() =>
-            {
-                ExtractAndDeleteArchive(zip);
-            })).ToArray();
-
-            await UniTask.WhenAll(tasks);
-        }
-
-        public static void DeleteModFromDisk(ModInfo modInfo)
-        {
-            DeleteModFromDisk(modInfo, LoadingPath);
+            return new ModPackageSetSnapshot(packages);
         }
 
         internal static void DeleteModFromDisk(ModInfo modInfo, string loadingRoot)
         {
-            if (modInfo == null || string.IsNullOrWhiteSpace(modInfo.FilePath) || !Directory.Exists(modInfo.FilePath))
+            Directory.Delete(RequireModDirectoryForDeletion(modInfo, loadingRoot), true);
+        }
+
+        /// <summary>验证待删除目录确实存在于 Mod 根目录内，并返回规范化路径。</summary>
+        internal static string RequireModDirectoryForDeletion(ModInfo modInfo, string loadingRoot)
+        {
+            if (modInfo == null)
             {
-                return;
+                throw new ArgumentNullException(nameof(modInfo));
+            }
+            if (string.IsNullOrWhiteSpace(modInfo.FilePath))
+            {
+                throw new InvalidDataException($"Mod {modInfo.DisplayName ?? "<未命名>"} 没有可删除的安装目录。");
             }
 
             string fullPath = Path.GetFullPath(modInfo.FilePath);
             if (!IsPathInsideDirectory(loadingRoot, fullPath))
             {
-                Debug.LogError($"[ModAPI] Refuse to delete mod outside loading root: {fullPath}");
-                return;
+                throw new InvalidDataException($"拒绝删除 Mod 根目录外的目录：{fullPath}。");
+            }
+            if (!Directory.Exists(fullPath))
+            {
+                throw new DirectoryNotFoundException($"待删除的 Mod 目录不存在：{fullPath}。");
             }
 
-            Directory.Delete(fullPath, true);
+            return fullPath;
         }
 
-        public static async UniTask<ModInfo> LoadModInfo(string modInfoPath)
+        public static ModInfo LoadModInfo(string modInfoPath)
         {
-            ModInfo modInfo = JsonConvert.DeserializeObject<ModInfo>(await File.ReadAllTextAsync(modInfoPath));
+            if (string.IsNullOrWhiteSpace(modInfoPath))
+            {
+                throw new ArgumentException("Mod 清单路径不能为空。", nameof(modInfoPath));
+            }
+
+            string fullPath = Path.GetFullPath(modInfoPath);
+            ModInfo modInfo;
+            try
+            {
+                modInfo = JsonConvert.DeserializeObject<ModInfo>(File.ReadAllText(fullPath));
+            }
+            catch (JsonException exception)
+            {
+                throw new InvalidDataException($"Mod 清单不是有效 JSON：{fullPath}。", exception);
+            }
             if (modInfo == null)
             {
-                return null;
+                throw new InvalidDataException($"文件 {fullPath} 没有包含有效 Mod 清单。");
             }
 
-            string directory = Path.GetDirectoryName(modInfoPath);
+            string directory = Path.GetDirectoryName(fullPath);
             modInfo.FilePath = string.IsNullOrWhiteSpace(directory) ? null : Path.GetFullPath(directory);
             return modInfo;
-        }
-
-        private static void ExtractAndDeleteArchive(string zip)
-        {
-            string outputDirectory = Path.GetDirectoryName(zip);
-            if (string.IsNullOrWhiteSpace(outputDirectory))
-            {
-                return;
-            }
-
-            if (ZipArchiveExtractor.UnzipFile(zip, outputDirectory))
-            {
-                File.Delete(zip);
-            }
         }
 
         private static bool IsPathInsideDirectory(string rootPath, string candidatePath)

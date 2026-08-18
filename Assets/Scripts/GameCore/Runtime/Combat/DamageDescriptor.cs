@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GAS.Runtime;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ namespace GameCore
 {
     /// <summary>
     /// 一次伤害结算后的命中标记。
-    /// Critical 和 Miss 可以同时作为计算过程证据保留，最终表现由接收端解释。
+    /// Critical 只会出现在命中后的伤害结果；Miss 表示本次攻击没有造成伤害。
     /// </summary>
     [Flags]
     internal enum EDamageFlag
@@ -67,12 +68,87 @@ namespace GameCore
     }
 
     /// <summary>
+    /// 一次伤害在战斗语义匹配后的表现结果。
+    /// 它只描述本次结算是否有优势 / 劣势反馈，不定义内容类型；内容语义仍由 EX-GAS 标签配置。
+    /// </summary>
+    public enum DamageMatchupResult
+    {
+        None = 0,
+        Advantage = 1,
+        Disadvantage = 2
+    }
+
+    /// <summary>
+    /// FormalDamage 中声明的一条来源标签与目标标签倍率规则。
+    /// 来源和目标都查询唯一 ASC 当前标签，不在战斗系统里复制 combat type。
+    /// </summary>
+    internal readonly struct DamageMatchupRule
+    {
+        internal DamageMatchupRule(
+            int sourceRequiredTag,
+            int targetRequiredTag,
+            float multiplier,
+            DamageMatchupResult result)
+        {
+            if (sourceRequiredTag <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(sourceRequiredTag),
+                    sourceRequiredTag,
+                    "伤害克制规则的来源标签必须是有效 EX-GAS 标签码。");
+            }
+            if (targetRequiredTag <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(targetRequiredTag),
+                    targetRequiredTag,
+                    "伤害克制规则的目标标签必须是有效 EX-GAS 标签码。");
+            }
+            if (float.IsNaN(multiplier) || float.IsInfinity(multiplier) || multiplier < 0.0f)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(multiplier),
+                    multiplier,
+                    "伤害克制倍率必须是非负有限数值。");
+            }
+
+            SourceRequiredTag = sourceRequiredTag;
+            TargetRequiredTag = targetRequiredTag;
+            Multiplier = multiplier;
+            Result = result;
+        }
+
+        internal int SourceRequiredTag { get; }
+        internal int TargetRequiredTag { get; }
+        internal float Multiplier { get; }
+        internal DamageMatchupResult Result { get; }
+    }
+
+    /// <summary>
+    /// 一次伤害匹配到的克制倍率。
+    /// </summary>
+    internal readonly struct DamageMatchupEvaluation
+    {
+        internal DamageMatchupEvaluation(float multiplier, DamageMatchupResult result)
+        {
+            Multiplier = multiplier;
+            Result = result;
+            HasMatch = true;
+        }
+
+        internal bool HasMatch { get; }
+        internal float Multiplier { get; }
+        internal DamageMatchupResult Result { get; }
+    }
+
+    /// <summary>
     /// 伤害来源合同。
     /// 结算系统通过它读取攻击者实例和命中当刻的战斗属性快照，避免直接依赖具体角色字段。
     /// </summary>
     internal interface IDamageSource
     {
         public bool TryResolveCharacter(out CharacterBase character);
+        public bool TryResolveAbilitySystem(out AbilitySystemCell abilitySystem);
         public bool TryGetCombatStatSnapshot(out CombatStatSnapshot snapshot);
     }
 
@@ -88,6 +164,12 @@ namespace GameCore
             return false;
         }
 
+        public bool TryResolveAbilitySystem(out AbilitySystemCell abilitySystem)
+        {
+            abilitySystem = null;
+            return false;
+        }
+
         public bool TryGetCombatStatSnapshot(out CombatStatSnapshot snapshot)
         {
             snapshot = default;
@@ -100,10 +182,12 @@ namespace GameCore
     /// </summary>
     internal readonly struct AbilitySystemDamageSource : IDamageSource
     {
+        private readonly AbilitySystemCell m_abilitySystem;
         private readonly CombatStatSnapshot m_combatStats;
 
         internal AbilitySystemDamageSource(AbilitySystemCell abilitySystem)
         {
+            m_abilitySystem = abilitySystem ?? throw new ArgumentNullException(nameof(abilitySystem));
             m_combatStats = DamageSolver.CreateCombatStatSnapshot(abilitySystem);
         }
 
@@ -111,6 +195,12 @@ namespace GameCore
         {
             character = null;
             return false;
+        }
+
+        public bool TryResolveAbilitySystem(out AbilitySystemCell abilitySystem)
+        {
+            abilitySystem = m_abilitySystem;
+            return abilitySystem != null;
         }
 
         public bool TryGetCombatStatSnapshot(out CombatStatSnapshot snapshot)
@@ -148,6 +238,19 @@ namespace GameCore
             return resolvedCharacter != null;
         }
 
+        public bool TryResolveAbilitySystem(out AbilitySystemCell abilitySystem)
+        {
+            abilitySystem = null;
+            if (!TryResolveCharacter(out CharacterBase character) ||
+                !character.TryGetFormalAbilitySystem(out AbilitySystemComponent abilitySystemComponent))
+            {
+                return false;
+            }
+
+            abilitySystem = abilitySystemComponent.Cell;
+            return abilitySystem != null;
+        }
+
         public bool TryGetCombatStatSnapshot(out CombatStatSnapshot snapshot)
         {
             snapshot = m_combatStats;
@@ -165,7 +268,8 @@ namespace GameCore
             EDamageType damageType,
             int flatDamages,
             float scalingFactor,
-            bool ignoreDefense)
+            bool ignoreDefense,
+            IReadOnlyList<DamageMatchupRule> matchupRules = null)
         {
             if (flatDamages < 0)
             {
@@ -190,6 +294,9 @@ namespace GameCore
             MissBehavior = EResolutionBehavior.Default;
             IgnoreDefense = ignoreDefense;
             Silent = false;
+            MatchupRules = matchupRules == null
+                ? Array.Empty<DamageMatchupRule>()
+                : new List<DamageMatchupRule>(matchupRules).ToArray();
         }
 
         internal EDamageType DamageType { get; }
@@ -199,6 +306,7 @@ namespace GameCore
         internal EResolutionBehavior MissBehavior { get; }
         internal bool IgnoreDefense { get; }
         internal bool Silent { get; }
+        internal IReadOnlyList<DamageMatchupRule> MatchupRules { get; }
     }
 
     /// <summary>
@@ -212,7 +320,9 @@ namespace GameCore
         internal int damage;
         internal EDamageFlag flags;
         internal DamageResolutionRolls rolls;
+        internal EResolutionBehavior criticalBehavior;
         internal EResolutionBehavior missBehavior;
+        internal IReadOnlyList<DamageMatchupRule> matchupRules;
         internal bool ignoreDefense;
         internal bool silent;
 
@@ -238,6 +348,7 @@ namespace GameCore
         internal IDamageSource source;
         internal int damage;
         internal EDamageFlag flags;
+        internal DamageMatchupResult matchupResult;
         internal bool silent;
 
         internal bool IsCriticalHit => flags.HasFlag(EDamageFlag.Critical);

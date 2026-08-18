@@ -52,6 +52,8 @@ namespace Gameplay.Tabletop.Actions
 
 		public float Progress => (TurnCost == 0) ? 1f : Mathf.Clamp01(ProgressedTurns / (float)TurnCost);
 
+		public float RemainingTurns => Mathf.Max(0f, TurnCost - ProgressedTurns);
+
 		internal ActionResultPlan ResultPlan { get; }
 
 		internal ActionInstance(ActionCandidate candidate, int turnCost, string resultBranchKey, ActionResultPlan resultPlan)
@@ -158,6 +160,47 @@ namespace Gameplay.Tabletop.Actions
 				ResultBranchKey,
 				bindingSnapshots,
 				ResultPlan);
+		}
+
+		/// <summary>判断指定牌桌卡牌是否参与了这次行动；只读查询，不改变行动生命周期。</summary>
+		public bool ContainsParticipant(TabletopCardId cardId)
+		{
+			if (!cardId.IsValid)
+			{
+				return false;
+			}
+			for (int bindingIndex = 0; bindingIndex < Bindings.Count; bindingIndex++)
+			{
+				IReadOnlyList<TabletopCardId> cardIds = Bindings[bindingIndex].CardIds;
+				for (int cardIndex = 0; cardIndex < cardIds.Count; cardIndex++)
+				{
+					if (cardIds[cardIndex] == cardId)
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		/// <summary>返回第一个有效参与卡牌，用于牌桌表现把行动进度锚定到真实参与对象。</summary>
+		public bool TryGetFirstParticipantCardId(out TabletopCardId cardId)
+		{
+			for (int bindingIndex = 0; bindingIndex < Bindings.Count; bindingIndex++)
+			{
+				IReadOnlyList<TabletopCardId> cardIds = Bindings[bindingIndex].CardIds;
+				for (int participantIndex = 0; participantIndex < cardIds.Count; participantIndex++)
+				{
+					if (cardIds[participantIndex].IsValid)
+					{
+						cardId = cardIds[participantIndex];
+						return true;
+					}
+				}
+			}
+
+			cardId = default;
+			return false;
 		}
 
 		internal void Advance(float turnUnits)

@@ -33,13 +33,19 @@ metadata:
 - 新增或改写暴露字段时，字段符号本身继续使用英文代码命名；至少用中文 `[LabelText("现实含义")]` 表达字段含义。存在配置风险、单位、取值范围、引用职责归属或旧数据兼容影响时，必须同步写中文 `Tooltip`。有分组时使用中文 `Header`。
 - Unity 的 `InspectorNameAttribute` 只用于枚举值显示名，不得再用于普通序列化字段。Odin 或其它 Inspector 插件仍须先登记插件落点，才能成为新的作者入口依赖。
 - 简单赋值、自说明字段和一眼能懂的私有方法不强行补注释，避免把代码翻译成中文。
-- 需要新增或审查注释时，使用全局 `D:\codex-home\skills\code-comments\SKILL.md`；本项目当前没有 `.agents/skills/code-comments/SKILL.md`。
+- 需要新增或审查注释时，使用系统 skill `D:\codex-home\skills\code-comments\SKILL.md`；本项目当前没有对应的项目内 `code-comments` skill。
 
 ## 命名
 
 - `.spec` 目录和 skill 目录使用 kebab-case。
 - GameCore 作为通用框架时，运行时默认值、编辑器入口、作者菜单、存档目录、输入绑定 key、配置文件名和生成物默认名使用 `GameCore` 或职责名；不得使用当前 Unity 工程名、未来游戏名或来源工程名。当前工程名只允许出现在仓库路径、项目事实、迁移记录、验证记录等“说明当前工作区”的文档位置。
 - 项目侧正式玩法资产、素材文件、Prefab、ScriptableObject、Sprite Library、场景实例和正式测试场景入口优先中文命名；尤其是给策划、关卡、技能或表现作者直接选择的 SO 资产，文件名和 Inspector 显示名都应使用中文表达现实含义。
+- 游戏素材目录按 Unity / 参考工程约定使用英文类别名，具体自有资源文件名使用中文现实名称。当前正式入口为 `Assets/Art/Sprites`、`Assets/Art/Textures`、`Assets/Art/Materials`、`Assets/Art/Prefabs`、`Assets/Audio/SFX`；后续新增材质、Prefab、Sprite Library 等类别时，先使用行业约定英文目录，再在目录内使用中文资源名。不得把约定俗成的资源类别目录写成 `素材/图片/音效/特效` 这类中文分类。
+- 从参考模板改造后归 CardLoop 使用的自有素材必须按上述目录规则迁入项目自有资源目录，并把资源文件名、Prefab 根对象名和作者可见地址改成中文现实名称。只有第三方原件留在参考目录、外部协议键、代码符号或工具强制 ASCII 时才保留英文。
+- 中文资源名是项目正式作者入口，不是临时测试例外；不得因为文件名包含中文、Unicode 或空格外的非 ASCII 字符，就把自有图片、音频、材质、粒子、Prefab 或场景实例改回英文。真正需要 ASCII 的位置必须能指出外部工具、协议或构建链的硬约束。
+- 粒子特效、特效材质、特效贴图、音效和其它美术 / 表现资产从参考模板吸收为自有资源时，不保留 `Puff`、`Hit`、`Projectile` 这类来源工程英文素材名作为正式资产名；资产文件名、Prefab 根对象名和给作者选择的资源地址应改成中文现实名称。对应 C# 类型、枚举值、字段和方法仍保持英文代码符号，但英文符号必须表达 CardLoop 自己的领域语义，例如正式卡牌烟雾使用 `CardSmoke`，不沿用来源模板行话 `Puff`。
+- 从参考模板字段迁移到自有字段后，若项目自有场景、Prefab、SO 和测试资产中已无旧序列化字段存量，应删除 `FormerlySerializedAs` 等旧来源兼容标记；只有仍需保护真实存量资产时才保留兼容标记，并在迁移记录说明原因。
+- 由测试场景生成器或编辑器工具重建、但会被正式玩法配置通过资源系统引用的自有素材，也按项目素材规则放入 `Assets/Art/Sprites`、`Assets/Art/Textures`、`Assets/Art/Materials`、`Assets/Art/Prefabs`、`Assets/Audio/SFX` 等标准资源目录并使用中文现实名称；只有纯测试夹具才允许带“测试”前缀。
 - `CreateAssetMenu` 的 `menuName`、`fileName` 等作者入口优先使用中文；只有唯一 ID、外部协议键、跨工具 ASCII 键或第三方来源名需要保留英文。
 - C# 类名、结构体名、接口名、枚举名、方法名、字段符号、属性符号、事件符号和命名空间必须按项目现有英文符号风格保持稳定；中文通过 Inspector 特性、菜单名、资产名、注释和文档承载，不把运行时代码符号强行改成中文。
 - 自有玩法顶级模块统一拼作 `Gameplay`，不得新增历史拼写 `GamePlay`。正式 C# 命名空间按真实职责分为 `Gameplay.Content`、`Gameplay.Actions`、`Gameplay.Tabletop`、`Gameplay.Scenarios`，牌桌拥有的行动运行对象进入 `Gameplay.Tabletop.Actions`；编辑器工具在 `Gameplay.Editor.<职责>`，测试在 `Gameplay.Tests`。目录、程序集根命名空间和作者菜单必须同步使用这一拼写与层级。
@@ -68,4 +74,3 @@ metadata:
 - 项目 `.spec/skills/<name>/SKILL.md` 只要求 `name` 和 `description`。
 - description 必须写清触发场景，不把完整 SOP 堆在描述里。
 - 详细做法放正文，相关细节放 references 或项目 docs。
-

@@ -43,7 +43,7 @@ namespace GameCore
                 }
 
                 BindCloseTask(menuPanel, menuClosedTask);
-                UIKit.PushPanel(menuPanel, stackName, true);
+                UIKit.PushPanel(menuPanel, stackName, hidePreLevel: false);
                 menuPanel.NotifyPushedToMenuStack();
                 menuPanel.ApplyMenuStackInteractions(true);
                 GameManager.InputSystem.PrepareUIReleaseGate(m_cancelReleaseGate, EUIInputAction.Cancel);

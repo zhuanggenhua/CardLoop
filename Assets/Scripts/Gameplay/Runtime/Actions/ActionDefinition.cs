@@ -19,11 +19,21 @@ namespace Gameplay.Actions
 		[Tooltip("普通行动完成所需的回合数；0 表示选择后立即完成。切换即时制时由当前回合规则统一换算秒数，不能在行动上另配持续秒数。战斗技能不使用本字段。")]
 		private int m_turnCost = 1;
 
+		[SerializeField]
+		[LabelText("允许点击启动")]
+		[Tooltip("开启后，玩家单击参与卡牌也会查询这项行动；关闭时只通过拖拽、填槽或其它正式入口启动。")]
+		private bool m_canStartFromClick;
+
 		[Header("参与槽位")]
 		[SerializeField]
 		[LabelText("参与槽位")]
 		[Tooltip("声明行动需要哪些参与对象以及各自的匹配条件。槽位只负责判断能否参与，不扣除材料、不启动计时，也不执行结果。")]
 		private ActionSlotDefinition[] m_participationSlots = Array.Empty<ActionSlotDefinition>();
+
+		[SerializeReference]
+		[LabelText("可用条件")]
+		[Tooltip("候选显示和正式提交前都必须满足的单局条件；条件只读取事实，不保存第二份运行状态。")]
+		private ActionCondition[] m_conditions = Array.Empty<ActionCondition>();
 
 		[Header("结果意图")]
 		[SerializeReference]
@@ -39,6 +49,8 @@ namespace Gameplay.Actions
 		public IReadOnlyList<ActionSlotDefinition> ParticipationSlots => m_participationSlots ?? Array.Empty<ActionSlotDefinition>();
 
 		public IReadOnlyList<ActionResultIntent> ResultIntents => m_resultIntents ?? Array.Empty<ActionResultIntent>();
+
+		public IReadOnlyList<ActionCondition> Conditions => m_conditions ?? Array.Empty<ActionCondition>();
 
 		public IReadOnlyList<ActionResultBranchDefinition> ResultBranches => m_resultBranches ?? Array.Empty<ActionResultBranchDefinition>();
 
@@ -64,6 +76,8 @@ namespace Gameplay.Actions
 
 		public int TurnCost => m_turnCost;
 
+		public bool CanStartFromClick => m_canStartFromClick;
+
 		protected override void ValidateContent(ContentValidationContext context)
 		{
 			base.ValidateContent(context);
@@ -76,8 +90,24 @@ namespace Gameplay.Actions
 			}
 			HashSet<string> slotKeys = new(StringComparer.Ordinal);
 			ValidateSlots(context, slotKeys);
+			ValidateConditions(context, slotKeys);
 			ValidateResultIntents(context, ResultIntents, slotKeys);
 			ValidateResultBranches(context, slotKeys);
+		}
+
+		private void ValidateConditions(ContentValidationContext context, HashSet<string> slotKeys)
+		{
+			ActionResultValidationContext conditionContext = new(this, slotKeys, context);
+			for (int i = 0; i < Conditions.Count; i++)
+			{
+				ActionCondition condition = Conditions[i];
+				if (condition == null)
+				{
+					context.AddError("ACTION_CONDITION_NULL", $"行动 {ContentId} 的第 {i + 1} 个可用条件为空。", this);
+					continue;
+				}
+				condition.Validate(conditionContext);
+			}
 		}
 
 		private void ValidateSlots(

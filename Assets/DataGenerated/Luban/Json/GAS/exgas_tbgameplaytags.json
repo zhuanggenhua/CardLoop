@@ -163,5 +163,25 @@
     "id": 4001004,
     "Name": "State.Buff.Invincible",
     "Desc": "状态：无敌"
+  },
+  {
+    "id": 700,
+    "Name": "Combat",
+    "Desc": "战斗语义标签"
+  },
+  {
+    "id": 7001,
+    "Name": "Combat.Melee",
+    "Desc": "战斗语义：近战"
+  },
+  {
+    "id": 7002,
+    "Name": "Combat.Ranged",
+    "Desc": "战斗语义：远程"
+  },
+  {
+    "id": 7003,
+    "Name": "Combat.Magic",
+    "Desc": "战斗语义：魔法"
   }
 ]

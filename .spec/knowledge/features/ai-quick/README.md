@@ -37,7 +37,7 @@ metadata:
 | 输入上下文、重绑定和绑定持久化 | [Unity Input System / YokiFrame InputKit 入口](../plugin-docs.md) | `GameCore.InputSystem` + `InputKit` | 正式 owner 已确认 |
 | 存档文件槽位、版本和世界快照 | [YokiFrame SaveKit 入口](../../../../Assets/Plugins/YokiFrame/Core/Editor/AI_NAVIGATION.md) | `SaveSystem` 聚合世界快照，`SaveKit` 负责文件层 | 正式 owner 已确认 |
 | Cinemachine、DOTween、Tilemap、Addressables | [UnitySkills / 包内官方入口](../plugin-docs.md) | 先确认当前业务是否有正式调用 | 已装或被工具覆盖，未确认统一项目入口 |
-| AIBridge、UnitySkills 等 AI 工具 | [插件入口索引](../plugin-docs.md) | 工具自身入口，不进入 GameCore 运行时职责 | 官方入口已有 |
+| UnitySkills、AIBridge、puerts-unity-mcp、batchmode 等 Unity 自动化工具 | [插件入口索引](../plugin-docs.md) | [`unity-automation-tools.md`](unity-automation-tools.md)：默认入口、专项场景、禁止场景和 guard | 已补项目职责矩阵 |
 
 ## 文档分层
 

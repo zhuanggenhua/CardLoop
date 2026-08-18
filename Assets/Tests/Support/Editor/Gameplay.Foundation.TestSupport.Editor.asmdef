@@ -3,12 +3,16 @@
   "rootNamespace": "Gameplay.Tests.Support.Editor",
   "references": [
     "GameCore",
+    "GameCore.Editor",
     "Gameplay.Runtime",
     "Gameplay.Foundation.TestSupport",
     "GAS.GeneratedRuntime",
     "Unity.TextMeshPro",
     "YokiFrame.UIKit",
     "Unity.InputSystem",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "YooAsset",
     "YooAsset.Editor"
   ],
   "includePlatforms": [

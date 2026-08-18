@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using GAS.Runtime;
 using Gameplay.Content;
 using Gameplay.Quests;
 using Gameplay.Scenarios;
@@ -26,7 +27,7 @@ namespace Gameplay.Tests
 		{
 			m_saveDirectory = Path.Combine(
 				Path.GetTempPath(),
-				"CardLoop-ScenarioDirector-" + Guid.NewGuid().ToString("N"));
+				"Gameplay-ScenarioDirector-" + Guid.NewGuid().ToString("N"));
 			InvokeSaveSystemMethod("ConfigureSaveKit", m_saveDirectory);
 		}
 
@@ -86,6 +87,58 @@ namespace Gameplay.Tests
 				director.OnSystemShutdown();
 				Object.DestroyImmediate(director.gameObject);
 				Destroy(scenario, region);
+			}
+		}
+
+		[Test]
+		public void ContinueDayCycle_StartsNewDayAndOverwritesTheRunsAssignedSlot()
+		{
+			ScenarioRegionDefinition region = CreateRegion("test.autosave.region");
+			ScenarioDefinition scenario = CreateScenarioWithRegion(
+				"test.autosave.scenario",
+				"自动存档测试剧本",
+				region,
+				"自动存档测试地区");
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_turnsPerDay\":1,\"m_dayCycleRules\":{\"m_enabled\":true,\"m_hungerPerCharacter\":0,\"m_baseCardLimit\":10}}",
+				scenario);
+			CharacterCardDefinition character = ScriptableObject.CreateInstance<CharacterCardDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.autosave.character\"},\"m_abilitySystemPresetId\":1001}",
+				character);
+			ScenarioDirector director = new GameObject("ScenarioDirector-AutoSave-Test")
+				.AddComponent<ScenarioDirector>();
+			XLuban.LoadTablesForEditor();
+			InvokeFormalGasBootstrap("EnsureInitialized");
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { scenario, region, character });
+				ScenarioRun run = new ScenarioRun(scenario, contentIndex, 12345u);
+				run.Tabletop.CreateCard(character.ContentId, Vector2.zero);
+				run.ConfirmTurn();
+				run.ContinueDayCycle();
+				Assert.That(run.DayCyclePhase, Is.EqualTo(ScenarioDayCyclePhase.AwaitingNewDayConfirmation));
+				SetPrivateField(director, "m_activeRun", run);
+				SetPrivateField(director, "m_activeSaveSlotId", 4);
+				if (!director.enabled)
+				{
+					director.OnSystemStart();
+				}
+
+				director.ContinueDayCycle();
+
+				Assert.That(run.CurrentDay, Is.EqualTo(2));
+				Assert.That(director.ActiveSaveSlotId, Is.EqualTo(4));
+				SaveData container = GameCore.SaveSystem.ExtractSaveContainerFromFile(4);
+				Assert.That(container, Is.Not.Null);
+				Assert.That(container.GetModule<ScenarioRunSnapshot>().ConfirmedTurnIndex, Is.EqualTo(1));
+			}
+			finally
+			{
+				InvokeFormalGasBootstrap("Shutdown");
+				director.OnSystemShutdown();
+				Object.DestroyImmediate(director.gameObject);
+				Destroy(scenario, region, character);
 			}
 		}
 
@@ -329,6 +382,21 @@ namespace Gameplay.Tests
 				methodName,
 				BindingFlags.Static | BindingFlags.NonPublic)
 				.Invoke(null, arguments);
+		}
+
+		private static void InvokeFormalGasBootstrap(string methodName)
+		{
+			Type bootstrapType = typeof(GameCore.GameManager).Assembly.GetType(
+				"GameCore.FormalAbilityRuntimeBootstrap",
+				throwOnError: true);
+			MethodInfo method = bootstrapType.GetMethod(
+				methodName,
+				BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			if (method == null)
+			{
+				throw new InvalidOperationException($"找不到 FormalAbilityRuntimeBootstrap.{methodName}。");
+			}
+			method.Invoke(null, null);
 		}
 
 		private static ScenarioRun InvokeCreateRunFromSaveContainer(
