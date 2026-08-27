@@ -70,14 +70,25 @@ namespace CryingSnow.StackCraft
             {
                 try
                 {
+                    string fileName = Path.GetFileNameWithoutExtension(filePath);
+                    // 参考模板和 CardLoop 共用持久化目录，模板存档只接受自己的 SaveSlot 文件。
+                    if (typeof(T) == typeof(GameData) && !fileName.StartsWith("SaveSlot", System.StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
                     // 3. Attempt to read and deserialize
                     string json = File.ReadAllText(filePath);
                     T data = JsonConvert.DeserializeObject<T>(json);
 
                     if (data != null)
                     {
-                        // 4. Get the file name to use as the Key (e.g., "SaveSlot001")
-                        string fileName = Path.GetFileNameWithoutExtension(filePath);
+                        // 旧模板存档 UI 依赖当前场景名，缺失时跳过，避免把其它 JSON 当成模板存档。
+                        if (data is GameData gameData && string.IsNullOrWhiteSpace(gameData.CurrentScene))
+                        {
+                            Debug.LogWarning($"Skipped invalid StackCraft save file at: {filePath}. Missing CurrentScene.");
+                            continue;
+                        }
 
                         // Add to dictionary
                         validDataDict.Add(fileName, data);

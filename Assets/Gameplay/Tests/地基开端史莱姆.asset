@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CharacterCardDefinition
   m_contentId:
     m_value: test.foundation.pack.beginning.slime
-  m_tagCodes: ea030000
-  m_displayName: Slime
-  m_description: A slimy slime.
+  m_tagCodes: ea030000f1157a00
+  m_displayName: 史莱姆
+  m_description: 湿滑的史莱姆。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 1
   m_countsTowardCardLimit: 1
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 5
   m_automaticMovementRadius: 1
@@ -40,6 +40,8 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u4E3B\u52A8\u654C\u4EBA"
     Guid: 53949e6ee1b84c088610c0c0b088d95f
     Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}
   m_abilitySystemPresetId: 1006
   m_attributeOverrides:
   - m_attributeCode: 1

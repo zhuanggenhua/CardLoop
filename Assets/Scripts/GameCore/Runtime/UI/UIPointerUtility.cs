@@ -70,6 +70,11 @@ namespace GameCore
 
         private static bool IsBlockingUIRaycastResult(RaycastResult result, string ignoredObjectName)
         {
+            if (result.module is not GraphicRaycaster)
+            {
+                return false;
+            }
+
             GameObject hitObject = result.gameObject;
             if (hitObject == null || hitObject.name == ignoredObjectName)
             {

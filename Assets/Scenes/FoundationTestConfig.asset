@@ -22,10 +22,10 @@ MonoBehaviour:
     m_keys: []
     m_values: []
   m_damageTypesBinding:
-    m_keys: 
+    m_keys:
     m_values: []
   m_abilityTypesBinding:
-    m_keys: 
+    m_keys:
     m_values: []
   m_databaseRegistry: {fileID: 0}
   m_interactionLayer: Interaction

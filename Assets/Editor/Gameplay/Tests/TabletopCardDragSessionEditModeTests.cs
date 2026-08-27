@@ -33,15 +33,30 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
-		public void Update_UsesScreenDistanceInsteadOfCameraDependentTableDistance()
+		public void Update_UsesTableDistanceForStackCraftClickThreshold()
 		{
 			TabletopCards cards = new TabletopCards();
-			TabletopCard card = cards.CreateCard("test.screen-threshold", Vector2.zero);
-			TabletopCardDragSession session = new TabletopCardDragSession(10f);
+			TabletopCard card = cards.CreateCard("test.table-threshold", Vector2.zero);
+			TabletopCardDragSession session = new TabletopCardDragSession(0.5f);
 			session.Begin(card.Id, Vector2.zero, Vector2.zero, card.Position);
 
-			Assert.That(session.Update(new Vector2(9f, 0f), new Vector2(100f, 0f)), Is.False);
-			Assert.That(session.Update(new Vector2(10f, 0f), new Vector2(100f, 0f)), Is.True);
+			Assert.That(session.Update(new Vector2(100f, 0f), new Vector2(0.49f, 0f)), Is.False);
+			Assert.That(session.Update(new Vector2(100f, 0f), new Vector2(0.5f, 0f)), Is.True);
+		}
+
+		[Test]
+		public void Update_BelowThresholdStillRefreshesPreviewStackPosition()
+		{
+			TabletopCards cards = new TabletopCards();
+			TabletopCard card = cards.CreateCard("test.preview-before-drag", new Vector2(2f, 3f));
+			TabletopCardDragSession session = new TabletopCardDragSession(0.5f);
+			session.Begin(card.Id, Vector2.zero, Vector2.one, card.Position);
+
+			Assert.That(session.Update(new Vector2(10f, 10f), new Vector2(1.25f, 1.1f)), Is.False);
+			Assert.That(
+				session.CurrentStackPosition,
+				Is.EqualTo(new Vector2(2.25f, 3.1f)),
+				"StackCraft 按下后立即让卡牌跟随指针；点击阈值只决定释放是否按点击处理。");
 		}
 
 		[Test]

@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 435156c947e99c24e93b7f17c8aa4353, type: 3}
+  m_Name: "\u5730\u57FAStackCraft\u540C\u6001\u6D4B\u8BD5\u5267\u672C"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Scenarios.ScenarioDefinition
+  m_contentId:
+    m_value: test.foundation.scenario.stackcraft-parity
+  m_tagCodes:
+  m_displayName: 地基模板同态测试剧本
+  m_description: 只用于验证新玩法框架复现模板默认初始卡包开局。
+  m_icon:
+    Address:
+    Guid:
+    Locked: 1
+  m_initialRegionId:
+    m_value: test.foundation.region.stackcraft-parity
+  m_regionIds:
+  - m_value: test.foundation.region.stackcraft-parity
+  m_questIds:
+  - m_value: test.foundation.quest.stackcraft-parity.open-starter-pack
+  m_turnsPerDay: 1
+  m_secondsPerTurn: 120
+  m_dayCycleRules:
+    m_enabled: 0
+    m_hungerPerCharacter: 2
+    m_baseCardLimit: 24
+    m_feedingHealingEffectId: 2005
+    m_encounters: []
+  m_battleFormationRules:
+    m_sideLayouts:
+    - m_centerOffset: {x: -1.5, y: 0}
+      m_columnStep: {x: 1, y: 0}
+      m_rankStep: {x: 0, y: -1}
+      m_columnsPerRank: 2
+    - m_centerOffset: {x: 1.5, y: 0}
+      m_columnStep: {x: -1, y: 0}
+      m_rankStep: {x: 0, y: 1}
+      m_columnsPerRank: 2
+    m_areaMargin: {x: 0.1, y: 0.1}
+
+

@@ -17,8 +17,8 @@ namespace Gameplay.Tests.Support.Editor
 	public static partial class FoundationTestSceneMenu
 	{
 		internal const string TitleScenePath = "Assets/Scenes/FoundationTitleTest.unity";
-		private const string ScenarioTitlePanelPrefabPath = TabletopTestFolder + "/ScenarioTitlePanel.prefab";
-		private const string SettingsPanelPrefabPath = TabletopTestFolder + "/UISettings.prefab";
+		private const string ScenarioTitlePanelPrefabPath = GameplayUiPrefabFolder + "/ScenarioTitlePanel.prefab";
+		private const string SettingsPanelPrefabPath = GameplayUiPrefabFolder + "/UISettings.prefab";
 
 		[MenuItem("Gameplay/地基/重建标题入口测试场景")]
 		public static void RebuildTitleTestScene()
@@ -28,7 +28,7 @@ namespace Gameplay.Tests.Support.Editor
 			EnsureTabletopTestAssets();
 			EnsureScenarioTitlePanelPrefab();
 			EnsureSettingsPanelPrefab();
-			GameManager runtimeRootPrefab = EnsureRuntimeRootPrefab(EnsureConfigAsset());
+			GameObject runtimeRootPrefab = EnsureRuntimeRootPrefab(EnsureConfigAsset());
 
 			GameObject runtimeEntryObject = new("FoundationTitleRuntimeEntry");
 			SceneManager.MoveGameObjectToScene(runtimeEntryObject, scene);
@@ -50,10 +50,7 @@ namespace Gameplay.Tests.Support.Editor
 					$"标题测试场景没有写入唯一测试进程根预制体：{RuntimeRootPrefabPath}");
 			}
 
-			GameObject cameraObject = new("Main Camera");
-			SceneManager.MoveGameObjectToScene(cameraObject, scene);
-			cameraObject.tag = "MainCamera";
-			Camera camera = cameraObject.AddComponent<Camera>();
+			Camera camera = CreateMainCamera(scene);
 			camera.clearFlags = CameraClearFlags.SolidColor;
 			camera.backgroundColor = new Color(0.025f, 0.032f, 0.04f, 1f);
 			camera.transform.position = new Vector3(0f, 0f, -10f);
@@ -84,7 +81,7 @@ namespace Gameplay.Tests.Support.Editor
 			Debug.Log($"标题入口测试场景已重建：{TitleScenePath}", savedTitleScreen);
 		}
 
-		private static ScenarioTitleScreen VerifySavedTitleSceneConfig(GameManager expectedRuntimeRootPrefab)
+		private static ScenarioTitleScreen VerifySavedTitleSceneConfig(GameObject expectedRuntimeRootPrefab)
 		{
 			Scene savedScene = EditorSceneManager.OpenScene(TitleScenePath, OpenSceneMode.Single);
 			if (savedScene.GetRootGameObjects()
@@ -184,6 +181,7 @@ namespace Gameplay.Tests.Support.Editor
 				serializedPanel.FindProperty("m_dayDurationSlider").objectReferenceValue = dayDuration;
 				serializedPanel.FindProperty("m_dayDurationLabel").objectReferenceValue = dayDurationLabel;
 				serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
 				if (PrefabUtility.SaveAsPrefabAsset(root, ScenarioTitlePanelPrefabPath) == null)
 				{
@@ -471,6 +469,7 @@ namespace Gameplay.Tests.Support.Editor
 				serializedSettings.FindProperty("m_shadowLabel").objectReferenceValue = shadowLabel;
 				serializedSettings.FindProperty("m_resetSettingsButton").objectReferenceValue = reset;
 				serializedSettings.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
 				if (PrefabUtility.SaveAsPrefabAsset(root, SettingsPanelPrefabPath) == null)
 				{

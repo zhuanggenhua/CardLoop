@@ -111,6 +111,19 @@ namespace GameCore.Tests
         }
 
         [UnityTest]
+        public IEnumerator ShutdownForApplicationQuit_WhenYooAssetsDriverAlreadyDestroyedRuntime_ClearsProjectOwnership()
+        {
+            yield return ResourceSystem.InitializeAsync().ToCoroutine();
+            YooAssets.Destroy();
+
+            ResourceSystem.ShutdownForApplicationQuit();
+
+            Assert.That(ResourceSystem.Initialized, Is.False);
+            Assert.That(YooInit.Initialized, Is.False);
+            Assert.That(YooAssets.IsInitialized, Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator Shutdown_WhenYokiFrameOwnsResources_ThrowsWithoutReleasingExternalState()
         {
             yield return YooInit.InitAsync().ToCoroutine();

@@ -120,7 +120,7 @@ namespace Gameplay.Tabletop
 		private TabletopCardId m_executingActorId;
 		private TabletopCardId m_executingTargetId;
 		private AbilitySpec m_executingAbility;
-		private int m_executingPresentationTagCode;
+		private int m_executingCombatTypeTagCode;
 		private float m_pendingActivationRemainingSeconds;
 		private float m_pendingActivationDurationSeconds;
 		private ulong m_attackPresentationSequence;
@@ -370,7 +370,7 @@ namespace Gameplay.Tabletop
 			TabletopCardId actorId,
 			TabletopCardId targetId,
 			AbilitySpec ability,
-			int presentationTagCode,
+			int combatTypeTagCode,
 			float preActivationSeconds)
 		{
 			RequireActive();
@@ -401,7 +401,7 @@ namespace Gameplay.Tabletop
 			m_executingActorId = actorId;
 			m_executingTargetId = targetId;
 			m_executingAbility = ability;
-			m_executingPresentationTagCode = presentationTagCode;
+			m_executingCombatTypeTagCode = combatTypeTagCode;
 			m_pendingActivationDurationSeconds = preActivationSeconds;
 			m_pendingActivationRemainingSeconds = preActivationSeconds;
 			checked
@@ -460,7 +460,7 @@ namespace Gameplay.Tabletop
 				m_attackPresentationSequence,
 				m_executingActorId,
 				m_executingTargetId,
-				m_executingPresentationTagCode,
+				m_executingCombatTypeTagCode,
 				m_pendingActivationDurationSeconds,
 				remainingSeconds);
 		}
@@ -575,7 +575,7 @@ namespace Gameplay.Tabletop
 			m_executingAbility = null;
 			m_executingActorId = default;
 			m_executingTargetId = default;
-			m_executingPresentationTagCode = 0;
+			m_executingCombatTypeTagCode = 0;
 			m_pendingActivationRemainingSeconds = 0f;
 			m_pendingActivationDurationSeconds = 0f;
 			if (resetActorProgress && m_actionProgress.ContainsKey(actorId))
@@ -600,14 +600,14 @@ namespace Gameplay.Tabletop
 			ulong sequence,
 			TabletopCardId sourceCardId,
 			TabletopCardId targetCardId,
-			int presentationTagCode,
+			int combatTypeTagCode,
 			float durationSeconds,
 			float remainingSeconds)
 		{
 			Sequence = sequence;
 			SourceCardId = sourceCardId;
 			TargetCardId = targetCardId;
-			PresentationTagCode = presentationTagCode;
+			CombatTypeTagCode = combatTypeTagCode;
 			DurationSeconds = durationSeconds;
 			RemainingSeconds = remainingSeconds;
 		}
@@ -615,7 +615,7 @@ namespace Gameplay.Tabletop
 		public ulong Sequence { get; }
 		public TabletopCardId SourceCardId { get; }
 		public TabletopCardId TargetCardId { get; }
-		public int PresentationTagCode { get; }
+		public int CombatTypeTagCode { get; }
 		public float DurationSeconds { get; }
 		public float RemainingSeconds { get; }
 	}

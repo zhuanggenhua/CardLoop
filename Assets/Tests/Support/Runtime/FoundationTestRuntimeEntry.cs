@@ -13,7 +13,7 @@ namespace Gameplay.Tests.Support
     public sealed class FoundationTestRuntimeEntry : MonoBehaviour
     {
         [SerializeField, Tooltip("仅在单独打开测试场景时实例化的唯一测试进程根预制体。")]
-        private GameManager m_runtimeRootPrefab;
+        private GameObject m_runtimeRootPrefab;
 
         private void Awake()
         {
@@ -26,7 +26,11 @@ namespace Gameplay.Tests.Support
                 throw new InvalidOperationException("地基测试场景没有配置测试进程根预制体。");
             }
 
-            Instantiate(m_runtimeRootPrefab.gameObject);
+            GameObject runtimeRoot = Instantiate(m_runtimeRootPrefab);
+            if (!runtimeRoot.TryGetComponent(out GameManager _))
+            {
+                throw new InvalidOperationException("地基测试进程根预制体缺少 GameManager 组件。");
+            }
         }
     }
 }

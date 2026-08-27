@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
   m_contentId:
     m_value: test.foundation.recipe-card.crafting-stick
-  m_tagCodes: e9030000
-  m_displayName: 'Recipe: Wooden Stick'
-  m_description: Timber x1, Villager x1.
+  m_tagCodes: e9030000f0157a00
+  m_displayName: 配方：木棍
+  m_description: 木材 ×1，村民 ×1。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 1
   m_countsTowardCardLimit: 1
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
@@ -40,3 +40,5 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u914D\u65B9"
     Guid: dccf24b24bba463caee5777b021086e0
     Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}

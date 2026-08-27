@@ -13,28 +13,28 @@ MonoBehaviour:
   m_Name: "\u724C\u684C\u6D4B\u8BD5\u89C6\u56FE\u8BBE\u7F6E"
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Tabletop.TabletopViewSettings
   m_cardViewPrefab:
-    Address: "\u724C\u684C\u6D4B\u8BD5\u5361\u724C\u89C6\u56FE"
-    Guid: e0e5e302108a1f74989be97f0f65e7de
+    Address: "\u5361\u724C\u89C6\u56FE"
+    Guid: b25f599a45617f34f9fd19b391b97970
     Locked: 1
   m_actionProgressViewPrefab:
-    Address: "\u724C\u684C\u6D4B\u8BD5\u884C\u52A8\u8FDB\u5EA6"
-    Guid: c6a4453a163925b4fa0a3ec2d7e35a81
+    Address: "\u884C\u52A8\u8FDB\u5EA6"
+    Guid: 2c120707acb15204fba8436a53954491
     Locked: 1
   m_battleAreaViewPrefab:
-    Address: "\u724C\u684C\u6D4B\u8BD5\u6218\u6597\u533A\u57DF"
-    Guid: 0a6a4c2674891c6479b4a9b548a3f247
+    Address: "\u6218\u6597\u533A\u57DF"
+    Guid: e472ccf9eb51e7b44b8498740faf029e
     Locked: 1
   m_projectileViewPrefab:
-    Address: "\u724C\u684C\u6D4B\u8BD5\u6295\u5C04\u7269"
-    Guid: 71374535c96594147a97e6d9c3ff8df0
+    Address: "\u6295\u5C04\u7269"
+    Guid: 4cafa8c07d60d5043ac4f1a2f7c344e7
     Locked: 1
   m_cardSmokeEffectPrefab:
     Address: "\u5361\u724C\u70DF\u96FE\u7C92\u5B50"
     Guid: 728ff838a02e647fb4521d417e15d709
     Locked: 1
   m_hitResultViewPrefab:
-    Address: "\u724C\u684C\u6D4B\u8BD5\u547D\u4E2D\u7ED3\u679C"
-    Guid: d05820f4f6918e74e9827d22a7b5ebdc
+    Address: "\u547D\u4E2D\u7ED3\u679C"
+    Guid: 970d74521f036a645a826889794e656e
     Locked: 1
   m_stackHeightStep: 0.002
   m_baseSortingOrder: 10
@@ -60,4 +60,7 @@ MonoBehaviour:
   m_missAudio: {fileID: 11400000, guid: 9382d861fc09c6e438534205c1fcc271, type: 2}
   m_criticalAudio: {fileID: 11400000, guid: 29ea83bac279cbd4c8bc9cabf50fea17, type: 2}
   m_dragFollowSharpness: 100
+  m_clickThreshold: 0.02
+  m_attachRadius: 0.25
+  m_dragHeight: 0.1
   m_moveDurationSeconds: 0.1

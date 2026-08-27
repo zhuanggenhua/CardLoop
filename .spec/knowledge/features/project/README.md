@@ -17,6 +17,7 @@ metadata:
 | [`card-survival-infinite.md`](card-survival-infinite.md) | 判断《卡牌生存：无限》的产品愿景、核心交互、局外到局内流程、Mod、关卡编辑器或联机目标时查。 |
 | [`stackcraft-template-study.md`](stackcraft-template-study.md) | 查看 StackCraft 模板导入、设置恢复、整体吸收裁决和候选底座边界时查。 |
 | [`stackcraft-system-reference-matrix.md`](stackcraft-system-reference-matrix.md) | 裁决 StackCraft 模块搬迁顺序、可吸收职责、排除项、UI 框架或联机约束时查。 |
+| [`stackcraft-functional-parity-matrix.md`](stackcraft-functional-parity-matrix.md) | 判断 StackCraft 等价吸收是否完成、端到端和目标对照还差什么时查。 |
 | [`stackcraft-business-data-migration.md`](stackcraft-business-data-migration.md) | 对账 StackCraft 代表性业务竖切、剩余业务 out-of-scope 范围和删除参考目录门槛时查。 |
 | [`stackcraft-visual-animation-parity.md`](stackcraft-visual-animation-parity.md) | 对账 StackCraft 卡牌表面、材质、进度、命中、粒子、投射物和拖拽 / 移动 / 受击动画是否由当前框架等效承接时查。 |
 | [`gameplay-foundation-proposal.md`](gameplay-foundation-proposal.md) | 查看 Gameplay 地基总体方案、内容定义、作者源、资源/输入选择和分阶段吸收设计时查。 |
@@ -31,6 +32,7 @@ metadata:
 - StackCraft 模板当前作为参考模板和候选底座保留；设置恢复、吸收裁决与后续约束见 [`stackcraft-template-study.md`](stackcraft-template-study.md)。
 - 当前主线是打 Gameplay 地基与 StackCraft 架构搬迁 / 吸收审查，不是先实现《卡牌生存：无限》的原创业务内容；游戏愿景、联机、Mod、关卡编辑器和职业成长只作为架构裁决约束。
 - StackCraft 模块吸收审查表见 [`stackcraft-system-reference-matrix.md`](stackcraft-system-reference-matrix.md)：按依赖顺序记录数据定义优先、逐模块重构裁决、UI 框架吸收、联机适配约束、可吸收职责、必须排除的旧职责和临时适配删除条件。
+- StackCraft 完成矩阵见 [`stackcraft-functional-parity-matrix.md`](stackcraft-functional-parity-matrix.md)：当前处于重审纠偏，之前完成声明已降级为历史线索；必须先去掉原创/临时业务并回到干净模板同操作、同源码参数、同资源配置对账。
 - StackCraft 业务数据迁移清单见 [`stackcraft-business-data-migration.md`](stackcraft-business-data-migration.md)：当前业务验收范围是代表性竖切，不要求完整迁移 StackCraft 全部原始业务 `.asset`；删除参考目录仍需单独授权和删除后验证。
 - StackCraft 表面 / 动画一致性清单见 [`stackcraft-visual-animation-parity.md`](stackcraft-visual-animation-parity.md)：机制效果和代表性业务通过不等于玩家可见表面、素材布局或动画已与模板一致。
 - Gameplay 地基提案见 [`gameplay-foundation-proposal.md`](gameplay-foundation-proposal.md)：保留本项目框架，使用 YooAsset 与新 Input System，先建立内容定义 / 加载 / 作者源校验，再按 StackCraft 架构搬迁顺序逐块吸收。

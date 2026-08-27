@@ -62,6 +62,12 @@ function numberScalar(text, name) {
   return value == null || value === "" ? Number.NaN : Number(value);
 }
 
+function nestedContentId(text, name) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = text.match(new RegExp(`^\\s*${escaped}:\\s*\\r?\\n\\s*m_value:\\s*(.*)$`, "m"));
+  return match?.[1]?.trim().replace(/^"|"$/g, "") ?? null;
+}
+
 function buildStackCraftGuidNameMap() {
   const map = new Map();
   for (const metaFile of walk("Assets/StackCraft/Resources").filter((file) => file.endsWith(".asset.meta"))) {
@@ -211,8 +217,8 @@ function assertStarterRepresentative(guidNameMap) {
   const targetSlots = parseCardLoopPackSlots(target);
 
   assert(scalar(source, "displayName") === "Starter", "StackCraft Starter 显示名读取失败。");
-  assert(scalar(target, "m_displayName") === "Starter", "CardLoop Starter 显示名未对齐。");
-  assert(scalar(target, "m_description") === scalar(source, "description"), "CardLoop Starter 描述未对齐。");
+  assert(scalar(target, "m_displayName") === "初始卡包", "CardLoop Starter 中文显示名未对齐。");
+  assert(scalar(target, "m_description") === "一个初始卡包。", "CardLoop Starter 中文描述未对齐。");
   assert(sourceSlots.length === 4, `StackCraft Starter 应有 4 个槽位，当前 ${sourceSlots.length}`);
   assert(targetSlots.length === 4, `CardLoop Starter 应有 4 个槽位，当前 ${targetSlots.length}`);
 
@@ -243,8 +249,8 @@ function assertBeginningRepresentative(guidNameMap) {
   const targetSlots = parseCardLoopPackSlots(target);
 
   assert(scalar(source, "displayName") === "Beginning", "StackCraft Beginning 显示名读取失败。");
-  assert(scalar(target, "m_displayName") === "Beginning", "CardLoop Beginning 显示名未对齐。");
-  assert(scalar(target, "m_description") === scalar(source, "description"), "CardLoop Beginning 描述未对齐。");
+  assert(scalar(target, "m_displayName") === "开端卡包", "CardLoop Beginning 中文显示名未对齐。");
+  assert(scalar(target, "m_description") === "一个开端卡包。", "CardLoop Beginning 中文描述未对齐。");
   assert(
     targetSlots.length === numberScalar(source, "uses"),
     "CardLoop Beginning 使用次数未对齐：CardPackDefinition 的运行时使用次数由抽取槽位数量派生。");
@@ -280,7 +286,7 @@ function assertBeginningRepresentative(guidNameMap) {
       `Beginning 第 ${i + 1} 槽配方概率未对齐。`);
   }
 
-  assert(vendor.includes("m_offeredPackId:\n    m_value: test.foundation.pack.beginning"), "Beginning 商贩没有指向 Beginning 卡包。");
+  assert(nestedContentId(vendor, "m_offeredPackId") === "test.foundation.pack.beginning", "Beginning 商贩没有指向 Beginning 卡包。");
   assert(numberScalar(vendor, "m_price") === numberScalar(source, "buyPrice"), "Beginning 商贩价格未对齐。");
   assert(numberScalar(vendor, "m_minimumCompletedQuests") === numberScalar(source, "minQuests"), "Beginning 商贩解锁任务数未对齐。");
 }

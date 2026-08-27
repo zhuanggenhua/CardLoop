@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.ActionDefinition
   m_contentId:
     m_value: test.foundation.pack.open
-  m_tagCodes: 
-  m_displayName: Open Card Pack
-  m_description: Click a card pack multiple times to fully open it and claim all
-    the cards inside.
+  m_tagCodes:
+  m_displayName: 打开卡包
+  m_description: 多次点击卡包，完全打开并取得里面的所有卡牌。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_turnCost: 0
   m_canStartFromClick: 1
+  m_journalGroupName:
   m_participationSlots:
   - m_key: pack
     m_displayName: "\u5361\u5305"
@@ -32,20 +32,20 @@ MonoBehaviour:
     m_allowedContentIds:
     - m_value: test.foundation.pack
     - m_value: test.foundation.pack.beginning
-    m_requiredAllContentTagCodes: 
-    m_requiredAnyContentTagCodes: 
-    m_requiredNoneContentTagCodes: 
-    m_requiredAllAbilitySystemTagCodes: 
-    m_requiredAnyAbilitySystemTagCodes: 
-    m_requiredNoneAbilitySystemTagCodes: 
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
   m_conditions: []
   m_resultIntents:
-  - rid: 7366053183022957328
+  - rid: 7366053338002227786
   m_resultBranches: []
   references:
     version: 2
     RefIds:
-    - rid: 7366053183022957328
+    - rid: 7366053338002227786
       type: {class: OpenCardPackResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
       data:
         m_packSlotKey: pack

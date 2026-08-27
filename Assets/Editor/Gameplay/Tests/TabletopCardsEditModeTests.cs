@@ -64,7 +64,7 @@ namespace Gameplay.Tests
 				TabletopCardPlacementRules placementRules = new TabletopCardPlacementRules(
 					new TabletopCardPlacementArea(new Rect(-2f, -2f, 4f, 4f)),
 					new TabletopCardStackGeometry(Vector2.one, Vector2.zero),
-					new Vector2(0.2f, 0f));
+					cardLimitBonusExpansionPerPoint: new Vector2(0.2f, 0f));
 				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
 					contentIndex,
 					placementRules,
@@ -89,6 +89,71 @@ namespace Gameplay.Tests
 			finally
 			{
 				Object.DestroyImmediate(normal);
+				Object.DestroyImmediate(booster);
+			}
+		}
+
+		[Test]
+		public void Tabletop_PlacementBoundsMoveStackCraftHeaderRestrictionWithCardLimitBonus()
+		{
+			TabletopCardPlacementRules rules = new TabletopCardPlacementRules(
+				new TabletopCardPlacementArea(
+					new Rect(-6f, -4f, 12f, 8f),
+					new[] { new Rect(-6f, 2.5f, 12f, 1.5f), new Rect(-1f, -1f, 2f, 2f) }),
+				new TabletopCardStackGeometry(Vector2.one, Vector2.zero),
+				cardLimitBonusExpansionPerPoint: new Vector2(0.06f, 0.04f));
+
+			TabletopCardPlacementRules expanded = rules.CreateForCardLimitBonus(100);
+
+			Assert.That(expanded.Area.Bounds, Is.EqualTo(new Rect(-12f, -8f, 24f, 16f)));
+			Assert.That(expanded.Area.RestrictedAreas[0], Is.EqualTo(new Rect(-12f, 6.5f, 24f, 1.5f)));
+			Assert.That(expanded.Area.RestrictedAreas[1], Is.EqualTo(new Rect(-1f, -1f, 2f, 2f)));
+		}
+
+		[Test]
+		public void Tabletop_CardLimitBonusMovesLockedHeaderStacksWithStackCraftBoard()
+		{
+			CardDefinition tradeZone = ScriptableObject.CreateInstance<CardDefinition>();
+			CardDefinition booster = ScriptableObject.CreateInstance<CardDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.tabletop.header.trade-zone\"}}",
+				tradeZone);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.tabletop.header.booster\"},\"m_cardLimitBonus\":100}",
+				booster);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { tradeZone, booster });
+				TabletopCardPlacementRules placementRules = new TabletopCardPlacementRules(
+					new TabletopCardPlacementArea(
+						new Rect(-6f, -4f, 12f, 8f),
+						new[] { new Rect(-6f, 2.5f, 12f, 1.5f) }),
+					new TabletopCardStackGeometry(
+						new Vector2(0.8f, 1f),
+						new Vector2(0f, -0.18f),
+						new Vector2(0.1f, 0.1f)),
+					cardLimitBonusExpansionPerPoint: new Vector2(0.06f, 0.04f));
+				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
+					contentIndex,
+					placementRules,
+					_ => false,
+					(_, __) => { },
+					_ => { });
+				TabletopCard tradeZoneCard = tabletop.CreateCard(
+					tradeZone.ContentId,
+					new Vector2(-0.55f, 3.25f),
+					isPlacementLocked: true);
+
+				tabletop.CreateCard(booster.ContentId, Vector2.zero);
+
+				Assert.That(tabletop.PlacementRules.Area.Bounds, Is.EqualTo(new Rect(-12f, -8f, 24f, 16f)));
+				Assert.That(tabletop.PlacementRules.Area.RestrictedAreas[0], Is.EqualTo(new Rect(-12f, 6.5f, 24f, 1.5f)));
+				Assert.That(tradeZoneCard.Position.x, Is.EqualTo(-0.55f).Within(0.0001f));
+				Assert.That(tradeZoneCard.Position.y, Is.EqualTo(7.25f).Within(0.0001f));
+			}
+			finally
+			{
+				Object.DestroyImmediate(tradeZone);
 				Object.DestroyImmediate(booster);
 			}
 		}
@@ -141,9 +206,29 @@ namespace Gameplay.Tests
 			TabletopCardStack detached = state.DetachStackAt(top.Id);
 			Assert.That(top.Stack, Is.SameAs(detached));
 			Assert.That(top.Position, Is.EqualTo(detached.Position));
+			Assert.That(state.StackCount, Is.EqualTo(2));
+			CollectionAssert.AreEqual(new TabletopCard[] { bottom }, merged.Cards);
+			CollectionAssert.AreEqual(new TabletopCard[] { top }, detached.Cards);
 
 			state.RemoveCard(top.Id);
 			Assert.That(top.Stack, Is.Null);
+		}
+
+		[Test]
+		public void DetachStackAt_MergedTopCardCreatesSingleCardStack()
+		{
+			TabletopCards state = new TabletopCards();
+			TabletopCard bottom = state.CreateCard("test.detach-top.bottom", new Vector2(1f, 2f));
+			TabletopCard top = state.CreateCard("test.detach-top.top", new Vector2(5f, 6f));
+			TabletopCardStack original = state.MergeStackOnto(top.Id, bottom.Id);
+
+			TabletopCardStack detached = state.DetachStackAt(top.Id);
+
+			Assert.That(state.StackCount, Is.EqualTo(2));
+			Assert.That(original.Cards, Is.EqualTo(new TabletopCard[] { bottom }));
+			Assert.That(detached.Cards, Is.EqualTo(new TabletopCard[] { top }));
+			Assert.That(state.GetStackContaining(bottom.Id), Is.SameAs(original));
+			Assert.That(state.GetStackContaining(top.Id), Is.SameAs(detached));
 		}
 
 		[Test]

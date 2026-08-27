@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.ActionDefinition
   m_contentId:
     m_value: test.foundation.chest.withdraw
-  m_tagCodes: 
-  m_displayName: "\u53D6\u51FA\u94B1\u7BB1\u8D27\u5E01"
-  m_description: "\u5355\u51FB\u5B58\u6709 Coin \u7684\u94B1\u7BB1\uFF0C\u7ACB\u5373\u53D6\u51FA\u4E00\u5F20
-    Coin \u5361\u3002"
+  m_tagCodes:
+  m_displayName: 取出钱箱货币
+  m_description: 单击存有金币的钱箱，立即取出一张金币卡。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_turnCost: 0
   m_canStartFromClick: 1
+  m_journalGroupName:
   m_participationSlots:
   - m_key: chest
     m_displayName: "\u94B1\u7BB1"
@@ -31,25 +31,25 @@ MonoBehaviour:
     m_maximumParticipants: 1
     m_allowedContentIds:
     - m_value: test.foundation.chest
-    m_requiredAllContentTagCodes: 
-    m_requiredAnyContentTagCodes: 
-    m_requiredNoneContentTagCodes: 
-    m_requiredAllAbilitySystemTagCodes: 
-    m_requiredAnyAbilitySystemTagCodes: 
-    m_requiredNoneAbilitySystemTagCodes: 
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
   m_conditions:
-  - rid: 7366053183022957334
+  - rid: 7366053338002227792
   m_resultIntents:
-  - rid: 7366053183022957335
+  - rid: 7366053338002227793
   m_resultBranches: []
   references:
     version: 2
     RefIds:
-    - rid: 7366053183022957334
+    - rid: 7366053338002227792
       type: {class: ChestHasStoredCurrencyCondition, ns: Gameplay.Actions, asm: Gameplay.Runtime}
       data:
         m_chestSlotKey: chest
-    - rid: 7366053183022957335
+    - rid: 7366053338002227793
       type: {class: WithdrawCurrencyFromChestResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
       data:
         m_chestSlotKey: chest

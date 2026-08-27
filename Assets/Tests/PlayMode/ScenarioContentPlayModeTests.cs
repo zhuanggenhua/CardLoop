@@ -84,7 +84,7 @@ namespace Gameplay.Tests
 			Assert.That(
 				contentIndex.TryGet(actionId, out ActionDefinition actionDefinition),
                 Is.True);
-            Assert.That(actionDefinition.DisplayName, Is.EqualTo("Test Action"));
+            Assert.That(actionDefinition.DisplayName, Is.EqualTo("测试行动"));
 			Assert.That(
 				contentIndex.TryGet(actionId, out CardDefinition _),
                 Is.False,

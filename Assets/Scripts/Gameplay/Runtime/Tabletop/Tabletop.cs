@@ -97,6 +97,12 @@ namespace Gameplay.Tabletop
 
 		internal ContentIndex ContentIndex => m_contentIndex;
 
+		/// <summary>读取当前单局的内容发现事实；牌桌表现用它投影卡包商贩收藏进度，不保存第二份发现状态。</summary>
+		internal bool IsContentDiscovered(ContentId contentId)
+		{
+			return m_isContentDiscovered(contentId);
+		}
+
 		internal event Action<ContentId, ActionSettlementResult> ActionSettled;
 
 		internal event Action<TabletopPresentationCue> PresentationCueRequested;
@@ -121,7 +127,7 @@ namespace Gameplay.Tabletop
 			m_isContentDiscovered = isContentDiscovered ?? throw new ArgumentNullException(nameof(isContentDiscovered));
 			m_actionCompleted = actionCompleted ?? throw new ArgumentNullException(nameof(actionCompleted));
 			m_cardsDefeated = cardsDefeated ?? throw new ArgumentNullException(nameof(cardsDefeated));
-			Cards = new TabletopCards(cardIdSequence);
+			Cards = new TabletopCards(cardIdSequence, ResolveCardSize);
 			m_readOnlyActionPlans = m_actionPlans.AsReadOnly();
 			m_readOnlyBattles = m_activeBattles.AsReadOnly();
 			m_battleFormation = battleFormationRules?.CreateRuntime();
@@ -146,7 +152,8 @@ namespace Gameplay.Tabletop
 			Cards = TabletopCards.Restore(
 				cardStateSnapshot,
 				cardIdSequence ?? throw new ArgumentNullException(nameof(cardIdSequence)),
-				RestoreCardFromSnapshot);
+				RestoreCardFromSnapshot,
+				ResolveCardSize);
 			m_readOnlyActionPlans = m_actionPlans.AsReadOnly();
 			m_readOnlyBattles = m_activeBattles.AsReadOnly();
 			m_battleFormation = battleFormationRules?.CreateRuntime();
@@ -211,7 +218,12 @@ namespace Gameplay.Tabletop
 			}
 		}
 
-		public TabletopCard CreateCard(ContentId contentId, Vector2 position, bool isPlacementLocked = false)
+		public TabletopCard CreateCard(
+			ContentId contentId,
+			Vector2 position,
+			bool isPlacementLocked = false,
+			bool allowSpawnAttach = false,
+			TabletopCardId spawnAttachIgnoredStackCardId = default)
 		{
 			RequireActive();
 			CardDefinition definition = RequireCardDefinition(contentId, "创建卡牌");
@@ -222,11 +234,21 @@ namespace Gameplay.Tabletop
 				isPlacementLocked,
 				definition.InitialUses,
 				definition.CreateRuntimeCard);
+			if (allowSpawnAttach)
+			{
+				AttachSpawnedStackToNearestSameContentStack(card.Stack, spawnAttachIgnoredStackCardId);
+			}
 			RefreshPlacementRulesForCurrentCards(reflowExistingStacks: false);
 			return card;
 		}
 
-		public TabletopCardStack CreateCardStack(ContentId contentId, int count, Vector2 position, bool isPlacementLocked = false)
+		public TabletopCardStack CreateCardStack(
+			ContentId contentId,
+			int count,
+			Vector2 position,
+			bool isPlacementLocked = false,
+			bool allowSpawnAttach = false,
+			TabletopCardId spawnAttachIgnoredStackCardId = default)
 		{
 			RequireActive();
 			CardDefinition definition = RequireCardDefinition(contentId, "创建牌堆");
@@ -238,8 +260,107 @@ namespace Gameplay.Tabletop
 				isPlacementLocked,
 				definition.InitialUses,
 				definition.CreateRuntimeCard);
+			if (allowSpawnAttach)
+			{
+				stack = AttachSpawnedStackToNearestSameContentStack(stack, spawnAttachIgnoredStackCardId);
+			}
 			RefreshPlacementRulesForCurrentCards(reflowExistingStacks: false);
 			return stack;
+		}
+
+		private TabletopCardStack AttachSpawnedStackToNearestSameContentStack(
+			TabletopCardStack spawnedStack,
+			TabletopCardId ignoredStackCardId)
+		{
+			if (spawnedStack == null)
+			{
+				throw new ArgumentNullException(nameof(spawnedStack));
+			}
+			float radius = PlacementRules.SpawnAttachRadius;
+			if (radius == 0f)
+			{
+				return spawnedStack;
+			}
+			if (spawnedStack.IsPlacementLocked)
+			{
+				throw new InvalidOperationException("锁定牌堆不能启用出生吸附。");
+			}
+			if (!TryFindNearestSameContentSpawnAttachTarget(
+				spawnedStack,
+				ignoredStackCardId,
+				radius,
+				out TabletopCardStack targetStack))
+			{
+				return spawnedStack;
+			}
+
+			return MergeStackOnto(spawnedStack.BottomCard.Id, targetStack.BottomCard.Id);
+		}
+
+		private bool TryFindNearestSameContentSpawnAttachTarget(
+			TabletopCardStack spawnedStack,
+			TabletopCardId ignoredStackCardId,
+			float radius,
+			out TabletopCardStack targetStack)
+		{
+			targetStack = null;
+			float radiusSquared = radius * radius;
+			float bestSqrDistance = float.PositiveInfinity;
+			ContentId spawnedContentId = spawnedStack.BottomCard.ContentId;
+			Vector2 spawnedPosition = spawnedStack.Position;
+			IReadOnlyList<TabletopCardStack> stacks = Cards.Stacks;
+			for (int stackIndex = 0; stackIndex < stacks.Count; stackIndex++)
+			{
+				TabletopCardStack candidateStack = stacks[stackIndex];
+				if (ReferenceEquals(candidateStack, spawnedStack) ||
+					!candidateStack.BottomCard.ContentId.Equals(spawnedContentId) ||
+					StackContainsCard(candidateStack, ignoredStackCardId) ||
+					StackContainsBusyCard(candidateStack))
+				{
+					continue;
+				}
+
+				float candidateSqrDistance = ClosestCardSqrDistance(candidateStack, spawnedPosition);
+				if (candidateSqrDistance <= radiusSquared && candidateSqrDistance < bestSqrDistance)
+				{
+					bestSqrDistance = candidateSqrDistance;
+					targetStack = candidateStack;
+				}
+			}
+			return targetStack != null;
+		}
+
+		private bool StackContainsCard(TabletopCardStack stack, TabletopCardId cardId)
+		{
+			return cardId.IsValid && stack.IndexOf(cardId) >= 0;
+		}
+
+		private bool StackContainsBusyCard(TabletopCardStack stack)
+		{
+			for (int cardIndex = 0; cardIndex < stack.Cards.Count; cardIndex++)
+			{
+				TabletopCardId cardId = stack.Cards[cardIndex].Id;
+				if (IsActiveActionParticipant(cardId) || TryFindBattleContaining(cardId, out _))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private float ClosestCardSqrDistance(TabletopCardStack stack, Vector2 position)
+		{
+			float bestSqrDistance = float.PositiveInfinity;
+			for (int cardIndex = 0; cardIndex < stack.Cards.Count; cardIndex++)
+			{
+				Vector2 cardPosition = Cards.GetCardTablePosition(stack.Cards[cardIndex].Id, PlacementRules.Geometry);
+				float sqrDistance = (cardPosition - position).sqrMagnitude;
+				if (sqrDistance < bestSqrDistance)
+				{
+					bestSqrDistance = sqrDistance;
+				}
+			}
+			return bestSqrDistance;
 		}
 
 		public void RemoveCard(TabletopCardId cardId)
@@ -769,13 +890,13 @@ namespace Gameplay.Tabletop
 			Vector2 sourcePosition = source.Position;
 			if (tracksAutomaticTurn)
 			{
-				int presentationTagCode = ResolveAttackPresentationTagCode(source.AbilitySystem);
-				float preActivationSeconds = GetPreActivationSeconds(presentationTagCode);
+				int combatTypeTagCode = ResolveAttackCombatTypeTagCode(source.AbilitySystem);
+				float preActivationSeconds = GetPreActivationSeconds(combatTypeTagCode);
 				battle.BeginTurn(
 					sourceCardId,
 					targetCardId,
 					ability,
-					presentationTagCode,
+					combatTypeTagCode,
 					preActivationSeconds);
 				if (preActivationSeconds > 0f)
 				{
@@ -801,7 +922,7 @@ namespace Gameplay.Tabletop
 			return result;
 		}
 
-		private static int ResolveAttackPresentationTagCode(AbilitySystemCell abilitySystem)
+		private static int ResolveAttackCombatTypeTagCode(AbilitySystemCell abilitySystem)
 		{
 			if (abilitySystem == null)
 			{
@@ -815,7 +936,7 @@ namespace Gameplay.Tabletop
 			if (matchedCount > 1)
 			{
 				throw new InvalidOperationException(
-					"角色 ASC 同时拥有多个 Combat.* 攻击表现标签，无法确定本次自动攻击表现。");
+					"角色 ASC 同时拥有多个 Combat.* 战斗类型标签，无法确定本次自动攻击表现。");
 			}
 
 			if (isRanged)
@@ -829,10 +950,10 @@ namespace Gameplay.Tabletop
 			return isMelee ? XTag.Combat_Melee : 0;
 		}
 
-		private static float GetPreActivationSeconds(int presentationTagCode)
+		private static float GetPreActivationSeconds(int combatTypeTagCode)
 		{
-			return presentationTagCode == GAS.Runtime.XTag.Combat_Ranged ||
-				presentationTagCode == GAS.Runtime.XTag.Combat_Magic
+			return combatTypeTagCode == GAS.Runtime.XTag.Combat_Ranged ||
+				combatTypeTagCode == GAS.Runtime.XTag.Combat_Magic
 					? ProjectileAttackPreActivationSeconds
 					: 0f;
 		}
@@ -887,6 +1008,53 @@ namespace Gameplay.Tabletop
 			RequireNoBattleParticipantInAffectedStack(sourceCardId, "合并牌堆");
 			RequireNoBattleParticipantInAffectedStack(targetCardId, "合并牌堆");
 			return Cards.MergeStackOnto(sourceCardId, targetCardId);
+		}
+
+		/// <summary>
+		/// 判断一次玩家拖拽释放是否允许按地区牌桌合堆规则合并到目标堆。
+		/// </summary>
+		public bool CanStackOnto(TabletopCardId sourceCardId, TabletopCardId targetCardId)
+		{
+			RequireActive();
+			TabletopCardStack sourceStack = Cards.GetStackContaining(sourceCardId);
+			TabletopCardStack targetStack = Cards.GetStackContaining(targetCardId);
+			if (!CanUseTargetStackForDraggedSegment(sourceStack, sourceCardId, targetStack, targetCardId))
+			{
+				return false;
+			}
+			if (!Cards.TryGetCard(sourceCardId, out TabletopCard sourceCard))
+			{
+				throw new KeyNotFoundException($"牌桌中不存在拖动卡牌 {sourceCardId}。");
+			}
+			CardDefinition sourceDefinition = RequireCardDefinition(sourceCard.ContentId, "判断牌桌合堆来源");
+			CardDefinition targetBottomDefinition = RequireCardDefinition(
+				targetStack.BottomCard.ContentId,
+				"判断牌桌合堆目标");
+			return PlacementRules.StackingRules.CanStack(sourceDefinition, targetBottomDefinition);
+		}
+
+		/// <summary>
+		/// 按 StackCraft 普通释放语义把拖拽牌段合并到目标牌堆；未满足合堆规则时不修改牌桌。
+		/// </summary>
+		public bool TryDropStackOnto(
+			TabletopCardId sourceCardId,
+			TabletopCardId targetCardId,
+			out TabletopCardStack mergedStack)
+		{
+			RequireActive();
+			RequireNoBattleParticipantInDetachedTail(sourceCardId, "拖拽合并牌堆");
+			RequireNoBattleParticipantInAffectedStack(targetCardId, "拖拽合并牌堆");
+			if (!CanStackOnto(sourceCardId, targetCardId))
+			{
+				mergedStack = null;
+				return false;
+			}
+
+			TabletopCardStack targetStack = Cards.GetStackContaining(targetCardId);
+			TabletopCardId targetBottomCardId = targetStack.BottomCard.Id;
+			TabletopCardStack sourceStack = Cards.DetachStackAt(sourceCardId);
+			mergedStack = Cards.MergeStackOnto(sourceStack.BottomCard.Id, targetBottomCardId);
+			return true;
 		}
 
 		public TabletopCardStack DetachStackAt(TabletopCardId cardId)
@@ -985,10 +1153,42 @@ namespace Gameplay.Tabletop
 			RequireActive();
 			RequireOwnedActionPlan(plan);
 			ActionPlanBinding targetBinding = plan.GetBinding(slotKey);
+			if (!CanAddCardToActionPlan(plan, targetBinding, cardId, out string failureMessage))
+			{
+				throw new InvalidOperationException(failureMessage);
+			}
+
+			targetBinding.Add(cardId);
+		}
+
+		public bool TryAddCardToActionPlan(
+			ActionPlan plan,
+			string slotKey,
+			TabletopCardId cardId)
+		{
+			RequireActive();
+			RequireOwnedActionPlan(plan);
+			ActionPlanBinding targetBinding = plan.GetBinding(slotKey);
+			if (!CanAddCardToActionPlan(plan, targetBinding, cardId, out _))
+			{
+				return false;
+			}
+
+			targetBinding.Add(cardId);
+			return true;
+		}
+
+		private bool CanAddCardToActionPlan(
+			ActionPlan plan,
+			ActionPlanBinding targetBinding,
+			TabletopCardId cardId,
+			out string failureMessage)
+		{
 			if (!Cards.TryGetCard(cardId, out TabletopCard card) ||
 				!m_contentIndex.TryGet(card.ContentId, out ContentAsset contentAsset))
 			{
-				throw new InvalidOperationException($"牌桌中不存在可填入行动计划的卡牌 {cardId}。");
+				failureMessage = $"牌桌中不存在可填入行动计划的卡牌 {cardId}。";
+				return false;
 			}
 			for (int bindingIndex = 0; bindingIndex < plan.Bindings.Count; bindingIndex++)
 			{
@@ -997,16 +1197,22 @@ namespace Gameplay.Tabletop
 				{
 					if (existingIds[cardIndex] == cardId)
 					{
-						throw new InvalidOperationException(
-							$"行动计划 {plan.ActionId} 已经绑定牌桌卡牌 {cardId}。");
+						failureMessage = $"行动计划 {plan.ActionId} 已经绑定牌桌卡牌 {cardId}。";
+						return false;
 					}
 				}
+			}
+			if (IsActionPlanParticipant(cardId, plan))
+			{
+				failureMessage = $"牌桌卡牌 {cardId} 已填在其它待确认行动计划中。";
+				return false;
 			}
 			if (targetBinding.Slot.MaximumParticipants > 0 &&
 				targetBinding.CardIds.Count >= targetBinding.Slot.MaximumParticipants)
 			{
-				throw new InvalidOperationException(
-					$"行动计划 {plan.ActionId} 的槽位 {slotKey} 已达到参与上限。");
+				failureMessage =
+					$"行动计划 {plan.ActionId} 的槽位 {targetBinding.Slot.Key} 已达到参与上限。";
+				return false;
 			}
 			AbilitySystemCell abilitySystem = card is CharacterCard character
 				? character.AbilitySystem
@@ -1016,11 +1222,13 @@ namespace Gameplay.Tabletop
 					contentAsset,
 					abilitySystem))
 			{
-				throw new InvalidOperationException(
-					$"牌桌卡牌 {cardId} 不满足行动计划 {plan.ActionId} 的槽位 {slotKey} 条件。");
+				failureMessage =
+					$"牌桌卡牌 {cardId} 不满足行动计划 {plan.ActionId} 的槽位 {targetBinding.Slot.Key} 条件。";
+				return false;
 			}
 
-			targetBinding.Add(cardId);
+			failureMessage = string.Empty;
+			return true;
 		}
 
 		public void RemoveCardFromActionPlan(
@@ -1038,7 +1246,9 @@ namespace Gameplay.Tabletop
 			RequireActive();
 			RequireOwnedActionPlan(plan);
 			ValidateActionPlan(plan, requireComplete: true);
-			ActionInstance instance = StartAction(plan.CreateRequest());
+			ActionInstance instance = StartActionInstance(
+				CreateCandidateFromRequest(plan.CreateRequest()),
+				plan);
 			m_actionPlans.Remove(plan);
 			return instance;
 		}
@@ -1262,7 +1472,10 @@ namespace Gameplay.Tabletop
 			for (int requestIndex = 0; requestIndex < m_periodicProductionRequests.Count; requestIndex++)
 			{
 				PeriodicProductionRequest request = m_periodicProductionRequests[requestIndex];
-				CreateCard(request.ProductCardId, request.SourcePosition);
+				CreateCard(
+					request.ProductCardId,
+					request.SourcePosition,
+					allowSpawnAttach: true);
 				RequestPresentationCue(TabletopPresentationCue.AtTablePosition(
 					TabletopPresentationCueKind.CardSmoke,
 					request.SourcePosition));
@@ -1633,7 +1846,7 @@ namespace Gameplay.Tabletop
 			}
 
 			Vector2 candidatePosition = card.Position + direction.normalized * movementRadius;
-			return IsAutomaticMovementCandidateValid(candidatePosition) &&
+			return IsAutomaticMovementCandidateValid(card, candidatePosition) &&
 				TryPlaceSingleCard(card.Id, candidatePosition, out _);
 		}
 
@@ -1666,7 +1879,7 @@ namespace Gameplay.Tabletop
 				float angle = m_authoritativeRandom.NextFloat(0f, math.PI * 2f);
 				Vector2 direction = new Vector2(math.cos(angle), math.sin(angle));
 				Vector2 candidatePosition = basePosition + direction * definition.AutomaticMovementRadius;
-				if (IsAutomaticMovementCandidateValid(candidatePosition) &&
+				if (IsAutomaticMovementCandidateValid(card, candidatePosition) &&
 					TryPlaceSingleCard(card.Id, candidatePosition, out _))
 				{
 					return true;
@@ -1675,14 +1888,21 @@ namespace Gameplay.Tabletop
 			return false;
 		}
 
-		private bool IsAutomaticMovementCandidateValid(Vector2 position)
+		private bool IsAutomaticMovementCandidateValid(TabletopCard card, Vector2 position)
 		{
+			if (card == null)
+			{
+				throw new ArgumentNullException(nameof(card));
+			}
 			if (!IsFinitePosition(position))
 			{
 				return false;
 			}
 
-			Rect footprint = PlacementRules.Geometry.CalculateFootprint(position, 1);
+			Rect footprint = PlacementRules.Geometry.CalculateFootprint(
+				position,
+				1,
+				ResolveCardSize(card.ContentId, PlacementRules.Geometry.CardSize));
 			TabletopCardPlacementArea area = PlacementRules.Area;
 			if (!IsRectInside(area.Bounds, footprint))
 			{
@@ -2065,7 +2285,9 @@ namespace Gameplay.Tabletop
 				IReadOnlyList<TabletopCardId> cardIds = battle.Sides[sideIndex].CardIds;
 				for (int cardIndex = 0; cardIndex < cardIds.Count; cardIndex++)
 				{
-					total += Cards.GetStackContaining(cardIds[cardIndex]).Position;
+					total += Cards.GetCardTablePosition(
+						cardIds[cardIndex],
+						PlacementRules.Geometry);
 					participantCount++;
 				}
 			}
@@ -2171,6 +2393,22 @@ namespace Gameplay.Tabletop
 			}
 		}
 
+		private static bool CanUseTargetStackForDraggedSegment(
+			TabletopCardStack sourceStack,
+			TabletopCardId sourceCardId,
+			TabletopCardStack targetStack,
+			TabletopCardId targetCardId)
+		{
+			if (!ReferenceEquals(sourceStack, targetStack))
+			{
+				return true;
+			}
+
+			int segmentStartIndex = sourceStack.GetDraggedSegmentStartIndex(sourceCardId);
+			int targetIndex = sourceStack.IndexOf(targetCardId);
+			return segmentStartIndex > 0 && targetIndex >= 0 && targetIndex < segmentStartIndex;
+		}
+
 		private void RequireNoBattleParticipantInAffectedStack(TabletopCardId cardId, string operation)
 		{
 			TabletopCardStack stack = Cards.GetStackContaining(cardId);
@@ -2187,7 +2425,7 @@ namespace Gameplay.Tabletop
 		private void RequireNoBattleParticipantInDetachedTail(TabletopCardId cardId, string operation)
 		{
 			TabletopCardStack stack = Cards.GetStackContaining(cardId);
-			int startIndex = stack.IndexOf(cardId);
+			int startIndex = stack.GetDraggedSegmentStartIndex(cardId);
 			for (int index = startIndex; index < stack.Cards.Count; index++)
 			{
 				if (TryFindBattleContaining(stack.Cards[index].Id, out _))
@@ -2201,7 +2439,7 @@ namespace Gameplay.Tabletop
 		private void RequireNoOtherBattleParticipantInDetachedTail(TabletopCardId cardId, string operation)
 		{
 			TabletopCardStack stack = Cards.GetStackContaining(cardId);
-			int startIndex = stack.IndexOf(cardId);
+			int startIndex = stack.GetDraggedSegmentStartIndex(cardId);
 			for (int index = startIndex; index < stack.Cards.Count; index++)
 			{
 				TabletopCardId candidateId = stack.Cards[index].Id;
@@ -2251,8 +2489,17 @@ namespace Gameplay.Tabletop
 
 		private bool IsActionPlanParticipant(TabletopCardId cardId)
 		{
+			return IsActionPlanParticipant(cardId, ignoredPlan: null);
+		}
+
+		private bool IsActionPlanParticipant(TabletopCardId cardId, ActionPlan ignoredPlan)
+		{
 			for (int planIndex = 0; planIndex < m_actionPlans.Count; planIndex++)
 			{
+				if (ReferenceEquals(m_actionPlans[planIndex], ignoredPlan))
+				{
+					continue;
+				}
 				IReadOnlyList<ActionPlanBinding> bindings = m_actionPlans[planIndex].Bindings;
 				for (int bindingIndex = 0; bindingIndex < bindings.Count; bindingIndex++)
 				{
@@ -2334,6 +2581,14 @@ namespace Gameplay.Tabletop
 					throw new InvalidOperationException(
 						$"行动计划 {plan.ActionId} 的槽位 {binding.Slot.Key} 尚未完整或参与对象已失效。");
 				}
+				for (int cardIndex = 0; cardIndex < binding.CardIds.Count; cardIndex++)
+				{
+					if (IsActionPlanParticipant(binding.CardIds[cardIndex], plan))
+					{
+						throw new InvalidOperationException(
+							$"行动计划 {plan.ActionId} 的槽位 {binding.Slot.Key} 引用了其它待确认行动计划中的卡牌 {binding.CardIds[cardIndex]}。");
+					}
+				}
 			}
 		}
 
@@ -2397,7 +2652,7 @@ namespace Gameplay.Tabletop
 			return new ActionCandidate(action, bindings, 0);
 		}
 
-		private ActionInstance StartActionInstance(ActionCandidate candidate)
+		private ActionInstance StartActionInstance(ActionCandidate candidate, ActionPlan ignoredPlan = null)
 		{
 			for (int bindingIndex = 0; bindingIndex < candidate.Bindings.Count; bindingIndex++)
 			{
@@ -2408,6 +2663,16 @@ namespace Gameplay.Tabletop
 					{
 						throw new InvalidOperationException(
 							$"牌桌卡牌 {cardIds[cardIndex]} 仍属于活动战斗 {battle.Id}，必须先离开或结束战斗后才能启动普通行动。");
+					}
+					if (IsActiveActionParticipant(cardIds[cardIndex]))
+					{
+						throw new InvalidOperationException(
+							$"牌桌卡牌 {cardIds[cardIndex]} 已参与活动行动，必须先完成或取消该行动后才能启动新的普通行动。");
+					}
+					if (IsActionPlanParticipant(cardIds[cardIndex], ignoredPlan))
+					{
+						throw new InvalidOperationException(
+							$"牌桌卡牌 {cardIds[cardIndex]} 已填在待确认行动计划中，必须先提交或取消该计划后才能启动新的普通行动。");
 					}
 				}
 			}
@@ -2487,8 +2752,10 @@ namespace Gameplay.Tabletop
 			}
 
 			bool isShrinking = cardLimitBonus < m_currentPlacementCardLimitBonus;
+			TabletopCardPlacementRules previousPlacementRules = m_currentPlacementRules;
 			m_currentPlacementCardLimitBonus = cardLimitBonus;
 			m_currentPlacementRules = m_basePlacementRules.CreateForCardLimitBonus(cardLimitBonus);
+			Cards.MoveLockedStacksWithTopRestrictedBand(previousPlacementRules, PlacementRules);
 			if (reflowExistingStacks && isShrinking)
 			{
 				Cards.ReflowPlacement(PlacementRules);
@@ -2502,6 +2769,12 @@ namespace Gameplay.Tabletop
 				throw new InvalidOperationException($"{operation}引用的内容 {contentId} 缺失或不是卡牌定义。");
 			}
 			return definition;
+		}
+
+		private Vector2 ResolveCardSize(ContentId contentId, Vector2 defaultCardSize)
+		{
+			CardDefinition definition = RequireCardDefinition(contentId, "解析牌桌卡牌尺寸");
+			return definition.GetViewSize(defaultCardSize);
 		}
 
 		private void RequireActive()

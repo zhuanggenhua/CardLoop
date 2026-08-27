@@ -6,11 +6,13 @@ using System.Linq;
 using GameCore;
 using Gameplay.Content;
 using Gameplay.Scenarios;
+using Gameplay.Tabletop;
 using Gameplay.Tabletop.Actions;
 using Gameplay.Tests.Support;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -24,6 +26,7 @@ namespace Gameplay.Tests
         private const string FoundationScenePath = "Assets/Scenes/FoundationTest.unity";
         private const string UnreadIndicatorGlyph = "●";
         private string m_saveDirectory;
+        private int m_submitAudioRequestCount;
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -55,29 +58,66 @@ namespace Gameplay.Tests
                 UnityEngine.Object.FindAnyObjectByType<FoundationTestSceneHarness>();
             ScenarioDirector director = GameManager.GetSystem<ScenarioDirector>();
 
-            harness.OpenJournalPanel();
             ScenarioJournalPanel panel = null;
             yield return WaitForPanel(value => panel = value);
+            TabletopCardInfoPanel infoPanel =
+                UnityEngine.Object.FindAnyObjectByType<TabletopCardInfoPanel>();
+            Assert.That(infoPanel, Is.Not.Null, "统一地基场景必须同时打开 StackCraft 式详情面板。");
 
             Assert.That(panel.DisplayedQuestCount, Is.EqualTo(1));
+            StringAssert.Contains("基础 ▼", panel.DisplayedText);
             StringAssert.Contains("地基测试任务", panel.DisplayedText);
-            StringAssert.Contains("进度 1: 0 / 1", panel.DisplayedText);
+            StringAssert.Contains("• 地基测试任务", panel.DisplayedText);
             StringAssert.Contains(UnreadIndicatorGlyph, panel.DisplayedText);
+            ScenarioJournalEntryButton questButton = FindEntryButton(panel, "地基测试任务");
+            questButton.OnPointerEnter(new PointerEventData(EventSystem.current));
+            yield return null;
+            Assert.That(infoPanel.IsJournalEntryInfoActive, Is.True);
+            Assert.That(infoPanel.DisplayedJournalEntryHeader, Is.EqualTo("地基测试任务"));
+            StringAssert.Contains("进度：0 / 1", infoPanel.DisplayedJournalEntryBody);
+            StringAssert.DoesNotContain(UnreadIndicatorGlyph, panel.DisplayedText);
+            questButton.OnPointerExit(new PointerEventData(EventSystem.current));
+            yield return null;
+            Assert.That(infoPanel.IsJournalEntryInfoActive, Is.False);
 
-            FindButton(panel, "ActionsTab").onClick.Invoke();
+            FindButton(panel, "RecipesToggle").onClick.Invoke();
             yield return null;
             Assert.That(panel.DisplayedActionCount, Is.EqualTo(1));
-            StringAssert.Contains("Test Action", panel.DisplayedText);
+            StringAssert.Contains("建造 ▼", panel.DisplayedText);
+            StringAssert.Contains("测试行动", panel.DisplayedText);
+            StringAssert.DoesNotContain("杂项", panel.DisplayedText);
             StringAssert.DoesNotContain("协同行动", panel.DisplayedText);
             StringAssert.Contains(UnreadIndicatorGlyph, panel.DisplayedText);
+
+            ScenarioJournalEntryButton constructionHeader = FindEntryButton(panel, "建造");
+            Button constructionToggle = constructionHeader.GetComponent<Button>();
+            Assert.That(constructionToggle, Is.Not.Null, "日志分组头必须是可点击折叠按钮。");
+            constructionToggle.onClick.Invoke();
+            yield return null;
+            StringAssert.Contains("建造 ►", panel.DisplayedText);
+            StringAssert.DoesNotContain("测试行动", panel.DisplayedText);
+            FindEntryButton(panel, "建造").GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            StringAssert.Contains("建造 ▼", panel.DisplayedText);
+            StringAssert.Contains("测试行动", panel.DisplayedText);
+
+            ScenarioJournalEntryButton actionButton = FindEntryButton(panel, "测试行动");
+            actionButton.OnPointerEnter(new PointerEventData(EventSystem.current));
+            yield return null;
+            Assert.That(infoPanel.IsJournalEntryInfoActive, Is.True);
+            Assert.That(infoPanel.DisplayedJournalEntryHeader, Is.EqualTo("配方：测试行动"));
+            Assert.That(infoPanel.DisplayedJournalEntryBody, Is.EqualTo("村民 ×2."));
+            actionButton.OnPointerExit(new PointerEventData(EventSystem.current));
+            yield return null;
 
             harness.DiscoverActionPlanTestContent();
             yield return null;
             Assert.That(panel.DisplayedActionCount, Is.EqualTo(2));
+            StringAssert.Contains("杂项 ▼", panel.DisplayedText);
             StringAssert.Contains("协同行动", panel.DisplayedText);
             StringAssert.Contains(UnreadIndicatorGlyph, panel.DisplayedText);
 
-            FindButton(panel, "QuestsTab").onClick.Invoke();
+            FindButton(panel, "QuestsToggle").onClick.Invoke();
             yield return null;
             StringAssert.DoesNotContain(UnreadIndicatorGlyph, panel.DisplayedText);
             IReadOnlyList<ActionCandidate> candidates = harness.QueryTestActionCandidates(
@@ -91,8 +131,7 @@ namespace Gameplay.Tests
             director.ConfirmTurn();
             yield return null;
 
-            StringAssert.Contains("[已完成]", panel.DisplayedText);
-            StringAssert.Contains("进度 1: 1 / 1", panel.DisplayedText);
+            StringAssert.Contains("√", panel.DisplayedText);
 
             FindButton(panel, "Close").onClick.Invoke();
             yield return null;
@@ -100,23 +139,32 @@ namespace Gameplay.Tests
         }
 
         [UnityTest]
-        public IEnumerator JournalClosesWhenDayCycleTakesOver()
+        public IEnumerator JournalSlidesClosedWhenDayCycleTakesOver()
         {
             FoundationTestSceneHarness harness =
                 UnityEngine.Object.FindAnyObjectByType<FoundationTestSceneHarness>();
             ScenarioDirector director = GameManager.GetSystem<ScenarioDirector>();
 
-            harness.OpenJournalPanel();
-            yield return WaitForPanel(_ => { });
+            ScenarioJournalPanel panel = null;
+            yield return WaitForPanel(value => panel = value);
+            Assert.That(panel.IsMenuOpen, Is.True);
+            Assert.That(panel.MenuToggleText, Is.EqualTo(">>"));
 
+            m_submitAudioRequestCount = 0;
+            EventKit.Type.Register<AudioPlaybackRequestedEvent>(OnAudioPlaybackRequested);
             EventKit.Type.Send(new ScenarioDayCycleChangedEvent(
                 director.ActiveScenarioId,
                 endingDay: 1,
                 ScenarioDayCyclePhase.AwaitingFeedingConfirmation,
                 excessCardCount: 0));
-            yield return null;
+            yield return new WaitForSecondsRealtime(0.6f);
+            EventKit.Type.UnRegister<AudioPlaybackRequestedEvent>(OnAudioPlaybackRequested);
 
-            Assert.That(UnityEngine.Object.FindAnyObjectByType<ScenarioJournalPanel>(), Is.Null);
+            Assert.That(UnityEngine.Object.FindAnyObjectByType<ScenarioJournalPanel>(), Is.SameAs(panel));
+            Assert.That(panel.IsMenuOpen, Is.False);
+            Assert.That(panel.MenuToggleText, Is.EqualTo("<<"));
+            Assert.That(panel.MenuPanelAnchoredX, Is.EqualTo(400f).Within(0.01f));
+            Assert.That(m_submitAudioRequestCount, Is.EqualTo(1));
         }
 
         [UnityTearDown]
@@ -124,6 +172,7 @@ namespace Gameplay.Tests
         {
             UIKit.ClosePanel<ScenarioJournalPanel>();
             UIKit.ClearDialogQueue();
+            EventKit.Type.UnRegister<AudioPlaybackRequestedEvent>(OnAudioPlaybackRequested);
             if (GameManager.Exists())
             {
                 UnityEngine.Object.Destroy(GameManager.Instance.gameObject);
@@ -153,8 +202,22 @@ namespace Gameplay.Tests
 
         private static Button FindButton(Component root, string objectName)
         {
-            return root.GetComponentsInChildren<Button>(false)
+            return root.GetComponentsInChildren<Button>(includeInactive: true)
                 .First(button => button.gameObject.name == objectName);
+        }
+
+        private static ScenarioJournalEntryButton FindEntryButton(Component root, string text)
+        {
+            return root.GetComponentsInChildren<ScenarioJournalEntryButton>(includeInactive: true)
+                .First(button => button.Text.Contains(text));
+        }
+
+        private void OnAudioPlaybackRequested(AudioPlaybackRequestedEvent audioEvent)
+        {
+            if (audioEvent.AudioClipResolver == GameManager.Config.submitSound)
+            {
+                m_submitAudioRequestCount++;
+            }
         }
     }
 }

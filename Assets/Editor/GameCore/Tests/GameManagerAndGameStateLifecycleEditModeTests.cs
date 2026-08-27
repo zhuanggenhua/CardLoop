@@ -20,6 +20,8 @@ namespace GameCore.Tests
         public void SetUp()
         {
             SetStaticField(typeof(GameManager), "_instance", null);
+            SetStaticField(typeof(GameManager), "_mainCamera", null);
+            SetStaticField(typeof(GameManager), "_mainCameraRegistrationSource", null);
             LifecycleLog.Clear();
         }
 
@@ -27,6 +29,8 @@ namespace GameCore.Tests
         public void TearDown()
         {
             SetStaticField(typeof(GameManager), "_instance", null);
+            SetStaticField(typeof(GameManager), "_mainCamera", null);
+            SetStaticField(typeof(GameManager), "_mainCameraRegistrationSource", null);
 
             for (int i = m_createdObjects.Count - 1; i >= 0; i--)
             {
@@ -59,6 +63,22 @@ namespace GameCore.Tests
             Assert.IsTrue(GameManager.TryGetSystem(out ProbeSystem registeredSystem));
             Assert.AreSame(childSystem, registeredSystem);
             Assert.AreNotSame(externalSystem, registeredSystem);
+        }
+
+        [Test]
+        public void MainCamera_UsesExplicitSceneRegistration()
+        {
+            GameObject cameraObject = CreateObject("未打标签的正式玩法相机");
+            Camera camera = cameraObject.AddComponent<Camera>();
+            GameObject registrationSource = CreateObject("正式玩法相机注册入口");
+
+            GameManager.RegisterMainCamera(camera, registrationSource);
+
+            Assert.That(GameManager.MainCamera, Is.SameAs(camera));
+
+            GameManager.UnregisterMainCamera(camera, registrationSource);
+
+            Assert.That(GameManager.MainCamera, Is.Null);
         }
 
         [Test]

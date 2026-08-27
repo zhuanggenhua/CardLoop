@@ -15,31 +15,33 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.pack
   m_tagCodes: e9030000
-  m_displayName: Starter
-  m_description: A Starter card pack.
+  m_displayName: 初始卡包
+  m_description: 一个初始卡包。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 0
-  m_countsTowardCardLimit: 1
+  m_countsTowardCardLimit: 0
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
   m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
-    Address: "\u521D\u59CB\u5361\u5305"
-    Guid: c9616bb038c641edbc04766af61cabdb
+    Address: PackArts_Starter
+    Guid: fb0972332c914f5781f25629cd0af635
     Locked: 1
   m_cardSurface:
-    Address: "\u5361\u724C\u8868\u9762_\u8D35\u91CD\u7269"
-    Guid: 92fc5cfb53cc48a9ac775c857b840f38
+    Address: "\u5361\u724C\u8868\u9762_\u5361\u5305"
+    Guid: a87b68169bbf437ea36ceb751502285f
     Locked: 1
+  m_overrideViewSize: 1
+  m_viewSize: {x: 0.9, y: 1.3000002}
   m_slots:
   - m_entries:
     - m_cardId:

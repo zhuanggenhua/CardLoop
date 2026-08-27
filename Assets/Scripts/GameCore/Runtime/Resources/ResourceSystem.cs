@@ -128,6 +128,20 @@ namespace GameCore
         /// </summary>
         public static void Shutdown()
         {
+            Shutdown(allowRuntimeAlreadyDestroyed: false);
+        }
+
+        /// <summary>
+        /// Unity 退出 PlayMode / 退出应用时的项目资源关闭入口。
+        /// YooAsset 自带驱动可能先收到 OnApplicationQuit 并销毁底层运行时；此入口只在该生命周期下收口项目本地状态。
+        /// </summary>
+        public static void ShutdownForApplicationQuit()
+        {
+            Shutdown(allowRuntimeAlreadyDestroyed: true);
+        }
+
+        private static void Shutdown(bool allowRuntimeAlreadyDestroyed)
+        {
             if (!Initialized && s_initializationCancellation != null)
             {
                 // 初始化尚未交付完整资源状态时，只取消本轮初始化；回滚由初始化入口统一完成。
@@ -148,15 +162,22 @@ namespace GameCore
                 return;
             }
 
-            ShutdownOwnedRuntime();
+            ShutdownOwnedRuntime(allowRuntimeAlreadyDestroyed);
         }
 
-        private static void ShutdownOwnedRuntime()
+        private static void ShutdownOwnedRuntime(bool allowRuntimeAlreadyDestroyed)
         {
             if (!YooInit.Initialized || !YooAssets.IsInitialized)
             {
-                throw new InvalidOperationException(
-                    "资源系统已标记为初始化，但 YokiFrame.YooInit 或 YooAsset 的状态不完整。");
+                if (!allowRuntimeAlreadyDestroyed)
+                {
+                    throw new InvalidOperationException(
+                        "资源系统已标记为初始化，但 YokiFrame.YooInit 或 YooAsset 的状态不完整。");
+                }
+
+                DisposeYokiFrameAndYooAssetState();
+                ResetState();
+                return;
             }
 
             foreach (ResourceOperationState operation in ActiveOperations.ToArray())
@@ -164,8 +185,7 @@ namespace GameCore
                 operation.Release();
             }
 
-            YooInit.Dispose();
-            YooAssets.Destroy();
+            DisposeYokiFrameAndYooAssetState();
             ResetState();
         }
 
@@ -839,6 +859,19 @@ namespace GameCore
         {
             return DefaultPackage != null || s_sceneLoaderPool != null ||
                    ActiveOperations.Count > 0 || ModPackages.Count > 0;
+        }
+
+        private static void DisposeYokiFrameAndYooAssetState()
+        {
+            if (YooInit.Initialized)
+            {
+                YooInit.Dispose();
+            }
+
+            if (YooAssets.IsInitialized)
+            {
+                YooAssets.Destroy();
+            }
         }
 
         private static void EnsureSucceeded(AsyncOperationBase operation, string action)

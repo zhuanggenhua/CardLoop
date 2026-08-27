@@ -168,6 +168,24 @@ namespace Gameplay.Tabletop
 		private float m_dragFollowSharpness = 100f;
 
 		[SerializeField]
+		[LabelText("点击判定距离")]
+		[Tooltip("指针按下到释放的牌桌世界距离小于该值时按点击处理；对齐 StackCraft clickThreshold = 0.02。")]
+		[Min(0f)]
+		private float m_clickThreshold = 0.02f;
+
+		[SerializeField]
+		[LabelText("目标吸附半径")]
+		[Tooltip("拖拽释放时，若指针没有直接射中目标卡牌，则在拖拽牌段首张卡周围按该半径查找最近候选；对齐 StackCraft attachRadius = 0.25。")]
+		[Min(0f)]
+		private float m_attachRadius = 0.25f;
+
+		[SerializeField]
+		[LabelText("拖拽抬升高度")]
+		[Tooltip("玩家按下卡牌后，拖拽牌段首张卡离开桌面的 Unity Y 轴高度；对齐 StackCraft dragHeight = 0.1。")]
+		[Min(0f)]
+		private float m_dragHeight = 0.1f;
+
+		[SerializeField]
 		[LabelText("普通移动秒数")]
 		[Tooltip("牌堆权威位置变化后，卡牌移动到目标姿态的补间时长；对齐 StackCraft moveDuration = 0.1。")]
 		[Min(0f)]
@@ -195,6 +213,12 @@ namespace Gameplay.Tabletop
 
 		public float DragFollowSharpness => m_dragFollowSharpness;
 
+		public float ClickThreshold => m_clickThreshold;
+
+		public float AttachRadius => m_attachRadius;
+
+		public float DragHeight => m_dragHeight;
+
 		public float MoveDurationSeconds => m_moveDurationSeconds;
 
 		public AudioClipResolver MissAudio => m_missAudio;
@@ -219,26 +243,26 @@ namespace Gameplay.Tabletop
 			};
 		}
 
-		internal AudioClipResolver GetAttackAudio(int presentationTagCode)
+		internal AudioClipResolver GetAttackAudio(int combatTypeTagCode)
 		{
-			if (presentationTagCode == GAS.Runtime.XTag.Combat_Ranged)
+			if (combatTypeTagCode == GAS.Runtime.XTag.Combat_Ranged)
 			{
 				return m_rangedAttackAudio;
 			}
-			if (presentationTagCode == GAS.Runtime.XTag.Combat_Magic)
+			if (combatTypeTagCode == GAS.Runtime.XTag.Combat_Magic)
 			{
 				return m_magicAttackAudio;
 			}
 			return m_meleeAttackAudio;
 		}
 
-		internal AudioClipResolver GetHitAudio(int presentationTagCode)
+		internal AudioClipResolver GetHitAudio(int combatTypeTagCode)
 		{
-			if (presentationTagCode == GAS.Runtime.XTag.Combat_Ranged)
+			if (combatTypeTagCode == GAS.Runtime.XTag.Combat_Ranged)
 			{
 				return m_rangedHitAudio;
 			}
-			if (presentationTagCode == GAS.Runtime.XTag.Combat_Magic)
+			if (combatTypeTagCode == GAS.Runtime.XTag.Combat_Magic)
 			{
 				return m_magicHitAudio;
 			}

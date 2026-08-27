@@ -14,20 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
   m_contentId:
     m_value: test.foundation.day-cycle.encounter
-  m_tagCodes: e9030000
+  m_tagCodes: e9030000f1157a00
   m_displayName: "\u591C\u95F4\u6765\u5BA2"
   m_description: "\u65E5\u7EC8\u906D\u9047\u9636\u6BB5\u751F\u6210\uFF0C\u5E76\u5728\u73B0\u6709\u65E5\u7A0B
     HUD \u4E2D\u53CD\u9988\u3002"
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 1
   m_countsTowardCardLimit: 1
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
@@ -41,3 +41,5 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u4E3B\u52A8\u654C\u4EBA"
     Guid: 53949e6ee1b84c088610c0c0b088d95f
     Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}

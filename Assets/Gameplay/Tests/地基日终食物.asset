@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Tabletop.FoodCardDefinition
   m_contentId:
     m_value: test.foundation.day-cycle.food
-  m_tagCodes: e9030000
-  m_displayName: Berry
-  m_description: Picked from the bush.
+  m_tagCodes: e9030000eb157a00
+  m_displayName: 浆果
+  m_description: 从浆果丛采下的食物。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 1
   m_countsTowardCardLimit: 1
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
@@ -40,4 +40,6 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u6D88\u8017\u54C1"
     Guid: 5e76e3e0489c40d5823ec858bdcea64b
     Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}
   m_nutritionPerUse: 1

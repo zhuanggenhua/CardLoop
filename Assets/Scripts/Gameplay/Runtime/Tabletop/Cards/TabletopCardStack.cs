@@ -16,9 +16,11 @@ namespace Gameplay.Tabletop
 
 		public IReadOnlyList<TabletopCard> Cards => m_readOnlyCards;
 
-		public TabletopCard BottomCard => m_cards[0];
+		/// <summary>StackCraft 语义里的领牌：牌堆列表第 0 张，拖拽整叠时它立即跟随指针。</summary>
+		public TabletopCard TopCard => m_cards[0];
 
-		public TabletopCard TopCard => m_cards[m_cards.Count - 1];
+		/// <summary>StackCraft 语义里的目标底牌：牌堆列表最后一张，合堆规则和目标高亮都看它。</summary>
+		public TabletopCard BottomCard => m_cards[m_cards.Count - 1];
 
 		public Vector2 Position { get; private set; }
 
@@ -73,7 +75,7 @@ namespace Gameplay.Tabletop
 			}
 		}
 
-		internal void AppendOnTop(TabletopCardStack source)
+		internal void MergeDroppedStack(TabletopCardStack source)
 		{
 			if (source == null)
 			{
@@ -102,6 +104,19 @@ namespace Gameplay.Tabletop
 				}
 			}
 			return -1;
+		}
+
+		/// <summary>
+		/// 计算玩家拖拽时应带走的牌段起点。对齐 StackCraft：点领牌拖整叠，点拖尾牌只拆出该牌和其后的拖尾牌。
+		/// </summary>
+		internal int GetDraggedSegmentStartIndex(TabletopCardId cardId)
+		{
+			int cardIndex = IndexOf(cardId);
+			if (cardIndex < 0)
+			{
+				throw new KeyNotFoundException($"堆栈中不存在牌桌卡牌 {cardId}。");
+			}
+			return cardIndex == 0 ? 0 : cardIndex;
 		}
 
 		internal void RemoveCard(TabletopCardId cardId)

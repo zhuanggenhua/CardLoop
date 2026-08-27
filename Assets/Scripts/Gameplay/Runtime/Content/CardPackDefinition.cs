@@ -89,6 +89,10 @@ namespace Gameplay.Content
 
 		protected override bool HasDerivedInitialUses => true;
 
+		public override bool CountsTowardCardLimit => false;
+
+		protected override bool HasDerivedCardLimitCounting => true;
+
 		/// <summary>按唯一内容 ID 统计卡包所有普通卡和可发现行动，不把 UI 计数保存成第二份状态。</summary>
 		public CardPackCollectionProgress GetCollectionProgress(Func<ContentId, bool> isDiscovered)
 		{
@@ -129,6 +133,10 @@ namespace Gameplay.Content
 		protected override void ValidateContent(ContentValidationContext context)
 		{
 			base.ValidateContent(context);
+			if (AuthoringCountsTowardCardLimit)
+			{
+				context.AddError("CARD_PACK_COUNTS_TOWARD_LIMIT", $"卡包 {ContentId} 必须像 StackCraft PackInstance 一样不计入卡牌上限。", this);
+			}
 			if (Slots.Count == 0)
 			{
 				context.AddError("CARD_PACK_SLOTS_EMPTY", $"卡包 {ContentId} 至少需要一个抽取槽位。", this);

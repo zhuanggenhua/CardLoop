@@ -9,34 +9,39 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 732affab875846bba73045887651397f, type: 3}
+  m_Script: {fileID: 11500000, guid: 57b5fbce15df4d11a63021174f4bf313, type: 3}
   m_Name: "\u5730\u57FA\u65E5\u7EC8\u6536\u8D2D\u70B9"
-  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardBuyerDefinition
   m_contentId:
     m_value: test.foundation.day-cycle.buyer
-  m_tagCodes: e9030000
+  m_tagCodes: e9030000ee157a00
   m_displayName: "\u6536\u8D2D\u70B9"
   m_description: "\u63A5\u6536\u53EF\u552E\u5361\u724C\u7684\u56FA\u5B9A\u4EA4\u4E92\u8282\u70B9\u3002"
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 0
   m_countsTowardCardLimit: 0
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
   m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
-    Address: "\u5B9D\u7BB1"
-    Guid: dcfe01eceeac4f98bbbe4fc8452bb746
+    Address: CardArts_Placeholder
+    Guid: 7ddad6311d9440b9bb236f484702b0a7
     Locked: 1
   m_cardSurface:
-    Address: "\u5361\u724C\u8868\u9762_\u5EFA\u7B51"
-    Guid: b09cc8c4e00a4c3083b839e8f97eeb6d
+    Address: "\u4EA4\u6613\u533A"
+    Guid: 9c7b1d4a2e6346a08cf2a8e70a2f3d11
     Locked: 1
+  m_overrideViewSize: 1
+  m_viewSize: {x: 0.90000004, y: 1.1250004}
+  m_currencyCardId:
+    m_value: test.foundation.day-cycle.currency
+  m_currencySpawnOffset: {x: 0, y: -1.4}

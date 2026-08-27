@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using Gameplay.Actions;
+using Gameplay.Content;
 using GameCore;
 using Gameplay.Scenarios;
 using Gameplay.Tabletop.Actions;
@@ -65,7 +68,12 @@ namespace Gameplay.Tabletop
                 throw new InvalidOperationException("牌桌交互尚未绑定活动剧本。");
             if (!intent.IsDrag)
             {
-				return PresentActionCandidates(scenarioRun.FindActionCandidates(intent));
+				ActionCandidate[] clickCandidates = scenarioRun.FindActionCandidates(intent);
+				if (TryStartStackCraftClickableAction(scenarioRun, intent, clickCandidates))
+				{
+					return clickCandidates;
+				}
+				return PresentActionCandidates(clickCandidates);
             }
 			if (scenarioRun.Tabletop.TryDropBattleParticipant(
 					intent.CardId,
@@ -85,7 +93,91 @@ namespace Gameplay.Tabletop
                 return Array.Empty<ActionCandidate>();
             }
 
-			return PresentActionCandidates(scenarioRun.FindActionCandidates(intent));
+			if (scenarioRun.Tabletop.TryDropStackOnto(intent.CardId, intent.TargetCardId, out _))
+			{
+				return Array.Empty<ActionCandidate>();
+			}
+			ActionCandidate[] candidates = scenarioRun.FindActionCandidates(intent);
+			if (candidates.Length > 0)
+			{
+				return PresentActionCandidates(candidates);
+			}
+			scenarioRun.Tabletop.TryPlaceStack(
+				intent.CardId,
+				intent.RequestedStackPosition,
+				out _);
+			return Array.Empty<ActionCandidate>();
+		}
+
+		/// <summary>
+		/// 只读判断一次拖拽目标是否可交互；用于拖拽中的目标高亮，不打开 UI。
+		/// </summary>
+		public bool CanShowDropTargetHighlight(TabletopCardPointerReleaseIntent intent)
+		{
+			ScenarioRun scenarioRun = m_scenarioRun ??
+				throw new InvalidOperationException("牌桌交互尚未绑定活动剧本。");
+			ActionCandidate[] candidates = scenarioRun.FindActionCandidates(intent);
+			if (candidates.Length > 0)
+			{
+				return true;
+			}
+			return intent.TargetCardId.IsValid &&
+				scenarioRun.Tabletop.CanStackOnto(intent.CardId, intent.TargetCardId);
+		}
+
+		private static bool TryStartStackCraftClickableAction(
+			ScenarioRun scenarioRun,
+			TabletopCardPointerReleaseIntent intent,
+			IReadOnlyList<ActionCandidate> candidates)
+		{
+			if (scenarioRun == null)
+			{
+				throw new ArgumentNullException(nameof(scenarioRun));
+			}
+			if (candidates == null)
+			{
+				throw new ArgumentNullException(nameof(candidates));
+			}
+			if (!IsStackCraftClickableCard(scenarioRun, intent.CardId) ||
+				candidates.Count != 1)
+			{
+				return false;
+			}
+
+			ActionCandidate candidate = candidates[0];
+			if (!candidate.IsReady ||
+				candidate.Action.TurnCost != 0 ||
+				!HasStackCraftClickableResult(candidate.Action))
+			{
+				return false;
+			}
+
+			scenarioRun.StartAction(ActionRequest.FromCandidate(candidate));
+			return true;
+		}
+
+		private static bool IsStackCraftClickableCard(ScenarioRun scenarioRun, TabletopCardId cardId)
+		{
+			if (!scenarioRun.Tabletop.Cards.TryGetCard(cardId, out TabletopCard card) ||
+				!scenarioRun.ContentIndex.TryGet(card.ContentId, out ContentAsset content))
+			{
+				return false;
+			}
+
+			return content is CardPackDefinition or ChestCardDefinition;
+		}
+
+		private static bool HasStackCraftClickableResult(ActionDefinition action)
+		{
+			for (int intentIndex = 0; intentIndex < action.ResultIntents.Count; intentIndex++)
+			{
+				if (action.ResultIntents[intentIndex] is OpenCardPackResultIntent or
+					WithdrawCurrencyFromChestResultIntent)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		private ActionCandidate[] PresentActionCandidates(ActionCandidate[] candidates)

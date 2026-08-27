@@ -17,11 +17,18 @@ namespace Gameplay.Content
 		[SerializeField, Min(0), LabelText("解锁所需完成任务数")]
 		private int m_minimumCompletedQuests;
 
+		[SerializeField]
+		[LabelText("卡包生成偏移")]
+		[Tooltip("购买完成后卡包相对商贩牌桌位置的生成偏移；StackCraft 模板为商贩下方 1.4。")]
+		private Vector2 m_packSpawnOffset = new Vector2(0f, -1.4f);
+
 		public ContentId OfferedPackId => m_offeredPackId;
 
 		public int Price => m_price;
 
 		public int MinimumCompletedQuests => m_minimumCompletedQuests;
+
+		public Vector2 PackSpawnOffset => m_packSpawnOffset;
 
 		public bool IsUnlocked(int completedQuestCount)
 		{
@@ -52,6 +59,11 @@ namespace Gameplay.Content
 			if (MinimumCompletedQuests < 0)
 			{
 				context.AddError("PACK_VENDOR_QUEST_COUNT_INVALID", $"卡包商贩 {ContentId} 的解锁任务数不能为负数。", this);
+			}
+			if (float.IsNaN(PackSpawnOffset.x) || float.IsNaN(PackSpawnOffset.y) ||
+				float.IsInfinity(PackSpawnOffset.x) || float.IsInfinity(PackSpawnOffset.y))
+			{
+				context.AddError("PACK_VENDOR_SPAWN_OFFSET_INVALID", $"卡包商贩 {ContentId} 的卡包生成偏移必须是有限数值。", this);
 			}
 		}
 	}

@@ -15,6 +15,10 @@ namespace UnitySkills
     internal static class AsyncJobService
     {
         private const int TestStartTimeoutSeconds = 90;
+        private const int PlayModeTestStartTimeoutSeconds = 300;
+        private const int TestRunnerReconnectTimeoutSeconds = 30;
+        private const int PlayModeTestRunnerReconnectTimeoutSeconds = 180;
+        private const int MaxTestRestartAfterReloadCount = 1;
         private const int MaxConcurrentActiveTestJobs = 1;
 
         private sealed class TestRuntimeContext
@@ -840,19 +844,31 @@ namespace UnitySkills
 
                 if (!runtime.Callbacks.HasAcceptedRun &&
                     reconnectStartedAt > 0 &&
-                    DateTimeOffset.UtcNow.ToUnixTimeSeconds() - reconnectStartedAt > 30)
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds() - reconnectStartedAt >
+                    GetTestRunnerReconnectTimeoutSeconds(GetMetadataString(job, "testMode", "EditMode")))
                 {
+                    var testMode = GetMetadataString(job, "testMode", "EditMode");
+                    if (DeferPlayModeRestartWhileEditorIsPlaying(job, testMode))
+                        return;
+
+                    if (TryRestartTestJobAfterReload(job, testMode, GetMetadataString(job, "filter"), out var restartError))
+                        return;
+
                     FailJob(job.jobId,
-                        $"The original Unity Test Runner job '{runnerJobId}' was not restored after domain reload.",
+                        $"The original Unity Test Runner job '{runnerJobId}' was not restored after domain reload. {restartError}",
                         "failed_runner_not_restored");
                     CleanupTestRuntime(job.jobId);
                 }
 
                 if (job.status == "running" &&
                     string.Equals(job.currentStage, "starting", StringComparison.OrdinalIgnoreCase) &&
-                    DateTimeOffset.UtcNow.ToUnixTimeSeconds() - job.updatedAt > TestStartTimeoutSeconds)
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds() - job.updatedAt >
+                    GetTestStartTimeoutSeconds(GetMetadataString(job, "testMode", "EditMode")))
                 {
-                    FailJob(job.jobId, $"Unity Test Runner did not leave 'starting' within {TestStartTimeoutSeconds} seconds.", "failed_start_timeout");
+                    var startTimeout = GetTestStartTimeoutSeconds(GetMetadataString(job, "testMode", "EditMode"));
+                    FailJob(job.jobId,
+                        $"Unity Test Runner did not leave 'starting' within {startTimeout} seconds.",
+                        "failed_start_timeout");
                     CleanupTestRuntime(job.jobId);
                 }
                 return;
@@ -874,16 +890,21 @@ namespace UnitySkills
                 var runnerJobId = GetMetadataString(job, "runnerJobId");
                 if (!TryGetInternalTestRunnerState(runnerJobId, out var runnerState) || !runnerState.IsRunning)
                 {
-                    if (now - reconnectStartedAt <= 30)
+                    if (now - reconnectStartedAt <= GetTestRunnerReconnectTimeoutSeconds(testMode))
                     {
                         Transition(job, "reconnecting", "waiting_test_runner", 10,
                             "Waiting for Unity Test Framework to resume the original test run.", "test_recovery_wait");
                         return;
                     }
 
+                    if (DeferPlayModeRestartWhileEditorIsPlaying(job, testMode))
+                        return;
+
+                    if (TryRestartTestJobAfterReload(job, testMode, GetMetadataString(job, "filter"), out var restartError))
+                        return;
+
                     FailJob(job.jobId,
-                        $"The original Unity Test Runner job '{runnerJobId}' was not restored after domain reload. " +
-                        $"The {testMode} run was not restarted to avoid executing tests twice.",
+                        $"The original Unity Test Runner job '{runnerJobId}' was not restored after domain reload. {restartError}",
                         "failed_runner_not_restored");
                     return;
                 }
@@ -903,6 +924,132 @@ namespace UnitySkills
                     FailJob(job.jobId, $"Failed to restart tests: {ex.Message}", "failed_reconnect");
                 }
             }
+        }
+
+        private static bool TryRestartTestJobAfterReload(BatchJobRecord job, string testMode, string filter, out string error)
+        {
+            error = null;
+            if (string.Equals(testMode, "PlayMode", StringComparison.OrdinalIgnoreCase))
+            {
+                error =
+                    "PlayMode test restart after domain reload is disabled because the original run may already be producing gameplay side effects.";
+                return false;
+            }
+
+            if (!IsSafeToRestartTestJobAfterReload(job, out error))
+                return false;
+
+            try
+            {
+                CleanupTestRuntime(job.jobId);
+
+                var mode = string.Equals(testMode, "PlayMode", StringComparison.OrdinalIgnoreCase)
+                    ? TestMode.PlayMode
+                    : TestMode.EditMode;
+                var api = ScriptableObject.CreateInstance<TestRunnerApi>();
+                var callbacks = new TestCallbacks(job.jobId);
+                api.RegisterCallbacks(callbacks);
+                var filterObj = BuildTestFilter(testMode, filter, mode, job);
+
+                TestRuntimeJobs[job.jobId] = new TestRuntimeContext
+                {
+                    Api = api,
+                    Callbacks = callbacks
+                };
+
+                var runnerJobId = api.Execute(new ExecutionSettings
+                {
+                    filters = new[] { filterObj }
+                });
+
+                if (string.IsNullOrWhiteSpace(runnerJobId))
+                {
+                    CleanupTestRuntime(job.jobId);
+                    error = "Unity Test Runner did not return a new job id.";
+                    return false;
+                }
+
+                var restartCount = GetMetadataInt(job, "restartAfterReloadCount", 0) + 1;
+                job.metadata["runnerJobId"] = runnerJobId;
+                job.metadata["restartAfterReloadCount"] = restartCount;
+                job.metadata.Remove("reconnectStartedAt");
+                Transition(job, "running", "starting", 10,
+                    $"Restarted {testMode} tests after domain reload before any test result was accepted.",
+                    "test_restart_after_reload");
+                BatchPersistence.FlushIfDirty();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                CleanupTestRuntime(job.jobId);
+                error = $"Restart after domain reload failed: {ex.Message}";
+                return false;
+            }
+        }
+
+        private static bool DeferPlayModeRestartWhileEditorIsPlaying(BatchJobRecord job, string testMode)
+        {
+            if (!string.Equals(testMode, "PlayMode", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
+                return false;
+
+            Transition(job, "reconnecting", "waiting_playmode_exit", 10,
+                "Waiting for the original PlayMode test run to leave Play Mode before any restart is attempted.",
+                "test_restart_deferred_playmode_active");
+            return true;
+        }
+
+        private static int GetTestRunnerReconnectTimeoutSeconds(string testMode)
+        {
+            return string.Equals(testMode, "PlayMode", StringComparison.OrdinalIgnoreCase)
+                ? PlayModeTestRunnerReconnectTimeoutSeconds
+                : TestRunnerReconnectTimeoutSeconds;
+        }
+
+        private static int GetTestStartTimeoutSeconds(string testMode)
+        {
+            return string.Equals(testMode, "PlayMode", StringComparison.OrdinalIgnoreCase)
+                ? PlayModeTestStartTimeoutSeconds
+                : TestStartTimeoutSeconds;
+        }
+
+        private static bool IsSafeToRestartTestJobAfterReload(BatchJobRecord job, out string reason)
+        {
+            reason = null;
+            if (job == null)
+            {
+                reason = "The persisted test job is missing, so the run cannot be restarted safely.";
+                return false;
+            }
+
+            var restartCount = GetMetadataInt(job, "restartAfterReloadCount", 0);
+            if (restartCount >= MaxTestRestartAfterReloadCount)
+            {
+                reason = $"The run was already restarted {restartCount} time(s), so it will not be restarted again.";
+                return false;
+            }
+
+            var totalTests = GetResultInt(job, "totalTests", 0);
+            var passedTests = GetResultInt(job, "passedTests", 0);
+            var failedTests = GetResultInt(job, "failedTests", 0);
+            var skippedTests = GetResultInt(job, "skippedTests", 0);
+            var inconclusiveTests = GetResultInt(job, "inconclusiveTests", 0);
+            var otherTests = GetResultInt(job, "otherTests", 0);
+            if (totalTests != 0 ||
+                passedTests != 0 ||
+                failedTests != 0 ||
+                skippedTests != 0 ||
+                inconclusiveTests != 0 ||
+                otherTests != 0)
+            {
+                reason =
+                    "The original run has already accepted test results, so restarting could execute tests twice.";
+                return false;
+            }
+
+            return true;
         }
 
         private static void ProcessSmokeJob(BatchJobRecord job)

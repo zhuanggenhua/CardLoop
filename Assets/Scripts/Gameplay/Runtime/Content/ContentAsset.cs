@@ -17,6 +17,11 @@ namespace Gameplay.Content
 	/// </summary>
 	public abstract class ContentAsset : ScriptableObject
 	{
+		/// <summary>
+		/// YooAsset 构建清单中用于发现 Gameplay 内容作者资产的资源标签；它不是内容 ID，也不是 EX-GAS GameplayTag。
+		/// </summary>
+		public const string YooAssetContentTag = "gameplay-content";
+
 		[Header("身份")]
 		[SerializeField]
 		[LabelText("内容 ID")]

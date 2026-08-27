@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
   m_contentId:
     m_value: test.foundation.pack.beginning.soil
-  m_tagCodes: e9030000
-  m_displayName: Soil
-  m_description: A vital habitat for plants.
+  m_tagCodes: e9030000e9157a00
+  m_displayName: 土壤
+  m_description: 植物生长的土壤。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 3
   m_countsTowardCardLimit: 1
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
@@ -40,3 +40,5 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u8D44\u6E90"
     Guid: e3066071ccb6496ebc6a9eea45d741d0
     Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}

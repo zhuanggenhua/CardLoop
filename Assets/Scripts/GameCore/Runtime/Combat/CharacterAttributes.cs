@@ -199,6 +199,32 @@ namespace GameCore
         }
 
         /// <summary>
+        /// 通过 EX-GAS 正式 Cell 修改角色基础属性，并立即重算当前值。
+        /// 用于运行时规则需要在同一流程内读取最新当前值的资源变化。
+        /// </summary>
+        public static float SetBaseValueAndRecalculate(
+            AbilitySystemCell abilitySystem,
+            int attributeCode,
+            float value)
+        {
+            if (abilitySystem == null)
+            {
+                throw new ArgumentNullException(nameof(abilitySystem));
+            }
+            if (!float.IsFinite(value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "EX-GAS 属性基础值必须是有限数值。");
+            }
+
+            RequireKnownAttributeCode(attributeCode);
+            abilitySystem.SetAttrBaseValue(SetCode, attributeCode, value);
+            return AttributeHelper.RecalculateCurrentValue(
+                abilitySystem.Entity,
+                SetCode,
+                attributeCode);
+        }
+
+        /// <summary>
         /// 从 EX-GAS 正式属性集克隆角色配置，并只替换角色声明的基础值。
         /// 未覆盖属性和所有钳制规则始终继承 EX-GAS 表。
         /// </summary>

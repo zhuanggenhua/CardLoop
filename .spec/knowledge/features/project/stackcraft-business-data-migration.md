@@ -10,6 +10,8 @@ metadata:
 
 ## 当前结论
 
+2026-08-27 纠偏：用户要求当前阶段先去掉原创或临时业务，只保留 StackCraft 模板业务方便对照。本文中关于“代表性业务验收已完成”的旧口径只保留为历史线索；新的有效结论以 [`stackcraft-functional-parity-matrix.md`](stackcraft-functional-parity-matrix.md) 和任务卡 `../../../tasks/stackcraft-parity-absorption.md` 为准。
+
 “机制效果已通过”不等于“模板业务数据已全量一致”。当前 Gameplay 框架已经证明能承接 StackCraft 的牌桌、行动、任务、卡包、交易、日终、战斗和 UI 反馈机制；StackCraft 原始业务 `.asset` 没有全部转换成 CardLoop 作者源。
 
 当前用户已把业务验收范围收窄为“代表性验收”：不要求完整实现 StackCraft 全部业务内容，只要求证明 CardLoop 自有框架能承接有代表性的模板业务竖切。因此，剩余业务资产不再是当前阶段完成阻塞；它们是后续可选迁移或明确放弃范围。
@@ -27,10 +29,11 @@ node .spec/tools/stackcraft-business-representative-audit.mjs
 真正删除 `Assets/StackCraft` 前必须满足：
 
 1. 用户当轮明确授权删除参考目录。
-2. `node .spec/tools/gameplay-static-preflight.mjs` 通过，证明正式链路没有依赖参考目录。
-3. `node .spec/tools/stackcraft-business-representative-audit.mjs` 通过，证明代表性业务竖切仍可追溯。
-4. 剩余未迁移业务资产被明确记录为当前阶段 out-of-scope，或另行迁移完成。
-5. 删除后重新跑 Unity 编译和必要 PlayMode，证明删除没有破坏当前正式链路。
+2. 先裁决参考真相源：继续保留 `Assets/StackCraft` 作为参考目录，或把代表性审计需要的来源资产 / 参数冻结到项目参考快照并改造审计脚本。
+3. `node .spec/tools/gameplay-static-preflight.mjs` 通过，证明正式链路没有依赖参考目录。
+4. `node .spec/tools/stackcraft-business-representative-audit.mjs` 通过，证明代表性业务竖切仍可追溯；若已删除 `Assets/StackCraft`，该脚本必须先改为读取 frozen reference snapshot。
+5. 剩余未迁移业务资产被明确记录为当前阶段 out-of-scope，或另行迁移完成。
+6. 删除后重新跑 Unity 编译和必要 PlayMode，证明删除没有破坏当前正式链路。
 
 ## 原始数据规模
 
@@ -86,6 +89,7 @@ node .spec/tools/stackcraft-business-representative-audit.mjs
 
 ## 删除参考目录前门槛
 
+- 参考真相源已经裁决：保留 `Assets/StackCraft`，或建立 frozen reference snapshot 并让对账脚本改读快照。
 - `node .spec/tools/gameplay-static-preflight.mjs` 通过。
 - `node .spec/tools/stackcraft-business-representative-audit.mjs` 通过。
 - 剩余业务资产已被用户接受为当前阶段 out-of-scope，或已经另行迁移完成。

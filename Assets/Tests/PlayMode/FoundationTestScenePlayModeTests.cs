@@ -36,6 +36,17 @@ namespace Gameplay.Tests
 	public sealed class FoundationTestScenePlayModeTests : InputTestFixture
 	{
 		private const string FoundationScenePath = "Assets/Scenes/FoundationTest.unity";
+		private const string FoundationE2EContactSheetFileName =
+			"_contactsheet-foundation-e2e-sequence-latest.png";
+		private static readonly string[] FoundationE2EVisualEvidenceFiles =
+		{
+			"foundation-e2e-sequence-01-ready.png",
+			"foundation-e2e-sequence-02-damage-feedback.png",
+			"foundation-e2e-sequence-03-action-choice.png",
+			"foundation-e2e-sequence-04-action-progress-start.png",
+			"foundation-e2e-sequence-05-action-progress-half.png",
+			"foundation-e2e-sequence-06-action-completed-product.png",
+		};
 		private string m_saveDirectory;
 
 		[UnitySetUp]
@@ -69,11 +80,12 @@ namespace Gameplay.Tests
 			yield return null;
 
 			Physics.SyncTransforms();
-			Camera camera = Camera.main;
+			Camera camera = GetMainCamera();
 			BoxCollider selectedCollider = selectedView.GetComponent<BoxCollider>();
-			Vector3 exposedSelectedPoint = selectedCollider.bounds.center +
-				Vector3.left * selectedCollider.bounds.extents.x * 0.82f;
-			Vector2 selectedScreenPosition = camera.WorldToScreenPoint(exposedSelectedPoint);
+			Vector2 selectedScreenPosition = FindScreenPointThatHitsCard(
+				camera,
+				selectedCollider,
+				controller.MiddleCardId);
 			Vector2 hoveredScreenPosition = camera.WorldToScreenPoint(hoveredView.transform.position);
 			Vector2 emptyScreenPosition = new(Screen.width * 0.5f, Screen.height * 0.9f);
 
@@ -82,8 +94,8 @@ namespace Gameplay.Tests
 			Assert.That(tabletopView.HoveredCardId, Is.EqualTo(controller.MiddleCardId));
 			Assert.That(tabletopView.ReadableCardId, Is.EqualTo(controller.MiddleCardId));
 			Assert.That(infoPanel.DisplayedCardId, Is.EqualTo(controller.MiddleCardId));
-			Assert.That(infoPanel.DisplayedTitle, Is.EqualTo("Villager"));
-			Assert.That(infoPanel.DisplayedDescription, Does.Contain("A healthy villager."));
+			Assert.That(infoPanel.DisplayedTitle, Is.EqualTo("村民"));
+			Assert.That(infoPanel.DisplayedDescription, Does.Contain("健康的村民。"));
 
 			Press(mouse.leftButton);
 			yield return null;
@@ -123,7 +135,7 @@ namespace Gameplay.Tests
 			yield return null;
 
 			Physics.SyncTransforms();
-			Vector2 targetScreenPosition = Camera.main.WorldToScreenPoint(targetView.transform.position);
+			Vector2 targetScreenPosition = GetMainCamera().WorldToScreenPoint(targetView.transform.position);
 			Move(mouse.position, targetScreenPosition);
 			yield return null;
 			Press(mouse.leftButton);
@@ -142,6 +154,48 @@ namespace Gameplay.Tests
 			Assert.That(infoPanel.DisplayedCardId.IsValid, Is.False);
 			Assert.That(infoPanel.DisplayedTitle, Is.Empty);
 			Assert.That(infoPanel.DisplayedDescription, Is.Empty);
+		}
+
+		[UnityTest]
+		public IEnumerator FoundationTabletop_SequenceMessageOverridesReadableCardInfoPanel()
+		{
+			Mouse mouse = InputSystemApi.AddDevice<Mouse>("FoundationSequenceInfoPanelMouse");
+			Keyboard keyboard = InputSystemApi.AddDevice<Keyboard>("FoundationSequenceInfoPanelKeyboard");
+			yield return LoadFoundationTabletop();
+
+			FoundationTestSceneHarness controller =
+				Object.FindAnyObjectByType<FoundationTestSceneHarness>();
+			TabletopCardInfoPanel infoPanel = Object.FindAnyObjectByType<TabletopCardInfoPanel>();
+			PlayerInput playerInput = Object.FindAnyObjectByType<PlayerInput>();
+			Assert.That(playerInput.SwitchCurrentControlScheme(keyboard, mouse), Is.True);
+			GameManager.InputSystem.SetActionMap(EActionMap.Gameplay);
+			yield return null;
+
+			yield return ClickCard(mouse, controller.MiddleCardId);
+			Assert.That(infoPanel.DisplayedCardId, Is.EqualTo(controller.MiddleCardId));
+			Assert.That(infoPanel.DisplayedTitle, Is.EqualTo("村民"));
+
+			EventKit.Type.Send(new ScenarioSequenceMessageEvent(
+				controller.ScenarioRun.ScenarioId,
+				"卡包已解锁",
+				"这里可以购买开端卡包。",
+				0.05f));
+			yield return null;
+
+			Assert.That(infoPanel.IsSequenceMessageActive, Is.True);
+			Assert.That(infoPanel.DisplayedCardId.IsValid, Is.False);
+			Assert.That(infoPanel.DisplayedSequenceHeader, Is.EqualTo("卡包已解锁"));
+			Assert.That(infoPanel.DisplayedTitle, Is.EqualTo("卡包已解锁"));
+			Assert.That(
+				infoPanel.DisplayedDescription,
+				Is.EqualTo("这里可以购买开端卡包。"));
+
+			yield return new WaitForSecondsRealtime(0.1f);
+			yield return null;
+
+			Assert.That(infoPanel.IsSequenceMessageActive, Is.False);
+			Assert.That(infoPanel.DisplayedCardId, Is.EqualTo(controller.MiddleCardId));
+			Assert.That(infoPanel.DisplayedTitle, Is.EqualTo("村民"));
 		}
 
 		[UnityTest]
@@ -307,7 +361,7 @@ namespace Gameplay.Tests
 			GameManager.InputSystem.SetActionMap(EActionMap.Gameplay);
 			yield return null;
 
-			yield return CaptureVisualEvidence("foundation-e2e-sequence-01-ready.png");
+			yield return CaptureVisualEvidence(FoundationE2EVisualEvidenceFiles[0]);
 
 			Assert.That(
 				controller.Cards.TryGetCard(controller.TargetCardId, out TabletopCard tabletopCard),
@@ -323,25 +377,29 @@ namespace Gameplay.Tests
 				visualFlags: EEffectVisualFlags.None,
 				matchupResult: DamageMatchupResult.Advantage));
 			yield return null;
-			yield return CaptureVisualEvidence("foundation-e2e-sequence-02-damage-feedback.png");
+			yield return CaptureVisualEvidence(FoundationE2EVisualEvidenceFiles[1]);
 
 			yield return DragCardOntoCard(mouse, controller.MiddleCardId, controller.TargetCardId);
-			Assert.That(controller.LastActionCandidates.Count, Is.EqualTo(1));
+			Assert.That(
+				controller.LastActionCandidates.Count,
+				Is.EqualTo(1),
+				BuildLastReleaseDiagnostic(controller, "端到端截图链拖拽后没有得到行动候选。") +
+				" " + controller.BuildActionCandidateDiagnostic(controller.MiddleCardId, controller.TargetCardId));
 			ActionCandidate candidate = controller.LastActionCandidates[0];
 			Assert.That(candidate.Action.ContentId.Value, Is.EqualTo(FoundationTestSceneHarness.TestActionContentId));
-			yield return CaptureVisualEvidence("foundation-e2e-sequence-03-action-choice.png");
+			yield return CaptureVisualEvidence(FoundationE2EVisualEvidenceFiles[2]);
 
 			RuntimeTabletop tabletop = controller.ScenarioRun.Tabletop;
 			yield return SelectActionThroughPanel(controller, tabletop, candidate, mouse, playerInput);
 			Assert.That(tabletop.ActiveActions.Count, Is.EqualTo(1));
 			ActionInstance actionInstance = tabletop.ActiveActions.Single();
-			yield return CaptureVisualEvidence("foundation-e2e-sequence-04-action-progress-start.png");
+			yield return CaptureVisualEvidence(FoundationE2EVisualEvidenceFiles[3]);
 
 			ScenarioDirector scenarioDirector = GameManager.GetSystem<ScenarioDirector>();
 			Assert.That(scenarioDirector.ConfirmTurn(), Is.EqualTo(1));
 			yield return null;
 			Assert.That(actionInstance.Progress, Is.EqualTo(0.5f));
-			yield return CaptureVisualEvidence("foundation-e2e-sequence-05-action-progress-half.png");
+			yield return CaptureVisualEvidence(FoundationE2EVisualEvidenceFiles[4]);
 
 			Assert.That(scenarioDirector.ConfirmTurn(), Is.EqualTo(2));
 			float completionTimeoutAt = Time.realtimeSinceStartup + 2f;
@@ -358,7 +416,10 @@ namespace Gameplay.Tests
 			yield return WaitUntilViewsDisplayArtwork(
 				FoundationTestSceneHarness.TestProductContentId,
 				"行动产物卡已经创建，但木头业务卡面没有完成 YooAsset 投影。");
-			yield return CaptureVisualEvidence("foundation-e2e-sequence-06-action-completed-product.png");
+			yield return CaptureVisualEvidence(FoundationE2EVisualEvidenceFiles[5]);
+			CreateVisualEvidenceContactSheet(
+				FoundationE2EVisualEvidenceFiles,
+				FoundationE2EContactSheetFileName);
 		}
 
 		[UnityTest]
@@ -372,7 +433,7 @@ namespace Gameplay.Tests
 				controller.Cards.TryGetCard(controller.TargetCardId, out TabletopCard tabletopCard),
 				Is.True);
 			CharacterCard character = (CharacterCard)tabletopCard;
-			Camera camera = Camera.main;
+			Camera camera = GetMainCamera();
 			Assert.That(camera, Is.Not.Null);
 			Assert.That(camera.GetComponent<CameraShake>(), Is.Not.Null);
 			Assert.That(
@@ -427,27 +488,52 @@ namespace Gameplay.Tests
 			GameManager.InputSystem.SetActionMap(EActionMap.Gameplay);
 			yield return null;
 
-			Camera camera = Camera.main;
+			Camera camera = GetMainCamera();
 			Assert.That(camera, Is.Not.Null);
-			Assert.That(camera.GetComponent<TabletopCameraController>(), Is.Not.Null);
-			Vector3 initialPosition = camera.transform.position;
+			Assert.That(camera.orthographic, Is.False, "StackCraft 镜头复刻必须使用透视主相机。");
+			TabletopCameraController cameraController = camera.GetComponentInParent<TabletopCameraController>();
+			Assert.That(cameraController, Is.Not.Null);
+			TabletopView tabletopView = Object.FindAnyObjectByType<TabletopView>();
+			Assert.That(tabletopView, Is.Not.Null);
+			Vector3 initialPosition = cameraController.transform.position;
 
 			Vector2 dragStart = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
 			Vector2 dragEnd = dragStart + new Vector2(160f, 0f);
 			Move(mouse.position, dragStart);
 			yield return null;
+			Assert.That(
+				Vector2.Distance(GameManager.InputSystem.ReadPointerScreenPosition(EActionMap.Gameplay), dragStart),
+				Is.LessThan(0.1f),
+				"正式 Gameplay 指针输入没有读到镜头平移起点。");
 			Press(mouse.middleButton);
+			yield return null;
+			Assert.That(
+				GameManager.InputSystem.IsGameplayActionPressed(EGameplayInputAction.MiddleClick),
+				Is.True,
+				"正式 Gameplay 中键输入没有进入按住状态。");
+			Assert.That(
+				GameManager.InputSystem.IsGameplayActionBlocked(EGameplayInputAction.MiddleClick),
+				Is.False,
+				"正式 Gameplay 中键输入被动作图释放门禁阻挡。");
 			yield return null;
 			Move(mouse.position, dragEnd);
 			yield return null;
+			Assert.That(
+				Vector2.Distance(GameManager.InputSystem.ReadPointerScreenPosition(EActionMap.Gameplay), dragEnd),
+				Is.LessThan(0.1f),
+				"正式 Gameplay 指针输入没有读到镜头平移终点。");
+			Assert.That(
+				GameManager.InputSystem.IsGameplayActionPressed(EGameplayInputAction.MiddleClick),
+				Is.True,
+				"移动指针后正式 Gameplay 中键输入不再保持按住状态。");
 
 			float panTimeoutAt = Time.realtimeSinceStartup + 2f;
-			while (Vector3.Distance(camera.transform.position, initialPosition) <= 0.01f)
+			while (Vector3.Distance(cameraController.transform.position, initialPosition) <= 0.01f)
 			{
 				Assert.Less(
 					Time.realtimeSinceStartup,
 					panTimeoutAt,
-					"正式中键输入没有驱动牌桌主相机平移。");
+					"正式中键输入没有驱动牌桌镜头控制根平移。");
 				yield return null;
 			}
 			Release(mouse.middleButton);
@@ -460,14 +546,17 @@ namespace Gameplay.Tests
 					focusPosition));
 
 			float focusTimeoutAt = Time.realtimeSinceStartup + 2f;
-			while (Vector2.Distance(
-				new Vector2(camera.transform.position.x, camera.transform.position.y),
-				focusPosition) > 0.2f)
+			while (!TryProjectScreenToTable(
+					camera,
+					tabletopView.transform,
+					new Vector2(Screen.width * 0.5f, Screen.height * 0.5f),
+					out Vector2 centeredTablePosition) ||
+				Vector2.Distance(centeredTablePosition, focusPosition) > 0.2f)
 			{
 				Assert.Less(
 					Time.realtimeSinceStartup,
 					focusTimeoutAt,
-					"牌桌聚焦表现提示没有驱动主相机移动到目标牌桌位置。");
+					"牌桌聚焦表现提示没有把主相机画面中心移动到目标牌桌位置。");
 				yield return null;
 			}
 		}
@@ -724,6 +813,36 @@ namespace Gameplay.Tests
 			TabletopCardView enemyView = FindView(controller.TargetCardId);
 			TabletopCardView secondAllyView = FindView(controller.TopCardId);
 			TabletopCardView secondEnemyView = FindView(controller.MiddleCardId);
+			Vector2 requestedSeparatedAllyPosition = new Vector2(-2.2f, -2f);
+			Vector2 requestedSeparatedEnemyPosition = new Vector2(-2.2f, -2.1f);
+			Assert.That(
+				tabletop.TryPlaceSingleCard(
+					controller.TopCardId,
+					requestedSeparatedAllyPosition,
+					out _),
+				Is.True,
+				"第二场战斗布景必须先把友方卡牌放到真实分离区域。");
+			Assert.That(
+				tabletop.TryPlaceSingleCard(
+					controller.MiddleCardId,
+					requestedSeparatedEnemyPosition,
+					out _),
+				Is.True,
+				"第二场战斗布景必须先把敌方卡牌放到真实分离区域。");
+			Vector2 separatedAllyPosition = controller.Cards
+				.GetStackContaining(controller.TopCardId)
+				.Position;
+			Vector2 separatedEnemyPosition = controller.Cards
+				.GetStackContaining(controller.MiddleCardId)
+				.Position;
+			yield return WaitUntilCardViewAt(
+				secondAllyView,
+				separatedAllyPosition,
+				"第二场战斗友方布景卡没有移动到分离战斗区域。");
+			yield return WaitUntilCardViewAt(
+				secondEnemyView,
+				separatedEnemyPosition,
+				"第二场战斗敌方布景卡没有移动到分离战斗区域。");
 			Vector3 playerStackViewPosition = playerView.transform.localPosition;
 			Vector3 enemyStackViewPosition = enemyView.transform.localPosition;
 			Vector3 secondAllyStackViewPosition = secondAllyView.transform.localPosition;
@@ -759,16 +878,26 @@ namespace Gameplay.Tests
 			Assert.That(battle.Sides, Has.Count.EqualTo(2));
 			CollectionAssert.AreEqual(new[] { controller.BottomCardId }, battle.Sides[0].CardIds);
 			CollectionAssert.AreEqual(new[] { controller.TargetCardId }, battle.Sides[1].CardIds);
+			Vector2 playerBattlePosition = new Vector2(battleAnchor.x - 1.5f, battleAnchor.y);
+			Vector2 enemyBattlePosition = new Vector2(battleAnchor.x + 1.5f, battleAnchor.y);
+			yield return WaitUntilCardViewAt(
+				playerView,
+				playerBattlePosition,
+				"开战后玩家阵营卡牌没有进入剧本阵型派生的位置。");
+			yield return WaitUntilCardViewAt(
+				enemyView,
+				enemyBattlePosition,
+				"开战后敌对阵营卡牌没有进入剧本阵型派生的位置。");
 			Assert.That(
 				Vector3.Distance(
 					playerView.transform.localPosition,
-					new Vector3(battleAnchor.x - 1.5f, battleAnchor.y, 0f)),
+					TabletopCoordinateSpace.ToLocalPosition(playerBattlePosition)),
 				Is.LessThan(0.001f),
 				"开战后玩家阵营卡牌必须进入剧本阵型派生的位置。");
 			Assert.That(
 				Vector3.Distance(
 					enemyView.transform.localPosition,
-					new Vector3(battleAnchor.x + 1.5f, battleAnchor.y, 0f)),
+					TabletopCoordinateSpace.ToLocalPosition(enemyBattlePosition)),
 				Is.LessThan(0.001f),
 				"开战后敌对阵营卡牌必须进入剧本阵型派生的位置。");
 			Assert.That(playerView.SortingOrder, Is.EqualTo(100));
@@ -849,6 +978,22 @@ namespace Gameplay.Tests
 
 			Assert.That(battle.IsEnded, Is.True);
 			Assert.That(tabletop.ActiveBattles, Is.Empty);
+			yield return WaitUntilCardViewAt(
+				playerView,
+				playerStackPosition,
+				"战斗结束后玩家卡牌没有回到权威牌堆视图位置。");
+			yield return WaitUntilCardViewAt(
+				enemyView,
+				enemyStackPosition,
+				"战斗结束后敌对卡牌没有回到权威牌堆视图位置。");
+			yield return WaitUntilCardViewAt(
+				secondAllyView,
+				TabletopCoordinateSpace.ToTablePosition(secondAllyStackViewPosition),
+				"战斗结束后第二方友军卡牌没有回到权威牌堆视图位置。");
+			yield return WaitUntilCardViewAt(
+				secondEnemyView,
+				TabletopCoordinateSpace.ToTablePosition(secondEnemyStackViewPosition),
+				"战斗结束后第二方敌军卡牌没有回到权威牌堆视图位置。");
 			Assert.That(
 				Vector3.Distance(playerView.transform.localPosition, playerStackViewPosition),
 				Is.LessThan(0.001f),
@@ -905,16 +1050,55 @@ namespace Gameplay.Tests
 				yield return null;
 			}
 
+			Assert.That(
+				tabletop.TryGetBattlePose(
+					controller.BottomCardId,
+					0,
+					out TabletopCardPose playerBattlePose),
+				Is.True,
+				"开战后玩家卡牌没有进入正式战斗阵型。");
+			Assert.That(
+				tabletop.TryGetBattlePose(
+					controller.TargetCardId,
+					0,
+					out TabletopCardPose enemyBattlePose),
+				Is.True,
+				"开战后敌对卡牌没有进入正式战斗阵型。");
+			Vector2 expectedPlayerBattlePosition =
+				TabletopCoordinateSpace.ToTablePosition(playerBattlePose.LocalPosition);
+			Vector2 expectedEnemyBattlePosition =
+				TabletopCoordinateSpace.ToTablePosition(enemyBattlePose.LocalPosition);
+			yield return WaitUntilCardViewAt(
+				playerView,
+				expectedPlayerBattlePosition,
+				"离战测试开战后玩家卡牌还没有移动到稳定战斗位置。");
+			yield return WaitUntilCardViewAt(
+				enemyView,
+				expectedEnemyBattlePosition,
+				"离战测试开战后敌对卡牌还没有移动到稳定战斗位置。");
+
 			Rect battleArea = tabletop.GetBattleArea(battle);
-			Vector2 battlePose = playerView.transform.localPosition;
+			Vector2 battlePose = expectedPlayerBattlePosition;
 			Assert.That(Vector2.Distance(battlePose, playerStackPosition), Is.GreaterThan(0.001f));
 			Physics.SyncTransforms();
-			Camera camera = Camera.main;
+			Camera camera = GetMainCamera();
 			TabletopView tabletopView = Object.FindAnyObjectByType<TabletopView>();
-			Vector2 pressScreenPosition =
-				camera.WorldToScreenPoint(playerView.GetComponent<BoxCollider>().bounds.center);
+			Vector2 pressScreenPosition = FindScreenPointThatHitsCard(
+				camera,
+				playerView.GetComponent<BoxCollider>(),
+				controller.BottomCardId);
+			Vector2 pressTablePosition = ScreenToTablePosition(camera, playerView, pressScreenPosition);
+			Assert.That(
+				FindCardHitAt(camera, pressScreenPosition).CardId,
+				Is.EqualTo(controller.BottomCardId),
+				"离战测试按下点必须通过正式物理射线命中参战玩家卡牌。");
+			Assert.That(
+				UIPointerUtility.IsPositionOverUI(pressScreenPosition),
+				Is.False,
+				"离战测试按下点被正式 UI 射线挡住，牌桌输入不会开始拖拽。" +
+				" UI命中=" + DescribeUiRaycastAt(pressScreenPosition));
 			Rect placementBounds = controller.PlacementRules.Area.Bounds;
-			Vector2 releaseTablePosition = new Vector2(battleArea.xMax + 1f, battleArea.center.y);
+			Vector2 releaseTablePosition = new Vector2(battleArea.xMin - 1f, battleArea.center.y);
 			Assert.That(
 				battleArea.Contains(releaseTablePosition),
 				Is.False,
@@ -923,11 +1107,118 @@ namespace Gameplay.Tests
 				placementBounds.Contains(releaseTablePosition),
 				Is.True,
 				"离战测试释放点必须仍位于牌桌可放置边界内。");
-			Vector3 releaseWorldPosition = tabletopView.transform.TransformPoint(
-				new Vector3(releaseTablePosition.x, releaseTablePosition.y, 0f));
-			Vector2 releaseScreenPosition = camera.WorldToScreenPoint(releaseWorldPosition);
+			Vector2 releaseScreenPosition = TableToScreenPoint(camera, playerView, releaseTablePosition);
+			Assert.That(
+				UIPointerUtility.IsPositionOverUI(releaseScreenPosition),
+				Is.False,
+				"离战测试释放点被正式 UI 射线接管，无法验证牌桌空白释放语义。" +
+				" UI命中=" + DescribeUiRaycastAt(releaseScreenPosition));
+			Assert.That(
+				TryProjectScreenToTable(
+					camera,
+					tabletopView.transform,
+					releaseScreenPosition,
+					out Vector2 projectedReleaseTablePosition),
+				Is.True,
+				"离战测试释放屏幕点必须能投影回正式牌桌平面。");
+			Assert.That(
+				Vector2.Distance(projectedReleaseTablePosition, releaseTablePosition),
+				Is.LessThan(0.001f),
+				"离战测试释放屏幕点和牌桌坐标必须互相对应。");
 
-			yield return Drag(mouse, pressScreenPosition, releaseScreenPosition);
+			TabletopCardDragInput dragInput = Object.FindAnyObjectByType<TabletopCardDragInput>();
+			Assert.That(dragInput, Is.Not.Null, "统一地基场景缺少正式牌桌拖拽输入组件。");
+			Assert.That(dragInput.isActiveAndEnabled, Is.True, "正式牌桌拖拽输入组件没有处于启用状态。");
+			Assert.That(
+				GameManager.InputSystem.IsGameplayInputLocked,
+				Is.False,
+				"离战测试开始前 Gameplay 输入被正式流程锁定。");
+			Assert.That(
+				GameManager.InputSystem.IsGameplayActionBlocked(EGameplayInputAction.Click),
+				Is.False,
+				"离战测试开始前 Gameplay 点击输入被动作图释放门禁阻挡。");
+			int releaseCountBeforeDrag = controller.ReleaseIntentCount;
+			Move(mouse.position, pressScreenPosition);
+			yield return null;
+			Assert.That(
+				Vector2.Distance(
+					GameManager.InputSystem.ReadPointerScreenPosition(EActionMap.Gameplay),
+					pressScreenPosition),
+				Is.LessThan(0.1f),
+				"正式 Gameplay 指针输入没有读到离战拖拽按下点。");
+			Press(mouse.leftButton);
+			yield return null;
+			Assert.That(
+				GameManager.InputSystem.IsGameplayActionPressed(EGameplayInputAction.Click),
+				Is.True,
+				"按下鼠标左键后 Gameplay 点击 Action 没有进入按下态。");
+			Assert.That(
+				GameManager.InputSystem.IsGameplayInputLocked,
+				Is.False,
+				"按下参战卡牌后 Gameplay 输入被其它正式流程锁定，拖拽会话被取消。");
+			Assert.That(
+				GameManager.InputSystem.IsGameplayActionBlocked(EGameplayInputAction.Click),
+				Is.False,
+				"按下参战卡牌后 Gameplay 点击输入被释放门禁阻挡。");
+			Assert.That(
+				dragInput.IsPointerSessionActive,
+				Is.True,
+				"离战测试按下参战卡牌后没有启动正式牌桌拖拽会话。");
+			Move(mouse.position, releaseScreenPosition);
+			yield return null;
+			yield return null;
+			Assert.That(
+				dragInput.IsDragging,
+				Is.True,
+				"离战测试移动指针超过正式阈值后没有进入拖拽状态。");
+			Release(mouse.leftButton);
+			yield return null;
+			yield return null;
+			Assert.That(
+				controller.ReleaseIntentCount,
+				Is.GreaterThan(releaseCountBeforeDrag),
+				BuildBattleLeaveDiagnostic(
+					controller,
+					battleArea,
+					placementBounds,
+					releaseTablePosition,
+					pressTablePosition,
+					battlePose,
+					"参战卡牌拖出战斗区域没有形成正式释放事实。"));
+			Assert.That(controller.LastReleaseIntent.CardId, Is.EqualTo(controller.BottomCardId));
+			Assert.That(
+				controller.LastReleaseIntent.IsDrag,
+				Is.True,
+				BuildBattleLeaveDiagnostic(
+					controller,
+					battleArea,
+					placementBounds,
+					releaseTablePosition,
+					pressTablePosition,
+					battlePose,
+					"参战卡牌拖出战斗区域形成的不是拖拽释放事实。"));
+			Assert.That(
+				battleArea.Contains(controller.LastReleaseIntent.ReleasePointerPosition),
+				Is.False,
+				BuildBattleLeaveDiagnostic(
+					controller,
+					battleArea,
+					placementBounds,
+					releaseTablePosition,
+					pressTablePosition,
+					battlePose,
+					"参战卡牌释放事实仍落在战斗区域内。"));
+			Assert.That(
+				placementBounds.Contains(controller.LastReleaseIntent.RequestedStackPosition),
+				Is.True,
+				BuildBattleLeaveDiagnostic(
+					controller,
+					battleArea,
+					placementBounds,
+					releaseTablePosition,
+					pressTablePosition,
+					battlePose,
+					"参战卡牌释放后的请求堆位置不在牌桌可放置边界内。"));
 
 			float leaveTimeoutAt = Time.realtimeSinceStartup + 5f;
 			while (!battle.IsEnded)
@@ -935,7 +1226,14 @@ namespace Gameplay.Tests
 				Assert.Less(
 					Time.realtimeSinceStartup,
 					leaveTimeoutAt,
-					"参战玩家卡牌被拖到战斗区域外后没有离开战斗。");
+					BuildBattleLeaveDiagnostic(
+						controller,
+						battleArea,
+						placementBounds,
+						releaseTablePosition,
+						pressTablePosition,
+						battlePose,
+						"参战玩家卡牌被拖到战斗区域外后没有离开战斗。"));
 				yield return null;
 			}
 			while (Object.FindObjectsByType<TabletopBattleAreaView>().Length != 0)
@@ -948,7 +1246,6 @@ namespace Gameplay.Tests
 			}
 
 			Assert.That(tabletop.ActiveBattles, Is.Empty);
-			Assert.That(controller.LastReleaseIntent.CardId, Is.EqualTo(controller.BottomCardId));
 			Assert.That(
 				controller.LastActionCandidates,
 				Is.Empty,
@@ -975,6 +1272,14 @@ namespace Gameplay.Tests
 				overlapX <= 0.001f || overlapY <= 0.001f,
 				Is.True,
 				"离战放置完成后，逃离牌堆和非逃离方牌堆的权威占地不能重叠。");
+			yield return WaitUntilCardViewAt(
+				playerView,
+				placedStack.Position,
+				"战斗离场后逃离方卡牌没有移动到权威牌堆位置。");
+			yield return WaitUntilCardViewAt(
+				enemyView,
+				enemyStack.Position,
+				"战斗离场后非逃离方卡牌没有回到权威牌堆位置。");
 			Assert.That(
 				Vector2.Distance(ToTablePosition(playerView), placedStack.Position),
 				Is.LessThan(0.001f));
@@ -1195,11 +1500,11 @@ namespace Gameplay.Tests
             yield return null;
 
 			Physics.SyncTransforms();
-			Camera camera = Camera.main;
+			Camera camera = GetMainCamera();
 			BoxCollider middleCollider = middleView.GetComponent<BoxCollider>();
-			Vector2 sourceStackPosition = controller.Cards
-				.GetStackContaining(controller.MiddleCardId)
-				.Position;
+			Vector2 draggedSegmentAnchorPosition = controller.Cards.GetCardTablePosition(
+				controller.MiddleCardId,
+				controller.PlacementRules.Geometry);
 			Vector2 pressScreenPosition = FindScreenPointThatHitsCard(
 				camera,
 				middleCollider,
@@ -1208,7 +1513,7 @@ namespace Gameplay.Tests
 			var releaseTablePosition = new Vector2(0f, -4f);
 			Vector2 releaseScreenPosition = TableToScreenPoint(camera, middleView, releaseTablePosition);
 			Vector2 requestedStackPosition = releaseTablePosition +
-				(sourceStackPosition - pressTablePosition);
+				(draggedSegmentAnchorPosition - pressTablePosition);
 
 			Move(mouse.position, pressScreenPosition);
 			yield return null;
@@ -1315,18 +1620,18 @@ namespace Gameplay.Tests
             yield return null;
 
             Physics.SyncTransforms();
-            Camera camera = Camera.main;
+            Camera camera = GetMainCamera();
             BoxCollider middleCollider = middleView.GetComponent<BoxCollider>();
             Vector2 pressScreenPosition = FindScreenPointThatHitsCard(
                 camera,
                 middleCollider,
                 controller.MiddleCardId);
 			TabletopCardStackGeometry geometry = controller.PlacementRules.Geometry;
-			Vector2 sourceStackPosition = controller.Cards
-				.GetStackContaining(controller.MiddleCardId)
-				.Position;
+			Vector2 draggedSegmentAnchorPosition = controller.Cards.GetCardTablePosition(
+				controller.MiddleCardId,
+				geometry);
 			Vector2 pressTablePosition = ScreenToTablePosition(camera, middleView, pressScreenPosition);
-			Vector2 pointerToStackOffset = sourceStackPosition - pressTablePosition;
+			Vector2 pointerToStackOffset = draggedSegmentAnchorPosition - pressTablePosition;
 			Vector2 releaseTablePosition = FindBlankReleasePointThatOverlapsStack(
 				camera,
 				middleView,
@@ -1407,6 +1712,8 @@ namespace Gameplay.Tests
             TabletopCardView topView = FindView(controller.TopCardId);
             TabletopCardView targetView = FindView(controller.TargetCardId);
             TabletopCardDragInput dragInput = Object.FindAnyObjectByType<TabletopCardDragInput>();
+            TabletopView tabletopView = Object.FindAnyObjectByType<TabletopView>();
+            Assert.That(tabletopView, Is.Not.Null);
             Vector3 sourceAuthoritativePosition = sourceView.transform.position;
             Vector3 topAuthoritativePosition = topView.transform.position;
 
@@ -1430,12 +1737,17 @@ namespace Gameplay.Tests
             // 视图由 YooAsset 异步实例化并在同一帧设置 Transform；读取 Collider 边界前先同步物理世界，
             // 避免测试顺序和帧耗时决定 bounds 仍停留在预制体原点还是已到权威位置。
             Physics.SyncTransforms();
-            Camera camera = Camera.main;
+            Camera camera = GetMainCamera();
             BoxCollider sourceCollider = sourceView.GetComponent<BoxCollider>();
-            Vector2 pressScreenPosition = FindScreenPointThatHitsCard(
-                camera,
-                sourceCollider,
-                controller.MiddleCardId);
+			Vector2 pressScreenPosition = FindScreenPointThatHitsCard(
+				camera,
+				sourceCollider,
+				controller.MiddleCardId);
+			TabletopCardStackGeometry geometry = controller.PlacementRules.Geometry;
+			Vector2 draggedSegmentAnchorPosition = controller.Cards.GetCardTablePosition(
+				controller.MiddleCardId,
+				geometry);
+			Vector2 pressTablePosition = ScreenToTablePosition(camera, sourceView, pressScreenPosition);
             Vector2 targetScreenPosition = camera.WorldToScreenPoint(targetView.transform.position);
 
             TabletopCardView pressedView = FindCardHitAt(camera, pressScreenPosition);
@@ -1460,15 +1772,32 @@ namespace Gameplay.Tests
             yield return null;
             Assert.That(dragInput.IsPointerSessionActive, Is.True, "主指针按下后没有建立牌桌拖拽会话。");
 
-			EventSystem eventSystem = GameManager.EventSystem;
-			Assert.That(eventSystem.pixelDragThreshold, Is.GreaterThan(1));
-			Vector2 belowDragThresholdPosition = pressScreenPosition +
-				Vector2.right * (eventSystem.pixelDragThreshold - 1f);
+			float clickThreshold = tabletopView.CardClickThreshold;
+			Assert.That(
+				clickThreshold,
+				Is.EqualTo(0.02f).Within(0.0001f),
+				"StackCraft 同态测试必须使用 clickThreshold = 0.02 的牌桌世界距离。");
+			Vector2 belowDragThresholdTablePosition = pressTablePosition +
+				Vector2.right * (clickThreshold * 0.5f);
+			Vector2 belowDragThresholdPosition = TableToScreenPoint(
+				camera,
+				sourceView,
+				belowDragThresholdTablePosition);
 			Move(mouse.position, belowDragThresholdPosition);
 			yield return null;
-			Assert.That(dragInput.IsDragging, Is.False, "屏幕位移未达到正式 UI 像素阈值时不能开始拖拽。");
-			Assert.That(sourceView.transform.position, Is.EqualTo(sourceAuthoritativePosition));
-			Assert.That(topView.transform.position, Is.EqualTo(topAuthoritativePosition));
+			Assert.That(dragInput.IsDragging, Is.False, "牌桌世界位移未达到 StackCraft 点击判定距离时不能开始拖拽。");
+			Vector2 expectedBelowThresholdAnchor = belowDragThresholdTablePosition +
+				(draggedSegmentAnchorPosition - pressTablePosition);
+			Vector3 expectedBelowThresholdLocalPosition =
+				TabletopCoordinateSpace.ToLocalPosition(
+					expectedBelowThresholdAnchor,
+					tabletopView.CardDragHeight);
+			Assert.That(
+				Vector3.Distance(sourceView.transform.localPosition, expectedBelowThresholdLocalPosition),
+				Is.LessThan(0.001f),
+				"StackCraft 按下后会立即把卡牌抬到 DragHeight 跟随指针；点击阈值只决定释放解释，不阻止视觉拿起。");
+			Assert.That(sourceView.transform.position, Is.Not.EqualTo(sourceAuthoritativePosition));
+			Assert.That(topView.transform.position, Is.Not.EqualTo(topAuthoritativePosition));
 
             Move(mouse.position, targetScreenPosition);
             yield return null;
@@ -1507,11 +1836,10 @@ namespace Gameplay.Tests
             Assert.That(
                 controller.Cards.GetStackContaining(controller.MiddleCardId),
                 Is.SameAs(controller.Cards.GetStackContaining(controller.BottomCardId)));
-            Assert.That(
-                controller.Cards.GetStackContaining(controller.MiddleCardId),
-                Is.Not.SameAs(controller.Cards.GetStackContaining(controller.TargetCardId)));
+			Assert.That(
+				controller.Cards.GetStackContaining(controller.MiddleCardId),
+				Is.Not.SameAs(controller.Cards.GetStackContaining(controller.TargetCardId)));
 			TabletopCardStack sourceStack = controller.Cards.GetStackContaining(controller.MiddleCardId);
-			TabletopCardStackGeometry geometry = controller.PlacementRules.Geometry;
 			yield return WaitUntilCardViewAt(
 				sourceView,
 				sourceStack.Position + geometry.StackStep * sourceStack.IndexOf(controller.MiddleCardId),
@@ -1720,7 +2048,7 @@ namespace Gameplay.Tests
             TabletopCardView sourceView = FindView(controller.MiddleCardId);
             TabletopCardView targetView = FindView(controller.TargetCardId);
             Physics.SyncTransforms();
-            Camera camera = Camera.main;
+            Camera camera = GetMainCamera();
             BoxCollider sourceCollider = sourceView.GetComponent<BoxCollider>();
             Vector2 pressScreenPosition = camera.WorldToScreenPoint(
                 sourceCollider.bounds.center + Vector3.left * sourceCollider.bounds.extents.x * 0.82f);
@@ -1846,39 +2174,134 @@ namespace Gameplay.Tests
 			controller.CreatePackVendorTestCards();
 			yield return null;
 
-			yield return DragCardOntoCard(mouse, controller.FirstPackPaymentId, controller.PackVendorId);
-			Assert.That(controller.LastActionCandidates.Count, Is.EqualTo(1));
+			TabletopCardView vendorView = FindView(controller.PackVendorId);
+			yield return WaitUntilPackVendorSurface(
+				vendorView,
+				"初始卡包",
+				"价格：2",
+				"已发现：\n0/4");
+
+			AssertSinglePurchaseCandidate(
+				controller,
+				controller.FirstPackPaymentId,
+				controller.PackVendorId,
+				"卡包商贩付款规则候选本身必须成立。");
+
+			yield return HoldDraggedCardOverCard(mouse, controller.MiddleCardId, controller.PackVendorId);
+			Assert.That(
+				vendorView.IsHighlighted,
+				Is.False,
+				"StackCraft 交易区高亮只表示当前拖入对象可以交易；普通非付款卡拖到商贩上不能高亮。");
+			Release(mouse.leftButton);
+			yield return null;
+			yield return null;
+
+			int releaseCountBeforeFirstPaymentDrag = controller.ReleaseIntentCount;
+			yield return HoldDraggedCardOverCard(mouse, controller.FirstPackPaymentId, controller.PackVendorId);
+			Assert.That(
+				vendorView.IsHighlighted,
+				Is.True,
+				"金币拖到卡包商贩上时必须按 StackCraft CanTrade 语义高亮交易区。");
+			Release(mouse.leftButton);
+			yield return null;
+			yield return null;
+			Assert.That(
+				controller.ReleaseIntentCount,
+				Is.GreaterThan(releaseCountBeforeFirstPaymentDrag),
+				BuildLastReleaseDiagnostic(controller, "第一次拖拽付款没有形成正式释放事实。"));
+			Assert.That(
+				controller.LastActionCandidates.Count,
+				Is.EqualTo(1),
+				BuildLastReleaseDiagnostic(controller, "第一次拖拽付款后没有得到购买候选。"));
 			Assert.That(
 				controller.LastActionCandidates[0].Action.ContentId,
 				Is.EqualTo(new ContentId(FoundationTestSceneHarness.TestPurchaseCardPackActionContentId)));
+			Assert.That(
+				CountPlayingCardSmokeEffects(),
+				Is.Zero,
+				"付款前不应已经存在卡包商贩交易烟雾。");
 			yield return SelectActionThroughPanel(
 				controller,
 				controller.ScenarioRun.Tabletop,
 				controller.LastActionCandidates[0],
 				mouse,
 				playerInput);
+			yield return WaitUntilPlayingCardSmokeEffectAtLeast(
+				1,
+				"第一次成功付款后没有播放 StackCraft 交易烟雾。");
+			yield return WaitUntilCardSmokeEffectsReleased("第一次付款烟雾没有按粒子时长结束。");
 
 			Assert.That(
 				controller.Cards.TryGetCard(controller.PackVendorId, out TabletopCard vendorCard),
 				Is.True);
 			Assert.That(((PackVendorCard)vendorCard).PaidAmount, Is.EqualTo(1));
 			Assert.That(CountCards(controller, FoundationTestSceneHarness.TestCardPackContentId), Is.Zero);
+			yield return WaitUntilPackVendorSurface(
+				vendorView,
+				"初始卡包",
+				"价格：1",
+				"已发现：\n0/4");
 
 			yield return ClickCard(mouse, controller.PackVendorId);
 			TabletopCardInfoPanel infoPanel = Object.FindAnyObjectByType<TabletopCardInfoPanel>();
 			Assert.That(infoPanel.DisplayedDescription, Does.Contain("剩余价格：1"));
 
-			yield return DragCardOntoCard(mouse, controller.SecondPackPaymentId, controller.PackVendorId);
-			Assert.That(controller.LastActionCandidates.Count, Is.EqualTo(1));
+			AssertSinglePurchaseCandidate(
+				controller,
+				controller.SecondPackPaymentId,
+				controller.PackVendorId,
+				"卡包商贩第二次付款规则候选本身必须成立。");
+			int releaseCountBeforeSecondPaymentDrag = controller.ReleaseIntentCount;
+			yield return HoldDraggedCardOverCard(mouse, controller.SecondPackPaymentId, controller.PackVendorId);
+			Assert.That(
+				vendorView.IsHighlighted,
+				Is.True,
+				"第二枚金币拖到卡包商贩上时必须继续高亮交易区。");
+			Release(mouse.leftButton);
+			yield return null;
+			yield return null;
+			Assert.That(
+				controller.ReleaseIntentCount,
+				Is.GreaterThan(releaseCountBeforeSecondPaymentDrag),
+				BuildLastReleaseDiagnostic(controller, "第二次拖拽付款没有形成正式释放事实。"));
+			Assert.That(
+				controller.LastActionCandidates.Count,
+				Is.EqualTo(1),
+				BuildLastReleaseDiagnostic(controller, "第二次拖拽付款后没有得到购买候选。"));
 			yield return SelectActionThroughPanel(
 				controller,
 				controller.ScenarioRun.Tabletop,
 				controller.LastActionCandidates[0],
 				mouse,
 				playerInput);
+			yield return WaitUntilPlayingCardSmokeEffectAtLeast(
+				1,
+				"第二次成功付款后没有播放 StackCraft 交易烟雾。");
+			yield return WaitUntilCardSmokeEffectsReleased("第二次付款烟雾没有按粒子时长结束。");
 
 			Assert.That(((PackVendorCard)vendorCard).PaidAmount, Is.Zero);
 			Assert.That(CountCards(controller, FoundationTestSceneHarness.TestCardPackContentId), Is.EqualTo(1));
+			TabletopCard purchasedPack = controller.Cards.Stacks
+				.SelectMany(stack => stack.Cards)
+				.Single(card => card.ContentId == new ContentId(FoundationTestSceneHarness.TestCardPackContentId));
+			Assert.That(
+				controller.ScenarioRun.Tabletop.ContentIndex.TryGet(
+					vendorCard.ContentId,
+					out PackVendorDefinition vendorDefinition),
+				Is.True);
+			Vector2 vendorPosition = controller.Cards.GetStackContaining(controller.PackVendorId).Position;
+			Vector2 packPosition = controller.Cards.GetStackContaining(purchasedPack.Id).Position;
+			Assert.That(
+				Vector2.Distance(packPosition, vendorPosition + vendorDefinition.PackSpawnOffset),
+				Is.LessThan(0.001f),
+				"购买完成生成的卡包必须按 StackCraft 商贩下方偏移落位。");
+			TabletopCardView purchasedPackView = FindView(purchasedPack.Id);
+			yield return WaitUntilCardPackInstanceSurface(purchasedPackView, "初始卡包", "Starter");
+			yield return WaitUntilPackVendorSurface(
+				vendorView,
+				"初始卡包",
+				"价格：2",
+				"已发现：\n0/4");
 			yield return ClickCard(mouse, controller.PackVendorId);
 			Assert.That(infoPanel.DisplayedDescription, Does.Contain("剩余价格：2"));
 			Assert.That(infoPanel.DisplayedDescription, Does.Contain("收藏进度：0/4"));
@@ -2002,10 +2425,12 @@ namespace Gameplay.Tests
 			TabletopCardView sourceView = FindView(controller.MiddleCardId);
 			TabletopCardView targetView = FindView(controller.TargetCardId);
 			Physics.SyncTransforms();
-			Camera camera = Camera.main;
+			Camera camera = GetMainCamera();
 			BoxCollider sourceCollider = sourceView.GetComponent<BoxCollider>();
-			Vector2 sourcePosition = camera.WorldToScreenPoint(
-				sourceCollider.bounds.center + Vector3.left * sourceCollider.bounds.extents.x * 0.82f);
+			Vector2 sourcePosition = FindScreenPointThatHitsCard(
+				camera,
+				sourceCollider,
+				controller.MiddleCardId);
 			Vector2 targetPosition = camera.WorldToScreenPoint(targetView.transform.position);
 			yield return Drag(mouse, sourcePosition, targetPosition);
 
@@ -2049,7 +2474,10 @@ namespace Gameplay.Tests
 				: slotCanvas.worldCamera;
 			Vector2 slotPosition = RectTransformUtility.WorldToScreenPoint(slotCamera, slotRect.position);
 			TabletopCardView additionalView = FindView(controller.BottomCardId);
-			Vector2 additionalPosition = camera.WorldToScreenPoint(additionalView.transform.position);
+			Vector2 additionalPosition = FindScreenPointThatHitsCard(
+				camera,
+				additionalView.GetComponent<BoxCollider>(),
+				controller.BottomCardId);
 			yield return Drag(mouse, additionalPosition, slotPosition);
 
 			Assert.That(planPanel.Plan.IsReady, Is.True);
@@ -2078,7 +2506,10 @@ namespace Gameplay.Tests
 				.Single(item => item.Action.ContentId.Value ==
 					FoundationTestSceneHarness.TestActionPlanContentId);
 			ActionPlan first = controller.ScenarioRun.CreateActionPlan(candidate);
-			ActionPlan second = controller.ScenarioRun.CreateActionPlan(candidate);
+			Assert.Throws<InvalidOperationException>(() =>
+				controller.ScenarioRun.CreateActionPlan(candidate));
+			ActionPlan second = controller.ScenarioRun.CreateActionPlan(
+				CreateEmptyActionPlanCandidate(candidate));
 
 			UIKit.OpenPanelAsync<TabletopActionPlanPanel>(
 				level: UILevel.Pop,
@@ -2109,6 +2540,19 @@ namespace Gameplay.Tests
 			Assert.That(controller.ScenarioRun.Tabletop.ActionPlans.Count, Is.EqualTo(1));
 			controller.ScenarioRun.Tabletop.CancelActionPlan(first);
 			UIKit.ClosePanel(panel);
+		}
+
+		private static ActionCandidate CreateEmptyActionPlanCandidate(ActionCandidate source)
+		{
+			List<ActionSlotBinding> bindings = new List<ActionSlotBinding>(source.Bindings.Count);
+			int missingParticipantCount = 0;
+			for (int i = 0; i < source.Bindings.Count; i++)
+			{
+				ActionSlotDefinition slot = source.Bindings[i].Slot;
+				bindings.Add(new ActionSlotBinding(slot, System.Array.Empty<TabletopCardId>()));
+				missingParticipantCount += slot.MinimumParticipants;
+			}
+			return new ActionCandidate(source.Action, bindings, missingParticipantCount);
 		}
 
         [UnityTest]
@@ -2196,7 +2640,8 @@ namespace Gameplay.Tests
             yield return null;
 
             Assert.That(turnPanel.CanConfirmTurn, Is.False);
-            Assert.That(confirmButton.interactable, Is.False);
+            Assert.That(confirmButton.interactable, Is.True);
+			Assert.That(turnPanel.DisplayedTimePace, Is.EqualTo(ScenarioTimePace.Normal));
             float timeoutAt = Time.realtimeSinceStartup + 1f;
             while (turnPanel.DisplayedDayProgress <= 0f)
             {
@@ -2207,6 +2652,20 @@ namespace Gameplay.Tests
                 yield return null;
             }
             Assert.That(turnPanel.DisplayedDayProgress, Is.LessThan(1f));
+
+			confirmButton.onClick.Invoke();
+			yield return null;
+			Assert.That(turnPanel.DisplayedTimePace, Is.EqualTo(ScenarioTimePace.Fast));
+
+			confirmButton.onClick.Invoke();
+			yield return null;
+			Assert.That(turnPanel.DisplayedTimePace, Is.EqualTo(ScenarioTimePace.Paused));
+			float pausedProgress = turnPanel.DisplayedDayProgress;
+			yield return null;
+			yield return null;
+			Assert.That(
+				turnPanel.DisplayedDayProgress,
+				Is.EqualTo(pausedProgress).Within(0.001f));
         }
 
         [UnityTest]
@@ -2229,7 +2688,7 @@ namespace Gameplay.Tests
             TabletopCardView sourceView = FindView(controller.MiddleCardId);
             TabletopCardView targetView = FindView(controller.TargetCardId);
             Physics.SyncTransforms();
-            Camera camera = Camera.main;
+            Camera camera = GetMainCamera();
             BoxCollider sourceCollider = sourceView.GetComponent<BoxCollider>();
             Vector2 pressScreenPosition = camera.WorldToScreenPoint(
                 sourceCollider.bounds.center + Vector3.left * sourceCollider.bounds.extents.x * 0.82f);
@@ -2320,7 +2779,14 @@ namespace Gameplay.Tests
 			CharacterCard character = (CharacterCard)tabletop.CreateCard(
 				new ContentId(FoundationTestSceneHarness.TestContentId),
 				new Vector2(-2.5f, 1.6f));
-			character.AbilitySystem.SetAttrBaseValue(XAttrSet.FightUnit, XAttribute.Health, 20f);
+			CharacterAttributes.SetBaseValueAndRecalculate(
+				character.AbilitySystem,
+				CharacterAttributes.MaxHealth,
+				100f);
+			CharacterAttributes.SetBaseValueAndRecalculate(
+				character.AbilitySystem,
+				CharacterAttributes.Health,
+				20f);
 			TabletopCard food = tabletop.CreateCard(
 				new ContentId(FoundationTestSceneHarness.TestFoodContentId),
 				new Vector2(-2f, 1.6f));
@@ -2355,12 +2821,18 @@ namespace Gameplay.Tests
 			Assert.That(turnPanel.DisplayedCurrency, Is.Zero);
 			Assert.That(turnPanel.DisplayedCardsOwned, Is.EqualTo(5));
 			Assert.That(turnPanel.DisplayedCardLimit, Is.EqualTo(3));
+			string[] initialHudTexts = turnPanel.GetComponentsInChildren<TMP_Text>(true)
+				.Select(text => text.text)
+				.ToArray();
+			CollectionAssert.Contains(initialHudTexts, "1/1");
+			CollectionAssert.Contains(initialHudTexts, "0");
+			CollectionAssert.Contains(initialHudTexts, "5/3");
 			Assert.That(
-				turnPanel.GetComponentsInChildren<TMP_Text>(true).Any(text =>
-					text.text.Contains("食物 1/1") &&
-					text.text.Contains("货币 0") &&
-					text.text.Contains("卡牌 5/3")),
-				Is.True);
+				initialHudTexts.Any(text =>
+					text.Contains("食物 ") ||
+					text.Contains("货币 ") ||
+					text.Contains("卡牌 ")),
+				Is.False);
 
 			yield return ClickConfirmTurnButton(mouse);
 			Assert.That(run.DayCyclePhase, Is.EqualTo(ScenarioDayCyclePhase.AwaitingFeedingConfirmation));
@@ -2371,7 +2843,7 @@ namespace Gameplay.Tests
 			yield return ClickConfirmTurnButton(mouse);
 
 			Assert.That(run.Tabletop.Cards.TryGetCard(character.Id, out _), Is.True);
-			float healingTimeoutAt = Time.realtimeSinceStartup + 2f;
+			float healingTimeoutAt = Time.realtimeSinceStartup + 5f;
 			while (character.CurrentHealth <= 20f)
 			{
 				Assert.Less(Time.realtimeSinceStartup, healingTimeoutAt, "进食后 EX-GAS 没有结算生命恢复。");
@@ -2394,7 +2866,7 @@ namespace Gameplay.Tests
 				yield return null;
 			}
 
-			Camera camera = Camera.main;
+			Camera camera = GetMainCamera();
 			BoxCollider sellableCollider = sellableView.GetComponent<BoxCollider>();
 			Vector3 exposedSellablePoint = sellableCollider.bounds.center +
 				Vector3.down * sellableCollider.bounds.extents.y * 0.82f;
@@ -2434,11 +2906,17 @@ namespace Gameplay.Tests
 			Assert.That(turnPanel.DisplayedCurrency, Is.EqualTo(2));
 			Assert.That(turnPanel.DisplayedCardsOwned, Is.EqualTo(3));
 			Assert.That(turnPanel.DisplayedCardLimit, Is.EqualTo(3));
+			string[] dayEndHudTexts = turnPanel.GetComponentsInChildren<TMP_Text>(true)
+				.Select(text => text.text)
+				.ToArray();
+			CollectionAssert.Contains(dayEndHudTexts, "0/1");
+			CollectionAssert.Contains(dayEndHudTexts, "2");
+			CollectionAssert.Contains(dayEndHudTexts, "3/3");
 			Assert.That(
-				turnPanel.GetComponentsInChildren<TMP_Text>(true).Any(text =>
-					text.text.Contains("食物 0/1") ||
-					text.text.Contains("货币 2") ||
-					text.text.Contains("卡牌 3/3")),
+				dayEndHudTexts.Any(text =>
+					text.Contains("食物 ") ||
+					text.Contains("货币 ") ||
+					text.Contains("卡牌 ")),
 				Is.False);
 			Assert.That(
 				turnPanel.GetComponentsInChildren<TMP_Text>(true).Any(text =>
@@ -2521,6 +2999,16 @@ namespace Gameplay.Tests
             Assert.That(scenarioDirector.ActiveRun.ConfirmedTurnIndex, Is.Zero);
         }
 
+        private static Camera GetMainCamera()
+        {
+            Camera camera = GameManager.MainCamera;
+            Assert.That(
+                camera,
+                Is.Not.Null,
+                "地基测试场景必须通过正式场景组合根注册主相机，测试不能退回 Unity 标签查找。");
+            return camera;
+        }
+
         private static TabletopCardView FindView(TabletopCardId cardId)
         {
             return Object.FindObjectsByType<TabletopCardView>()
@@ -2541,22 +3029,41 @@ namespace Gameplay.Tests
 			Vector2 screenPosition,
 			out TabletopCardView view)
 		{
-			TabletopCardView[] views = Object.FindObjectsByType<TabletopCardView>();
-			if (views.Length == 0 ||
-				!TryProjectScreenToTable(
-					camera,
-					views[0].transform.parent,
-					screenPosition,
-					out Vector2 tablePosition))
+			if (camera == null)
 			{
 				view = null;
 				return false;
 			}
 
-			view = views
-				.Where(candidate => IsInsideViewFootprint(candidate, tablePosition))
-				.OrderByDescending(candidate => candidate.SortingOrder)
-				.FirstOrDefault();
+			Ray ray = camera.ScreenPointToRay(screenPosition);
+			RaycastHit[] hits = Physics.RaycastAll(
+				ray,
+				float.PositiveInfinity,
+				Physics.DefaultRaycastLayers,
+				QueryTriggerInteraction.Ignore);
+			TabletopCardView bestView = null;
+			float bestDistance = float.PositiveInfinity;
+			int bestSortingOrder = int.MinValue;
+			for (int hitIndex = 0; hitIndex < hits.Length; hitIndex++)
+			{
+				RaycastHit hit = hits[hitIndex];
+				TabletopCardView candidate = hit.collider.GetComponentInParent<TabletopCardView>();
+				if (candidate == null || !candidate.CardId.IsValid)
+				{
+					continue;
+				}
+				if (bestView == null ||
+					hit.distance < bestDistance - 0.0001f ||
+					(Mathf.Abs(hit.distance - bestDistance) <= 0.0001f &&
+					 candidate.SortingOrder > bestSortingOrder))
+				{
+					bestView = candidate;
+					bestDistance = hit.distance;
+					bestSortingOrder = candidate.SortingOrder;
+				}
+			}
+
+			view = bestView;
 			return view != null;
 		}
 
@@ -2566,6 +3073,8 @@ namespace Gameplay.Tests
 			TabletopCardId expectedCardId)
 		{
 			const int sampleSteps = 12;
+			int blockedUiCandidateCount = 0;
+			string firstBlockedUiDiagnostic = string.Empty;
 			for (int zIndex = 0; zIndex <= sampleSteps; zIndex++)
 			{
 				float normalizedZ = Mathf.Lerp(0.98f, -0.98f, zIndex / (float)sampleSteps);
@@ -2581,7 +3090,15 @@ namespace Gameplay.Tests
 					if (TryFindCardHitAt(camera, screenPoint, out TabletopCardView hitView) &&
 						hitView.CardId == expectedCardId)
 					{
-						return screenPoint;
+						if (!UIPointerUtility.IsPositionOverUI(screenPoint))
+						{
+							return screenPoint;
+						}
+						blockedUiCandidateCount++;
+						if (firstBlockedUiDiagnostic.Length == 0)
+						{
+							firstBlockedUiDiagnostic = DescribeUiRaycastAt(screenPoint);
+						}
 					}
 				}
 			}
@@ -2602,7 +3119,9 @@ namespace Gameplay.Tests
 						return $"{view.CardId}:pos={tablePosition:F3},stack={stackPosition:F3},index={stackIndex},sort={view.SortingOrder},size={colliderSize}";
 					}));
 			Assert.Fail(
-				"当前相机与 Collider 下找不到可直接命中目标牌的外露点，无法验证从牌堆中间拖出尾部。" +
+				$"当前相机与 Collider 下找不到可直接命中卡牌 {expectedCardId}、且不被 UI 挡住的外露点，无法验证牌桌输入。" +
+				$" 已命中但被 UI 挡住的候选点数={blockedUiCandidateCount}。" +
+				$" 首个阻挡UI={firstBlockedUiDiagnostic}。" +
 				" 当前视图：" + viewDiagnostics);
 			return default;
 		}
@@ -2638,6 +3157,127 @@ namespace Gameplay.Tests
 					$"{timeoutMessage} 当前={ToTablePosition(view):F3}，期望={expectedTablePosition:F3}");
 				yield return null;
 			}
+		}
+
+		private static IEnumerator WaitUntilPackVendorSurface(
+			TabletopCardView view,
+			string expectedTitle,
+			string expectedPrice,
+			string expectedTracker)
+		{
+			float timeoutAt = Time.realtimeSinceStartup + 1f;
+			while (view.DisplayedTitleText != expectedTitle ||
+				view.DisplayedPriceText != expectedPrice ||
+				view.DisplayedNutritionText != expectedTracker)
+			{
+				Assert.Less(
+					Time.realtimeSinceStartup,
+					timeoutAt,
+					"卡包商贩表面没有按 StackCraft 文本语义完成投影。" +
+					$" 当前=({view.DisplayedTitleText}, {view.DisplayedPriceText}, {view.DisplayedNutritionText})，" +
+					$"期望=({expectedTitle}, {expectedPrice}, {expectedTracker})");
+				yield return null;
+			}
+		}
+
+		private static IEnumerator WaitUntilCardPackInstanceSurface(
+			TabletopCardView view,
+			string expectedTitle,
+			string expectedArtworkName)
+		{
+			Vector2 expectedSize = new Vector2(0.9f, 1.3000002f);
+			float timeoutAt = Time.realtimeSinceStartup + 5f;
+			while (view.DisplayedTitleText != expectedTitle ||
+				view.DisplayedPriceText.Length != 0 ||
+				view.DisplayedNutritionText.Length != 0 ||
+				view.DisplayedSurfaceMaterial == null ||
+				view.DisplayedSurfaceMaterial.name != "卡牌表面_卡包" ||
+				view.DisplayedArtwork == null ||
+				view.DisplayedArtwork.name != expectedArtworkName ||
+				Vector2.Distance(view.AppliedCardSize, expectedSize) > 0.001f)
+			{
+				Assert.Less(
+					Time.realtimeSinceStartup,
+					timeoutAt,
+					"购买生成的卡包没有按 StackCraft PackInstance 独立表面完成投影。" +
+					$" 当前标题={view.DisplayedTitleText}，价格={view.DisplayedPriceText}，" +
+					$"信息={view.DisplayedNutritionText}，材质={view.DisplayedSurfaceMaterial?.name ?? "(空)"}，" +
+					$"卡图={view.DisplayedArtwork?.name ?? "(空)"}，尺寸={view.AppliedCardSize:F3}。");
+				yield return null;
+			}
+
+			BoxCollider collider = view.GetComponent<BoxCollider>();
+			Assert.That(collider, Is.Not.Null, "卡包视图必须保留 BoxCollider 作为 PackInstance 尺寸回读入口。");
+			Assert.That(collider.size.x, Is.EqualTo(expectedSize.x).Within(0.001f));
+			Assert.That(collider.size.z, Is.EqualTo(expectedSize.y).Within(0.001f));
+			Assert.That(collider.size.y, Is.EqualTo(0f).Within(0.001f));
+		}
+
+		private static void AssertSinglePurchaseCandidate(
+			FoundationTestSceneHarness controller,
+			TabletopCardId sourceCardId,
+			TabletopCardId targetCardId,
+			string message)
+		{
+			IReadOnlyList<ActionCandidate> candidates =
+				controller.QueryTestActionCandidates(sourceCardId, targetCardId);
+			Assert.That(
+				candidates.Count,
+				Is.EqualTo(1),
+				message + " " + controller.BuildActionCandidateDiagnostic(sourceCardId, targetCardId));
+			Assert.That(
+				candidates[0].Action.ContentId,
+				Is.EqualTo(new ContentId(FoundationTestSceneHarness.TestPurchaseCardPackActionContentId)),
+				message);
+		}
+
+		private static string BuildLastReleaseDiagnostic(
+			FoundationTestSceneHarness controller,
+			string message)
+		{
+			TabletopCardPointerReleaseIntent intent = controller.LastReleaseIntent;
+			return message +
+				$" 释放次数={controller.ReleaseIntentCount}，" +
+				$"来源={intent.CardId}，拖拽={intent.IsDrag}，目标={intent.TargetCardId}，" +
+				$"按下={intent.PressPointerPosition}，释放={intent.ReleasePointerPosition}，" +
+				$"请求堆位置={intent.RequestedStackPosition}。";
+		}
+
+		private static string BuildBattleLeaveDiagnostic(
+			FoundationTestSceneHarness controller,
+			Rect battleArea,
+			Rect placementBounds,
+			Vector2 intendedReleasePosition,
+			Vector2 pressTablePosition,
+			Vector2 battlePose,
+			string message)
+		{
+			TabletopCardPointerReleaseIntent intent = controller.LastReleaseIntent;
+			Vector2 expectedRequestedPosition = intendedReleasePosition + (battlePose - pressTablePosition);
+			string placementPreview;
+			try
+			{
+				placementPreview = intent.CardId.IsValid
+					? controller.Cards.CanPlaceStack(
+						intent.CardId,
+						intent.RequestedStackPosition,
+						controller.PlacementRules).ToString()
+					: "无有效卡牌";
+			}
+			catch (System.Exception exception)
+			{
+				placementPreview = exception.GetType().Name + ": " + exception.Message;
+			}
+
+			return message +
+				$" 释放次数={controller.ReleaseIntentCount}，" +
+				$"来源={intent.CardId}，拖拽={intent.IsDrag}，目标={intent.TargetCardId}，" +
+				$"按下={intent.PressPointerPosition}，释放={intent.ReleasePointerPosition}，" +
+				$"请求堆位置={intent.RequestedStackPosition}，" +
+				$"期望释放={intendedReleasePosition}，期望请求堆位置={expectedRequestedPosition}，" +
+				$"战斗区={battleArea}，释放在战斗区内={battleArea.Contains(intent.ReleasePointerPosition)}，" +
+				$"牌桌边界={placementBounds}，请求在边界内={placementBounds.Contains(intent.RequestedStackPosition)}，" +
+				$"放置预演={placementPreview}。";
 		}
 
 		private static Vector2 FindBlankReleasePointThatOverlapsStack(
@@ -2799,6 +3439,92 @@ namespace Gameplay.Tests
 			}
 		}
 
+		private static IEnumerator WaitUntilPlayingCardSmokeEffectAtLeast(
+			int expectedMinimum,
+			string timeoutMessage)
+		{
+			float timeoutAt = Time.realtimeSinceStartup + 5f;
+			while (CountPlayingCardSmokeEffects() < expectedMinimum)
+			{
+				Assert.Less(Time.realtimeSinceStartup, timeoutAt, timeoutMessage);
+				yield return null;
+			}
+		}
+
+		private static IEnumerator WaitUntilCardSmokeEffectsReleased(string timeoutMessage)
+		{
+			float timeoutAt = Time.realtimeSinceStartup + 5f;
+			while (CountPlayingCardSmokeEffects() > 0)
+			{
+				Assert.Less(Time.realtimeSinceStartup, timeoutAt, timeoutMessage);
+				yield return null;
+			}
+		}
+
+		private static int CountPlayingCardSmokeEffects()
+		{
+			return Object.FindObjectsByType<TabletopCardSmokeEffectView>(
+					FindObjectsInactive.Exclude,
+					FindObjectsSortMode.None)
+				.Count(view => view.IsPlaying);
+		}
+
+		private static string DescribeUiRaycastAt(Vector2 screenPosition)
+		{
+			EventSystem eventSystem = GameManager.EventSystem;
+			if (eventSystem == null)
+			{
+				return "(无正式 EventSystem)";
+			}
+
+			PointerEventData eventData = new PointerEventData(eventSystem)
+			{
+				position = screenPosition
+			};
+			List<RaycastResult> results = new List<RaycastResult>();
+			eventSystem.RaycastAll(eventData, results);
+			if (results.Count == 0)
+			{
+				return "(无 UI 射线命中)";
+			}
+
+			return string.Join(
+				"; ",
+				results.Select(result =>
+				{
+					GameObject hitObject = result.gameObject;
+					string path = hitObject == null ? "(空对象)" : BuildTransformPath(hitObject.transform);
+					Graphic graphic = hitObject == null ? null : hitObject.GetComponent<Graphic>();
+					CanvasGroup[] groups = hitObject == null
+						? System.Array.Empty<CanvasGroup>()
+						: hitObject.GetComponentsInParent<CanvasGroup>(includeInactive: false);
+					string groupText = groups.Length == 0
+						? "无CanvasGroup"
+						: string.Join(
+							">",
+							groups.Select(group =>
+								$"{group.name}:blocks={group.blocksRaycasts},interactable={group.interactable}"));
+					return $"{path},raycastTarget={graphic?.raycastTarget.ToString() ?? "(非Graphic)"},{groupText}";
+				}));
+		}
+
+		private static string BuildTransformPath(Transform transform)
+		{
+			if (transform == null)
+			{
+				return "(空 Transform)";
+			}
+
+			List<string> names = new List<string>();
+			while (transform != null)
+			{
+				names.Add(transform.name);
+				transform = transform.parent;
+			}
+			names.Reverse();
+			return string.Join("/", names);
+		}
+
 		private IEnumerator Drag(Mouse mouse, Vector2 start, Vector2 end)
 		{
 			Move(mouse.position, start);
@@ -2842,7 +3568,20 @@ namespace Gameplay.Tests
 				yield return null;
 			}
 			Physics.SyncTransforms();
-			Vector2 screenPosition = Camera.main.WorldToScreenPoint(view.GetComponent<BoxCollider>().bounds.center);
+			Camera camera = GetMainCamera();
+			Vector2 screenPosition = FindScreenPointThatHitsCard(
+				camera,
+				view.GetComponent<BoxCollider>(),
+				cardId);
+			Assert.That(
+				UIPointerUtility.IsPositionOverUI(screenPosition),
+				Is.False,
+				"测试点击点被正式 UI 射线挡住，牌桌输入不会选择卡牌。" +
+				" UI命中=" + DescribeUiRaycastAt(screenPosition));
+			Assert.That(
+				GameManager.InputSystem.IsGameplayActionBlocked(EGameplayInputAction.Click),
+				Is.False,
+				"测试点击卡牌时 Gameplay 点击输入仍被动作图释放门禁阻挡。");
 			Move(mouse.position, screenPosition);
 			yield return null;
 			Press(mouse.leftButton);
@@ -2850,12 +3589,23 @@ namespace Gameplay.Tests
 			Release(mouse.leftButton);
 			yield return null;
 			yield return null;
+			TabletopView tabletopView = Object.FindAnyObjectByType<TabletopView>();
+			Assert.That(tabletopView, Is.Not.Null);
+			float selectionTimeoutAt = Time.realtimeSinceStartup + 1f;
+			while (tabletopView.ReadableCardId != cardId)
+			{
+				Assert.Less(
+					Time.realtimeSinceStartup,
+					selectionTimeoutAt,
+					$"点击卡牌 {cardId} 后没有成为详情面板可读对象。" +
+					$" 当前悬浮={tabletopView.HoveredCardId}，选中={tabletopView.SelectedCardId}，可读={tabletopView.ReadableCardId}。");
+				yield return null;
+			}
 		}
 
 		private static IEnumerator CaptureVisualEvidence(string fileName)
 		{
-			string screenshotDirectory = Path.GetFullPath(
-				Path.Combine(Application.dataPath, "..", "Assets", "Screenshots", "FoundationE2E"));
+			string screenshotDirectory = GetFoundationE2EScreenshotDirectory();
 			Directory.CreateDirectory(screenshotDirectory);
 			string screenshotPath = Path.Combine(screenshotDirectory, fileName);
 			if (File.Exists(screenshotPath))
@@ -2877,7 +3627,98 @@ namespace Gameplay.Tests
 			yield return null;
 		}
 
+		private static string GetFoundationE2EScreenshotDirectory()
+		{
+			return Path.GetFullPath(
+				Path.Combine(Application.dataPath, "..", "Assets", "Screenshots", "FoundationE2E"));
+		}
+
+		private static void CreateVisualEvidenceContactSheet(
+			IReadOnlyList<string> fileNames,
+			string outputFileName)
+		{
+			string screenshotDirectory = GetFoundationE2EScreenshotDirectory();
+			var textures = new List<Texture2D>(fileNames.Count);
+			try
+			{
+				foreach (string fileName in fileNames)
+				{
+					string path = Path.Combine(screenshotDirectory, fileName);
+					Assert.That(File.Exists(path), Is.True, $"端到端过程图缺失，无法生成拼图：{path}");
+
+					var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+					Assert.That(
+						ImageConversion.LoadImage(texture, File.ReadAllBytes(path)),
+						Is.True,
+						$"端到端过程图无法解码，无法生成拼图：{path}");
+					textures.Add(texture);
+				}
+
+				int columns = Mathf.Min(3, textures.Count);
+				int rows = Mathf.CeilToInt(textures.Count / (float)columns);
+				int cellWidth = textures.Max(texture => texture.width);
+				int cellHeight = textures.Max(texture => texture.height);
+				var contactSheet = new Texture2D(
+					cellWidth * columns,
+					cellHeight * rows,
+					TextureFormat.RGBA32,
+					false);
+				try
+				{
+					var background = new Color32[contactSheet.width * contactSheet.height];
+					var backgroundColor = new Color32(18, 18, 18, 255);
+					for (int i = 0; i < background.Length; i++)
+					{
+						background[i] = backgroundColor;
+					}
+					contactSheet.SetPixels32(background);
+
+					for (int i = 0; i < textures.Count; i++)
+					{
+						Texture2D source = textures[i];
+						int column = i % columns;
+						int rowFromTop = i / columns;
+						int x = column * cellWidth + (cellWidth - source.width) / 2;
+						int y = (rows - 1 - rowFromTop) * cellHeight + (cellHeight - source.height) / 2;
+						contactSheet.SetPixels32(x, y, source.width, source.height, source.GetPixels32());
+					}
+					contactSheet.Apply(false, false);
+
+					string outputPath = Path.Combine(screenshotDirectory, outputFileName);
+					if (File.Exists(outputPath))
+					{
+						File.Delete(outputPath);
+					}
+					File.WriteAllBytes(outputPath, ImageConversion.EncodeToPNG(contactSheet));
+					Assert.That(File.Exists(outputPath), Is.True, $"端到端过程拼图没有写入：{outputPath}");
+					Assert.That(new FileInfo(outputPath).Length, Is.GreaterThan(0), $"端到端过程拼图为空：{outputPath}");
+				}
+				finally
+				{
+					UnityEngine.Object.Destroy(contactSheet);
+				}
+			}
+			finally
+			{
+				foreach (Texture2D texture in textures)
+				{
+					UnityEngine.Object.Destroy(texture);
+				}
+			}
+		}
+
 		private IEnumerator DragCardOntoCard(
+			Mouse mouse,
+			TabletopCardId sourceCardId,
+			TabletopCardId targetCardId)
+		{
+			yield return HoldDraggedCardOverCard(mouse, sourceCardId, targetCardId);
+			Release(mouse.leftButton);
+			yield return null;
+			yield return null;
+		}
+
+		private IEnumerator HoldDraggedCardOverCard(
 			Mouse mouse,
 			TabletopCardId sourceCardId,
 			TabletopCardId targetCardId)
@@ -2894,9 +3735,113 @@ namespace Gameplay.Tests
 				yield return null;
 			}
 			Physics.SyncTransforms();
-			Vector2 start = Camera.main.WorldToScreenPoint(source.GetComponent<BoxCollider>().bounds.center);
-			Vector2 end = Camera.main.WorldToScreenPoint(target.GetComponent<BoxCollider>().bounds.center);
-			yield return Drag(mouse, start, end);
+			Camera camera = GetMainCamera();
+			Vector2 start = FindScreenPointThatHitsCard(
+				camera,
+				source.GetComponent<BoxCollider>(),
+				sourceCardId);
+			Assert.That(
+				UIPointerUtility.IsPositionOverUI(start),
+				Is.False,
+				"测试拖拽按下点被正式 UI 射线挡住，牌桌输入不会开始拖拽。" +
+				" UI命中=" + DescribeUiRaycastAt(start));
+			Assert.That(FindCardHitAt(camera, start).CardId, Is.EqualTo(sourceCardId));
+			Assert.That(
+				GameManager.InputSystem.IsGameplayInputLocked,
+				Is.False,
+				"测试拖拽开始前 Gameplay 输入仍被剧本表现或其它正式流程锁定。");
+			Assert.That(
+				GameManager.InputSystem.IsGameplayActionBlocked(EGameplayInputAction.Click),
+				Is.False,
+				"测试拖拽开始前 Gameplay 点击输入仍被动作图释放门禁阻挡。");
+			Move(mouse.position, start);
+			yield return null;
+			Assert.That(
+				Vector2.Distance(
+					GameManager.InputSystem.ReadPointerScreenPosition(EActionMap.Gameplay),
+					start),
+				Is.LessThan(0.5f),
+				"正式 Gameplay 指针输入没有读到测试拖拽按下点。");
+			TabletopCardDragInput dragInput = Object.FindAnyObjectByType<TabletopCardDragInput>();
+			Assert.That(dragInput, Is.Not.Null, "统一测试场景缺少正式牌桌拖拽输入组件。");
+			Assert.That(dragInput.isActiveAndEnabled, Is.True, "正式牌桌拖拽输入组件没有处于启用状态。");
+			Press(mouse.leftButton);
+			float sessionTimeoutAt = Time.realtimeSinceStartup + 1f;
+			while (!dragInput.IsPointerSessionActive)
+			{
+				Assert.Less(
+					Time.realtimeSinceStartup,
+					sessionTimeoutAt,
+					BuildDragStartDiagnostic(mouse, camera, start, sourceCardId));
+				yield return null;
+			}
+			Vector2 end = FindDropScreenPointThatHitsCard(
+				camera,
+				target,
+				targetCardId);
+			Assert.That(FindCardHitAt(camera, end).CardId, Is.EqualTo(targetCardId));
+			Move(mouse.position, end);
+			yield return null;
+			yield return null;
+			Assert.That(
+				dragInput.IsDragging,
+				Is.True,
+				$"拖到目标卡牌 {targetCardId} 后仍未进入拖拽状态。");
+		}
+
+		private static string BuildDragStartDiagnostic(
+			Mouse mouse,
+			Camera camera,
+			Vector2 start,
+			TabletopCardId sourceCardId)
+		{
+			PlayerInput playerInput = Object.FindAnyObjectByType<PlayerInput>();
+			InputAction clickAction = playerInput?.actions
+				?.FindActionMap(EActionMap.Gameplay.ToString(), throwIfNotFound: false)
+				?.FindAction("Click", throwIfNotFound: false);
+			string currentActionMap = playerInput?.currentActionMap?.name ?? "(无当前动作图)";
+			string clickEnabled = clickAction?.enabled.ToString() ?? "(缺少 Click Action)";
+			string clickPressed = clickAction?.IsPressed().ToString() ?? "(缺少 Click Action)";
+			string mousePressed = mouse?.leftButton.isPressed.ToString() ?? "(缺少测试鼠标)";
+			string gameCoreClickPressed = GameManager.InputSystem
+				.IsGameplayActionPressed(EGameplayInputAction.Click)
+				.ToString();
+			string gameplayLocked = GameManager.InputSystem.IsGameplayInputLocked.ToString();
+			string gameplayClickBlocked = GameManager.InputSystem
+				.IsGameplayActionBlocked(EGameplayInputAction.Click)
+				.ToString();
+			string uiDiagnostic = UIPointerUtility.IsPositionOverUI(start)
+				? DescribeUiRaycastAt(start)
+				: "(未被 UI 阻挡)";
+			string physicsHit = TryFindCardHitAt(camera, start, out TabletopCardView hitView)
+				? hitView.CardId.ToString()
+				: "(未命中卡牌)";
+			Vector2 pointerPosition = GameManager.InputSystem.ReadPointerScreenPosition(EActionMap.Gameplay);
+
+			return $"按下卡牌 {sourceCardId} 后没有建立牌桌拖拽会话。" +
+				$" 当前动作图={currentActionMap}，Click启用={clickEnabled}，Click按下={clickPressed}，" +
+				$"测试鼠标左键按下={mousePressed}，正式点击按下={gameCoreClickPressed}，" +
+				$"Gameplay锁定={gameplayLocked}，点击门禁={gameplayClickBlocked}，" +
+				$"指针={pointerPosition}，目标按下点={start}，物理命中卡牌={physicsHit}，UI命中={uiDiagnostic}";
+		}
+
+		private static Vector2 FindDropScreenPointThatHitsCard(
+			Camera camera,
+			TabletopCardView target,
+			TabletopCardId expectedCardId)
+		{
+			Vector2 centerScreenPoint = camera.WorldToScreenPoint(target.transform.position);
+			if (TryFindCardHitAt(camera, centerScreenPoint, out TabletopCardView hitView) &&
+				hitView.CardId == expectedCardId &&
+				!UIPointerUtility.IsPositionOverUI(centerScreenPoint))
+			{
+				return centerScreenPoint;
+			}
+
+			return FindScreenPointThatHitsCard(
+				camera,
+				target.GetComponent<BoxCollider>(),
+				expectedCardId);
 		}
 
 		private static int CountCards(FoundationTestSceneHarness controller, string contentId)

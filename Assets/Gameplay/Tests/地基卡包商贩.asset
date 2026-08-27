@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.PackVendorDefinition
   m_contentId:
     m_value: test.foundation.pack.vendor
-  m_tagCodes: e9030000
-  m_displayName: "\u5361\u5305\u5546\u8D29"
-  m_description: "\u6295\u5165 Coin \u8D2D\u4E70 Starter \u5305\u3002"
+  m_tagCodes: e9030000ee157a00
+  m_displayName: 卡包商贩
+  m_description: 投入金币购买初始卡包。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 0
-  m_countsTowardCardLimit: 1
+  m_countsTowardCardLimit: 0
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
@@ -40,7 +40,10 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u5EFA\u7B51"
     Guid: b09cc8c4e00a4c3083b839e8f97eeb6d
     Locked: 1
+  m_overrideViewSize: 1
+  m_viewSize: {x: 0.90000004, y: 1.1250004}
   m_offeredPackId:
     m_value: test.foundation.pack
   m_price: 2
   m_minimumCompletedQuests: 0
+  m_packSpawnOffset: {x: 0, y: -1.4}

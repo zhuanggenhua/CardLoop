@@ -18,26 +18,32 @@ namespace GameCore
             SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationSecondMapTest.unity");
         }
 
-        [MenuItem("Scenes/Scenes/FoundationTest", priority = 1002)]
-        private static void OpenScene_002_Scenes_FoundationTest()
+        [MenuItem("Scenes/Scenes/FoundationStackCraftParityTest", priority = 1002)]
+        private static void OpenScene_002_Scenes_FoundationStackCraftParityTest()
+        {
+            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationStackCraftParityTest.unity");
+        }
+
+        [MenuItem("Scenes/Scenes/FoundationTest", priority = 1003)]
+        private static void OpenScene_003_Scenes_FoundationTest()
         {
             SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationTest.unity");
         }
 
-        [MenuItem("Scenes/Scenes/FoundationTitleTest", priority = 1003)]
-        private static void OpenScene_003_Scenes_FoundationTitleTest()
+        [MenuItem("Scenes/Scenes/FoundationTitleTest", priority = 1004)]
+        private static void OpenScene_004_Scenes_FoundationTitleTest()
         {
             SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationTitleTest.unity");
         }
 
-        [MenuItem("Scenes/Scenes/SampleScene", priority = 1004)]
-        private static void OpenScene_004_Scenes_SampleScene()
+        [MenuItem("Scenes/Scenes/SampleScene", priority = 1005)]
+        private static void OpenScene_005_Scenes_SampleScene()
         {
             SceneMenuRegistry.OpenScene("Assets/Scenes/SampleScene.unity");
         }
 
-        [MenuItem("Scenes/Settings/Scenes/URP2DSceneTemplate", priority = 1005)]
-        private static void OpenScene_005_Settings_Scenes_URP2DSceneTemplate()
+        [MenuItem("Scenes/Settings/Scenes/URP2DSceneTemplate", priority = 1006)]
+        private static void OpenScene_006_Settings_Scenes_URP2DSceneTemplate()
         {
             SceneMenuRegistry.OpenScene("Assets/Settings/Scenes/URP2DSceneTemplate.unity");
         }

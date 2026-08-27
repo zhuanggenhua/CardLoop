@@ -4914,7 +4914,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 40a1b0487151466eb7107f156f8c06bb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_particleSystem: {fileID: 1970284198028035618}
   m_renderer: {fileID: 1346825080441704261}

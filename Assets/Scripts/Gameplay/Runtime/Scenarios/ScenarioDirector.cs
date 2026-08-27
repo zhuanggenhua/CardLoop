@@ -1,31 +1,40 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Cysharp.Threading.Tasks;
 using GameCore;
 using Gameplay.Content;
+using Gameplay.Tabletop;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using YokiFrame;
 
 namespace Gameplay.Scenarios
 {
-	/// <summary>
-	/// 进程级单局编排入口，负责开始、推进和结束唯一活动剧本实例。
-	/// </summary>
+		/// <summary>
+		/// 进程级单局编排入口，负责开始、推进和结束唯一活动剧本实例。
+		/// </summary>
 	[DisallowMultipleComponent]
 	public sealed class ScenarioDirector : AGameSystem
 	{
-		private const string YooAssetContentTag = "gameplay-content";
+		private static readonly object SequenceInputLockRequester = new object();
+		private static readonly object SequencePauseLockRequester = new object();
 		private static readonly IReadOnlyCollection<Type> SystemStartupDependencies =
 			new[] { typeof(SceneSystem) };
 
 		private ResourceHandle<IList<ContentAsset>> m_contentHandle;
+		private readonly Queue<ScenarioSequencePresentationRequestEvent> m_sequencePresentationQueue =
+			new Queue<ScenarioSequencePresentationRequestEvent>();
 
 		private ScenarioRun m_activeRun;
 		private int? m_activeSaveSlotId;
 		private bool m_scenarioChangeInProgress;
 		private string m_returnSceneAddress = string.Empty;
+		private Coroutine m_sequencePresentationCoroutine;
+		private bool m_sequenceInputLockHeld;
+		private bool m_sequencePauseLockHeld;
+		private bool m_sequencePresentationSubscribed;
 
 		public override IReadOnlyCollection<Type> StartupDependencies => SystemStartupDependencies;
 
@@ -51,16 +60,21 @@ namespace Gameplay.Scenarios
 				throw new InvalidOperationException("剧本导演已经启动，不能重复进入启动生命周期。");
 			}
 			base.enabled = true;
+			RegisterSequencePresentationEvents();
 		}
 
 		public override void OnSystemStop()
 		{
+			UnregisterSequencePresentationEvents();
+			StopSequencePresentation();
 			base.enabled = false;
 			ReleaseActiveRun();
 		}
 
 		public override void OnSystemShutdown()
 		{
+			UnregisterSequencePresentationEvents();
+			StopSequencePresentation();
 			base.enabled = false;
 			ReleaseActiveRun();
 		}
@@ -118,7 +132,7 @@ namespace Gameplay.Scenarios
 
 			m_scenarioChangeInProgress = true;
 			ResourceHandle<IList<ContentAsset>> contentHandle =
-				ResourceSystem.LoadAssetsByAssetTagAsync<ContentAsset>(YooAssetContentTag);
+				ResourceSystem.LoadAssetsByAssetTagAsync<ContentAsset>(ContentAsset.YooAssetContentTag);
 			bool handleTransferred = false;
 			try
 			{
@@ -291,7 +305,7 @@ namespace Gameplay.Scenarios
 
 			m_scenarioChangeInProgress = true;
 			ResourceHandle<IList<ContentAsset>> contentHandle =
-				ResourceSystem.LoadAssetsByAssetTagAsync<ContentAsset>(YooAssetContentTag);
+				ResourceSystem.LoadAssetsByAssetTagAsync<ContentAsset>(ContentAsset.YooAssetContentTag);
 			bool handleTransferred = false;
 			ScenarioRun restoredRun = null;
 			try
@@ -516,6 +530,7 @@ namespace Gameplay.Scenarios
 
 		private void ReleaseActiveRun()
 		{
+			StopSequencePresentation();
 			ScenarioRun run = m_activeRun;
 			m_activeRun = null;
 			m_activeSaveSlotId = null;
@@ -533,6 +548,131 @@ namespace Gameplay.Scenarios
 			{
 				EventKit.Type.Send(new ScenarioRunChangedEvent(run, null));
 			}
+		}
+
+		private void OnScenarioSequencePresentationRequested(
+			ScenarioSequencePresentationRequestEvent request)
+		{
+			if (!HasActiveScenario || request.ScenarioId != ActiveScenarioId)
+			{
+				return;
+			}
+
+			m_sequencePresentationQueue.Enqueue(request);
+			if (m_sequencePresentationCoroutine == null)
+			{
+				m_sequencePresentationCoroutine = StartCoroutine(PlaySequencePresentationQueue());
+			}
+		}
+
+		private IEnumerator PlaySequencePresentationQueue()
+		{
+			while (m_sequencePresentationQueue.Count > 0)
+			{
+				ScenarioSequencePresentationRequestEvent request = m_sequencePresentationQueue.Dequeue();
+				if (!HasActiveScenario || request.ScenarioId != ActiveScenarioId)
+				{
+					continue;
+				}
+
+				AcquireSequenceLocks();
+				try
+				{
+					EventKit.Type.Send(new ScenarioSequenceMessageEvent(
+						request.ScenarioId,
+						request.Header,
+						request.Body,
+						request.DurationSeconds));
+					if (request.HasTablePosition)
+					{
+						m_activeRun.Tabletop.RequestPresentationCue(TabletopPresentationCue.AtTablePosition(
+							TabletopPresentationCueKind.CameraFocus,
+							request.TablePosition));
+					}
+					if (request.HasCardId)
+					{
+						m_activeRun.Tabletop.RequestPresentationCue(TabletopPresentationCue.AtCard(
+							TabletopPresentationCueKind.CardHighlight,
+							request.CardId));
+					}
+
+					float expiresAt = Time.realtimeSinceStartup + request.DurationSeconds;
+					while (Time.realtimeSinceStartup < expiresAt)
+					{
+						yield return null;
+					}
+				}
+				finally
+				{
+					ReleaseSequenceLocks();
+				}
+			}
+
+			m_sequencePresentationCoroutine = null;
+		}
+
+		private void AcquireSequenceLocks()
+		{
+			if (!m_sequenceInputLockHeld)
+			{
+				GameManager.InputSystem.AddGameplayInputLock(SequenceInputLockRequester);
+				m_sequenceInputLockHeld = true;
+			}
+			if (!m_sequencePauseLockHeld)
+			{
+				GameManager.GameStateSystem.AddExternalPauseLock(SequencePauseLockRequester);
+				m_sequencePauseLockHeld = true;
+			}
+		}
+
+		private void ReleaseSequenceLocks()
+		{
+			if (m_sequenceInputLockHeld &&
+				GameManager.Exists() &&
+				GameManager.TryGetSystem(out GameCore.InputSystem inputSystem))
+			{
+				inputSystem.RemoveGameplayInputLock(SequenceInputLockRequester);
+			}
+			m_sequenceInputLockHeld = false;
+
+			if (m_sequencePauseLockHeld &&
+				GameManager.Exists() &&
+				GameManager.TryGetSystem(out GameStateSystem gameStateSystem))
+			{
+				gameStateSystem.RemoveExternalPauseLock(SequencePauseLockRequester);
+			}
+			m_sequencePauseLockHeld = false;
+		}
+
+		private void StopSequencePresentation()
+		{
+			m_sequencePresentationQueue.Clear();
+			if (m_sequencePresentationCoroutine != null)
+			{
+				StopCoroutine(m_sequencePresentationCoroutine);
+				m_sequencePresentationCoroutine = null;
+			}
+			ReleaseSequenceLocks();
+		}
+
+		private void RegisterSequencePresentationEvents()
+		{
+			if (m_sequencePresentationSubscribed)
+			{
+				return;
+			}
+			EventKit.Type.Register<ScenarioSequencePresentationRequestEvent>(OnScenarioSequencePresentationRequested);
+			m_sequencePresentationSubscribed = true;
+		}
+
+		private void UnregisterSequencePresentationEvents()
+		{
+			if (!m_sequencePresentationSubscribed)
+			{
+				return;
+			}
+			EventKit.Type.UnRegister<ScenarioSequencePresentationRequestEvent>(OnScenarioSequencePresentationRequested);
+			m_sequencePresentationSubscribed = false;
 		}
 	}
 }

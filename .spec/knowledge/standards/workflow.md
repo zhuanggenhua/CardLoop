@@ -54,8 +54,8 @@ metadata:
 ### Codex 宿主环境工具门禁
 
 - 动手前必须先按当前会话宿主选择工具：Codex CLI / TUI 环境使用 `shell_command` 读取终端、文件状态、依赖探测和本地命令结果；Codex App / 桌面宿主环境才允许在确有需要时使用 `codex_app.*` 读取 App 终端、导航线程或加载工作区依赖。
-- 不得把调用失败当成环境探测方式。若已知当前处于 CLI / TUI，禁止调用 `codex_app.*` 这类动态 App 工具；若不确定宿主环境，先通过当前上下文、可用工具清单、普通 shell 命令或用户说明判断，再选择工具。
-- 如果某个工具返回 `Dynamic tool calls are not available in TUI yet.`，说明当前宿主不支持该动态 App 工具；必须立即停止重复调用，记录为工具环境限制，并改用当前宿主可用的正式工具链。不得把它当作项目代码、Unity 或测试失败。
+- 不得把调用失败当成环境探测方式。若已知当前处于 CLI / TUI，禁止调用 `search_tools`、动态工具发现、延迟加载 MCP / App 工具、`codex_app.*` 这类只适用于 App / 桌面宿主的入口；若不确定宿主环境，先通过当前上下文、可用工具清单、普通 shell 命令或用户说明判断，再选择工具。
+- 如果某个工具返回 `Dynamic tool calls are not available in TUI yet.`，说明当前宿主不支持这类动态工具；必须立即停止重复调用同类入口，记录为工具环境限制，并改用当前宿主可用的正式工具链。不得把它当作项目代码、Unity 或测试失败。
 - 需要 Unity 验证时仍先走 `.spec/tools/unity-verify.mjs` guard；不得因为 App 工具不可用就绕过 Unity 验证门禁。
 - 根 `AGENTS.md` 是入口，只放指针，不再堆项目细节。
 - `.spec` 是规范、knowledge、skill 和 agent 的唯一权威源。

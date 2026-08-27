@@ -14,24 +14,105 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Scenarios.ScenarioRegionDefinition
   m_contentId:
     m_value: test.foundation.region.scene
-  m_tagCodes: 
+  m_tagCodes:
   m_displayName: "\u5730\u57FA\u573A\u666F\u6D4B\u8BD5\u5730\u533A"
   m_description: "\u573A\u666F\u65C5\u884C\u6D4B\u8BD5\u4F7F\u7528\u7684\u7B2C\u4E00\u5730\u533A\u3002"
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_sceneAddress: FoundationMapTest
   m_tabletopPlacement:
     m_bounds:
       serializedVersion: 2
-      x: -5
-      y: -3
-      width: 10
-      height: 6
-    m_restrictedAreas: []
+      x: -6
+      y: -4
+      width: 12
+      height: 8
+    m_restrictedAreas:
+    - serializedVersion: 2
+      x: -6
+      y: 2.5
+      width: 12
+      height: 1.5
     m_cardSize: {x: 0.8, y: 1}
     m_cardMargin: {x: 0.1, y: 0.1}
     m_stackStep: {x: 0, y: -0.18}
-    m_cardLimitBonusExpansionPerPoint: {x: 0.05, y: 0.05}
+    m_overlapResolveMaxIterations: 8
+    m_spawnAttachRadius: 1
+    m_stacking:
+      m_rules:
+      - m_requiredSourceContentTagCodes: e9157a00
+        m_requiredTargetBottomContentTagCodes: e9157a00
+        m_requiresSameContent: 1
+      - m_requiredSourceContentTagCodes: ea157a00
+        m_requiredTargetBottomContentTagCodes: e9157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ea157a00
+        m_requiredTargetBottomContentTagCodes: ea157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ea157a00
+        m_requiredTargetBottomContentTagCodes: ec157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ea157a00
+        m_requiredTargetBottomContentTagCodes: ee157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ea157a00
+        m_requiredTargetBottomContentTagCodes: f2157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: eb157a00
+        m_requiredTargetBottomContentTagCodes: e9157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: eb157a00
+        m_requiredTargetBottomContentTagCodes: eb157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: eb157a00
+        m_requiredTargetBottomContentTagCodes: ee157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ec157a00
+        m_requiredTargetBottomContentTagCodes: e9157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ec157a00
+        m_requiredTargetBottomContentTagCodes: ec157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ec157a00
+        m_requiredTargetBottomContentTagCodes: ee157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ed157a00
+        m_requiredTargetBottomContentTagCodes: ea157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ed157a00
+        m_requiredTargetBottomContentTagCodes: ed157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ee157a00
+        m_requiredTargetBottomContentTagCodes: ee157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ef157a00
+        m_requiredTargetBottomContentTagCodes: ec157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ef157a00
+        m_requiredTargetBottomContentTagCodes: ee157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: ef157a00
+        m_requiredTargetBottomContentTagCodes: ef157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: f0157a00
+        m_requiredTargetBottomContentTagCodes: f0157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: f1157a00
+        m_requiredTargetBottomContentTagCodes: eb157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: f1157a00
+        m_requiredTargetBottomContentTagCodes: ee157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: f1157a00
+        m_requiredTargetBottomContentTagCodes: f1157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: f2157a00
+        m_requiredTargetBottomContentTagCodes: f2157a00
+        m_requiresSameContent: 0
+      - m_requiredSourceContentTagCodes: f3157a00
+        m_requiredTargetBottomContentTagCodes: f3157a00
+        m_requiresSameContent: 0
+    m_cardLimitBonusExpansionPerPoint: {x: 0.06, y: 0.04}
   m_arrivalPosition: {x: 0, y: 0}

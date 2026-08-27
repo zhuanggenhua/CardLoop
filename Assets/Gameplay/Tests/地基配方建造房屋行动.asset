@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.ActionDefinition
   m_contentId:
     m_value: test.foundation.recipe.building-house
-  m_tagCodes: 
-  m_displayName: Building House
-  m_description: 'StackCraft recipe reference: Stone x1, Wood x2, Villager x1. Crafting
-    duration 30 seconds.'
+  m_tagCodes:
+  m_displayName: 建造房屋
+  m_description: 模板配方参考：石头 ×1，木头 ×2，村民 ×1。制作耗时 30 秒。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_turnCost: 1
   m_canStartFromClick: 0
+  m_journalGroupName: 建造
   m_participationSlots: []
   m_conditions: []
   m_resultIntents: []

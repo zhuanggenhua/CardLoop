@@ -68,6 +68,13 @@ namespace Gameplay.Scenarios
 			{
 				return;
 			}
+
+			m_subscribed = false;
+			if (GameManager.StartupState != GameManagerStartupState.Ready)
+			{
+				return;
+			}
+
 			if (GameManager.Exists() && GameManager.HasSystem<CoreInputSystem>())
 			{
 				GameManager.InputSystem.RemoveGameplayActionListener(
@@ -75,7 +82,6 @@ namespace Gameplay.Scenarios
 					EInputActionPhase.Performed,
 					OnOpenGameMenu);
 			}
-			m_subscribed = false;
 		}
 
 		private void OnOpenGameMenu(InputAction.CallbackContext context)

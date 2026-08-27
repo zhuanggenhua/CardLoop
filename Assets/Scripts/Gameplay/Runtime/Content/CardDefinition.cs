@@ -26,6 +26,7 @@ namespace Gameplay.Content
 		private int m_sellValue;
 
 		[SerializeField]
+		[HideIf(nameof(HasDerivedCardLimitCounting))]
 		[LabelText("计入卡牌上限")]
 		[Tooltip("关闭后，这张卡仍存在于牌桌，但不计入日终卡牌数量；货币和固定交互节点通常关闭。")]
 		private bool m_countsTowardCardLimit = true;
@@ -85,6 +86,16 @@ namespace Gameplay.Content
 		[Tooltip("卡牌类别表面材质地址。StackCraft 卡面由材质同时承载底板、颜色、覆盖图比例和覆盖图偏移，不用 SpriteRenderer 另画一层。")]
 		private SoftAssetReference<Material> m_cardSurface;
 
+		[SerializeField]
+		[LabelText("覆盖牌桌可见尺寸")]
+		[Tooltip("开启后，这张卡在牌桌上的 Mesh、文字、图标和碰撞范围使用作者源尺寸；用于承接 StackCraft 卡包、交易区等非普通卡牌尺寸。")]
+		private bool m_overrideViewSize;
+
+		[SerializeField]
+		[LabelText("牌桌可见尺寸")]
+		[Tooltip("覆盖后的牌桌可见宽高，单位是牌桌坐标；只有开启覆盖时生效。")]
+		private Vector2 m_viewSize = Vector2.one;
+
 		public SoftAssetReference<Sprite> CardArt => m_cardArt;
 
 		public SoftAssetReference<Material> CardSurface => m_cardSurface;
@@ -96,9 +107,21 @@ namespace Gameplay.Content
 		/// <summary>派生卡牌可隐藏由自身作者数据计算的使用次数，避免维护第二份值。</summary>
 		protected virtual bool HasDerivedInitialUses => false;
 
+		/// <summary>派生卡牌可固定容量统计规则，避免作者源维护无效开关。</summary>
+		protected virtual bool HasDerivedCardLimitCounting => false;
+
+		/// <summary>派生卡牌校验历史资产里隐藏字段是否仍保存了错误值。</summary>
+		protected bool AuthoringCountsTowardCardLimit => m_countsTowardCardLimit;
+
+		/// <summary>返回这张卡牌在牌桌上的可见尺寸；尺寸只读作者源，不允许派生类再维护第二套显示真相。</summary>
+		public Vector2 GetViewSize(Vector2 defaultCardSize)
+		{
+			return m_overrideViewSize ? m_viewSize : defaultCardSize;
+		}
+
 		public int SellValue => m_sellValue;
 
-		public bool CountsTowardCardLimit => m_countsTowardCardLimit;
+		public virtual bool CountsTowardCardLimit => m_countsTowardCardLimit;
 
 		public int CardLimitBonus => m_cardLimitBonus;
 
@@ -173,6 +196,15 @@ namespace Gameplay.Content
 				context.AddError(
 					"CARD_AUTOMATIC_MOVEMENT_RETENTION_CAPACITY_INVALID",
 					$"卡牌 {ContentId} 的自动移动留存容量不能为负数，当前值为 {AutomaticMovementRetentionCapacity}。",
+					this);
+			}
+			if (m_overrideViewSize &&
+				(!float.IsFinite(m_viewSize.x) || !float.IsFinite(m_viewSize.y) ||
+				 m_viewSize.x <= 0f || m_viewSize.y <= 0f))
+			{
+				context.AddError(
+					"CARD_VIEW_SIZE_INVALID",
+					$"卡牌 {ContentId} 的牌桌可见尺寸必须为正数，当前值为 {m_viewSize}。",
 					this);
 			}
 			if (HasPeriodicProduction)

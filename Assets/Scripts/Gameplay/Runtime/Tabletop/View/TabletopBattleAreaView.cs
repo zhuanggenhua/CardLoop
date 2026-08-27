@@ -1,4 +1,5 @@
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Gameplay.Tabletop
@@ -7,6 +8,8 @@ namespace Gameplay.Tabletop
 	public sealed class TabletopBattleAreaView : MonoBehaviour
 	{
 		[SerializeField]
+		[LabelText("区域渲染器")]
+		[Tooltip("战斗区域的桌面贴图渲染器；Prefab 根节点必须旋转到 XZ 牌桌平面，区域尺寸由牌桌权威战斗区域派生。")]
 		private SpriteRenderer m_renderer;
 
 		public Battle Battle { get; private set; }

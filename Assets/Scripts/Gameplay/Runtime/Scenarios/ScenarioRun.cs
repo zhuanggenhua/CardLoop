@@ -13,11 +13,20 @@ using YokiFrame;
 
 namespace Gameplay.Scenarios
 {
+	public enum ScenarioTimePace
+	{
+		Paused = 0,
+		Normal = 1,
+		Fast = 2
+	}
+
 	/// <summary>
 	/// 一次剧本运行的普通 C# 聚合，统一拥有地区、回合、内容发现和任务日志。
 	/// </summary>
 	public sealed class ScenarioRun
 	{
+		private const float PackVendorUnlockMessageSeconds = 2f;
+
 		private readonly ContentIndex m_contentIndex;
 		private readonly ModPackageSetSnapshot m_modPackages;
 		private readonly HashSet<ContentId> m_currencyCardIds;
@@ -31,6 +40,7 @@ namespace Gameplay.Scenarios
 		private readonly ScenarioDayCycleRulesRuntime m_dayCycleRules;
 		private readonly ScenarioStartOptions m_startOptions;
 		private double m_realTimeElapsedSecondsInTurn;
+		private ScenarioTimePace m_timePace = ScenarioTimePace.Normal;
 
 		private readonly HashSet<ContentId> m_discoveredContentIds = new HashSet<ContentId>();
 		private readonly HashSet<ContentId> m_seenJournalEntryIds = new HashSet<ContentId>();
@@ -82,6 +92,8 @@ namespace Gameplay.Scenarios
 		public int TurnsPerDay => m_turnsPerDay;
 
 		public ActionProgressionMode ProgressionMode => Tabletop.ProgressionMode;
+
+		public ScenarioTimePace TimePace => m_timePace;
 
 		/// <summary>即时制普通行动已经推进到回合中途时，不能无损切回回合制。</summary>
 		public bool CanReturnToTurnBasedProgression => m_realTimeElapsedSecondsInTurn <= 0d;
@@ -185,7 +197,7 @@ namespace Gameplay.Scenarios
 					$"剧本 {definition.ContentId} 的每回合秒数必须是大于 0 的有限值，当前值为 {definition.SecondsPerTurn}。");
 			}
 			m_contentIndex = contentIndex;
-			m_currencyCardIds = BuildCurrencyCardIds(contentIndex);
+			m_currencyCardIds = CurrencyCardQuery.BuildCurrencyCardIds(contentIndex);
 			m_turnsPerDay = definition.TurnsPerDay;
 			m_secondsPerTurn = ResolveSecondsPerTurn(definition, startOptions);
 			m_dayCycleRules = definition.DayCycleRules?.CreateRuntime() ?? default;
@@ -306,7 +318,7 @@ namespace Gameplay.Scenarios
 
 			m_contentIndex = contentIndex;
 			m_modPackages = currentModPackages;
-			m_currencyCardIds = BuildCurrencyCardIds(contentIndex);
+			m_currencyCardIds = CurrencyCardQuery.BuildCurrencyCardIds(contentIndex);
 			m_turnsPerDay = definition.TurnsPerDay;
 			m_secondsPerTurn = restoredSecondsPerTurn;
 			m_dayCycleRules = definition.DayCycleRules?.CreateRuntime() ?? default;
@@ -641,6 +653,7 @@ namespace Gameplay.Scenarios
 		{
 			RequireActive();
 			ActionProgressionMode previousMode = ProgressionMode;
+			m_timePace = ScenarioTimePace.Normal;
 			for (int i = 0; i < m_regionOrder.Count; i++)
 			{
 				m_regionOrder[i].Tabletop.UseRealTimeProgression(m_secondsPerTurn);
@@ -661,6 +674,7 @@ namespace Gameplay.Scenarios
 					$"剧本 {ScenarioId} 的即时世界回合已经推进 {m_realTimeElapsedSecondsInTurn:0.###} 秒，只能在回合边界切回回合制。");
 			}
 			ActionProgressionMode previousMode = ProgressionMode;
+			m_timePace = ScenarioTimePace.Normal;
 			for (int i = 0; i < m_regionOrder.Count; i++)
 			{
 				m_regionOrder[i].Tabletop.UseTurnBasedProgression();
@@ -670,6 +684,23 @@ namespace Gameplay.Scenarios
 				QuestLog.RecordFact(new ProgressionModeChangedQuestTaskFact(ActionProgressionMode.TurnBased));
 				RefreshQuestState();
 			}
+		}
+
+		public ScenarioTimePace CycleTimePace()
+		{
+			RequireActive();
+			if (DayCyclePhase != ScenarioDayCyclePhase.Inactive)
+			{
+				throw new InvalidOperationException("日终阶段正在等待玩家处理，不能切换时间速度。");
+			}
+			if (ProgressionMode != ActionProgressionMode.RealTime)
+			{
+				throw new InvalidOperationException($"剧本 {ScenarioId} 处于回合制，不能切换即时制时间速度。");
+			}
+
+			m_timePace = (ScenarioTimePace)(((int)m_timePace + 1) %
+				Enum.GetValues(typeof(ScenarioTimePace)).Length);
+			return m_timePace;
 		}
 
 		internal bool DiscoverContent(ContentId contentId)
@@ -765,7 +796,13 @@ namespace Gameplay.Scenarios
 				return;
 			}
 
-			double remainingSeconds = deltaSeconds;
+			float timePaceMultiplier = GetTimePaceMultiplier(m_timePace);
+			if (timePaceMultiplier <= 0f)
+			{
+				return;
+			}
+
+			double remainingSeconds = deltaSeconds * timePaceMultiplier;
 			while (remainingSeconds > 0d)
 			{
 				double secondsUntilTurn = m_secondsPerTurn - m_realTimeElapsedSecondsInTurn;
@@ -786,6 +823,17 @@ namespace Gameplay.Scenarios
 					}
 				}
 			}
+		}
+
+		private static float GetTimePaceMultiplier(ScenarioTimePace pace)
+		{
+			return pace switch
+			{
+				ScenarioTimePace.Paused => 0f,
+				ScenarioTimePace.Normal => 1f,
+				ScenarioTimePace.Fast => 2f,
+				_ => throw new ArgumentOutOfRangeException(nameof(pace), pace, "未知剧本时间速度。")
+			};
 		}
 
 		internal void ContinueDayCycle()
@@ -929,10 +977,19 @@ namespace Gameplay.Scenarios
 			int consumedNutrition,
 			GameplayEffectConfig healingEffect)
 		{
+			if (character == null)
+			{
+				throw new ArgumentNullException(nameof(character));
+			}
 			if (consumedNutrition <= 0)
 			{
 				throw new ArgumentOutOfRangeException(nameof(consumedNutrition));
 			}
+			if (healingEffect == null)
+			{
+				throw new ArgumentNullException(nameof(healingEffect));
+			}
+
 			float missingHealth = Math.Max(0f, character.MaxHealth - character.CurrentHealth);
 			int requestedHealing = Mathf.RoundToInt(
 				character.MaxHealth * 0.5f * consumedNutrition / m_dayCycleRules.HungerPerCharacter);
@@ -942,9 +999,13 @@ namespace Gameplay.Scenarios
 				return;
 			}
 
-			GameplayEffectSpec effect = new GameplayEffectSpec(healingEffect.ComponentConfigs);
-			effect.SetModifierMagnitude(0, healing);
-			effect.ApplyToSelf(character.AbilitySystem);
+			float baseHealth = character.AbilitySystem.GetAttrBaseValue(
+				CharacterAttributes.SetCode,
+				CharacterAttributes.Health);
+			CharacterAttributes.SetBaseValueAndRecalculate(
+				character.AbilitySystem,
+				CharacterAttributes.Health,
+				Math.Min(character.MaxHealth, baseHealth + healing));
 		}
 
 		private static int FindNearestFoodIndex(CharacterCard character, IReadOnlyList<TabletopCard> foods)
@@ -1328,11 +1389,18 @@ namespace Gameplay.Scenarios
 						continue;
 					}
 
-					Tabletop.RequestPresentationCue(TabletopPresentationCue.AtTablePosition(
-						TabletopPresentationCueKind.CameraFocus,
-						vendorCard.Position));
-					Tabletop.RequestPresentationCue(TabletopPresentationCue.AtCard(
-						TabletopPresentationCueKind.CardHighlight,
+					if (!m_contentIndex.TryGet(vendorDefinition.OfferedPackId, out CardPackDefinition packDefinition))
+					{
+						throw new InvalidOperationException(
+							$"卡包商贩 {vendorDefinition.ContentId} 引用的卡包 {vendorDefinition.OfferedPackId} 不属于当前内容集合。");
+					}
+
+					EventKit.Type.Send(new ScenarioSequencePresentationRequestEvent(
+						ScenarioId,
+						"卡包已解锁",
+						$"这里可以购买{packDefinition.DisplayName}。",
+						PackVendorUnlockMessageSeconds,
+						vendorCard.Position,
 						vendorCard.Id));
 				}
 			}
@@ -1445,40 +1513,6 @@ namespace Gameplay.Scenarios
 				cardLimit);
 		}
 
-		private static HashSet<ContentId> BuildCurrencyCardIds(ContentIndex contentIndex)
-		{
-			if (contentIndex == null)
-			{
-				throw new ArgumentNullException(nameof(contentIndex));
-			}
-
-			HashSet<ContentId> currencyCardIds = new HashSet<ContentId>();
-			IReadOnlyList<ContentAsset> assets = contentIndex.AllAssets;
-			for (int i = 0; i < assets.Count; i++)
-			{
-				ContentAsset asset = assets[i];
-				switch (asset)
-				{
-					case ChestCardDefinition chest when chest.CurrencyCardId.IsValid:
-						currencyCardIds.Add(chest.CurrencyCardId);
-						break;
-					case ActionDefinition action:
-						AddCurrencyCardIds(action.ResultIntents, currencyCardIds);
-						IReadOnlyList<ActionResultBranchDefinition> branches = action.ResultBranches;
-						for (int branchIndex = 0; branchIndex < branches.Count; branchIndex++)
-						{
-							ActionResultBranchDefinition branch = branches[branchIndex];
-							if (branch != null)
-							{
-								AddCurrencyCardIds(branch.ResultIntents, currencyCardIds);
-							}
-						}
-						break;
-				}
-			}
-			return currencyCardIds;
-		}
-
 		private ContentAsset RequireJournalEntryContent(ContentId contentId)
 		{
 			if (!contentId.IsValid)
@@ -1510,20 +1544,6 @@ namespace Gameplay.Scenarios
 				return startOptions.DayDurationSecondsOverride.Value / definition.TurnsPerDay;
 			}
 			return definition.SecondsPerTurn;
-		}
-
-		private static void AddCurrencyCardIds(
-			IReadOnlyList<ActionResultIntent> resultIntents,
-			ISet<ContentId> currencyCardIds)
-		{
-			for (int intentIndex = 0; intentIndex < resultIntents.Count; intentIndex++)
-			{
-				if (resultIntents[intentIndex] is SellCardsResultIntent sellIntent &&
-					sellIntent.CurrencyCardId.IsValid)
-				{
-					currencyCardIds.Add(sellIntent.CurrencyCardId);
-				}
-			}
 		}
 
 		private void RequireActive()

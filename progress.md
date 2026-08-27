@@ -1,5 +1,400 @@
 # Gameplay 地基工作记录
 
+## 2026-08-25：StackCraft 等价吸收目标对照收口
+
+- 本轮主线仍是“用 CardLoop 自有框架等价吸收 StackCraft 模板业务”，没有切换到《卡牌生存：无限》原创业务，也没有删除 `Assets/StackCraft`。
+- C6 端到端过程链重新通过：UnitySkills PlayMode job `7318c482` 为 `1/1 passed`，6 张过程图和 `Assets/Screenshots/FoundationE2E/_contactsheet-foundation-e2e-sequence-latest.png` 已刷新；拼图尺寸 `3588×1122`，SHA256 `C6E65B84C4D722B17D9D2040DDE3871D1661074772217217A12BBAD1145E5F75`。
+- C6 失败点已订正为测试辅助问题：原辅助在按下后只等一帧就断言拖拽会话，现改为等待正式输入回调形成会话，并在失败时输出动作图、按键状态、UI 命中和物理命中诊断；没有绕过正式输入，也没有改生产拖拽逻辑。
+- C7 目标对照完成：StackCraft 参考图 `stackcraft-main-reference-clean.png` 与 CardLoop 同态图 `stackcraft-parity-current-ready.png` 均为 `1196×561`，顶部 HUD、播放图标、统计 HUD、Starter Pack、右侧 `Quests / Recipes`、任务条目、灰色桌面和底部署名目标区域一致。
+- 当前完成矩阵 `temp/stackcraft-absorb-completion.json` 已标记 `complete`；`.spec/knowledge/features/project/stackcraft-functional-parity-matrix.md` 和 `stackcraft-visual-animation-parity.md` 已同步本轮证据和边界。
+- 删除前依赖扫描补证：`Assets/StackCraft` 下 708 个旧模板 GUID 在 `Assets/StackCraft` 外部无命中；正式代码、Gameplay 测试、项目资源、场景、ProjectSettings 和 Packages 中无旧模板路径 / 命名空间运行依赖命中。仅 `Assets/Editor/Gameplay/Automation/StackCraftReferenceCaptureMenu.cs` 作为参考截图采集工具仍用字符串指向模板场景和类型，删除模板前需要单独退役或保留失败提示。
+- 删除模板仍不是本轮完成项：删除 `Assets/StackCraft` 需要用户单独授权、删除前依赖扫描、删除后静态预检、Unity 编译和必要 PlayMode 复验。
+
+## 2026-08-25：静态预检调用与对象引用级收紧
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `gameplay-static-preflight` 的静态证据质量；没有切换原创业务，没有启动 Unity，没有进入 PlayMode / 截图，也没有删除 `Assets/StackCraft`。
+- 牌桌放置解算调用不再用正则截取到第一个 `);` 后检查文本片段：静态守卫新增 C# 调用实参解析，逐个 `TabletopCardStackPlacementSolver.Solve(...)` 调用确认第三个实参是 `placementRules.OverlapResolveMaxIterations`。
+- 卡包商贩资产不再用整文件字符串筛选类型：静态守卫改为解析 Unity YAML 中唯一 `PackVendorDefinition` 脚本对象，并在该对象块内检查 `m_countsTowardCardLimit = 0`。
+- 剧本日志 HUD 不再保留“任意 TMP 文本包含目标文案”的重复弱证据；`Quests`、`Recipes`、`>>`、`No active quests`、`No discovered recipes` 已由父子对象级和目标组件字段检查覆盖。
+- TMP 字体材质检查不再用 MeshRenderer 整块 `includes`：静态守卫改为读取 `m_Materials` 引用列表，明确检查指定 TMP 字体材质列表项。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明 CLI 静态守卫闭包，不证明 Unity 编译、Prefab 回读、PlayMode、截图、连续动画或模板可删。
+
+## 2026-08-25：静态预检弱证据字段级收紧
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `gameplay-static-preflight` 的静态证据质量；没有切换原创业务，没有启动 Unity，没有进入 PlayMode / 截图，也没有删除 `Assets/StackCraft`。
+- `FoundationTestSceneHarness` 的同对象依赖不再靠整文件 token 证明：静态守卫现在要求 `RequireComponent` 出现在类声明链，并要求 `Awake()` 方法体内实际通过 `RequireSiblingComponent` 获取牌桌视图、拖拽输入和牌桌交互。
+- StackCraft 同态打开初始卡包任务描述不再用两段 `includes` 散落检查：静态守卫新增普通 YAML 多行字段读取，并直接对账 `m_description` 的完整多行文本。
+- `剧本屏幕效果配置.asset` 不再用 URP 后处理 token 散落检查：静态守卫现在按唯一 `VolumeProfile`、`Vignette`、`ColorAdjustments` 对象块和字段级 `components` 引用、`intensity` / `saturation` 初始值对账。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs`、`node .spec/tools/unity-yaml-guard.mjs`。该证据只证明 CLI 静态守卫闭包，不证明 Unity 编译、Prefab 回读、PlayMode、截图、连续动画或模板可删。
+
+## 2026-08-25：YooAsset 内容作者源收集器分组静态对账
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 ResourceSystem / YooAsset 收集配置的静态守卫；没有切换原创业务，没有启动 Unity，没有进入 PlayMode / 截图，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 已把 Gameplay 内容作者源收集器从“整份文件出现分组名和 `gameplay-content` 标签”升级为同组对账：`CollectPath: Assets` 所属分组必须同时是 `Gameplay内容定义`，并且该分组的 `AssetTags` 必须为 `gameplay-content`。
+- 这次补强的目的，是避免分组名、标签和收集器路径散落在不同位置时被误判为内容作者源已进入正式 YooAsset / ResourceSystem 链路。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`。该证据只证明 CLI 静态字段层闭包，不证明 Unity 编译、YooAsset 构建、Prefab 回读、PlayMode、截图、连续动画或模板可删。
+
+## 2026-08-25：StackCraft 普通卡面文字全量静态对账
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强普通卡面文字节点的静态守卫；没有切换原创业务，没有启动 Unity，没有进入 PlayMode / 截图，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 已把 StackCraft 12 类卡牌 Prefab 纳入普通文字全量对账：`Title`、`Price`、`Nutrition`、`Health` 必须从各来源 Prefab 的实际节点派生，并命中当前正式 `Assets/Art/Prefabs/牌桌/卡牌视图.prefab` 的 `标题`、`价格`、`营养`、`生命` 对应节点。
+- 这次补强的目的，是避免只用 `Card_Character` / `Card_Consumable` 代表性检查时漏掉其它卡牌类别的文字位置、尺寸、字号、对齐、样式或边距差异。
+- 当前尚未启动 Unity；本条只声明源码 / Prefab YAML 静态字段层闭包，不证明 Unity 编译、Prefab 回读、PlayMode、截图、连续动画或完整模板可删。
+
+## 2026-08-25：StackCraft 表面 / 反馈静态门禁去软化
+
+- 本轮继续 StackCraft 复刻吸收主线，只收紧静态预检门禁；没有切换原创业务，没有启动 Unity，没有进入 PlayMode / 截图，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 不再保留“辅助表现未对齐但普通预检可通过”的软门禁。原 `--strict-auxiliary-parity` 参数仍可传入作历史命令兼容，但不再改变结果；表面、HUD 提示职责和必要反馈缺口现在一律作为默认预检失败。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs`、`node .spec/tools/unity-yaml-guard.mjs`。
+- Unity 状态只做守卫检查：当前同项目存在主编辑器、导入进程和 ShaderCompiler，`unity-yaml-guard` 静态扫描 15798 个 Unity 文件通过；本条不证明 Unity 编译、PlayMode、截图、连续手感或完整模板可删。
+
+## 2026-08-25：StackCraft GameplayPrefsUI 标题新局偏好静态来源闭包
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `GameplayPrefsUI`、`GameData.GameplayPrefs` 与当前标题新局偏好链的源码级静态来源闭包；没有恢复 StackCraft 标题偏好面板、旧 DTO、旧点击音效链或旧 `GameDirector.NewGame(prefs)`，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责拆开处理：`GameplayPrefsUI` 负责日长滑条、友好模式开关、切换文案、取消和确认；`GameplayPrefs` 负责把 `DayDuration` 与 `IsFriendlyMode` 作为旧开局偏好事实传入旧新局流程。
+- 当前正式实现不恢复旧 `GameplayPrefsUI`、`GameplayPrefs`、`AudioManager`、`TimeManager` 或 `GameDirector.Instance.NewGame(prefs)`。标题入口由 `ScenarioTitlePanel` 承接，开局偏好由 `ScenarioStartOptions` 承接，日长换算和友好模式消费由 `ScenarioRun` 承接，持久化由 `ScenarioRunSnapshot` 承接，标题测试入口由 `FoundationTitleTestSceneMenu` 承接。
+- `gameplay-static-preflight` 新增检查：逐段读取 StackCraft 偏好 UI 和旧 DTO 源码，要求当前正式 owner 覆盖同一职责，并要求标题 PlayMode / 单局 EditMode 测试覆盖友好模式和日长滑条替代链。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明源码 / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图、完整标题 UI 视觉或完整模板可删。
+
+## 2026-08-25：StackCraft GameData / SaveSystem / SavedGamesUI 存档链静态来源闭包
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `GameData`、`SaveSystem`、`GameDirector`、`TitleScreen`、`SavedGamesUI` 与 `SavedGameSlot` 的源码级静态来源闭包；没有恢复 StackCraft 存档运行时结构，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责拆开处理：`GameData` / `SceneData` 负责旧整局和按场景 DTO，`SaveSystem` 负责旧 JSON 文件存取和全目录扫档，`GameDirector` 负责旧保存 / 读取 / 删除 / 自动槽位 / 返回标题，标题 UI 负责动态存档槽位、读取、删除、清空全部和关闭。
+- 当前正式实现不恢复旧 `GameData`、`SceneData`、`StackData`、`CardData`、`QuestData`、`VendorData`、`TimeData`、`GameplayPrefs`、旧 JSON 扫档、旧 `SavedGamesUI` 或 `SavedGameSlot`。文件槽位由 GameCore `SaveSystem` / `SaveFileStorageRuntime` 承接，整局事实由 `ScenarioRunSnapshot` 承接，保存 / 原子读档 / 删除 / 自动保存由 `ScenarioDirector` 承接，标题与存档 UI 由 `ScenarioTitlePanel`、`ScenarioSavePanel`、`ScenarioSaveSlotView` 承接。
+- `gameplay-static-preflight` 新增检查：逐个读取 StackCraft 保存链源码，要求当前正式 owner 覆盖同一职责，并禁止旧存档 DTO、旧 UI 和旧 JSON 槽位结构回流到正式 Gameplay 代码。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明源码 / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图、完整存档 UI 视觉或完整模板可删。
+
+## 2026-08-25：StackCraft Quest / QuestInstance / QuestManager 任务链静态来源闭包
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `Quest`、`QuestInstance` 与 `QuestManager` 的源码级静态来源闭包；没有恢复 StackCraft 任务运行时结构，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责拆开处理：`Quest` 负责旧任务作者字段和 `QuestType`；`QuestInstance` 负责旧运行状态和整数进度；`QuestManager` 负责旧任务分组、活动 / 完成集合、ID 查重、存档读写、激活、完成、后继解锁，以及 14 类任务事实分支。
+- 当前正式实现不恢复旧 `QuestManager`、`QuestInstance`、`QuestType`、旧跨 Manager 事件订阅或 `GameData.SaveQuests`。任务作者源由 `QuestDefinition` 承接，运行对象由 `QuestProgress` 承接，单局集合和状态提交由 `QuestLog` 承接，任务分支由 `QuestTaskDefinition` / `QuestTaskRuntimeState` 承接，存档由 `QuestLogSnapshot` 承接，事实提交由 `ScenarioRun` 承接。
+- `gameplay-static-preflight` 新增检查：逐个读取 StackCraft 任务源码，要求当前正式 owner 覆盖同一职责，并禁止旧任务结构回流到正式 Gameplay 代码。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明源码 / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图、完整任务 UI 或完整模板可删。
+
+## 2026-08-25：StackCraft DayCycleManager 日终五阶段静态来源闭包
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `DayCycleManager` 的源码级静态来源闭包；没有恢复 StackCraft 日终运行时结构，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责拆开处理：日结束通知、进食确认、食物分配、全员死亡 Game Over、超限卖卡阻断、日终遭遇执行、新日确认和新日后自动保存。
+- 当前正式实现不恢复旧 `DayCycleManager`、`TimeManager.Instance`、`InputManager.Instance`、`InfoPanel.Instance`、`CardManager.Instance`、`EncounterManager.Instance` 或 `GameDirector.Instance`。日终阶段状态由 `ScenarioDayCycle` 承接，进食 / 超限 / 遭遇 / 新日推进由 `ScenarioRun` 承接，自动保存由 `ScenarioDirector` 承接，玩家确认入口由 `ScenarioTurnPanel` 承接。
+- `gameplay-static-preflight` 新增检查：逐段读取 StackCraft 日终管理器源码，要求当前正式 owner 覆盖同一职责，并禁止旧日终结构回流到正式 Gameplay 代码。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明源码 / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图、连续日终表现或完整模板可删。
+
+## 2026-08-25：StackCraft EncounterDefinition / EncounterManager 日终遭遇静态来源闭包
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `EncounterDefinition` 与 `EncounterManager` 的源码级静态来源闭包；没有恢复 StackCraft 遭遇运行时结构，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责拆开处理：`EncounterDefinition` 负责日终候选的身份、提示、生成卡牌、数量、一次性、日期条件、优先级、概率和卡牌上限；`EncounterManager` 负责一次性记录读写、候选选择、通知、随机生成、镜头、烟雾和清理。
+- 当前正式实现不恢复旧 `EncounterManager`、`EncounterDefinition`、`EncounterType`、`InfoPanel`、`CardManager.Instance`、`Board.Instance`、`Camera.main` 或 Unity `Random`。遭遇作者源由 `ScenarioDayCycleRules` 承接，选择与结算由 `ScenarioRun` 承接，摘要由 `ScenarioDayCycle` 承接，一次性记录由 `ScenarioRunSnapshot` 承接，生成后的任务事实由 `QuestLog` 承接，镜头和烟雾由 `TabletopPresentationCue` 承接。
+- `gameplay-static-preflight` 新增检查：逐个读取 StackCraft 遭遇定义和遭遇管理器源码，要求当前正式 owner 覆盖同一职责，并禁止旧遭遇结构回流到正式 Gameplay 代码。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明源码 / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图、连续遭遇表现或完整模板可删。
+
+## 2026-08-25：StackCraft CraftingManager / CraftingTask 制作运行链静态来源闭包
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `CraftingManager` 与 `CraftingTask` 的源码级静态来源闭包；没有恢复 StackCraft 制作运行时结构，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责拆开处理：`CraftingManager` 负责旧配方扫描、整堆自动匹配、加权选择、活动制作列表、进度 UI、发现集合、完成后执行和连续 / 消耗后重复制作；`CraftingTask` 只保存配方、目标堆、进度、暂停、取消和完成状态。
+- 当前正式实现不恢复旧 `CraftingManager`、`CraftingTask`、`Resources.LoadAll`、旧 `ProgressUI` 或旧发现集合。候选由 `ActionCandidateResolver` 生成，填充由 `ActionPlan` 承接，运行进度由 `ActionInstance` 承接，活动集合和推进由 `Tabletop.ActiveActions` 承接，完成结算由 `ActionResultSettlement` 承接，恢复由 `ActionInstanceSnapshot` / `ActionResultPlanSnapshot` 承接，进度表现由 `TabletopActionProgressView` 承接。
+- `gameplay-static-preflight` 新增检查：逐个读取 StackCraft 制作管理器和制作任务源码，要求当前正式 owner 覆盖同一职责，并禁止 `CraftingManager` / `CraftingTask` 旧运行时结构回流到正式 Gameplay 代码。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明源码 / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图、连续制作手感或完整模板可删。
+
+## 2026-08-25：StackCraft Grower / Research / Recipe 特殊配方静态来源闭包
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `GrowerDefinition`、`ResearchDefinition`、`RecipeDefinition`、`GrowthRecipe`、`ExplorationRecipe`、`ResearchRecipe`、`TravelRecipe` 的源码级静态来源闭包；没有恢复 StackCraft 特殊配方运行时结构，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责拆开处理：`GrowerDefinition` / `ResearchDefinition` 是“空类型即行为”的旧标记；`RecipeDefinition` 是材料、分类、耗时、权重、消耗和直接副作用的旧作者源；`GrowthRecipe`、`ExplorationRecipe`、`ResearchRecipe`、`TravelRecipe` 分别证明种植、探索、研究和旅行的特殊玩家效果。
+- 当前正式实现不恢复旧 `RecipeDefinition.Execute`、`CraftingManager`、`CardManager.Instance`、`GameDirector.Instance` 或 `Random.Range`。内容身份 / 展示由 `ContentAsset` / `DisplayableContentAsset` 承接，卡牌事实由 `CardDefinition` 承接，参与材料和标签条件由 `ActionSlotDefinition` 承接，消耗 / 生成 / 探索 / 研究由 `ActionResultIntent` + `ActionResultSettlement` 承接，旅行由 `ScenarioRun` / `ScenarioDirector.TravelAsync` 承接。
+- `gameplay-static-preflight` 新增检查：逐个读取 StackCraft 特殊卡和特殊配方源码，要求当前正式 owner 覆盖同一职责，并禁止 `GrowerDefinition`、`ResearchDefinition`、`RecipeDefinition`、`GrowthRecipe`、`ExplorationRecipe`、`ResearchRecipe`、`TravelRecipe`、`CraftingManager`、`CardManager.Instance` 回流到正式 Gameplay 代码。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明源码 / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图、旅行场景画面或完整模板可删。
+
+## 2026-08-25：StackCraft PackEntry / PackSlot / PackInstance 静态来源闭包
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强卡包槽位脚本的静态来源证据；没有恢复 StackCraft `PackInstance`、`PackSlot`、`PackEntry`、`PackDefinition` 运行时结构，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责是卡包点击后按剩余次数逐槽打开，先按配方概率尝试抽取尚未发现配方并生成配方卡，失败或无可用配方时回退普通加权卡池，使用次数耗尽后移除卡包。
+- 当前正式实现仍由 `CardPackDefinition`、`OpenCardPackResultIntent`、`ActionResultSettlement.AddCardPackDraw` 和 `Tabletop.UseCard` 承接：卡包槽位属于内容作者源，抽取在行动开始时冻结为正式结果计划，发现事实归 `ScenarioRun`，随机归牌桌权威随机流。
+- `gameplay-static-preflight` 新增检查：直接读取 StackCraft 四个卡包源码文件，并要求当前 CardPack 作者源、打开卡包结果意图、行动结算、牌桌使用次数和 `CardPackEditModeTests` 三条回归都承接同一玩家效果。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明源码 / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图或卡包表面最终一致。
+
+## 2026-08-25：StackCraft PauseMenu 功能链静态守卫补强
+
+- 本轮继续 StackCraft 复刻吸收主线，只补强 `PauseMenu` 功能链的静态证据；没有恢复 StackCraft `PauseMenu`、`TimeManager`、`GameDirector.Instance` 或旧输入系统，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 参考职责是 Cancel 打开暂停菜单、继续恢复、设置打开选项界面、返回标题并保存；当前正式实现仍由 `ScenarioPauseInput`、`ScenarioPausePanel`、`UISystem/UIManager`、`GameStateSystem.Menu` 和 `ScenarioDirector` 承接。
+- `gameplay-static-preflight` 新增检查：暂停输入只能订阅正式 `OpenGameMenu`，暂停面板三按钮只能走正式菜单栈 / 设置面板 / 存档退出，`ScenarioPausePanel.prefab` 三个按钮字段必须对象级绑定到现有 Button，并禁止旧暂停链路回流。
+- 新鲜离线验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/spec-lint.mjs`。该证据只证明源码 / Prefab / 静态守卫闭包，不证明 Unity 编译、PlayMode、截图或暂停菜单视觉一致。
+
+## 2026-08-25：StackCraft DayTimeUI 速度切换行为静态吸收
+
+- 本轮继续 StackCraft 复刻吸收主线，只订正 `DayTimeUI` 的玩家可见速度切换行为；没有恢复 StackCraft `TimeManager` 单例，没有写全局 `Time.timeScale`，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- `ScenarioRun` 新增本单局实时速度档位 `ScenarioTimePace`，按 StackCraft 顺序保留暂停、正常、加速三档；实时模式下点击 HUD 主按钮会循环档位，暂停档让本单局实时推进停止，加速档按 2 倍推进本单局实时秒数。
+- `ScenarioTurnPanel` 现在持有三张 StackCraft 速度图标，回合制或日终阶段显示暂停图标，实时模式显示当前速度图标；`CanConfirmTurn` 在实时模式仍为 false，避免把“切换速度”误称为“手动推进回合”。
+- `FoundationTestSceneMenu` 和 `ScenarioTurnPanel.prefab` 已写入三档图标引用，`gameplay-static-preflight` 已加入运行时字段、点击链、单局倍率、Prefab 图标列表和禁止 `ScenarioRun` 使用 `Time.timeScale` 的守卫。该证据只证明源码 / Prefab / 静态对账闭包，不证明 Unity 编译、PlayMode、截图、连续手感或完整复刻完成。
+
+## 2026-08-25：StackCraft UI Layer 静态闭包对账
+
+- 本轮继续 StackCraft 复刻吸收主线，只订正 HUD / 浮动 UI Prefab 的 Unity Layer 归属；没有切换原创业务，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- 对证 `Assets/StackCraft/Prefabs/UI/UIRoot.prefab` 后，确认 `DayTimeUI`、`CardStatsUI`、`TimeProgress`、`DayText`、`PaceImage`、三组统计图标 / 数字和 `Watermark` 都在 Unity UI Layer，即序列化字段 `m_Layer: 5`。
+- 当前正式 `Assets/Art/Prefabs/UI/*.prefab`、`Assets/Art/Prefabs/牌桌/命中结果.prefab` 和 `Assets/Art/Prefabs/牌桌/行动进度.prefab` 已同步为 UI Layer；`卡牌视图`、`投射物`、`战斗区域` 保持世界对象 Layer 0，因为 StackCraft 对应对象不是 HUD UI Layer。
+- `FoundationTestSceneMenu` / `FoundationTitleTestSceneMenu` 已在保存 UI Prefab 前递归写入 UI Layer，`gameplay-static-preflight` 已加入对象级 `m_Layer` 守卫和生成器防回退检查。该证据只证明 Unity Layer 序列化参数闭包，不证明 Unity 编译、PlayMode、截图、连续动画或完整复刻完成。
+
+## 2026-08-25：StackCraft 右侧 HUD 交互参数静态对账
+
+- 本轮继续 StackCraft 复刻吸收主线，只订正右侧 `Quests / Recipes` HUD 的静态来源参数；没有切换原创业务，没有启动 Unity 动态验证，也没有删除 `Assets/StackCraft`。
+- `ScenarioJournalPanel` 的 `QuestsView / RecipesView` 已从 `Clamped` 改为 StackCraft `UIRoot.prefab` 同款 `Elastic` 滚动，并同步滚动条可见策略与间距。
+- `QuestsToggle/Label`、`RecipesToggle/Label` 已按来源 Prefab 对齐文字 RectTransform / TMP 参数；`QuestsToggle`、`RecipesToggle` 和 `MenuToggle` 的 `m_TargetGraphic` 改为子文字 Label，页签选中态颜色对齐为白色，避免交互反馈绑到背景 Image。
+- 新鲜离线验证通过：`node .spec/tools/unity-yaml-guard.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/spec-lint.mjs` 和定向 `git diff --check`。UnitySkills `/health` 仍显示主线程队列不消费，因此本条不声明 Unity 编译、PlayMode、截图或最终视觉一致。
+
+## 2026-08-23：StackCraft 源脚本覆盖门禁订正
+
+- 本轮继续 StackCraft 复刻吸收主线，只收紧源码覆盖对账门禁；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- 发现旧静态预检只用“脚本类名是否出现在吸收矩阵文本里”判断 StackCraft 源脚本已登记，这会被同名词、历史段落或无关说明误判为已覆盖。现已改为每个 `Assets/StackCraft/Scripts/**/*.cs` 必须在吸收矩阵里出现精确 marker：`stackcraft-script:<相对路径>`。
+- `stackcraft-system-reference-matrix.md` 新增 StackCraft 源脚本显式覆盖索引，登记全部参考脚本路径；它只证明参考源码进入裁决视野，不越权证明最终画面、连续动画、全量业务迁移或模板可删。
+- 新鲜 CLI 验证已通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/spec-lint.mjs` 和定向 `git diff --check`。`gameplay-static-preflight` 仍提示未发现 `.sln / .csproj`，C# 编译必须留到 Unity 编译阶段验证；`git diff --check` 只剩 LF/CRLF 换行转换 warning，没有行尾空白错误。
+
+## 2026-08-23：StackCraft 拖拽高亮离线编译链复核
+
+- 本轮继续 StackCraft 复刻吸收主线，只做源码 / 生成物 / 编译响应文件对账；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- 复核 `TabletopCardDragInput` 与 `TabletopView` 的拖拽候选高亮改动后，发现离线编译最初报 `XTag` 缺少 `Card_Category_*` 常量。源码真相源 `Assets/Scripts/Gen/XTag.gen.cs` 和 Luban JSON 均已包含这些标签，旧 `Library/Bee` / `Library/ScriptAssemblies` 里的 `GAS.GeneratedRuntime` 二进制则没有这些字段。
+- 用 Unity 自带 Roslyn 在 `Logs/compile-check` 临时输出重新编译最新 `GAS.GeneratedRuntime`，再让 `Gameplay.Runtime` 和 `Gameplay.Foundation.TestSupport` 引用这份临时 ref，三层均编译通过。这证明该错误是 Unity 当前生成程序集未刷新导致的编译产物滞后，不是当前 Gameplay 源码缺字段。
+- 新鲜 CLI 验证已通过：`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs` 和定向 `git diff --check`。Unity 当前仍有同项目主 Editor、AssetImportWorker 与 ShaderCompiler 进程，不能启动 batch 或 Editor 自动化；该证据不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：订正卡牌中文字体与 StackCraft 文字效果对账
+
+- 本轮继续 StackCraft 复刻吸收主线，只订正进入 Unity 前的静态对账和已落盘 Prefab 字体引用；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- 订正上一轮错误口径：`LiberationSans SDF` 只能作为 StackCraft 英文模板的参考字体来源，不能成为 CardLoop 卡牌内容字体真相；卡牌标题、生命、价格、营养和命中结果伤害文本改为使用项目中文 TMP 字体，确保后续卡牌内容可以显示中文。
+- StackCraft 仍作为文字效果参数来源：位置、尺寸、旋转、字号基准、对齐、边距、样式 hash、字距和换行/溢出语义继续按来源 Prefab / YAML 对账；字体资产与材质引用改由“中文内容字体”对象级守卫检查。
+- 新鲜 CLI 验证已通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs` 和定向 `git diff --check`。`gameplay-static-preflight` 仍提示未发现 `.sln / .csproj`，C# 编译必须留到 Unity 编译阶段验证；该证据不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft 文本锚点共享常量静态对账补强
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的静态对账脚本；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 新增多来源共享常量断言：`TabletopCardView.StackCraftTextAnchoredPosition` 不再只靠手写 `new Vector2(0f, 0.001f)` 通过，而是从 StackCraft `PackVendor.prefab` 的 `Title / Tracker / Price`、`PackInstance.prefab` 的 `Title`、`CardBuyer.prefab` 的 `Title` 这些文本 `RectTransform.m_AnchoredPosition` 反查。
+- 现实意义：只有这些参考 Prefab 的文本锚点全部一致时，当前框架才允许用一个共享文本锚点常量；如果任一来源缺失或锚点不同，静态预检会直接失败，避免商贩、卡包和收购点文字落点形成第二真相。
+- 新鲜 CLI 验证已通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs` 和定向 `git diff --check`。该证据只证明文本锚点静态对账更严格，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft 静态守卫类体锚点继续补强
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的静态对账脚本；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 继续把正向弱证据从整文件顺序扫描升级为类体 / 方法体 / 字段初始化断言：`TabletopViewSettings` 拖拽手感只读参数、`ScenarioDirector` 序列播放队列、`CurrencyCardQuery` 货币查询结构、`TabletopCameraController` 镜头字段、`TabletopProjectileView` 投射物字段、`TabletopCardView` 卡牌表面字段、`CardDefinition` 可见尺寸字段 / 校验、`TabletopHitResultView` 命中结果字段、`ScenarioTurnPanel` HUD 统计字段、`TabletopActionProgressView` 进度字段，Foundation 生成器的占位图 / HUD 图标、StackCraft 表面字体、卡包网格、装备面板网格 / 材质路径常量，StackCraft `Highlight` 构造函数里的候选高亮来源语义，以及从 StackCraft `ProgressUI.prefab` 派生反查的根尺寸、背景 / 填充颜色、初始填充值和显示偏移。
+- 同步订正商贩验证口径：Starter 商贩的 `Price: 2 → 1 → 2` 只作为地基测试夹具，用来验证 StackCraft 分次付款、交易高亮、烟雾和卡包生成偏移语义；Beginning 商贩的价格与解锁任务数继续从 StackCraft `01_Pack_Beginning.asset` 派生对账。
+- 现实意义：这些玩家可见效果现在必须落在当前正式 owner 的类体或方法体里，不能再靠 using、注释、相似类名、无关方法或同文件其它位置出现相同文字误判为已对齐。
+- 新鲜 CLI 验证已通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity` 和 `node .spec/tools/stackcraft-business-representative-audit.mjs`。该证据只证明静态对账更严格，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft 静态守卫继续方法体化
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的静态对账脚本；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 继续把正向弱证据从整文件 token 检查升级为类体 / 方法体顺序断言：`TabletopCardInfoPanel` 的流程提示状态、`CurrencyCardQuery` 类结构、`Tabletop.StartActionInstance` 的战斗 / 活动行动占用拒绝、`TabletopCardSmokeEffectView` 的粒子生命周期、`TabletopViewSettings.GetPresentationAudio` 的烟雾音效映射、`TabletopView.PlayPresentationCue` / `RequestCardSmokeEffect` 的音效 + 粒子触发顺序、`TabletopCardDragSession` / `TabletopCardDragInput` 的点击阈值入口、`TabletopHitResultView.PlayPunchTween` 的 DOTween punch，以及 `GameCore.CameraShake` 的 EX-GAS 命中震动链。
+- 现实意义：这些玩家可见效果现在必须落在当前正式 owner 的具体类或方法中，不能再靠注释、无关方法或同文件其它位置出现相同文字误判为已对齐。
+- 新鲜 CLI 验证已通过：`node --check .spec/tools/gameplay-static-preflight.mjs` 和 `node .spec/tools/gameplay-static-preflight.mjs`。该证据只证明静态对账更严格，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft 表面与交易链静态守卫继续去弱证据
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的静态对账脚本；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 继续把整文件 token 检查升级为方法体 / 字段级断言，新增覆盖：收购点 / 卡包商贩测试作者源生成器、交易区布局、牌桌镜头绑定 / 平移 / 缩放 / 聚焦、投射物播放 / 朝向、牌桌放置几何、视图设置、测试地区放置写入、卡牌视图表面 / 卡包 / 商贩 / 受击反馈、占位图消费、HUD 三统计图标、行动进度 UGUI、剧本货币卡查询、剧本序列队列、卡牌可见尺寸和 `TabletopView` 实例化尺寸应用。
+- 现实意义：这些检查现在要求 StackCraft 玩家可见效果落在当前正式 owner 的具体方法或作者字段上，不能再靠注释、无关方法、同文件其它位置出现相同文字误判为已对齐。
+- 新鲜 CLI 验证已通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs` 和 `node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。该证据只证明静态对账更严格，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft 输入暂停与商贩作者源方法级对账补强
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的静态对账脚本；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 已把 GameCore 输入锁、GameState 外部暂停锁、`CardBuyerDefinition` 和 `PackVendorDefinition` 从整文件 token 检查升级为类结构和方法体顺序断言。
+- 现实意义：商贩解锁序列必须通过正式输入系统锁住 Gameplay 输入、通过正式游戏状态系统暂停时间；收购点和卡包商贩作者源必须在自己的创建 / 恢复 / 校验方法里声明 StackCraft 所需的货币图标、生成偏移、商品、价格、任务门槛和付款状态恢复语义。
+- 新鲜 CLI 验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs` 和 `node .spec/tools/unity-yaml-guard.mjs`。该证据只证明静态对账更严格，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+## 2026-08-23：StackCraft 商贩交易链方法级对账补强
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的静态对账脚本；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 继续把整文件散落 token 检查升级为指定方法 / 指定分支内部的顺序断言，覆盖商贩表面、收购点货币图标、商贩解锁表现队列、详情面板流程提示、货币卡推导、付款 / 出售候选和购买 / 出售结算。
+- 已升级的具体链路包括：`TabletopView` 的 `RefreshPackVendorSurfaces` / `ApplyPackVendorSurface` / `EnsureCardBuyerCurrencyArtwork` / `ApplyCardBuyerCurrencyArtwork` / `PlayPresentationCue` / `PlayCardHighlight`，`ScenarioRun.PresentPackVendorUnlocks`，`ScenarioDirector` 的序列播放队列和输入 / 暂停锁，`TabletopCardInfoPanel` 的 StackCraft InfoPanel 优先级提示，以及 `CurrencyCardQuery`、`CardPaymentSourceAvailableCondition`、`CardSaleSourceAvailableCondition`、`ActionResultSettlement.AddPackPurchase` 和出售分支。
+- 新鲜 CLI 验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity` 和 `node .spec/tools/stackcraft-business-representative-audit.mjs`。该证据只证明这些链路的静态对账更严格，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft 静态守卫方法级对账补强
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的静态对账脚本；没有切换原创业务，没有启动 Unity，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 新增 C# 方法体顺序断言：同一玩家可见语义必须落在指定方法内部并按调用链顺序出现，不能再靠无关方法、注释或整文件散落 token 误判通过。
+- 已升级的范围：`TabletopCoordinateSpace` 的 XZ 桌面映射、`TabletopCardLayout.Calculate` 的堆叠投影、`TabletopBattleAreaView.ApplyArea` 的战斗区域 XZ 投影、`TabletopCardDragSession` 的牌桌世界距离点击 / 拖拽判定，以及 `TabletopCardDragInput` 的按下即拿起、正式主相机投影、可见卡牌射线命中和牌堆段锚点。
+- 新鲜 CLI 验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs` 和 `node .spec/tools/spec-lint.mjs`。该证据只证明方法级静态守卫更严格，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft 静态守卫对象块漏检订正
+
+- 本轮继续 StackCraft 复刻吸收主线，只修正进入 Unity 前的静态对账脚本和记录；没有切换原创业务，没有启动 Unity，没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 订正 FoundationTest 镜头场景参数检查：之前派生字段数组用 `slice(3)` 会跳过第一个 StackCraft 派生字段，现在改为显式字段数组，`m_panSpeed / m_smoothTime / m_panPadding / m_zoomSpeed / m_minDistance / m_maxDistance / m_focusDurationSeconds` 都必须落在 `TabletopCameraController` 对应场景组件字段上。
+- 同步把四个测试地区作者源的 Board01 边界、页眉禁放区和卡牌几何从散落 token 检查升级为 YAML 字段块检查：`m_bounds`、唯一 `m_restrictedAreas[0]`、`m_cardSize / m_cardMargin / m_stackStep` 分别对账，不能再靠同文件其它位置出现相同数字通过。
+- 地基 Villager 作者源的显示名、描述和战斗属性覆盖也改为双来源字段对账：显示文本来自 StackCraft `Card_Villager.asset`，属性码来自 GAS 生成的 `XAttribute`，属性值来自 StackCraft 的 `maxHealth / attack / defense / attackSpeed / accuracy / dodge / criticalChance / criticalMultiplier`，不再靠散落 `m_baseValue` token。
+- 新鲜 CLI 验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs`。该证据只证明静态守卫漏检已订正，不证明 Unity 编译、玩家画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft 静态守卫赋值级对账补强
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的源码 / 参数对账；没有切换原创业务，没有启动 Unity，没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 新增 C# 赋值级断言，用来确认参考参数落在指定字段、常量或赋值目标上，而不是只在源码文件中出现相同文字。
+- 已升级的正向证据包括：牌桌放置几何 `m_cardSize / m_cardMargin / m_stackStep`，商贩解锁提示 / 高亮时长，牌桌镜头参数，测试地区生成器的 Board01 边界 / 禁放区 / 卡牌几何，StackCraft Main 默认卡包出生位置 / 半径，以及桌面背景 / 牌桌底板生成器的位置、旋转、缩放和本地包围盒。
+- 新鲜 CLI 验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity` 和 `node .spec/tools/stackcraft-business-representative-audit.mjs`。该证据只证明静态守卫更精确，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：StackCraft Board 边界文档口径订正
+
+- 本轮继续 StackCraft 复刻吸收主线，只修正记录口径；没有修改代码、Unity 资源、场景或 `Assets/StackCraft`。
+- 订正 `stackcraft-visual-animation-parity.md` 中把 Prefab `SkinnedMeshRenderer.m_AABB` 渲染包围盒误写成规则边界的问题：`48 × 0 × 32` 只用于渲染安全包围盒，玩法可摆放边界必须按 StackCraft `Board.cs` 的 `BakeMesh + RecalculateBounds` 口径从 `Board.fbx` 基础网格派生为 `12 × 8`，顶部页眉禁放区对应 `x=-6, y=2.5, width=12, height=1.5`。
+- 新鲜 CLI 验证通过：`node .spec/tools/spec-lint.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs`。该证据只证明文档口径与当前静态对账一致，不证明 Unity 编译、最终画面、连续动画、全量业务迁移或模板可删。
+
+## 2026-08-23：阶段 C 与视觉专项口径收口
+
+- 本轮继续 StackCraft 复刻吸收主线，只修正记录口径；没有修改代码、Unity 资源、场景或 `Assets/StackCraft`。
+- 订正 `stackcraft-system-reference-matrix.md` 的阶段 C 标题和结论：阶段 C “无缺口 / 已收口”只限定为机制、规则结算、代表业务链路和已审计源码参数的编码缺口；表面 / 动画最终一致性仍以 `stackcraft-visual-animation-parity.md` 为当前真相。
+- 当前正式说法：机制和代表性业务已有证据，表面 / 动画参数闭包已完成当前登记项，但卡图比例、文字落点最终观感、连续拖拽 / 移动 / 反馈手感、整体验收截图 / 录像和用户试玩确认仍未收口；在视觉专项未收口前，不得说“和模板完全一致”“完整复刻”或“可以删除模板”。
+- 新鲜 CLI 验证通过：`node .spec/tools/spec-lint.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`。`git diff --check` 只剩既有 LF/CRLF 换行转换 warning，没有行尾空白错误。
+
+## 2026-08-23：StackCraft E2E 过程截图链刷新
+
+- 本轮继续 StackCraft 复刻吸收主线，在静态预检通过后复用当前已打开 Unity；没有启动第二个 Unity，没有切换原创业务，也没有删除 `Assets/StackCraft`。
+- 进入 Unity 前的新鲜证据：`node .spec/tools/unity-verify.mjs status` 识别当前项目主 Editor，`unityskills-ensure` 显示端口 `8090`、队列 `0`、未编译、未导入；`node .spec/tools/unity-verify.mjs preflight --mode editor-automation --tool unityskills` 通过；`debug_check_compilation` 为未编译 / 未更新，`debug_get_errors` 返回 `count=0`。
+- 顺序执行单条 PlayMode：`Gameplay.Tests.FoundationTestScenePlayModeTests.FoundationTabletop_CapturesE2EVisualEvidenceSequence`，UnitySkills job `bf626b8b` 返回 `1/1 passed`，耗时 `35s`。这是过程截图链验证，不是最终视觉 PASS。
+- 刷新 6 张过程图：`Assets/Screenshots/FoundationE2E/foundation-e2e-sequence-01-ready.png` 到 `foundation-e2e-sequence-06-action-completed-product.png`，最新写入时间为 `2026-08-23 04:42:30-31 +08:00`；同步刷新过程拼图 `Assets/Screenshots/FoundationE2E/_contactsheet-foundation-e2e-sequence-latest.png`，尺寸 `1504×582`，写入时间 `2026-08-23 04:43:24 +08:00`。
+- 测试后回读：UnitySkills 队列为空、未编译、未导入；`debug_check_compilation` 仍为空闲，`debug_get_errors` 仍为 `0`。该证据只证明截图链可运行并产出最新过程图，不证明连续动画手感、玩家试玩、全量业务迁移、完整复刻或模板可删。
+
+## 2026-08-23：StackCraft 表现参数静态守卫去弱证据
+
+- 本轮继续 StackCraft 复刻吸收主线，只强化进入 Unity 前的静态对账脚本；没有切换到原创《卡牌生存：无限》业务，没有改玩法运行代码，也没有删除 `Assets/StackCraft`。
+- `gameplay-static-preflight` 中已经删除“参考源派生 token 只要出现在源码文本里就算通过”的旧辅助函数；牌桌视图设置、收购点 / 卡包商贩生成偏移、测试场景交易区常量、投射物表现前摇、受击闪白 / 摇晃、命中结果弹跳和行动进度显示偏移 / 运行颜色，现在改为解析具体 C# 字段初始化、`const float` 常量或 YAML 字段值。
+- 这次改动的现实意义是：后续如果有人把 StackCraft 参数写到注释、无关方法或其它字段里，静态预检不会再误判为已对齐；它只承认正确字段 / 常量 / Prefab 字段承接了参考参数。
+- 新鲜 CLI 验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs`；YAML 守卫扫描 `15785` 个 Unity 文件。`gameplay-static-preflight` 仍只提示没有 `.sln / .csproj`，C# 编译必须留到 Unity 阶段验证。
+- 该证据只证明表现参数静态守卫更严格且现有参数仍通过；不证明 Unity 编译、最终截图、连续动画手感、全量模板业务迁移、完整复刻或模板可删。
+
+## 2026-08-23：UnitySkills 队列恢复与代表 PlayMode 链收口
+
+- 本轮继续 StackCraft 复刻吸收主线，只处理验证基础设施恢复、代表链复跑和证据记录；没有切换到原创《卡牌生存：无限》业务，也没有删除 `Assets/StackCraft`。
+- 之前 UnitySkills 队列卡住的现实原因是 Unity 弹出“已打开场景在磁盘上改变，是否重载”的模态确认框，主线程请求被阻断。已用 `.spec/tools/unity-confirm-scene-reload.mjs` 精确确认对应场景重载，随后 `unityskills-ensure` 回到 `queuedRequests=0`、未编译、未导入的空闲状态。
+- `FoundationTabletop_CapturesE2EVisualEvidenceSequence` 初次复跑 job `1e84dfa1` 失败，失败点是拖拽后没有形成释放事实；同一时刻候选诊断能证明规则候选存在。相邻正式拖拽链 `FoundationTabletop_SelectedActionUsesTurnTruthAcrossProgressionModeSwitch` job `35f94c3d` 通过，因此本次订正的是截图链测试辅助驱动的诊断断言，不是生产拖拽逻辑。
+- `Assets/Tests/PlayMode/FoundationTestScenePlayModeTests.cs` 的拖拽辅助现在会在释放前断言 Gameplay 输入未锁定、点击 Action 未被阻挡、正式指针读到按下点、`TabletopCardDragInput` 已建立指针会话且移动后进入拖拽状态；以后同类失败会暴露输入断点，而不是只报“没有行动候选”。
+- 刷新资源并重新编译后，Unity 编译 `success=true`、`errorCount=0`；截图链 job `a55f01e6` 复跑 `1/1 passed`。随后本轮再次刷新代表链：截图链 job `d1c4dec2` 为 `1/1 passed`，Starter 卡包逐槽打开 job `a55870ea` 为 `1/1 passed`，卡包商贩两次付款 job `5f84ee2c` 为 `1/1 passed`。
+- 收口验证通过：`unityskills-ensure` 队列为空；`unity-verify preflight --mode editor-automation --tool unityskills` 通过；`gameplay-static-preflight`、`stackcraft-business-representative-audit`、`spec-lint`、规范测试 `2/2` 通过；Unity Console 当前 `debug_get_errors count=0`。剩余两个 Warning 分别来自 YooAsset 退出阶段中止 `DownloadSchedulerOperation` 和 Unity Entities 包自身 `UpdateAfterAttribute` 排序提示，不是本轮 Gameplay 复刻代码错误。
+- 当前可声明范围：UnitySkills 自动化队列已恢复，三条代表 PlayMode 玩家链路可跑，测试辅助断言更能暴露真实输入断点；最新六张过程截图已合成为 `Assets/Screenshots/FoundationE2E/_contactsheet-foundation-e2e-sequence-latest.png`，尺寸 `1504×582`。仍不能据此声明最终视觉 PASS、连续动画手感、StackCraft 全量业务迁移、完整复刻或模板可删。
+
+## 2026-08-23：地图测试场景主相机层级静态订正
+
+- 本轮继续 StackCraft 复刻吸收主线，只处理测试场景相机结构与静态对账；没有切换到原创玩法，也没有删除 `Assets/StackCraft`。
+- 发现 `FoundationMapTest.unity` 与 `FoundationSecondMapTest.unity` 仍是旧落盘结构：`Main Camera` 直接作为场景根对象，缺少 StackCraft 同形的 `CameraController` 根对象，导致 `gameplay-static-preflight` 按对象级字段对账失败。
+- 已把两个地图测试场景订正为 `CameraController` 根对象 + `Main Camera` 子对象：相机根保留 StackCraft 视角位置 `{0, 10, -1}` 与 `85°` 旋转，子相机本地位置 / 旋转对齐 StackCraft `CameraController.prefab`，并保留 `Camera` 与 `AudioListener` 组件。
+- 新鲜 CLI 验证通过：`unity-yaml-guard` 扫描 `15785` 个 Unity 文件通过；`gameplay-static-preflight` 与 `--strict-auxiliary-parity` 均通过；`stackcraft-business-representative-audit` 通过；`spec-lint` 与规范测试 `2/2` 通过；`git diff --check` 只有既有 LF/CRLF 换行提示。
+- UnitySkills 当前仍显示 1 个重请求卡在编辑器自动化队列，`isCompiling=false`、`isUpdating=false`，因此本轮没有继续调用 UnitySkills 主线程接口，没有执行场景健康检查、PlayMode 或截图验收。该结论只证明 CLI 静态场景结构和参考参数对账通过，不证明 Unity 运行态、最终画面或模板可删。
+
+## 2026-08-23：测试场景 StackCraft 表面参数落盘订正
+
+- 本轮继续 StackCraft 复刻吸收主线，目标是修正测试场景 / Prefab 生成器中已经被静态守卫证明不一致的序列化参数；没有切换到原创玩法，也没有删除 `Assets/StackCraft`。
+- `FoundationTestSceneMenu` 已把桌面背景 Transform 的四元数和欧拉提示按 StackCraft `Main.unity` 的 `Background` 精确落盘，避免 `Quaternion.Euler(0, 180, 0)` 产生浮点尾差后被静态对账拦截。
+- 同一生成源已把卡牌标题 / 价格 / 营养 / 生命、命中结果伤害数字和 HUD 三个统计数字的 TMP 样式 hash 与字距开关写成 StackCraft 参数；`ScenarioTurnPanel.prefab`、`卡牌视图.prefab`、`命中结果.prefab` 和三张地基桌面场景已通过 Unity 菜单重建落盘。
+- 同步修正测试运行根 Prefab 引用口径：运行入口保存 Prefab 根对象引用，根对象再包含 `GameManager`，不再把 `GameManager` 组件 fileID 当成 Prefab 引用目标；三张测试场景的主相机均保留 `AudioListener`。
+- 新鲜验证：UnitySkills 端口 `8090` 可用，`Assets/Refresh` 后 Unity 编译 `success=true`、`errorCount=0`；`Gameplay/地基/重建测试场景` 与 `Gameplay/地基/重建标题入口测试场景` 执行成功；`node .spec/tools/gameplay-static-preflight.mjs` 与 `--strict-auxiliary-parity` 均通过；`node .spec/tools/stackcraft-business-representative-audit.mjs` 通过；`node .spec/tools/spec-lint.mjs` 与规范测试 `2/2` 通过；`node .spec/tools/unity-yaml-guard.mjs` 扫描 `15785` 个 Unity YAML 文件通过；`git diff --check` 只剩换行转换 warning，无行尾空白错误。
+- Unity 只读健康检查：`debug_check_compilation` 返回未编译 / 未更新，`debug_get_errors` 与 Console Error 均为 `0`；当前活动场景 `FoundationTitleTest` 的 `scene_health_check` 无 Error，仅有无 Light 的 Warning。该证据不等于最终画面、连续动画手感、全量业务数据迁移或模板可删。
+
+## 2026-08-23：旧输入与固定场景入口静态守卫补强
+
+- 本轮继续 StackCraft 复刻吸收主线，只做 CLI 静态对账；没有启动 Unity、没有截图、没有删除模板目录。
+- `gameplay-static-preflight` 已把正式 GameCore / Gameplay / 测试支撑源码纳入依赖入口扫描：旧 `UnityEngine.Input`、`StandaloneInputModule`、写死 `Main / Island / Title` 的直接切场景入口、全局对象查找和 `Camera.main` 都会在静态预检阶段失败。
+- 同时清理了已经无调用方的旧辅助哈希对账函数，并把 `Transform.Find` 守卫从宽泛 `.Find("...")` 收窄为真实 Transform 层级查找，避免把 `Shader.Find` 调试材质 fallback 误报为依赖入口问题。
+- 新鲜静态验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs` 均通过；YAML 守卫扫描 `15785` 个 Unity 文件。
+- 该证据只证明旧输入 / 固定场景名 / 依赖入口回流在 CLI 阶段可被拦截；不证明 Unity 编译、GameView 最终画面、连续动画手感或模板可删。
+
+## 2026-08-23：HUD 统计图标静态守卫升级
+
+- 本轮继续主线“我的框架，他的业务”，只做不启动 Unity 的 StackCraft 静态吸收对账；没有切换到原创策划，也没有删除 `Assets/StackCraft`。
+- 订正 `gameplay-static-preflight`：StackCraft `CardStatsUI` 对应的 HUD 营养、货币和卡牌容量三组图标 / 数字统计不再作为“辅助表现”处理，而是默认预检阻塞项。缺图、hash 不一致、导入视觉参数不一致、`ScenarioTurnPanel` 源码缺失、Prefab 缺失、`UIRoot.prefab` 来源缺失、字段引用缺失或 Sprite GUID 未命中都会直接失败。
+- 新鲜静态验证通过：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs` 和 `node .spec/tools/unity-yaml-guard.mjs` 均通过；YAML 守卫扫描 `15785` 个 Unity 文件。`gameplay-static-preflight` 仍只提示未发现 `.sln / .csproj`，C# 编译必须留到 Unity 阶段验证。
+- 该证据只证明 HUD 统计表面从默认静态预检层面防回流；不证明 Unity 编译、GameView 最终画面、连续动画手感或模板可删。
+
+## 2026-08-22：StackCraft E2E 截图链新鲜复跑
+
+- 本轮继续主线“我的框架，他的业务”，没有切换到原创《卡牌生存：无限》业务，也没有删除 `Assets/StackCraft`。
+- 先完成代码级与资源级预检：`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs` 和 `node .spec/tools/unity-yaml-guard.mjs` 均通过；YAML 守卫扫描 `15785` 个 Unity 文件。`gameplay-static-preflight` 仍只提示没有 `.sln / .csproj`，C# 编译必须留到 Unity 阶段。
+- Unity 入口按项目规范复用已打开 Editor：`node .spec/tools/unityskills-ensure.mjs --timeout-ms 600000` 返回端口 `8090`、`bypass`、无编译 / 导入；`node .spec/tools/unity-verify.mjs preflight --mode editor-automation --tool unityskills` 通过。期间没有启动第二个 Unity，也没有并发跑测试。
+- Unity 编译状态回读为 `success=true`、`errorCount=0`、`warningCount=84`；这些 warning 仍集中在第三方插件 / 历史包，不能当作本轮 Gameplay 错误。
+- 单条 PlayMode `Gameplay.Tests.FoundationTestScenePlayModeTests.FoundationTabletop_CapturesE2EVisualEvidenceSequence` 通过，UnitySkills job `6f319203` 返回 `totalTests=1, passedTests=1, failedTests=0`，耗时 `34s`。测试后 UnitySkills 健康、无编译 / 导入，Console 编译错误仍为 `0`。
+- 继续顺序复跑两条代表业务链，均只使用原 TestRunner job 恢复，不并发、不自动重启：Starter 卡包逐槽打开 `FoundationTabletop_PlayerClicksCardPackAndDrawsEachSlotThroughFormalAction` job `cfff2e1c` 为 `1/1 passed`；卡包商贩两次付款 `FoundationTabletop_PlayerPaysPackVendorInTwoTransactionsAndReceivesPack` job `74d06b4f` 为 `1/1 passed`。两条测试中的短暂 REST 连接拒绝发生在 Unity Domain Reload 瞬断窗口，最终原 job 都恢复并返回真实 TestRunner 结果。
+- 本轮重新生成 6 张过程截图：`Assets/Screenshots/FoundationE2E/foundation-e2e-sequence-01-ready.png` 到 `foundation-e2e-sequence-06-action-completed-product.png`，最新写入时间为 `2026-08-22 19:32:21-22 +08:00`。这些截图只证明统一测试场景过程链路可跑并能产出画面证据，不是最终视觉 PASS，也不能证明连续动画手感、全量模板业务、试玩体验或模板可删。
+
+## 2026-08-22：UnitySkills PlayMode TestRunner 恢复链再订正
+
+- 本轮复跑截图链时确认此前“PlayMode 可安全重启一次”的结论不成立：`FoundationTabletop_CapturesE2EVisualEvidenceSequence` 的原始 PlayMode job 已经生成 `foundation-e2e-sequence-01/02/03`，甚至后续 `04/05/06` 截图，但 UnitySkills 因未收到完成回调而重启同一 PlayMode 测试，导致 Unity Test Runner 在 PlayMode 内创建启动场景或重复进入生命周期，出现 `CreateBootstrapSceneTask` / `PlayModeRunTask` / `Lifecycle ERROR`。
+- 已订正 `Packages/com.besty.unity-skills/Editor/Skills/AsyncJobService.cs`：PlayMode 测试在 Domain Reload 后只等待原始 Test Runner job 恢复；PlayMode 活跃时不重启，PlayMode 离开后仍取不到结果也不重启，只把它标为验证基础设施失败。EditMode 仍保留“未接受任何结果时可保守重启一次”的机制。
+- 同步规范：`.spec/knowledge/standards/testing.md` 和 `.spec/knowledge/features/ai-quick/unity-automation-tools.md` 已改成“PlayMode 不自动重启”。当前截图链失败只能证明 UnitySkills / TestRunner 恢复结果失败，不能证明 Gameplay 业务失败，也不能拿中间截图当完成证据。
+
+## 2026-08-22：UnitySkills TestRunner 恢复链修复
+
+- 本轮修复目标是 UnitySkills / Unity Test Runner 验证基础设施，不是 Gameplay 业务逻辑：此前 PlayMode 测试在 Domain Reload 后可能返回 `failed_runner_not_restored / totalTests=0`，现实含义是测试 job 恢复失败，不能证明业务测试失败或通过。
+- `Packages/com.besty.unity-skills/Editor/Skills/AsyncJobService.cs` 已改为保守恢复：原 Test Runner job 30 秒未恢复时，只有在同一测试任务尚未接受任何测试结果、`total/passed/failed/skipped/inconclusive/other` 全为 `0`、且本任务还没重启过的情况下，才用同一测试过滤器安全重启一次；已经开始产出测试结果的任务仍直接失败，避免重复执行测试。
+- `Packages/com.besty.unity-skills/Editor/Skills/SkillsHttpServer.cs` 已把 Domain Reload 中断后台 HTTP 响应线程的 `ThreadAbortException` 识别为脚本重载正常路径，不再把它写成 Unity Console Error。旧 Console 残留清空后，第三次复跑未再出现 `Fallback response failed`。
+- 历史订正：此处原写法“UnitySkills PlayMode 可内置恢复一次 / 可安全重启同一测试一次”已被后续截图链复跑推翻。当前正式口径以上一节为准：PlayMode 只恢复原始 job，不自动重启。
+- 新鲜验证：`ResourceSystemLifecyclePlayModeTests.ShutdownForApplicationQuit_WhenYooAssetsDriverAlreadyDestroyedRuntime_ClearsProjectOwnership` 三次通过，最终干净复跑 job `85734744` 为 `1/1 passed`，复跑后 Unity 编译空闲、Console `0` Error。
+- 代表性业务 PlayMode 已恢复可用：`FoundationTabletop_PlayerPaysPackVendorInTwoTransactionsAndReceivesPack` job `1e395c7f` 为 `1/1 passed`；`FoundationTabletop_PlayerCompletesDayCycleByFeedingAndSellingThroughExistingUi` job `76bb1c7f` 为 `1/1 passed`。测试期间 REST 连接拒绝只发生在 Domain Reload 瞬断窗口，最终均返回真实 TestRunner 结果。
+- 收口验证：`debug_get_errors` 返回 `count=0`，`console_get_stats` 返回 `0` Error / `6` Warning，`debug_check_compilation` 返回未编译 / 未更新；`gameplay-static-preflight`、`stackcraft-business-representative-audit`、`spec-lint` 和规范测试 `2/2` 通过。剩余 Warning 分别是 YooAsset 退出时中止下载调度、TMP 缺少中文 fallback 字符和 Unity Entities 包自身排序提示，不是本轮 TestRunner 恢复失败。
+
+## 2026-08-22：StackCraft 静态吸收验收链订正
+
+- Unity 已由用户打开后，本轮按项目 guard 只做最小只读验证，不进入 PlayMode、截图或场景保存：`node .spec/tools/unity-verify.mjs preflight --mode editor-automation --tool unityskills` 通过，UnitySkills 端口 `8090`、主线程空闲、`isCompiling=false`、`isUpdating=false`。
+- 通过 UnitySkills 只读接口复查编辑器状态：`unity_diagnose` 返回 `healthy=true`、Console 错误数 `0`、警告数 `0`（诊断摘要口径），`debug_check_compilation` 返回未编译 / 未更新，`console_get_stats` 返回 Console 总计 `84` 条 warning、`0` 条 error，`debug_get_errors` 返回 `count=0`。这些 warning 集中在 StackCraft 旧保存数据、Backbone 旧 API 和 SmartLighting2D 序列化提示，不证明当前吸收链失败。
+- Unity AssetDatabase 关键资产只读回读通过：`FoundationTest.unity`、`FoundationStackCraftParityTest.unity`、`牌桌测试视图设置.asset`、测试 / 正式卡牌视图 Prefab、卡牌烟雾粒子 Prefab、投射物 Prefab、主动敌人卡牌表面材质、StackCraft Villager 复制卡图、地基打开卡包行动和地基日终收购点均能由 `asset_get_info` 识别为对应 Unity 类型。随后复查仍为未编译 / 未更新、Console `0` 错误。
+- Unity Editor 场景结构回读通过：`scene_load` 可加载 `FoundationStackCraftParityTest.unity` 与 `FoundationTest.unity`，两个场景均 `isDirty=false`，`validate_scene` 与 `validate_missing_references` 均为 `0` 问题。`FoundationTest` 当前场景直挂桌面背景、牌桌底板、牌桌测试对象、CameraController 和 `FoundationTestRuntimeEntry`；`FoundationTestRuntimeRoot.prefab` 与 `FoundationGameUI.prefab` 均能由 Unity 识别，说明运行根和 UI 进入的是运行时装配链，不是场景内重复常驻对象。
+- 单条 PlayMode 运行根验证通过：`test_run_by_name` 执行 `Gameplay.Tests.FoundationTestScenePlayModeTests.FoundationTabletop_InstantiatesViewsAndLoadsArtworkThroughYooAsset`，UnitySkills job `a0a44394` 完成，结果 `1/1` passed。测试后 `unityskills-ensure` 与 `unity-verify preflight --mode editor-automation --tool unityskills` 均通过，Unity 未编译 / 未更新，Console `0` 错误、`2` 个 warning。
+- 继续尝试用 UnitySkills TestRunner 跑资源退出生命周期回归时，job `07f3680e` 返回 `totalTests=0` 与 `failed_runner_not_restored`，现实含义是 TestRunner 在 Domain Reload 后没有恢复原 job，不是业务断言失败或通过。随后 UnitySkills 服务短暂拒绝连接，`unityskills-ensure` 已恢复端口 `8090`；Console 仅出现 Unity 生命周期域错误，清空旧残留后 `debug_get_errors` 与 `console_get_stats` 均回到 `0`。
+- 已回审退出清理补丁：普通 `ResourceSystem.Shutdown()` 仍在资源运行时状态不完整时抛错；只有 `GameManager.OnApplicationQuit` 进入 `ShutdownForApplicationQuit()`，用于收口 Unity / YooAsset 退出阶段里第三方运行时已经先销毁的状态。`ScenarioPauseInput` 与 `TabletopCardDragInput` 在 `GameManager` 非 Ready 时不再反向访问已停机的输入动作，订阅清理由唯一 `GameCore.InputSystem` 的停机流程完成。
+- 本轮补充静态回归重新通过：`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs` 与 `node .spec/tools/unity-yaml-guard.mjs` 均通过；YAML 守卫扫描 `15777` 个 Unity 文件，`gameplay-static-preflight` 仍只提示没有 `.sln / .csproj`，C# 编译必须留到 Unity 阶段。
+- 该证据只证明当前 Unity Editor 已能导入脚本且 Console 没有错误；仍不证明 GameView 画面、连续动画、试玩手感、PlayMode 用例或模板可删。
+- 继续收口静态守卫的“第二份期望值”风险：HUD 统计区从 `UIRoot.prefab` 做对象级 Image / Text / 布局组件对账；卡包商贩解锁提示时长从 StackCraft `TradeManager.PlayActivationSequence` 的 `WaitForSecondsRealtime` 派生；FoundationTest 相机根 Transform、WorldSpace 表现旋转、卡牌 Highlight Transform，以及卡牌视图网格 / 材质 / 装备面板 / 收购图标引用改为从测试场景生成器、StackCraft `Highlight.cs` 或目标对象组件字段证明，不再只靠全文件 token 或手写 YAML 数值。
+- 本次继续把卡面文字字体 / 材质、命中结果五类图标、HUD 三个数字标签和投射物箭矢 / 魔法图片从“全 Prefab 出现过对应 GUID”收口为“具体对象上的具体组件或字段引用”，避免静态守卫用全文件 token 冒充对象级复刻。
+- 本次继续把材质、模型 remap、音效资产和烟雾表现引用从“文件里出现过 GUID”收口为“具体字段命中”：桌面 / 卡牌 / 卡包 / 交易 / 装备 / 烟雾材质检查 `m_Shader` 与贴图槽，`Board.fbx.meta` 检查 Body / Header 材质映射，卡牌烟雾视图设置检查 `SoftAssetReference` 的 `Address / Guid / Locked`、音效资产的 `m_audioClips` 列表和 SFX 通道，烟雾 Prefab 检查 Renderer 材质对象块。
+- 继续去掉宽泛字符串正向判断：材质名称改为只读 `!u!21` Material 对象，卡牌 / 商贩可见尺寸改为 YAML 标量字段，行动进度 Canvas 改为对象级 `Canvas.m_RenderMode = 2`，烟雾粒子初始隐藏状态改为 GameObject 字段检查。
+- 本轮新增组件字段级引用 helper 后，已删除 `assertUnityComponentHasTokens` / `assertUnityMonoBehaviourHasTokens` 这类对象块 token 搜索入口；卡牌默认 / 卡包网格、桌面背景 / 底板材质、候选高亮、装备面板、收购货币图标、HUD 三图标、行动进度 `Square` 图片、烟雾 Renderer 材质 / 排序 / `playOnAwake`、镜头震动幅度 / 时长均改为 `m_Materials`、`m_Mesh`、`m_Sprite`、`m_RenderMode`、`m_SortingOrder`、`m_amplitude`、`m_duration` 等具体字段读取。
+- `assertSerializedScalarFromCsharpLiteral`、`assertSerializedScalarFromReference` 和 YooAsset Collector 块检查也已改为字段值解析；不再允许同一文件或同一块内其它位置出现相同文本就被当成序列化字段对齐。
+- 继续补齐 StackCraft TMP 文字对象字段级对账：卡牌标题 / 价格 / 营养 / 生命、命中结果伤害数字、HUD 三个统计数字现在同时校验正常样式哈希、字偶距、颜色、自动缩放、对齐、溢出和换行语义；正式 Prefab 与测试 Prefab 已修正 `m_TextStyleHashCode` 和 `m_enableKerning`，避免文字排版“看起来类似但参数不一致”。
+- 牌桌测试视图设置资产的投射物、命中结果和基础视图资源地址也改为按 `SoftAssetReference` 字段块检查 `Address / Guid / Locked`；块内字段现在逐项解析和反转义，不再允许 GUID、地址或锁定标记只是在块文本里出现就被误判为正确引用。
+- YooAsset 收集配置继续从“路径和规则分别出现”收口为“同一个 Collector 块字段一致”：`Assets/Art/Sprites/StackCraft` 必须在自身收集块使用 `AddressByFolderAndFileName`；正式表现 Prefab、正式 UI Prefab、卡牌表面材质、卡包材质、交易区材质和测试占位卡图必须在自身块内同时具备 `AddressByFileName`、`PackDirectory`、`CollectAll` 和 `test` 标签。
+- 卡包 / 商贩作者源检查也已从手写 token 收口：Starter / Beginning 卡包的显示名与描述从 StackCraft 原 `PackDefinition` 读取，卡包图、卡包表面、商贩宝箱卡图和建筑表面改为 `SoftAssetReference` 字段块级检查；Beginning 商贩售价和解锁任务数从 StackCraft `01_Pack_Beginning.asset` 的 `buyPrice / minQuests` 派生。Starter 测试商贩售价 2 明确只属于地基测试合同，不伪装成 StackCraft 原包价格。
+- 继续横向清理同类问题：日终收购点的占位卡图和交易区表面改为 `SoftAssetReference` 字段块检查，FoundationTest / FoundationStackCraftParityTest 的运行根 Prefab 引用 GUID 改为从 `FoundationTestRuntimeRoot.prefab.meta` 派生；`gameplay-static-preflight` 内已无直接手写 Unity 资源 GUID 或运行根 Prefab GUID token。
+- 继续收紧同态测试闭环守卫：`FoundationStackCraftParityTest` 不再用全场景 token 证明剧本 ID 和 Starter 卡包开局，而是定位 `FoundationTestSceneHarness` 组件后检查 `m_scenarioId.m_value` 与 `m_initialLayout`；`地基打开卡包行动.asset` 不再用全文件 token 证明 PackInstance 点击语义，而是检查 `m_contentId.m_value`、点击启动、参与槽 `pack`、允许卡包内容 ID、SerializeReference 结果意图和 `m_packSlotKey`；战斗区域 Prefab 的视图脚本与颜色也改为目标对象组件字段检查。
+- 继续收紧测试内容作者源守卫：`Assets/Gameplay/Tests` 中带 `m_cardSurface` 的资产现在读取该字段块内的 `Address` 并与 StackCraft 分族表面白名单对账，不再用整份 `.asset` 正则命中地址；`地基日终收购点.asset` 现在按 `m_EditorClassIdentifier` 和 `m_currencyCardId.m_value` 字段证明它确实是收购点并绑定日终货币卡；GameObject 名称定位改为读取对象块 `m_Name` 字段值后精确比较，脚本组件类型定位也改为读取组件块 `m_EditorClassIdentifier` 字段值后精确比较。
+- 继续补齐已中文化卡图副本的导入闭包：`Assets/Art/Sprites/CardArts` 中 19 张来自 StackCraft 的自有中文卡图此前只保证图片 hash，未保证 mipmap、wrap、透明和压缩等导入视觉参数；本轮已按来源同步这些 `.meta`，同时保留项目自有 GUID、`textureType: 8`、`spriteMode: 1` 和 Sprite 引用能力，并加入 `gameplay-static-preflight` 守卫。
+- 继续补齐独立测试占位卡图闭包：`Assets/Art/Sprites/卡牌占位图.png` 虽然不是 `Assets/Art/Sprites/StackCraft/**` 全量复制库成员，但仍由 `FoundationTestSceneMenu` 直接消费；本轮已把它按 StackCraft `Sprites/Square.png` 的图片 hash 和 Unity 导入视觉参数加入守卫，并同步检查 YooAsset 收集路径和测试生成器消费入口。
+- 继续补齐复制资源的导入闭包：`草地背景.png`、`水面背景.png` 和 `卡牌烟雾.png` 虽然位于 `Assets/Art/Textures` 而不是 `Assets/Art/Sprites/StackCraft`，仍必须和 StackCraft 来源保持图片 hash、mipmap、边缘采样、压缩和非 Sprite 导入类型一致；`gameplay-static-preflight` 已区分 Sprite 副本和材质贴图副本两种守卫模式。
+- 继续补齐 ShaderGraph 元数据闭包：`卡牌表面.shadergraph`、`卡牌轮廓.shadergraph`、`装备面板.shadergraph` 和 `桌面简单光照.shadergraph` 除文件 hash 对齐外，还必须保持 StackCraft 来源的 `ScriptedImporter` 脚本一致，并使用项目自有 GUID；该守卫只证明 Unity 导入器入口一致，不证明最终画面。
+- 本轮继续主线“我的框架，他的业务”，只做不启动 Unity 的静态源码 / Prefab / YAML / 业务作者源对账，不切换到原创《卡牌生存：无限》业务，也不删除 `Assets/StackCraft`。
+- 正式 Gameplay 源码和测试支撑扫描未发现旧 `CryingSnow` 命名空间、`Resources.LoadAll`、旧输入 API、`Camera.main`、全局对象查找或 `Assets/StackCraft` 运行依赖回流；命中项仍集中在文档和静态预检脚本的参考真相源读取。
+- `ActionSlotReferenceDrawer` 已确认存在并承担行动槽位引用下拉职责；`gameplay-static-preflight` 新增守卫，要求该抽屉、单槽位自动推导选项和多槽位错误提示存在，防止作者流程退回手填内部槽位 key。
+- `stackcraft-business-representative-audit` 曾因固定 `
+` 字符串匹配误判 CRLF YAML，报告 “Beginning 商贩没有指向 Beginning 卡包”；实际 `地基开端卡包商贩.asset` 的 `m_offeredPackId.m_value` 已是 `test.foundation.pack.beginning`。脚本已改为字段级解析 `m_offeredPackId.m_value`。
+- `gameplay-static-preflight` 继续收口静态期望值来源：投射物 / 命中结果 / 卡牌烟雾排序从 `TabletopViewSettings.cs` 默认字段派生，Foundation 主相机参数从 StackCraft `CameraController.prefab` 派生，镜头震动从 StackCraft `CameraController.Shake` 默认参数派生；`TabletopCardSmokeEffectView` 不再使用固定 `+0.1f` 余量，改为按粒子系统自身播放时长和最大粒子寿命计算隐藏时间。
+- 新鲜静态验证通过：`spec-lint`、规范测试 `2/2`、`node --check .spec/tools/gameplay-static-preflight.mjs`、`gameplay-static-preflight`、`gameplay-static-preflight --strict-auxiliary-parity`、`stackcraft-business-representative-audit` 和 `unity-yaml-guard`（扫描 `15776` 个 Unity YAML 文件）均通过。`gameplay-static-preflight` 仍只提示没有 `.sln/.csproj`，C# 编译必须留到 Unity 阶段。
+- 当前可声明范围：静态守卫和代表性业务审计链路已恢复；不能据此声明 Unity 编译、玩家画面、连续动画、试玩手感、StackCraft 全量业务迁移或模板可删。
+
+## 2026-08-21：StackCraft E2E 截图链恢复与证据范围
+
+- 本轮继续主线“我的框架，他的业务”，只处理 StackCraft 表面 / 动画对账链路，不切换到原创《卡牌生存：无限》业务，也不删除 `Assets/StackCraft`。
+- 新鲜静态 guard 全部通过：`node .spec/tools/spec-lint.mjs` 通过；`node --test .spec/tools/spec-lint.test.mjs` `2/2` 通过；`node .spec/tools/gameplay-static-preflight.mjs` 与 `--strict-auxiliary-parity` 均通过；`node .spec/tools/unity-yaml-guard.mjs` 通过并扫描 `15775` 个 Unity YAML 文件。
+- Unity 入口按项目规范走已打开 Editor + UnitySkills，不启动第二套 Unity。`unityskills-ensure` 返回端口 `8090`、`bypass`、主线程空闲、无编译 / 导入；`unity-verify preflight --mode editor-automation --tool unityskills` 通过。
+- 单条 PlayMode `Gameplay.Tests.FoundationTestScenePlayModeTests.FoundationTabletop_CapturesE2EVisualEvidenceSequence` 通过，UnitySkills job `20011c56` 返回 `totalTests=1, passedTests=1, failedTests=0`，耗时 `53s`。
+- 代表性业务只读审计 `node .spec/tools/stackcraft-business-representative-audit.mjs` 通过，继续覆盖 Starter pack、Beginning pack、Beginning vendor、权重条目和配方候选；它仍不证明 StackCraft 全量业务资产已经迁移。
+- 该用例重新生成 6 张过程截图：`foundation-e2e-sequence-01-ready.png` 到 `foundation-e2e-sequence-06-action-completed-product.png`，最新写入时间为 `2026-08-21 23:25:38-39`。这些截图只证明统一测试场景的过程链路可跑并能产出画面证据，不是最终视觉 PASS，也不能证明连续手感已与模板完全一致。
+- 测试后复查 Unity 编译状态和 Console：`debug_check_compilation` 显示 `isCompiling=false`、`isUpdating=false`；`debug_get_errors` 返回 `count=0`。当前可声明范围是“截图链和参数闭包证据恢复”，不能声明“完整复刻 / 模板可删”。
+
+## 2026-08-21：Unity batch 验证报告门禁订正
+
+- 本轮按项目 guard 先完成代码级预检：`spec-lint` 通过，规范测试 `2/2` 通过，`gameplay-static-preflight` 与 `--strict-auxiliary-parity` 均通过，`unity-yaml-guard` 扫描 `15769` 个 Unity YAML 文件通过；代表性业务审计 `stackcraft-business-representative-audit` 通过，仍只证明 Starter / Beginning 竖切，不证明模板全量业务迁移。
+- 曾误启动全量 PlayMode batch，现实后果是进入无关 `GameManagerInfrastructureLifecyclePlayModeTests` 后 15 分钟无结果文件、日志不再推进并留下 Unity 锁文件。该链路已按进程命令行确认是本轮 batch 后中止，并通过 `unity-verify clean-stale-lockfile --confirm-stale-lockfile` 清理残留锁文件；不能把这次全量超时解释成玩法失败。
+- 历史辅助证据：定向 EditMode `Gameplay.Tests.TabletopCardDragSessionEditModeTests` 和定向 PlayMode `FoundationTabletop_SelectedActionUsesTurnTruthAcrossProgressionModeSwitch` 曾以 Unity 退出码 `0` 结束但缺少指定 XML；这些旧跑法只证明链路跑到退出，不作为完整测试报告。
+- 已修正 `.spec/tools/unity-verify.mjs`：`batch-test --execute` 现在要求 Unity 退出码成功且 `--testResults` XML 存在并非空，并禁止把 `--testResults` 写到项目 `Temp` 目录；相关口径已同步到 Unity 自动化工具矩阵和测试规范，避免以后把无结果文件误判为测试通过。
+- 新鲜正式证据：使用 `Logs\TabletopDrag-PlayMode-20260821.xml` 重跑定向 PlayMode `FoundationTabletop_SelectedActionUsesTurnTruthAcrossProgressionModeSwitch`，XML 回读为 `total=1, passed=1, failed=0`；Unity 退出后 `unity-verify status` 显示无项目 Unity / 导入 / shader 进程、无 `Temp/UnityLockfile`。
+- 视觉证据流程订正：尝试用 batchmode 跑 `FoundationTabletop_CapturesE2EVisualEvidenceSequence` 后 15 分钟未生成新截图或结果 XML，已确认并中止本轮命令行 batch 进程、清理陈旧锁文件。该结果只说明截图类用例不应走无头 batchmode，不证明玩法失败或画面失败；`unity-verify` 已阻断截图 / 视觉证据过滤项走 batch，要求改用健康编辑器自动化或截图专用链路。
+
+## 2026-08-21：StackCraft 点击 / 拖拽阈值与按下即拿起订正
+
+- 对证 StackCraft `CardSettings.clickThreshold = 0.02` 与 `CardController.OnPointerUp` 后，确认模板点击 / 拖拽判断使用卡牌在牌桌世界坐标上的移动距离，不使用 Unity UI 的屏幕像素拖拽阈值。
+- 对证 StackCraft `CardController.OnPointerDown` 与 `CardStack.SetDragTargetPosition` 后，确认模板是“按下立即拿起并跟随”，`clickThreshold` 只决定释放解释；拖拽首张卡高度来自 `CardSettings.dragHeight = 0.1`。
+- `TabletopViewSettings` 新增并回写唯一作者参数 `m_clickThreshold: 0.02` 与 `m_dragHeight: 0.1`；`TabletopCardDragSession` 改为用牌桌坐标位移判断释放是否为拖拽，同时在低于阈值时持续刷新预览牌堆位置。`TabletopCardDragInput` 仍要求正式 `EventSystem`，但它只用于 UI 命中和释放目标射线。
+- `TabletopCardDragInput` 的拖拽锚点改为实际被拖走牌段的首张卡；拖最上层卡时预览整叠，拖中间卡时预览中间卡及其上方尾段，不再把整堆底部误当所有拖拽锚点。
+- 同步订正既有 EditMode / PlayMode 断言，避免测试继续保护旧像素阈值和“低于阈值卡牌不动”的错误口径；`gameplay-static-preflight` 新增硬门禁，禁止 `pixelDragThreshold` 再参与卡牌点击 / 拖拽判定，并守卫 `dragHeight`、立即预览和牌段锚点。
+- 新鲜验证：`node .spec/tools/gameplay-static-preflight.mjs` 通过，`--strict-auxiliary-parity` 通过，`node .spec/tools/unity-yaml-guard.mjs` 通过并扫描 `15769` 个 Unity YAML 文件；定向 PlayMode `FoundationTabletop_SelectedActionUsesTurnTruthAcrossProgressionModeSwitch` 使用 `Logs\TabletopDrag-PlayMode-20260821.xml` 复验为 `1/1` 通过。该证据只覆盖本拖拽 / 推进模式切片，不覆盖最终观感。
+
+## 2026-08-20：StackCraft 复刻当前执行口径
+
+- 当前主线仍是“用 CardLoop 自有 Gameplay 框架复刻 StackCraft 玩家可见业务效果”，不是原创《卡牌生存：无限》业务，也不是直接复制 StackCraft 旧结构。
+- 本轮新鲜验证：`node .spec/tools/spec-lint.mjs` 通过，`node --test .spec/tools/spec-lint.test.mjs` `2/2` 通过，`node .spec/tools/gameplay-static-preflight.mjs` 通过，`node .spec/tools/unity-yaml-guard.mjs` 通过并扫描 `15749` 个 Unity YAML 文件；UnitySkills editor-automation 预检通过，Unity 编译 `0` 错误，Console `0` 错误 / `69` 警告，8 个关键复刻资产均可由 Unity 识别。
+- 投射物旧记录已订正：`Assets/Art/Sprites/箭矢投射物.png` 与 `Assets/Art/Sprites/魔法投射物.png` 已由 `Assets/Art/Prefabs/牌桌/投射物.prefab` 和 `Assets/Gameplay/Tests/牌桌/牌桌测试投射物.prefab` 直接引用，并已进入 `BundleCollectorSetting.asset` 收集配置；它们不再是“预留未用素材”。
+- 当前可声明范围：源码、Prefab、材质、资源路径和静态守卫已覆盖当前登记的表面 / 动画参数闭包；最终卡图比例、文字落点、连续拖拽 / 移动 / 受击 / 投射物 / 粒子手感仍需要截图 / 录像或试玩确认。
+- 当前不能声明：不能说“完整复刻”“和模板完全一致”或“可以删除 `Assets/StackCraft`”；删除参考目录仍需要用户当轮授权，删除后重新跑 Unity 编译、Console 检查和 PlayMode 验证。
+
 ## 2026-08-18：StackCraft 表面 / 动画一致性口径纠偏
 
 - 用户指出此前“一致”口径错误：机制、源码映射和代表性业务参数一致，不能证明卡牌表面、素材布局、进度条、命中反馈、拖拽手感、移动 / 受击 / 投射物 / 粒子动画也与模板一致。
@@ -26,7 +421,7 @@
 - 已把此前误放在 `Assets/Gameplay/素材/` 的自有原型素材迁移到标准目录：2D 卡面、图标和投射物进入 `Assets/Art/Sprites`，卡牌烟雾贴图进入 `Assets/Art/Textures`，卡牌烟雾材质进入 `Assets/Art/Materials`，卡牌烟雾粒子 prefab 进入 `Assets/Art/Prefabs`，音效进入 `Assets/Audio/SFX`；资源文件名继续使用中文现实名称。
 - 测试场景生成器、静态预检、StackCraft 吸收矩阵、重审记录和任务计划中的当前素材路径已同步；旧 `Assets/Gameplay/素材` 目录与 `.meta` 已删除。
 - 静态预检新增旧目录守卫：正式工程文本配置不得指向 `Assets/Gameplay/素材`，该目录重新出现也会失败。
-- 当前资源引用审计结果：除 `Assets/Art/Sprites/箭矢投射物.png` 与 `Assets/Art/Sprites/魔法投射物.png` 暂无 GUID / 路径引用外，其它迁移素材均被测试场景、YooAsset 收集项、卡牌视图、牌桌视图设置、音效 Resolver 或粒子 prefab 链路引用。两个投射物贴图未使用的原因是当前投射物表现仍由 `Assets/Gameplay/Tests/牌桌/牌桌测试投射物.prefab` 使用占位卡面承担，箭矢 / 魔法弹贴图只是此前为后续投射物视觉预留，尚未接入正式测试 prefab；它们已保留在 `Assets/Art/Sprites`，不删除。
+- 当前资源引用审计结果已由 2026-08-20 订正：`Assets/Art/Sprites/箭矢投射物.png` 与 `Assets/Art/Sprites/魔法投射物.png` 已接入正式投射物 Prefab、测试投射物 Prefab 和 YooAsset 收集配置；此前“暂无 GUID / 路径引用、只是预留”的记录已失效。其它迁移素材仍由测试场景、YooAsset 收集项、卡牌视图、牌桌视图设置、音效 Resolver 或粒子 Prefab 链路引用。
 
 ## 2026-08-17：阶段 C 当前阻塞口径订正
 
@@ -364,8 +759,8 @@
 ## 2026-08-11：模块 3.3 拖拽意图与输入边界完成
 
 - 参考吸收：保留 StackCraft 从按下点拖动、牌堆尾段预览、点击/拖拽区分和目标高亮；排除输入回调直接拆堆、交易、装备、战斗、制作和 Transform 权威写入。
-- 坐标语义：拖拽会话同时读取屏幕坐标和牌桌坐标。屏幕坐标只判定是否越过像素阈值，牌桌坐标只计算按下偏移、预览位置和释放请求。
-- 唯一配置：阈值来自正式 `EventSystem.pixelDragThreshold`，相机来自 `GameManager.MainCamera`，射线距离来自相机远裁面；删除命中层、最大距离、拖拽距离和牌桌平面四个 Inspector 字段。
+- 坐标语义：拖拽会话同时读取屏幕坐标和牌桌坐标。屏幕坐标只校验输入有效性；点击 / 拖拽判断、按下偏移、预览位置和释放请求均按牌桌坐标计算，对齐 StackCraft `clickThreshold = 0.02`。
+- 唯一配置：点击 / 拖拽阈值来自 `TabletopViewSettings.m_clickThreshold`，相机来自 `GameManager.MainCamera`，`EventSystem` 只负责 UI 命中和释放目标射线；删除命中层、最大距离、拖拽距离和牌桌平面四个 Inspector 字段。
 - 输入边界：输入只产生 `TabletopCardPointerReleaseIntent`。空白释放由牌桌原子放置，目标卡牌释放由当前单局查询行动候选；输入和视图均无牌桌写权限。
 - 验证：会话定向 `6/6`、Foundation 真实输入 `13/13`、全量 EditMode `425/426`（`1` 条既有忽略）、全量 PlayMode `30/30`；测试场景已由正式生成器重建。
 - 下一步：模块 3.4，回审视图投影、资源句柄和表现状态，不提前进入正式 UI。
@@ -1106,7 +1501,7 @@
 - 对证 StackCraft `QuestType.Explore` 后，吸收“指定区域 / 地点卡被探索后推进任务”的玩家效果；不恢复 `QuestManager`、`CraftingManager.NotifyExplorationFinished`、`ExplorationRecipe.Execute` 里的全局回调或固定 `QuestType` 枚举。
 - 新增探索结果意图后，行动开始时从指定参与槽位冻结被探索卡牌内容 ID；行动成功提交后，`ScenarioRun` 才把 `CardsExploredQuestTaskFact` 交给当前 `QuestLog`。失败、取消和参与对象失效不会发布探索事实。
 - 探索事实也写入 `ActionResultPlanSnapshot`。未完成探索行动读档时恢复冻结内容 ID，不重新读取可能已经变化的行动作者资产；旧快照没有该字段时按“没有探索事实”兼容读取。
-- 对证 StackCraft `QuestType.Time` / `TimeManager.CycleTimePace` 后，不复制 `Paused / Normal / Fast` 速度枚举。CardLoop 正式语义是普通行动推进模式切换，因此吸收为 `ActionProgressionMode.TurnBased / RealTime` 切换事实；初始默认回合制和读档恢复不会自动完成该任务。
+- 对证 StackCraft `QuestType.Time` / `TimeManager.CycleTimePace` 后，当时先以普通行动推进模式切换近似承接时间任务事实：`ActionProgressionMode.TurnBased / RealTime` 切换会发布任务事实，初始默认回合制和读档恢复不会自动完成该任务。2026-08-25 已订正：`Paused / Normal / Fast` 三档速度现在由 `ScenarioRun.ScenarioTimePace` 承接；旧推进模式任务事实不是速度档任务事实，后续若要一比一对齐 `QuestType.Time`，必须重构任务事实入口，不能并行保留两套真相。
 - 新鲜验证：Unity 编译空闲且 Console `0` 错误；`QuestLogEditModeTests` `16/16`、`ScenarioRunEditModeTests` `24/24`、`ActionResultSettlementEditModeTests` `15/15` 通过；`.spec` lint 通过，规范测试 `2/2` 通过。阶段 C 仍是补充审计中，不能据此宣称 StackCraft 完整吸收完成。
 
 ## 2026-08-15：标题入口友好模式与阶段 C 回归复验
@@ -1181,3 +1576,78 @@
 - 对证 StackCraft 剩余未点名类型后，确认 `LootEntry`、`AnimatedEquipment`、`HitType`、`CombatTypeAdvantage`、`CombatState`、`QuestGroup`、`QuestData`、`VendorData`、`TimeData`、`ShadowPreset`、`CustomPass` 和 `Styles` 都是旧实现内部条目、DTO、枚举或 GUI 缓存，不是独立玩家模块。
 - 它们已分别归入当前正式 owner：掉落 / 产出归行动、遭遇和卡包链；装备漂浮缓存被角色装备事实和详情面板替代；命中反馈归 GNS / EX-GAS 战斗链与 `TabletopCardView`；任务进度和商贩付款归 `ScenarioRunSnapshot` 与派生卡牌状态；设置与后处理归 `DisplaySettingsSystem` 和 `ScenarioScreenEffectView`。
 - 本轮不新增代码，不恢复旧 DTO 或旧枚举。后续若要做怪物掉落或其它面板的已读 / 未读状态，必须按当前作者源和单局快照重新裁决，不能把这些旧局部类型作为第二套真相迁回。
+
+## 2026-08-22：StackCraft 卡面材质贴图槽闭包对账
+
+- 对证 StackCraft 12 类卡牌表面材质后，确认 `_BaseTex`、`_MainTex`、`_OverlayTex` 不能按“全部等于本类别贴图 / 全部等于 Placeholder”一刀切。配方卡的覆盖图来自 `CardArts/Recipe.png`，部分卡面的 `_MainTex` 复用角色、建筑、材料或货币类别贴图。
+- `gameplay-static-preflight` 现在从 StackCraft 来源材质逐槽读取贴图 GUID，反查来源贴图路径，再映射到 `Assets/Art/Sprites/StackCraft` 下的自有复制素材 GUID，同时校验自有贴图与来源贴图内容 hash 一致、GUID 不复用来源 GUID。
+- 已修正自有材质中 7 个 `_MainTex` 误指向自身类别贴图的槽位：生物、主动敌人改为角色卡面主贴图；消耗品、装备、地区改为建筑卡面主贴图；配方改为材料卡面主贴图；贵重物改为货币卡面主贴图。
+- 新鲜验证：`node --check .spec/tools/gameplay-static-preflight.mjs` 通过；`node .spec/tools/gameplay-static-preflight.mjs` 通过，并只提示“未发现 `.sln / .csproj`，C# 编译必须留到 Unity 编译阶段验证”。这只证明静态材质 / GUID / hash 对账，不等于 Unity 编译、场景回读、玩家截图或动画表现完成。
+
+## 2026-08-22：StackCraft 复制贴图导入参数闭包对账
+
+- 发现并修正 `Assets/StackCraft/Textures` 复制到 `Assets/Art/Sprites/StackCraft` 的 133 张自有贴图导入设置偏差：图片字节一致，但 mipmap、边缘采样、非 2 次幂缩放、透明通道处理等 Unity 导入参数与来源不同，会影响实际材质 / 卡图观感。
+- 批量同步这些复制贴图的视觉采样参数，保留项目自有 GUID、`textureType: 8`、`spriteMode: 1` 和 Sprite 引用能力；没有把自有 `.meta` 整体覆盖成 StackCraft 来源 `.meta`。
+- `gameplay-static-preflight` 已新增导入参数守卫：自动扫描 `Assets/StackCraft/Textures` -> `Assets/Art/Sprites/StackCraft` 的复制贴图，并额外覆盖命中图标、HUD 图标、进度方块、投射物图、19 个 StackCraft 音频副本和 4 个 StackCraft fbx 模型的显式来源配对。音频和模型当前没有参数偏差，只新增防回流守卫；牌桌模型允许材质 remap 指向项目自有材质。
+- 新鲜验证：`node --check .spec/tools/gameplay-static-preflight.mjs` 通过；`node .spec/tools/gameplay-static-preflight.mjs` 与 `node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity` 均通过，并只提示“未发现 `.sln / .csproj`，C# 编译必须留到 Unity 编译阶段验证”。这仍只证明 CLI 静态导入参数对账，不证明 Unity 重新导入后的最终画面。
+
+## 2026-08-23：StackCraft TMP 文本样式 hash 多来源对账
+
+- 发现测试场景生成器仍有一个手写 TMP 文本样式 hash：`FoundationTestSceneMenu.StackCraftConvertedTextStyleHashCode = -1183493901`。它影响卡面、商贩、卡包、收购点和命中反馈等 StackCraft 表面文字的生成参数。
+- `gameplay-static-preflight` 新增多来源整数常量断言：从 `HitUI.prefab` 的 `DamageLabel`、`PackVendor.prefab` 的 `Title / Tracker / Price`、`PackInstance.prefab` 的 `Title`、`CardBuyer.prefab` 的 `Title` 逐个读取 TMP 组件 `m_TextStyleHashCode`，先确认来源一致，再断言生成器常量等于来源值。
+- 这次没有改 Gameplay 运行时代码、Unity 场景、Prefab、材质或素材；只是把一个视觉生成器常量从“手写数字”升级为“StackCraft 原 prefab 字段反查守卫”，避免形成第二真相。
+- 新鲜验证：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs` 和定向 `git diff --check` 均通过；预检仍只提示“未发现 `.sln / .csproj`，C# 编译必须留到 Unity 编译阶段验证”。这只证明 TMP 样式 hash 静态对账通过，不等于 Unity 编译、场景回读、截图或完整复刻完成。
+
+## 2026-08-23：StackCraft 普通拖放 AttachRadius 提交链守卫
+
+- 对证 StackCraft `CardController.HandleStandardDrop` 与 `CardInstance.TryAttachToNearbyStack` 后，确认模板普通拖放在没有交易、装备或战斗等终止行为时，会先按桌面规则放置牌堆，再用 `AttachRadius` 查找附近可合堆牌堆并吸附。
+- 当前 Gameplay 的运行时代码已经具备同职责链路：`TabletopCardDragInput` 拖拽中先射线命中可见卡牌，未命中时用 `TabletopView.TryFindNearestCardViewWithinAttachRadius` 从当前拖拽牌堆锚点找最近候选；释放时把 `m_currentTargetCardId` 写入 `TabletopCardPointerReleaseIntent`，再由 `TabletopInteraction` 先展示行动候选、无候选时调用 `Tabletop.TryDropStackOnto`，最后才普通放置。
+- 本轮只补强静态守卫：`gameplay-static-preflight` 现在明确断言释放阶段必须把直接命中或 `AttachRadius` 吸附目标提交给正式交互入口，并要求 `Tabletop.CanStackOnto` / `TryDropStackOnto` 按目标牌堆底牌和 GAS 标签堆叠规则复核后再拆堆合并，防止后续只保留高亮预览而丢失真正合堆提交。
+- 新鲜验证：`node --check .spec/tools/gameplay-static-preflight.mjs`、`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity`、`node .spec/tools/stackcraft-business-representative-audit.mjs`、`node .spec/tools/unity-yaml-guard.mjs`、`node .spec/tools/spec-lint.mjs`、`node --test .spec/tools/spec-lint.test.mjs` 均通过；预检仍只提示“未发现 `.sln / .csproj`，C# 编译必须留到 Unity 编译阶段验证”。本轮未启动 Unity，不声明场景回读或 PlayMode 通过。
+
+## 2026-08-23：StackCraft 拖拽候选底牌高亮吸收
+
+- 对证 StackCraft `CardManager.HighlightStackableStacks` 后，确认模板在按下拿起卡牌时会立刻高亮所有能与当前拖拽卡合堆的目标牌堆底牌，释放或取消时一次性清理这些高亮。
+- 当前 Gameplay 已把单目标高亮改为本地候选集合：`TabletopCardDragInput` 从按下拿起开始遍历当前牌桌牌堆，按正式行动 / 合堆谓词生成可接受目标底牌列表；`TabletopView` 只维护本地高亮集合并调用 `TabletopCardView.SetHighlighted`，不写规则状态、不存档、不新增 Manager。
+- 同步订正 `AttachRadius` 选择顺序：现在先得到可接受候选底牌集合，再由视图在这些候选所在牌堆的可见卡面里找最近目标，避免不可合堆的近邻卡牌挡住有效吸附。
+- 当前只完成源码与静态守卫更新；Unity 编译、场景回读、玩家画面和连续动画仍需 Unity 阶段验证后才能声明。
+
+## 2026-08-23：StackCraft 吸收 Unity 编译与场景状态补证
+
+- 新鲜静态验证：`gameplay-static-preflight --strict-auxiliary-parity` 通过，仅提示没有 `.sln / .csproj`，因此 C# 编译仍以 Unity 为准；`stackcraft-business-representative-audit` 通过，统计为 cards=103、packs=11、recipes=90、quests=66、encounters=3；`unity-yaml-guard` 通过，扫描 15785 个 Unity 文件；`.spec` lint 通过。
+- UnitySkills 链路按正式守卫进入：`unity-verify status` 确认当前只有同项目主编辑器，另有同项目导入 / Shader 子进程；`unityskills-ensure` 返回端口 8090、bypass、队列 0、未编译、未导入；`unity-verify preflight --mode editor-automation --tool unityskills` 通过。
+- Unity 编译状态：`/compile/status` 显示最近一次脚本编译成功，C# 错误数为 0，警告数为 84；警告主要来自第三方插件旧 API 和序列化分析，不是本轮 Gameplay 编译错误。
+- Unity 控制台状态：当前控制台有 1 个错误，现实含义是 Unity 服务登录 / 网络令牌交换失败，原始错误为 `UnityConnectWebRequestException: Token Exchange failed...`；它不阻止本轮 Gameplay 脚本编译，也不能当作 StackCraft 吸收功能错误。
+- 场景回读结果：`FoundationTest` 和 `FoundationStackCraftParityTest` 均可通过 UnitySkills 加载，活动场景 `isDirty=false`，缺失引用数为 0；健康检查各有 1 条 `MissingLight` 警告，现实含义是场景内没有 Light 组件，不是缺失引用或脚本编译错误。
+- 恢复状态：检查后已恢复到 `FoundationTitleTest`，该场景已加载、为活动场景、`isDirty=false`、根对象 3 个。上述证据只证明场景可加载、无缺失引用并已恢复标题场景，不证明最终画面、连续动画或 StackCraft 全量效果已经验收。
+
+## 2026-08-23：StackCraft Main CardManager 字段级守卫
+
+- 发现 `FoundationTestSceneHarness` 的同态开局已经使用 StackCraft Main 的默认出生位置和半径，但静态守卫没有直接证明 `CardManager` 场景字段本身来自模板真实引用。
+- `gameplay-static-preflight` 已把 StackCraft Main 场景 Prefab 实例来源锁定为 `Board01.prefab`、`UIRoot.prefab` 和 `CameraController.prefab` 三项，并把 Island 场景来源锁定为 `Board02.prefab`、`UIRoot.prefab` 和 `CameraController.prefab` 三项，避免后续场地 / HUD / 镜头对账脱离真实模板场景入口。
+- `gameplay-static-preflight` 已补字段级检查：从 `Assets/StackCraft/Scenes/Main.unity` 读取默认 Starter 卡包、卡牌 Prefab、交易、遭遇、战斗和制作 UI 来源；从 `Assets/StackCraft/Scenes/Island.unity` 读取默认 Island 卡包、Coral 货币、Survival 可售卡包、空遭遇列表、战斗 / 制作 UI 来源和 `The Basics` 三条任务来源；逐项反查必须命中 StackCraft 原资产；同时要求 Harness 的同态布局内容 ID 为 `test.foundation.pack`。
+- 新鲜验证：`node --check .spec/tools/gameplay-static-preflight.mjs` 与 `node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity` 已通过；完整静态门禁将在本条记录同步后重跑。本轮未启动 Unity，不声明最终画面或完整复刻完成。
+
+## 2026-08-25：StackCraft DayTimeUI / CardStatsUI 日终显隐吸收
+
+- 对证 StackCraft `DayTimeUI.HandleDayEnded` / `HandleDayStarted` 与 `CardStatsUI.HandleDayEnded` / `HandleDayStarted` 后，确认日终阶段会隐藏左上时间 HUD 和统计 HUD，并关闭射线阻断；新一天开始后重新显示。
+- `ScenarioTurnPanel` 新增对现有 `ConfirmTurn` 与 `CardStatsUI` 两个 `CanvasGroup` 的正式引用，在单局日程阶段非 `Inactive` 时设置 `alpha = 0`、`blocksRaycasts = false`，回到普通日内阶段恢复 `alpha = 1`、`blocksRaycasts = true`；不恢复 StackCraft 旧 `DayTimeUI` / `CardStatsUI` 脚本或旧管理器事件链。
+- `FoundationTestSceneMenu` 的 HUD Prefab 生成器和正式 `Assets/Art/Prefabs/UI/ScenarioTurnPanel.prefab` 已序列化同一现有组件引用；`ConfirmTurn` 已有的 `UINavigationTarget` 继续承接 StackCraft 点击音效，走 GameCore `submitSound`，不恢复旧 `AudioManager`。
+- `gameplay-static-preflight` 增加源码字段、生成器绑定、Prefab 对象级引用、显隐 helper 和 `UINavigationTarget` 防回退静态守卫。
+- 同步订正 `stackcraft-system-reference-matrix.md`：`ScenarioTimePace` 三档速度已经是当前 HUD 速度入口真相；旧 `ProgressionModeChangedQuestTaskFact` 仍只是回合 / 即时模式切换任务事实，不能继续和 StackCraft `QuestType.Time` 速度点击任务混写。
+- 当前只完成源码 / Prefab / 静态守卫更新；Unity 编译、PlayMode、最终截图和连续手感仍需后续 Unity 阶段验证后才能声明。
+
+## 2026-08-25：StackCraft ScreenFader / TravelSequence 静态吸收守卫
+
+- 对证 StackCraft `ScreenFader` 与 `GameDirector.TravelSequence` 后，确认模板的场景旅行可见链路是外部暂停、全屏 CanvasGroup 淡出、直接加载场景、解除暂停、淡入。
+- 当前正式职责保持不变：`SceneSystem` 拥有整次技术场景切换，`TransitionSystem` 只拥有淡出 / 淡入表现状态，`ScenarioDirector` 的开局、结束、读档和旅行均通过 `GameManager.SceneSystem.TransitionToAsync` 进入正式链路；不恢复 `ScreenFader.Instance`、模板 `TimeManager` 或直接 `SceneManager.LoadSceneAsync`。
+- 局内暂停灰阶和日终暗角继续由 `ScenarioScreenEffectView` + 全局 `Volume` 承接，不混入场景转场 owner。
+- `gameplay-static-preflight` 已补源码守卫、旧链路残留扫描、运行根 Prefab 组件绑定检查和 `剧本屏幕效果配置.asset` 的 `ColorAdjustments` / `Vignette` Profile 检查。新鲜验证：`node --check .spec/tools/gameplay-static-preflight.mjs` 通过，`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity` 通过，仅提示没有 `.sln / .csproj`，C# 编译必须留到 Unity 阶段。
+- 本轮未启动 Unity、未跑 PlayMode、未截图，不能据此声明最终转场画面或连续手感一致。
+
+## 2026-08-25：StackCraft 箱子 / 围栏 / 上限扩展静态来源闭包
+
+- 回审 `ChestLogic`、`EnclosureLogic` 和 `LimitBoosterDefinition` 后，确认这三项不是新模块，而是已经归入现有正式 owner 的玩家效果：箱子归 `ChestCardDefinition` / `ChestCard` 和牌桌行动结算；围栏归 `CardDefinition.AutomaticMovementRetentionCapacity` 与 `Tabletop` 自动移动；上限扩展归 `CardDefinition.CardLimitBonus`、`ScenarioRun` 容量统计和 `Tabletop` 放置规则。
+- `gameplay-static-preflight` 已新增来源脚本 / 来源资产 / 当前实现 / 回归测试的组合守卫：Wooden Chest 容量 50、Creature Cage 容量 1、Creature Pen 容量 5、Yard 加成 4、Warehouse 加成 10 均从 StackCraft 来源回读；Foundation 快速箱子容量仍明确为 2，只用于短链路验证，不冒充模板容量。
+- 本轮没有改 Gameplay 运行时代码或 Unity 资源，只补静态门禁和知识记录。新鲜验证：`node --check .spec/tools/gameplay-static-preflight.mjs` 通过，`node .spec/tools/gameplay-static-preflight.mjs --strict-auxiliary-parity` 通过，仅提示没有 `.sln / .csproj`，C# 编译必须留到 Unity 阶段。
+- 本轮未启动 Unity、未跑 PlayMode、未截图，不能据此声明箱子 / 围栏 / LimitBooster 最终玩家画面或完整模板业务已经完成。

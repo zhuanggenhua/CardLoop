@@ -171,7 +171,7 @@ namespace Gameplay.Actions
 		}
 	}
 
-	/// <summary>要求付款槽位里的每个付款来源都可用；普通卡算 1 单位，箱子必须非空。</summary>
+	/// <summary>要求付款槽位里的每个来源都是当前内容集合声明的货币卡，或是至少存有一个货币单位的箱子。</summary>
 	[Serializable]
 	public sealed class CardPaymentSourceAvailableCondition : ActionCondition
 	{
@@ -198,6 +198,11 @@ namespace Gameplay.Actions
 				{
 					return false;
 				}
+				if (card is not ChestCard &&
+					!CurrencyCardQuery.IsCurrencyCard(context.Content, card.ContentId))
+				{
+					return false;
+				}
 			}
 			return true;
 		}
@@ -205,6 +210,51 @@ namespace Gameplay.Actions
 		protected override void ValidateCondition(ActionResultValidationContext context)
 		{
 			context.ValidateSlotReference(PaymentSlotKey, "ACTION_CONDITION_PAYMENT_SLOT_UNKNOWN");
+		}
+	}
+
+	/// <summary>要求出售槽位里的每张牌都可出售；箱子必须为空才能进入收购点。</summary>
+	[Serializable]
+	public sealed class CardSaleSourceAvailableCondition : ActionCondition
+	{
+		[SerializeField, ActionSlotReference, LabelText("出售槽位")]
+		private string m_soldSlotKey;
+
+		public string SoldSlotKey => m_soldSlotKey ?? string.Empty;
+
+		protected override bool Evaluate(ActionConditionContext context)
+		{
+			ActionSlotBinding binding = context.GetBinding(SoldSlotKey);
+			if (binding.CardIds.Count == 0)
+			{
+				return false;
+			}
+
+			for (int i = 0; i < binding.CardIds.Count; i++)
+			{
+				if (!context.Cards.TryGetCard(binding.CardIds[i], out TabletopCard card))
+				{
+					throw new InvalidOperationException($"行动 {context.Action.ContentId} 的出售槽位引用了不存在的牌桌卡牌 {binding.CardIds[i]}。");
+				}
+				if (!context.Content.TryGet(card.ContentId, out CardDefinition definition))
+				{
+					throw new InvalidOperationException($"行动 {context.Action.ContentId} 的出售槽位引用了非卡牌内容 {card.ContentId}。");
+				}
+				if (card is ChestCard chest && chest.StoredCurrencyCount > 0)
+				{
+					return false;
+				}
+				if (definition.SellValue <= 0)
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		protected override void ValidateCondition(ActionResultValidationContext context)
+		{
+			context.ValidateSlotReference(SoldSlotKey, "ACTION_CONDITION_SELL_SLOT_UNKNOWN");
 		}
 	}
 

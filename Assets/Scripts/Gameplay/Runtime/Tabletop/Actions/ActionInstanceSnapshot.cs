@@ -659,6 +659,9 @@ namespace Gameplay.Tabletop.Actions
 		[SerializeField]
 		private bool m_createAsSingleStack;
 
+		[SerializeField]
+		private Vector2 m_positionOffset;
+
 		public ContentId ContentId => m_contentId;
 
 		public int Count => m_count;
@@ -667,12 +670,15 @@ namespace Gameplay.Tabletop.Actions
 
 		public bool CreateAsSingleStack => m_createAsSingleStack;
 
+		public Vector2 PositionOffset => m_positionOffset;
+
 		internal ActionCardCreationSnapshot(CardCreationSpec creation)
 		{
 			m_contentId = creation.ContentId;
 			m_count = creation.Count;
 			m_anchorCardId = creation.AnchorCardId.Value;
 			m_createAsSingleStack = creation.CreateAsSingleStack;
+			m_positionOffset = creation.PositionOffset;
 		}
 
 		internal CardCreationSpec CreateRuntimeSpec()
@@ -689,7 +695,7 @@ namespace Gameplay.Tabletop.Actions
 			{
 				throw new InvalidOperationException("行动结果计划快照包含无效产物位置卡牌 ID。");
 			}
-			return new CardCreationSpec(ContentId, Count, AnchorCardId, CreateAsSingleStack);
+			return new CardCreationSpec(ContentId, Count, AnchorCardId, CreateAsSingleStack, PositionOffset);
 		}
 	}
 }

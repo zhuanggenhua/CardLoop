@@ -18,6 +18,12 @@ namespace Gameplay.Quests
 		[Tooltip("本任务激活前必须全部完成的任务。编辑器自动保存所选任务的唯一内容 ID，只维护这一份单向关系。")]
 		private ContentId[] m_prerequisiteQuestIds = Array.Empty<ContentId>();
 
+		[Header("日志")]
+		[SerializeField]
+		[LabelText("日志分组")]
+		[Tooltip("在 StackCraft 式 Quests 日志中显示的折叠分组名。为空时归入 Quests；该字段只影响展示，不改变任务激活或完成规则。")]
+		private string m_journalGroupName;
+
 		[SerializeReference]
 		[LabelText("任务子项")]
 		[Tooltip("任务内部需要完成的子项或步骤。子项只声明作者数据，运行进度由当前单局的任务日志创建并持有。")]
@@ -27,12 +33,27 @@ namespace Gameplay.Quests
 
 		public IReadOnlyList<QuestTaskDefinition> Tasks => m_tasks ?? Array.Empty<QuestTaskDefinition>();
 
+		public string JournalGroupName => m_journalGroupName ?? string.Empty;
+
 		protected override void ValidateContent(ContentValidationContext context)
 		{
 			base.ValidateContent(context);
+			ValidateJournalGroupName(context);
 			ValidatePrerequisites(context);
 			ValidateTasks(context);
 			ValidatePrerequisiteCycle(context);
+		}
+
+		private void ValidateJournalGroupName(ContentValidationContext context)
+		{
+			if (!string.IsNullOrEmpty(JournalGroupName) &&
+				(JournalGroupName.Contains('\n') || JournalGroupName.Contains('\r')))
+			{
+				context.AddError(
+					"QUEST_JOURNAL_GROUP_INVALID",
+					$"任务 {ContentId} 的日志分组不能包含换行：{JournalGroupName}。",
+					this);
+			}
 		}
 
 		private void ValidatePrerequisites(ContentValidationContext context)

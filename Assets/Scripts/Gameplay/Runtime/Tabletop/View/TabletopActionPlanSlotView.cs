@@ -40,9 +40,9 @@ namespace Gameplay.Tabletop
             m_binding = binding ?? throw new ArgumentNullException(nameof(binding));
         }
 
-        public void AcceptCard(TabletopCardId cardId)
+        public bool TryAcceptCard(TabletopCardId cardId)
         {
-            m_panel.AddCard(m_binding, cardId);
+            return m_panel.TryAddCard(m_binding, cardId);
         }
 
         internal void Refresh()

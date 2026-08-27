@@ -20,9 +20,13 @@ namespace Gameplay.Tabletop
 
 		private Action<TabletopCardPointerReleaseIntent> m_releaseHandler;
 
+		private Func<TabletopCardPointerReleaseIntent, bool> m_dropTargetHighlightPredicate;
+
 		private TabletopCardDragSession m_session;
 
 		private TabletopCardId m_currentTargetCardId;
+
+		private readonly List<TabletopCardId> m_dropTargetHighlightCardIds = new List<TabletopCardId>();
 
 		private bool m_isSubscribed;
 
@@ -34,7 +38,8 @@ namespace Gameplay.Tabletop
 			GameCore.InputSystem inputSystem,
 			Tabletop tabletop,
 			TabletopView tabletopView,
-			Action<TabletopCardPointerReleaseIntent> releaseHandler)
+			Action<TabletopCardPointerReleaseIntent> releaseHandler,
+			Func<TabletopCardPointerReleaseIntent, bool> dropTargetHighlightPredicate)
 		{
 			if (inputSystem == null)
 			{
@@ -56,11 +61,15 @@ namespace Gameplay.Tabletop
 			{
 				throw new ArgumentNullException("releaseHandler");
 			}
+			if (dropTargetHighlightPredicate == null)
+			{
+				throw new ArgumentNullException(nameof(dropTargetHighlightPredicate));
+			}
 			EventSystem eventSystem = GameManager.EventSystem;
 			if (eventSystem == null)
 			{
 				throw new InvalidOperationException(
-					"牌桌拖拽输入需要 GameManager 提供正式 EventSystem，以复用项目唯一的像素拖拽阈值。");
+					"牌桌拖拽输入需要 GameManager 提供正式 EventSystem，用于 UI 命中和释放目标射线。");
 			}
 			Unsubscribe();
 			CancelCurrentInteraction();
@@ -68,7 +77,8 @@ namespace Gameplay.Tabletop
 			m_tabletop = tabletop;
 			m_tabletopView = tabletopView;
 			m_releaseHandler = releaseHandler;
-			m_session = new TabletopCardDragSession(eventSystem.pixelDragThreshold);
+			m_dropTargetHighlightPredicate = dropTargetHighlightPredicate;
+			m_session = new TabletopCardDragSession(tabletopView.CardClickThreshold);
 			SubscribeIfPossible();
 		}
 
@@ -80,6 +90,7 @@ namespace Gameplay.Tabletop
 			m_tabletop = null;
 			m_tabletopView = null;
 			m_releaseHandler = null;
+			m_dropTargetHighlightPredicate = null;
 			m_session = null;
 		}
 
@@ -96,16 +107,24 @@ namespace Gameplay.Tabletop
 
 		private void Update()
 		{
+			if (m_inputSystem != null && m_inputSystem.IsGameplayInputLocked)
+			{
+				CancelCurrentInteraction();
+				return;
+			}
+
 			TabletopCardDragSession session = m_session;
 			if (session == null || !session.IsActive)
 			{
 				UpdateHoveredCard();
 			}
 			if (session != null && session.IsActive &&
-				TryReadPointerPositions(out var screenPosition, out var tablePosition) &&
-				session.Update(screenPosition, tablePosition))
+				TryReadPointerPositions(out var screenPosition, out var tablePosition))
 			{
-				m_tabletopView.SetDragPreview(session.CardId, session.CurrentStackPosition);
+				session.Update(screenPosition, tablePosition);
+				m_tabletopView.SetDragPreview(
+					GetDragPreviewAnchorCardId(session.CardId),
+					session.CurrentStackPosition);
 				UpdateDropTarget(screenPosition);
 			}
 		}
@@ -126,7 +145,7 @@ namespace Gameplay.Tabletop
 			{
 				GameCore.InputSystem inputSystem = m_inputSystem;
 				m_isSubscribed = false;
-				if (!(inputSystem == null))
+				if (!(inputSystem == null) && GameManager.StartupState == GameManagerStartupState.Ready)
 				{
 					inputSystem.RemoveGameplayActionListener(EGameplayInputAction.Click, EInputActionPhase.Started, OnPrimaryPointerStarted);
 					inputSystem.RemoveGameplayActionListener(EGameplayInputAction.Click, EInputActionPhase.Canceled, OnPrimaryPointerCanceled);
@@ -136,7 +155,8 @@ namespace Gameplay.Tabletop
 
 		private void OnPrimaryPointerStarted(InputAction.CallbackContext _)
 		{
-			if (m_inputSystem == null)
+			if (m_inputSystem == null ||
+				m_inputSystem.IsGameplayInputLocked)
 			{
 				return;
 			}
@@ -154,13 +174,20 @@ namespace Gameplay.Tabletop
 				TryHitCardView(screenPosition, out var cardView))
 			{
 				TabletopCardStack sourceStack = m_tabletop.Cards.GetStackContaining(cardView.CardId);
-				Vector2 dragAnchor = sourceStack.Position;
+				int draggedSegmentStartIndex = sourceStack.GetDraggedSegmentStartIndex(cardView.CardId);
+				TabletopCardId previewAnchorCardId = sourceStack.Cards[draggedSegmentStartIndex].Id;
+				Vector2 dragAnchor = m_tabletop.Cards.GetCardTablePosition(
+					previewAnchorCardId,
+					m_tabletop.PlacementRules.Geometry);
 				if (m_tabletop.TryGetBattlePose(cardView.CardId, 0, out TabletopCardPose battlePose))
 				{
+					previewAnchorCardId = cardView.CardId;
 					dragAnchor = TabletopCoordinateSpace.ToTablePosition(battlePose.LocalPosition);
 				}
 				m_session.Begin(cardView.CardId, screenPosition, tablePosition, dragAnchor);
 				m_tabletop.HoldAutomaticBehaviorForLocalInput(cardView.CardId);
+				m_tabletopView.SetDragPreview(previewAnchorCardId, m_session.CurrentStackPosition);
+				UpdateDropTarget(screenPosition);
 				m_tabletopView.PlayPresentationCue(TabletopPresentationCueKind.CardPick);
 			}
 		}
@@ -178,6 +205,13 @@ namespace Gameplay.Tabletop
 
 		private void OnPrimaryPointerCanceled(InputAction.CallbackContext _)
 		{
+			if (m_inputSystem == null ||
+				m_inputSystem.IsGameplayInputLocked)
+			{
+				CancelCurrentInteraction();
+				return;
+			}
+
 			TabletopCardDragSession session = m_session;
 			if (session != null && session.IsActive)
 			{
@@ -185,6 +219,7 @@ namespace Gameplay.Tabletop
 				Vector2 releaseTablePosition = TryProjectToTable(screenPosition, out var tablePosition)
 					? tablePosition
 					: session.CurrentPointerTablePosition;
+				session.Update(screenPosition, releaseTablePosition);
 				UpdateDropTarget(screenPosition);
 				TabletopCardPointerReleaseIntent intent = session.End(
 					screenPosition,
@@ -192,12 +227,13 @@ namespace Gameplay.Tabletop
 					m_currentTargetCardId);
 				m_tabletop.ReleaseAutomaticBehaviorForLocalInput(intent.CardId);
 				m_tabletopView.ClearDragPreview();
-				m_tabletopView.SetDropTargetHighlight(default(TabletopCardId));
+				m_tabletopView.ClearDropTargetHighlights();
 				m_currentTargetCardId = default(TabletopCardId);
+				m_dropTargetHighlightCardIds.Clear();
 				m_tabletopView.PlayPresentationCue(TabletopPresentationCueKind.CardDrop);
 				if (intent.IsDrag && TryGetCardDropTarget(screenPosition, out var dropTarget))
 				{
-					dropTarget.AcceptCard(intent.CardId);
+					dropTarget.TryAcceptCard(intent.CardId);
 					return;
 				}
 				if (!intent.IsDrag)
@@ -234,6 +270,11 @@ namespace Gameplay.Tabletop
 		{
 			if (m_inputSystem == null || m_tabletopView == null)
 			{
+				return;
+			}
+			if (m_inputSystem.IsGameplayInputLocked)
+			{
+				m_tabletopView.SetHoveredCard(default(TabletopCardId));
 				return;
 			}
 
@@ -289,45 +330,46 @@ namespace Gameplay.Tabletop
 			TabletopCardStack excludedStack,
 			out TabletopCardView cardView)
 		{
-			if (!TryProjectToTable(screenPosition, out Vector2 tablePosition))
+			Camera camera = GameManager.MainCamera;
+			if (camera == null || m_tabletopView == null)
 			{
 				cardView = null;
 				return false;
 			}
 
 			TabletopCardView bestView = null;
+			float bestDistance = float.PositiveInfinity;
 			int bestSortingOrder = int.MinValue;
-			TabletopCardStackGeometry geometry = m_tabletop.PlacementRules.Geometry;
-			for (int stackIndex = 0; stackIndex < m_tabletop.Cards.Stacks.Count; stackIndex++)
+			Ray ray = camera.ScreenPointToRay(screenPosition);
+			RaycastHit[] hits = Physics.RaycastAll(
+				ray,
+				float.PositiveInfinity,
+				Physics.DefaultRaycastLayers,
+				QueryTriggerInteraction.Ignore);
+			for (int hitIndex = 0; hitIndex < hits.Length; hitIndex++)
 			{
-				TabletopCardStack stack = m_tabletop.Cards.Stacks[stackIndex];
-				if (excludedStack != null && stack == excludedStack)
+				RaycastHit hit = hits[hitIndex];
+				TabletopCardView candidateView = hit.collider.GetComponentInParent<TabletopCardView>();
+				if (candidateView == null ||
+					!candidateView.CardId.IsValid ||
+					!m_tabletopView.TryGetCardView(candidateView.CardId, out TabletopCardView registeredView) ||
+					!ReferenceEquals(candidateView, registeredView))
 				{
 					continue;
 				}
-
-				for (int cardIndex = 0; cardIndex < stack.Cards.Count; cardIndex++)
+				if (excludedStack != null &&
+					ReferenceEquals(candidateView.TabletopCard?.Stack, excludedStack))
 				{
-					TabletopCard tabletopCard = stack.Cards[cardIndex];
-					if (!m_tabletopView.TryGetCardView(tabletopCard.Id, out TabletopCardView candidateView))
-					{
-						continue;
-					}
-
-					Vector2 cardCenter = stack.Position + geometry.StackStep * cardIndex;
-					if (m_tabletop.TryGetBattlePose(tabletopCard.Id, 0, out TabletopCardPose battlePose))
-					{
-						cardCenter = TabletopCoordinateSpace.ToTablePosition(battlePose.LocalPosition);
-					}
-					if (!ContainsTablePosition(cardCenter, geometry.CardSize, tablePosition))
-					{
-						continue;
-					}
-					if (bestView == null || candidateView.SortingOrder > bestSortingOrder)
-					{
-						bestView = candidateView;
-						bestSortingOrder = candidateView.SortingOrder;
-					}
+					continue;
+				}
+				if (bestView == null ||
+					candidateView.SortingOrder > bestSortingOrder ||
+					(candidateView.SortingOrder == bestSortingOrder &&
+					 hit.distance < bestDistance - 0.0001f))
+				{
+					bestView = candidateView;
+					bestDistance = hit.distance;
+					bestSortingOrder = candidateView.SortingOrder;
 				}
 			}
 
@@ -335,33 +377,120 @@ namespace Gameplay.Tabletop
 			return cardView != null;
 		}
 
-		private static bool ContainsTablePosition(
-			Vector2 center,
-			Vector2 cardSize,
-			Vector2 tablePosition)
-		{
-			Vector2 halfSize = cardSize * 0.5f;
-			return tablePosition.x >= center.x - halfSize.x &&
-				tablePosition.x <= center.x + halfSize.x &&
-				tablePosition.y >= center.y - halfSize.y &&
-				tablePosition.y <= center.y + halfSize.y;
-		}
-
 		private void UpdateDropTarget(Vector2 screenPosition)
 		{
 			TabletopCardDragSession session = m_session;
-			if (session == null || !session.IsDragging || m_tabletop == null ||
-				!m_tabletop.Cards.TryGetStackContaining(session.CardId, out var sourceStack) ||
-				!TryHitCardView(screenPosition, sourceStack, out var targetView))
+			if (session == null || !session.IsActive || m_tabletop == null ||
+				!m_tabletop.Cards.TryGetStackContaining(session.CardId, out var sourceStack))
 			{
-				m_currentTargetCardId = default(TabletopCardId);
-				m_tabletopView.SetDropTargetHighlight(default(TabletopCardId));
+				ClearDropTarget();
+				return;
+			}
+
+			RefreshDropTargetHighlights(session, sourceStack);
+			if (TryHitCardView(screenPosition, sourceStack, out var targetView))
+			{
+				if (TrySetDropTarget(session, targetView.CardId))
+				{
+					return;
+				}
+			}
+			if (TryFindAttachRadiusTarget(session, sourceStack, out targetView))
+			{
+				TrySetDropTarget(session, targetView.CardId);
 			}
 			else
 			{
-				m_currentTargetCardId = targetView.CardId;
-				m_tabletopView.SetDropTargetHighlight(m_currentTargetCardId);
+				ClearCurrentDropTarget();
 			}
+		}
+
+		private bool TryFindAttachRadiusTarget(
+			TabletopCardDragSession session,
+			TabletopCardStack sourceStack,
+			out TabletopCardView targetView)
+		{
+			if (!m_tabletopView.TryFindNearestCardViewWithinAttachRadius(
+					session.CurrentStackPosition,
+					sourceStack,
+					m_dropTargetHighlightCardIds,
+					out targetView))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		private bool TrySetDropTarget(TabletopCardDragSession session, TabletopCardId targetCardId)
+		{
+			if (!CanHighlightDropTarget(session, targetCardId))
+			{
+				m_currentTargetCardId = default(TabletopCardId);
+				return false;
+			}
+
+			m_currentTargetCardId = targetCardId;
+			return true;
+		}
+
+		private void RefreshDropTargetHighlights(
+			TabletopCardDragSession session,
+			TabletopCardStack sourceStack)
+		{
+			m_dropTargetHighlightCardIds.Clear();
+			IReadOnlyList<TabletopCardStack> stacks = m_tabletop.Cards.Stacks;
+			for (int stackIndex = 0; stackIndex < stacks.Count; stackIndex++)
+			{
+				TabletopCardStack candidateStack = stacks[stackIndex];
+				if (ReferenceEquals(candidateStack, sourceStack))
+				{
+					continue;
+				}
+				TabletopCardId bottomCardId = candidateStack.BottomCard.Id;
+				if (CanHighlightDropTarget(session, bottomCardId))
+				{
+					m_dropTargetHighlightCardIds.Add(bottomCardId);
+				}
+			}
+
+			m_tabletopView.SetDropTargetHighlights(m_dropTargetHighlightCardIds);
+		}
+
+		private bool CanHighlightDropTarget(TabletopCardDragSession session, TabletopCardId targetCardId)
+		{
+			TabletopCardPointerReleaseIntent intent = new TabletopCardPointerReleaseIntent(
+				session.CardId,
+				session.PressPointerTablePosition,
+				session.CurrentPointerTablePosition,
+				session.CurrentStackPosition,
+				isDrag: true,
+				targetCardId);
+			return m_dropTargetHighlightPredicate(intent);
+		}
+
+		private void ClearDropTarget()
+		{
+			ClearCurrentDropTarget();
+			m_dropTargetHighlightCardIds.Clear();
+			m_tabletopView.ClearDropTargetHighlights();
+		}
+
+		private void ClearCurrentDropTarget()
+		{
+			m_currentTargetCardId = default(TabletopCardId);
+		}
+
+		private TabletopCardId GetDragPreviewAnchorCardId(TabletopCardId cardId)
+		{
+			if (m_tabletop.TryGetBattlePose(cardId, 0, out _))
+			{
+				return cardId;
+			}
+
+			TabletopCardStack sourceStack = m_tabletop.Cards.GetStackContaining(cardId);
+			int draggedSegmentStartIndex = sourceStack.GetDraggedSegmentStartIndex(cardId);
+			return sourceStack.Cards[draggedSegmentStartIndex].Id;
 		}
 
 		private void CancelCurrentInteraction()
@@ -374,9 +503,10 @@ namespace Gameplay.Tabletop
 				m_tabletop?.ReleaseAutomaticBehaviorForLocalInput(cardId);
 			}
 			m_tabletopView?.ClearDragPreview();
-			m_tabletopView?.SetDropTargetHighlight(default(TabletopCardId));
+			m_tabletopView?.ClearDropTargetHighlights();
 			m_tabletopView?.SetHoveredCard(default(TabletopCardId));
 			m_currentTargetCardId = default(TabletopCardId);
+			m_dropTargetHighlightCardIds.Clear();
 		}
 	}
 }

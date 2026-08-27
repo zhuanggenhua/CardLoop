@@ -14,16 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.ActionDefinition
   m_contentId:
     m_value: test.foundation.action
-  m_tagCodes: 
-  m_displayName: Test Action
+  m_tagCodes:
+  m_displayName: 测试行动
   m_description: "\u4EC5\u7528\u4E8E\u9A8C\u8BC1\u884C\u52A8\u4F5C\u8005\u6E90\u3001\u53C2\u4E0E\u6761\u4EF6\u3001\u56DE\u5408\u8FDB\u5EA6\u548C\u6743\u5A01\u968F\u673A\u7ED3\u679C\u7ECF\u8FC7
     YooAsset \u8FDB\u5165\u6B63\u5F0F\u94FE\u8DEF\u3002"
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_turnCost: 2
   m_canStartFromClick: 0
+  m_journalGroupName: 建造
   m_participationSlots:
   - m_key: slot-1
     m_displayName: "\u53C2\u4E0E\u8005"
@@ -39,34 +40,34 @@ MonoBehaviour:
     m_requiredNoneAbilitySystemTagCodes: a20f0000
   m_conditions: []
   m_resultIntents:
-  - rid: 7366053183022957324
+  - rid: 7366053338002227781
   m_resultBranches:
   - m_key: branch-1
     m_weight: 1
     m_resultIntents:
-    - rid: 7366053183022957325
+    - rid: 7366053338002227782
   - m_key: branch-2
     m_weight: 3
     m_resultIntents:
-    - rid: 7366053183022957326
+    - rid: 7366053338002227783
   references:
     version: 2
     RefIds:
-    - rid: 7366053183022957324
+    - rid: 7366053338002227781
       type: {class: RemoveCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
       data:
-        m_slotKey: 
-    - rid: 7366053183022957325
+        m_slotKey:
+    - rid: 7366053338002227782
       type: {class: CreateCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
       data:
         m_contentId:
           m_value: test.foundation.product
         m_count: 1
-        m_anchorSlotKey: 
-    - rid: 7366053183022957326
+        m_anchorSlotKey:
+    - rid: 7366053338002227783
       type: {class: CreateCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
       data:
         m_contentId:
           m_value: test.foundation.product
         m_count: 2
-        m_anchorSlotKey: 
+        m_anchorSlotKey:

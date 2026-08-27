@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CharacterCardDefinition
   m_contentId:
     m_value: test.foundation.pack.beginning.chicken
-  m_tagCodes: 40420f00
-  m_displayName: Chicken
-  m_description: A healthy chicken.
+  m_tagCodes: 40420f00f1157a00
+  m_displayName: 鸡
+  m_description: 健康的鸡。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 0
@@ -40,6 +40,8 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u751F\u7269"
     Guid: a58bf9d5d75e402081a2c4570afc3c9d
     Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}
   m_abilitySystemPresetId: 1005
   m_attributeOverrides:
   - m_attributeCode: 1

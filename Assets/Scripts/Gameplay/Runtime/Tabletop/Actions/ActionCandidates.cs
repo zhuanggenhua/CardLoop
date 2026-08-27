@@ -170,8 +170,8 @@ namespace Gameplay.Tabletop.Actions
 				return null;
 			}
 
-			int startIndex = stack.IndexOf(intent.CardId);
-			if (startIndex < 0 || startIndex >= stack.Cards.Count - 1)
+			int startIndex = stack.GetDraggedSegmentStartIndex(intent.CardId);
+			if (stack.Cards.Count - startIndex <= 1)
 			{
 				return null;
 			}

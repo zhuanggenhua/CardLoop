@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
   m_contentId:
     m_value: test.foundation.pack.beginning.golden-key
-  m_tagCodes: e9030000
-  m_displayName: Golden Key
-  m_description: A key of pure gold. Whatever it opens must be precious.
+  m_tagCodes: e9030000f3157a00
+  m_displayName: 金钥匙
+  m_description: 纯金制成的钥匙。能打开的东西应该很珍贵。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 3
   m_countsTowardCardLimit: 1
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
@@ -40,3 +40,5 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u8D35\u91CD\u7269"
     Guid: 92fc5cfb53cc48a9ac775c857b840f38
     Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}

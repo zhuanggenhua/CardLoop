@@ -17,9 +17,9 @@ MonoBehaviour:
   TargetDisplay: 0
   PixelPerfect: 0
   ScaleMode: 1
-  ReferenceResolution: {x: 3840, y: 2160}
+  ReferenceResolution: {x: 1920, y: 1080}
   ScreenMatchMode: 0
-  MatchWidthOrHeight: 0
+  MatchWidthOrHeight: 1
   ReferencePixelsPerUnit: 100
   PhysicalUnit: 3
   FallbackScreenDPI: 96

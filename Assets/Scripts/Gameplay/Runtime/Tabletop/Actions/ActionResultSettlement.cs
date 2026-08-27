@@ -289,14 +289,23 @@ namespace Gameplay.Tabletop.Actions
 					throw new InvalidOperationException($"行动 {action.ActionId} 的产物位置引用了不存在的牌桌卡牌 {creation.AnchorCardId}。");
 				}
 				TabletopCardStack anchorStack = cards.GetStackContaining(creation.AnchorCardId);
+				Vector2 creationPosition = anchorStack.Position + creation.PositionOffset;
 				if (creation.CreateAsSingleStack)
 				{
-					creations.Add(new TabletopCardCreationRequest(creation.ContentId, creation.Count, anchorStack.Position));
+					creations.Add(new TabletopCardCreationRequest(
+						creation.ContentId,
+						creation.Count,
+						creationPosition,
+						anchorStack.BottomCard.Id));
 					continue;
 				}
 				for (int creationIndex = 0; creationIndex < creation.Count; creationIndex++)
 				{
-					creations.Add(new TabletopCardCreationRequest(creation.ContentId, 1, anchorStack.Position));
+					creations.Add(new TabletopCardCreationRequest(
+						creation.ContentId,
+						1,
+						creationPosition,
+						anchorStack.BottomCard.Id));
 				}
 				if (!isContentDiscovered(creation.ContentId) && plannedDiscoveries.Add(creation.ContentId))
 				{
@@ -331,7 +340,11 @@ namespace Gameplay.Tabletop.Actions
 				}
 				ResearchDiscoveryEntrySpec selected = available[authoritativeRandom.NextInt(available.Count)];
 				TabletopCardStack anchorStack = cards.GetStackContaining(research.AnchorCardId);
-				creations.Add(new TabletopCardCreationRequest(selected.RecipeCardId, 1, anchorStack.Position));
+				creations.Add(new TabletopCardCreationRequest(
+					selected.RecipeCardId,
+					1,
+					anchorStack.Position,
+					anchorStack.BottomCard.Id));
 				plannedDiscoveries.Add(selected.ActionId);
 				discoveries.Add(selected.ActionId);
 				if (!isContentDiscovered(selected.RecipeCardId) && plannedDiscoveries.Add(selected.RecipeCardId))
@@ -428,7 +441,12 @@ namespace Gameplay.Tabletop.Actions
 			for (int l = 0; l < creations.Count; l++)
 			{
 				TabletopCardCreationRequest creation2 = creations[l];
-				tabletop.CreateCardStack(creation2.ContentId, creation2.Count, creation2.Position);
+				tabletop.CreateCardStack(
+					creation2.ContentId,
+					creation2.Count,
+					creation2.Position,
+					allowSpawnAttach: true,
+					spawnAttachIgnoredStackCardId: creation2.SpawnAttachIgnoredStackCardId);
 				for (int createdIndex = 0; createdIndex < creation2.Count; createdIndex++)
 				{
 					createdCardIds.Add(creation2.ContentId);
@@ -741,19 +759,25 @@ namespace Gameplay.Tabletop.Actions
 					throw new InvalidOperationException(
 						$"行动 {action.ContentId} 的售卡结果缺少有效货币卡 {sellIntent.CurrencyCardId}。");
 				}
-				if (anchorBinding.CardIds.Count == 0)
+				if (anchorBinding.CardIds.Count != 1)
 				{
 					throw new InvalidOperationException(
-						$"行动 {action.ContentId} 的货币生成位置来源槽位 {anchorSlotKey} 没有绑定牌桌卡牌。");
+						$"行动 {action.ContentId} 的货币生成位置来源槽位 {anchorSlotKey} 必须绑定一张收购点卡牌。");
 				}
 				if (soldBinding.CardIds.Count == 0)
 				{
 					throw new InvalidOperationException(
 						$"行动 {action.ContentId} 的出售槽位 {soldSlotKey} 没有绑定牌桌卡牌。");
 				}
+				TabletopCardId currencyAnchorCardId = anchorBinding.CardIds[0];
+				if (!cards.TryGetCard(currencyAnchorCardId, out TabletopCard anchorCard) ||
+					!contentIndex.TryGet(anchorCard.ContentId, out CardBuyerDefinition buyerDefinition))
+				{
+					throw new InvalidOperationException(
+						$"行动 {action.ContentId} 的货币生成位置来源槽位 {anchorSlotKey} 没有绑定有效收购点。");
+				}
 
 				int totalSellValue = 0;
-				TabletopCardId currencyAnchorCardId = soldBinding.CardIds[0];
 				for (int i = 0; i < soldBinding.CardIds.Count; i++)
 				{
 					TabletopCardId cardId = soldBinding.CardIds[i];
@@ -786,7 +810,8 @@ namespace Gameplay.Tabletop.Actions
 					sellIntent.CurrencyCardId,
 					totalSellValue,
 					currencyAnchorCardId,
-					createAsSingleStack: true));
+					createAsSingleStack: true,
+					positionOffset: buyerDefinition.CurrencySpawnOffset));
 				return;
 			}
 			if (intent is UseCardsResultIntent useIntent)
@@ -1320,6 +1345,11 @@ namespace Gameplay.Tabletop.Actions
 					continue;
 				}
 
+				if (!CurrencyCardQuery.IsCurrencyCard(contentIndex, paymentCard.ContentId))
+				{
+					throw new InvalidOperationException(
+						$"卡包购买行动 {action.ContentId} 的付款卡 {paymentCard.ContentId} 不是当前内容集合声明的货币卡。");
+				}
 				if (!removalSet.Add(paymentCardId))
 				{
 					throw new InvalidOperationException($"卡包购买行动 {action.ContentId} 重复移除付款卡 {paymentCardId}。");
@@ -1341,7 +1371,11 @@ namespace Gameplay.Tabletop.Actions
 				vendorDefinition.OfferedPackId));
 			if (completesPurchase)
 			{
-				creations.Add(new CardCreationSpec(vendorDefinition.OfferedPackId, 1, vendorCardId));
+				creations.Add(new CardCreationSpec(
+					vendorDefinition.OfferedPackId,
+					1,
+					vendorCardId,
+					positionOffset: vendorDefinition.PackSpawnOffset));
 			}
 		}
 
@@ -1823,16 +1857,25 @@ namespace Gameplay.Tabletop.Actions
 
 		internal bool CreateAsSingleStack { get; }
 
+		internal Vector2 PositionOffset { get; }
+
 		internal CardCreationSpec(
 			ContentId contentId,
 			int count,
 			TabletopCardId anchorCardId,
-			bool createAsSingleStack = false)
+			bool createAsSingleStack = false,
+			Vector2 positionOffset = default)
 		{
+			if (float.IsNaN(positionOffset.x) || float.IsNaN(positionOffset.y) ||
+				float.IsInfinity(positionOffset.x) || float.IsInfinity(positionOffset.y))
+			{
+				throw new ArgumentException("卡牌生成偏移必须是有限数值。", nameof(positionOffset));
+			}
 			ContentId = contentId;
 			Count = count;
 			AnchorCardId = anchorCardId;
 			CreateAsSingleStack = createAsSingleStack;
+			PositionOffset = positionOffset;
 		}
 	}
 }

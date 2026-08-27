@@ -1,3 +1,4 @@
+using DG.Tweening;
 using GameCore;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -5,10 +6,9 @@ using UnityEngine;
 namespace Gameplay.Tabletop
 {
 	/// <summary>
-	/// 牌桌主相机控制组件，吸收 StackCraft 的中键平移、滚轮缩放和事件聚焦能力。
+	/// 牌桌镜头控制根，按 StackCraft 的透视相机、平移、滚轮缩放和事件聚焦参数驱动真实主相机。
 	/// </summary>
 	[DisallowMultipleComponent]
-	[RequireComponent(typeof(Camera))]
 	public sealed class TabletopCameraController : MonoBehaviour
 	{
 		[Header("牌桌镜头")]
@@ -18,80 +18,82 @@ namespace Gameplay.Tabletop
 		private TabletopView m_tabletopView;
 
 		[SerializeField]
-		[LabelText("平移倍率")]
-		[Tooltip("中键拖拽时屏幕位移转换为牌桌平移的倍率。1 表示指针下的牌桌点跟随鼠标。")]
-		[Min(0.01f)]
-		private float m_panMultiplier = 1f;
+		[LabelText("相机 Transform")]
+		[Tooltip("真正带 Camera 组件的子物体 Transform；这是唯一相机配置入口，Camera 组件由该对象自动读取。")]
+		private Transform m_cameraTransform;
+
+		private Camera m_camera;
+
+		[SerializeField]
+		[LabelText("平移速度")]
+		[Tooltip("拖拽空白牌桌时每像素屏幕位移转换为世界位移的倍率；对齐 StackCraft panSpeed = 0.01。")]
+		[Min(0.0001f)]
+		private float m_panSpeed = 0.01f;
 
 		[SerializeField]
 		[LabelText("平滑时间")]
-		[Tooltip("镜头向目标位置和目标缩放平滑移动的时间，单位秒。")]
+		[Tooltip("镜头向目标位置平滑移动的时间；对齐 StackCraft smoothTime = 0.15。")]
 		[Min(0.001f)]
-		private float m_smoothTime = 0.12f;
+		private float m_smoothTime = 0.15f;
 
 		[SerializeField]
 		[LabelText("边界外余量")]
-		[Tooltip("镜头中心允许越过牌桌规则边界的距离，用于保留边缘卡牌观察空间。")]
+		[Tooltip("镜头中心允许越过牌桌规则边界的距离；对齐 StackCraft panPadding = 0.5。")]
 		[Min(0f)]
 		private float m_panPadding = 0.5f;
 
-		[Header("缩放")]
 		[SerializeField]
-		[LabelText("滚轮缩放倍率")]
-		[Tooltip("鼠标滚轮每单位输入改变的正交尺寸。新输入系统鼠标滚轮通常每格约为 120。")]
+		[LabelText("滚轮缩放速度")]
+		[Tooltip("滚轮输入沿相机 forward 改变控制根位置的倍率；对齐 StackCraft zoomSpeed = 1。")]
 		[Min(0.0001f)]
-		private float m_zoomPerScrollUnit = 0.01f;
+		private float m_zoomSpeed = 1f;
 
 		[SerializeField]
-		[LabelText("最小正交尺寸")]
-		[Tooltip("镜头允许缩到最近时的正交尺寸。")]
+		[LabelText("最近距离")]
+		[Tooltip("沿相机 forward 计算的最近观察距离；对齐 StackCraft minDistance = 5。")]
 		[Min(0.01f)]
-		private float m_minOrthographicSize = 2.5f;
+		private float m_minDistance = 5f;
 
 		[SerializeField]
-		[LabelText("最大正交尺寸")]
-		[Tooltip("镜头允许拉远时的正交尺寸。")]
+		[LabelText("最远距离")]
+		[Tooltip("沿相机 forward 计算的最远观察距离；对齐 StackCraft maxDistance = 20。")]
 		[Min(0.01f)]
-		private float m_maxOrthographicSize = 8f;
+		private float m_maxDistance = 20f;
 
 		[SerializeField]
-		[LabelText("聚焦正交尺寸")]
-		[Tooltip("遭遇、解锁等牌桌表现要求聚焦时使用的目标正交尺寸。")]
-		[Min(0.01f)]
-		private float m_focusOrthographicSize = 3.5f;
+		[LabelText("聚焦秒数")]
+		[Tooltip("遭遇和商贩解锁聚焦到目标点的补间时长；对齐 StackCraft MoveTo 默认 0.5 秒。")]
+		[Min(0f)]
+		private float m_focusDurationSeconds = 0.5f;
 
-		private Camera m_camera;
+		private Vector2 m_dragOriginScreenPosition;
 		private Vector3 m_targetWorldPosition;
 		private Vector3 m_moveVelocity;
-		private float m_targetOrthographicSize;
-		private float m_zoomVelocity;
 		private bool m_isDragging;
-		private bool m_hasPreviousDragTablePosition;
-		private Vector2 m_previousDragTablePosition;
-		private bool m_hasLastPointerScreenPosition;
-		private Vector2 m_lastPointerScreenPosition;
 		private Tabletop m_subscribedTabletop;
+		private TabletopCardDragInput m_tabletopCardDragInput;
+		private Tween m_focusTween;
 
 		private void Awake()
 		{
-			m_camera = GetComponent<Camera>();
-			if (!m_camera.orthographic)
-			{
-				throw new System.InvalidOperationException("牌桌镜头控制器只支持正交主相机。");
-			}
-			ResetTargetsToCurrentCamera();
+			RequireCameraBinding();
+			ResetTargetToCurrentRoot();
 		}
 
 		private void OnEnable()
 		{
-			ResetTargetsToCurrentCamera();
+			RequireCameraBinding();
+			GameManager.RegisterMainCamera(m_camera, this);
+			ResetTargetToCurrentRoot();
 			SyncTabletopSubscription();
 		}
 
 		private void OnDisable()
 		{
+			GameManager.UnregisterMainCamera(m_camera, this);
 			UnsubscribeFromTabletop();
 			StopDragging();
+			KillFocusTween();
 		}
 
 		private void LateUpdate()
@@ -102,17 +104,45 @@ namespace Gameplay.Tabletop
 			}
 
 			SyncTabletopSubscription();
-			if (!TryGetInputSystem(out GameCore.InputSystem inputSystem))
+			if (TryGetInputSystem(out GameCore.InputSystem inputSystem))
 			{
-				ApplySmoothing();
-				return;
+				if (inputSystem.IsGameplayInputLocked)
+				{
+					StopDragging();
+				}
+				else
+				{
+					Vector2 screenPosition = inputSystem.ReadPointerScreenPosition(EActionMap.Gameplay);
+					HandlePan(inputSystem, screenPosition);
+					HandleZoom(inputSystem, screenPosition);
+				}
 			}
-
-			Vector2 screenPosition = inputSystem.ReadPointerScreenPosition(EActionMap.Gameplay);
-			HandlePan(inputSystem, screenPosition);
-			HandleZoom(inputSystem, screenPosition);
 			ApplySmoothing();
-			RememberPointerScreenPosition(screenPosition);
+		}
+
+		private void RequireCameraBinding()
+		{
+			if (m_cameraTransform == null)
+			{
+				throw new MissingReferenceException("牌桌镜头控制器缺少相机 Transform 引用。");
+			}
+			m_camera = m_cameraTransform.GetComponent<Camera>();
+			if (m_camera == null)
+			{
+				throw new MissingReferenceException("牌桌镜头控制器配置的相机 Transform 上缺少 Camera 组件。");
+			}
+			if (m_camera.orthographic)
+			{
+				throw new System.InvalidOperationException("StackCraft 镜头复刻必须使用透视相机，不能使用正交相机。");
+			}
+			if (m_tabletopView != null)
+			{
+				m_tabletopCardDragInput = m_tabletopView.GetComponent<TabletopCardDragInput>();
+				if (m_tabletopCardDragInput == null)
+				{
+					throw new MissingReferenceException("牌桌镜头控制器必须和正式牌桌拖拽输入绑定同一张牌桌，避免拖卡时镜头同时平移。");
+				}
+			}
 		}
 
 		private static bool TryGetInputSystem(out GameCore.InputSystem inputSystem)
@@ -123,10 +153,20 @@ namespace Gameplay.Tabletop
 
 		private void HandlePan(GameCore.InputSystem inputSystem, Vector2 screenPosition)
 		{
+			if (m_tabletopCardDragInput != null && m_tabletopCardDragInput.IsPointerSessionActive)
+			{
+				StopDragging();
+				return;
+			}
+
 			bool middlePressed =
 				inputSystem.IsGameplayActionPressed(EGameplayInputAction.MiddleClick) &&
 				!inputSystem.IsGameplayActionBlocked(EGameplayInputAction.MiddleClick);
-			if (!middlePressed)
+			bool leftPressed =
+				inputSystem.IsGameplayActionPressed(EGameplayInputAction.Click) &&
+				!inputSystem.IsGameplayActionBlocked(EGameplayInputAction.Click);
+			bool panPressed = middlePressed || leftPressed;
+			if (!panPressed)
 			{
 				StopDragging();
 				return;
@@ -134,38 +174,43 @@ namespace Gameplay.Tabletop
 
 			if (!m_isDragging)
 			{
-				if (UIPointerUtility.IsPositionOverUI(screenPosition))
+				if (!middlePressed && IsPointerBlockedForPan(screenPosition))
 				{
 					return;
 				}
 				m_isDragging = true;
-				Vector2 dragStartScreenPosition = m_hasLastPointerScreenPosition
-					? m_lastPointerScreenPosition
-					: screenPosition;
-				m_hasPreviousDragTablePosition = TryProjectToTable(
-					dragStartScreenPosition,
-					out m_previousDragTablePosition);
+				m_dragOriginScreenPosition = screenPosition;
+				KillFocusTween();
 			}
 
-			if (!TryProjectToTable(screenPosition, out Vector2 tablePosition))
+			Vector2 delta = screenPosition - m_dragOriginScreenPosition;
+			if (float.IsFinite(delta.x) && float.IsFinite(delta.y))
 			{
-				m_hasPreviousDragTablePosition = false;
-				return;
+				Vector3 tableDelta = new Vector3(-delta.x, 0f, -delta.y) *
+					m_panSpeed *
+					(transform.position.y / 10f);
+				Vector3 worldDelta = m_tabletopView.transform.TransformVector(tableDelta);
+				SetTargetWorldPosition(m_targetWorldPosition + worldDelta);
 			}
-			if (m_hasPreviousDragTablePosition)
+
+			m_dragOriginScreenPosition = screenPosition;
+		}
+
+		private bool IsPointerBlockedForPan(Vector2 screenPosition)
+		{
+			if (UIPointerUtility.IsPositionOverUI(screenPosition))
 			{
-				Vector2 delta = tablePosition - m_previousDragTablePosition;
-				if (float.IsFinite(delta.x) && float.IsFinite(delta.y))
-				{
-					Vector3 worldDelta = m_tabletopView.transform.TransformVector(
-						TabletopCoordinateSpace.ToLocalDelta(delta));
-					Vector3 nextTarget = m_targetWorldPosition -
-						worldDelta * m_panMultiplier;
-					SetTargetWorldPosition(nextTarget);
-				}
+				return true;
 			}
-			m_previousDragTablePosition = tablePosition;
-			m_hasPreviousDragTablePosition = true;
+
+			Ray ray = m_camera.ScreenPointToRay(screenPosition);
+			return Physics.Raycast(
+					ray,
+					out RaycastHit hit,
+					Mathf.Infinity,
+					Physics.DefaultRaycastLayers,
+					QueryTriggerInteraction.Ignore) &&
+				hit.collider.GetComponentInParent<TabletopCardView>() != null;
 		}
 
 		private void HandleZoom(GameCore.InputSystem inputSystem, Vector2 screenPosition)
@@ -181,14 +226,24 @@ namespace Gameplay.Tabletop
 				return;
 			}
 
-			float nextSize = Mathf.Clamp(
-				m_targetOrthographicSize - scrollDelta.y * m_zoomPerScrollUnit,
-				m_minOrthographicSize,
-				m_maxOrthographicSize);
-			if (!Mathf.Approximately(nextSize, m_targetOrthographicSize))
+			Vector3 nextPosition = m_targetWorldPosition +
+				m_cameraTransform.forward * (scrollDelta.y * m_zoomSpeed);
+			float nextDistance = CalculateDistanceFromTable(nextPosition);
+			if (nextDistance >= m_minDistance && nextDistance <= m_maxDistance)
 			{
-				m_targetOrthographicSize = nextSize;
+				KillFocusTween();
+				SetTargetWorldPosition(nextPosition);
 			}
+		}
+
+		private float CalculateDistanceFromTable(Vector3 rootWorldPosition)
+		{
+			float cosine = Mathf.Cos(Mathf.Deg2Rad * (90f - m_cameraTransform.eulerAngles.x));
+			if (Mathf.Approximately(cosine, 0f))
+			{
+				throw new System.InvalidOperationException("牌桌镜头角度无法计算 StackCraft 缩放距离。");
+			}
+			return rootWorldPosition.y / cosine;
 		}
 
 		private void FocusOnTablePosition(Vector2 tablePosition)
@@ -199,16 +254,29 @@ namespace Gameplay.Tabletop
 			}
 
 			Vector3 targetWorldPosition = m_tabletopView.transform.TransformPoint(
-				new Vector3(
-					tablePosition.x,
-					m_tabletopView.transform.InverseTransformPoint(transform.position).y,
-					tablePosition.y));
-			SetTargetWorldPosition(targetWorldPosition);
-			m_targetOrthographicSize = Mathf.Clamp(
-				m_focusOrthographicSize,
-				m_minOrthographicSize,
-				m_maxOrthographicSize);
+				TabletopCoordinateSpace.ToLocalPosition(tablePosition));
+			float desiredDistance = Mathf.Lerp(m_maxDistance, m_minDistance, 0.8f);
+			Vector3 nextRootPosition = targetWorldPosition - m_cameraTransform.forward * desiredDistance;
 			StopDragging();
+			KillFocusTween();
+			Tween focusTween = transform
+				.DOMove(nextRootPosition, m_focusDurationSeconds)
+				.SetUpdate(true)
+				.SetTarget(this)
+				.SetLink(gameObject, LinkBehaviour.KillOnDisable);
+			m_focusTween = focusTween;
+			focusTween.OnComplete(() =>
+			{
+				m_targetWorldPosition = nextRootPosition;
+				m_moveVelocity = Vector3.zero;
+			});
+			focusTween.OnKill(() =>
+			{
+				if (ReferenceEquals(m_focusTween, focusTween))
+				{
+					m_focusTween = null;
+				}
+			});
 		}
 
 		private void SetTargetWorldPosition(Vector3 targetWorldPosition)
@@ -237,28 +305,13 @@ namespace Gameplay.Tabletop
 			return m_tabletopView.transform.TransformPoint(tableLocalPosition);
 		}
 
-		private bool TryProjectToTable(Vector2 screenPosition, out Vector2 tablePosition)
-		{
-			tablePosition = default;
-			if (m_tabletopView == null)
-			{
-				return false;
-			}
-
-			Ray ray = m_camera.ScreenPointToRay(screenPosition);
-			Transform tablePlane = m_tabletopView.transform;
-			if (!TabletopCoordinateSpace.CreateTablePlane(tablePlane).Raycast(ray, out float distance))
-			{
-				return false;
-			}
-
-			Vector3 localPoint = tablePlane.InverseTransformPoint(ray.GetPoint(distance));
-			tablePosition = TabletopCoordinateSpace.ToTablePosition(localPoint);
-			return true;
-		}
-
 		private void ApplySmoothing()
 		{
+			if (m_focusTween != null && m_focusTween.active)
+			{
+				return;
+			}
+
 			transform.position = Vector3.SmoothDamp(
 				transform.position,
 				m_targetWorldPosition,
@@ -266,39 +319,28 @@ namespace Gameplay.Tabletop
 				m_smoothTime,
 				Mathf.Infinity,
 				Time.unscaledDeltaTime);
-			m_camera.orthographicSize = Mathf.SmoothDamp(
-				m_camera.orthographicSize,
-				m_targetOrthographicSize,
-				ref m_zoomVelocity,
-				m_smoothTime,
-				Mathf.Infinity,
-				Time.unscaledDeltaTime);
 		}
 
-		private void ResetTargetsToCurrentCamera()
+		private void ResetTargetToCurrentRoot()
 		{
 			m_targetWorldPosition = transform.position;
-			m_targetOrthographicSize = m_camera != null ? m_camera.orthographicSize : 1f;
 			m_moveVelocity = Vector3.zero;
-			m_zoomVelocity = 0f;
 		}
 
 		private void StopDragging()
 		{
 			m_isDragging = false;
-			m_hasPreviousDragTablePosition = false;
 		}
 
-		private void RememberPointerScreenPosition(Vector2 screenPosition)
+		private void KillFocusTween()
 		{
-			if (!float.IsFinite(screenPosition.x) || !float.IsFinite(screenPosition.y))
+			if (m_focusTween == null)
 			{
-				m_hasLastPointerScreenPosition = false;
 				return;
 			}
 
-			m_lastPointerScreenPosition = screenPosition;
-			m_hasLastPointerScreenPosition = true;
+			m_focusTween.Kill();
+			m_focusTween = null;
 		}
 
 		private void SyncTabletopSubscription()

@@ -34,6 +34,10 @@ function usage() {
     "  - Never closes Unity through Puerts/MCP/EditorApplication.Exit.",
     "  - Refuses -runTests combined with -quit.",
     "  - Refuses batch verification while this project has Unity/import/shader processes.",
+    "  - Runs unity-yaml-guard before Unity automation.",
+    "  - Blocks UnitySkills automation when /health shows a stale main thread, compiling, or asset updating.",
+    "  - Refuses project Temp as --testResults output; use Logs for durable Unity test XML.",
+    "  - Refuses screenshot/visual-evidence PlayMode filters in batchmode; use editor automation or a screenshot-specialized path.",
     "  - Cleans only Temp/UnityLockfile when explicitly confirmed and no Unity process is active.",
   ].join("\n");
 }
@@ -181,8 +185,87 @@ function printState(state) {
       projectRelated: process.projectRelated,
       commandLineKnown: process.commandLineKnown,
     })),
+    unitySkillsHealth: state.unitySkillsHealth || null,
     latestCrash: state.latestCrash,
   }, null, 2));
+}
+
+function runYamlGuard() {
+  const guardPath = path.join(root, ".spec", "tools", "unity-yaml-guard.mjs");
+  if (!fs.existsSync(guardPath)) {
+    fail(`Unity YAML guard is missing: ${guardPath}`);
+  }
+  const result = spawnSync(process.execPath, [guardPath, root], {
+    cwd: root,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (result.status !== 0) {
+    const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
+    fail(`Unity serialized-file guard failed before verification.\n${output}`);
+  }
+}
+
+function getUnitySkillsHealthSync() {
+  for (let port = 8090; port <= 8100; port += 1) {
+    const result = getJsonFromLocalhostSync(port, "/health", 700);
+    if (result.ok) return { ...result.value, port };
+  }
+  return null;
+}
+
+function getJsonFromLocalhostSync(port, requestPath, timeoutMs) {
+  const start = Date.now();
+  const child = spawnSync(process.execPath, ["-e", `
+const http = require("http");
+const req = http.get({ host: "127.0.0.1", port: ${port}, path: "${requestPath}", timeout: ${timeoutMs} }, (res) => {
+  let data = "";
+  res.setEncoding("utf8");
+  res.on("data", (chunk) => data += chunk);
+  res.on("end", () => {
+    if (res.statusCode < 200 || res.statusCode >= 300) process.exit(2);
+    process.stdout.write(data);
+  });
+});
+req.on("timeout", () => { req.destroy(); process.exit(3); });
+req.on("error", () => process.exit(4));
+`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: timeoutMs + 300 });
+
+  if (child.status !== 0 || !child.stdout) return { ok: false, elapsedMs: Date.now() - start };
+  try {
+    return { ok: true, value: JSON.parse(child.stdout), elapsedMs: Date.now() - start };
+  } catch {
+    return { ok: false, elapsedMs: Date.now() - start };
+  }
+}
+
+function assertUnitySkillsHealth() {
+  const health = getUnitySkillsHealthSync();
+  if (health == null) {
+    fail("UnitySkills REST /health is not reachable on ports 8090-8100. Editor automation cannot start safely.");
+  }
+
+  const mainThreadIdleMs = Number(health.mainThreadIdleMs ?? -1);
+  const queuedRequests = Number(health.queuedRequests ?? health.pendingRequests ?? health.queueLength ?? 0);
+  const isCompiling = Boolean(health.isCompiling);
+  const isUpdating = Boolean(health.isUpdating);
+
+  if (mainThreadIdleMs > 120000 && !isCompiling && !isUpdating) {
+    fail([
+      "UnitySkills server is alive, but Unity's editor main thread has not processed the request loop for over 120 seconds.",
+      "This is the repeated stuck-editor condition. Do not call main-thread skills, do not send CloseMainWindow/WM_CLOSE/Alt+F4/taskkill, and do not start another verification path.",
+      `health=${JSON.stringify({ port: health.port, mainThreadIdleMs, queuedRequests, isCompiling, isUpdating })}`,
+    ].join(" "));
+  }
+
+  if (mainThreadIdleMs > 30000 && (isCompiling || isUpdating)) {
+    fail([
+      "Unity is still compiling or updating assets. Editor automation must wait instead of adding requests.",
+      `health=${JSON.stringify({ port: health.port, mainThreadIdleMs, queuedRequests, isCompiling, isUpdating })}`,
+    ].join(" "));
+  }
+
+  return health;
 }
 
 function assertNoUnsafeUnityArgs(unityArgs) {
@@ -220,8 +303,11 @@ function assertToolPolicyForEditorAutomation() {
 }
 
 function assertPreflight(mode) {
+  runYamlGuard();
   const state = getState();
   const unityEditors = state.projectProcesses.filter((process) => process.role === "main-editor");
+  const busyWorkers = state.projectProcesses.filter((process) =>
+    process.role === "asset-import-worker" || process.role === "shader-compiler");
 
   if (mode === "batch") {
     if (state.projectProcesses.length > 0) {
@@ -234,9 +320,24 @@ function assertPreflight(mode) {
   }
 
   if (mode === "editor-automation") {
-    assertToolPolicyForEditorAutomation();
+    const toolPolicy = assertToolPolicyForEditorAutomation();
     if (unityEditors.length !== 1) {
       fail("editor automation requires exactly one already-open Unity editor for this project.", state);
+    }
+    if (toolPolicy.tool === "unityskills") {
+      const health = assertUnitySkillsHealth();
+      state.unitySkillsHealth = {
+        port: health.port,
+        mainThreadIdleMs: health.mainThreadIdleMs,
+        queuedRequests: health.queuedRequests ?? health.pendingRequests ?? health.queueLength ?? 0,
+        isCompiling: Boolean(health.isCompiling),
+        isUpdating: Boolean(health.isUpdating),
+      };
+      if ((state.unitySkillsHealth.isCompiling || state.unitySkillsHealth.isUpdating) && busyWorkers.length > 0) {
+        fail("editor automation is blocked because UnitySkills /health reports compiling or asset updating.", state);
+      }
+    } else if (busyWorkers.length > 0) {
+      fail("editor automation is blocked while Unity asset import or shader compiler worker state cannot be verified through UnitySkills /health.", state);
     }
     return state;
   }
@@ -285,17 +386,65 @@ function buildBatchTestCommand() {
   if (!["EditMode", "PlayMode"].includes(testPlatform)) {
     fail("--testPlatform must be EditMode or PlayMode.");
   }
+  const testResultsPath = path.resolve(testResults);
+  assertDurableTestResultsPath(testResultsPath);
+  assertBatchTestFilterPolicy(testPlatform, testFilter);
   const unityArgs = [
     "-batchmode",
     "-projectPath", root,
     "-runTests",
     "-testPlatform", testPlatform,
-    "-testResults", path.resolve(testResults),
+    "-testResults", testResultsPath,
     "-logFile", path.resolve(logFile),
   ];
   if (testFilter) unityArgs.push("-testFilter", testFilter);
   assertNoUnsafeUnityArgs(unityArgs);
-  return { unity, unityArgs };
+  return { unity, unityArgs, testResultsPath };
+}
+
+function assertBatchTestFilterPolicy(testPlatform, testFilter) {
+  if (testPlatform !== "PlayMode" || !testFilter) return;
+
+  if (!/(screenshot|visualevidence|capturevisual|capturescreenshot)/i.test(testFilter)) return;
+
+  fail([
+    "Screenshot or visual-evidence PlayMode tests must not run through Unity batchmode in this project.",
+    `Blocked testFilter=${testFilter}`,
+    "Use the editor-automation guard with UnitySkills, or the screenshot-specialized puerts path, after confirming the editor is healthy.",
+  ].join(" "));
+}
+
+function assertDurableTestResultsPath(testResultsPath) {
+  const projectTemp = path.resolve(root, "Temp");
+  const relative = path.relative(projectTemp, testResultsPath);
+  const isInsideProjectTemp = relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+  if (!isInsideProjectTemp) return;
+
+  fail([
+    "Unity test results XML must not be written under this project's Temp directory.",
+    `Unsafe testResults=${testResultsPath}`,
+    "Use a durable project path such as Logs\\<name>.xml so missing or empty XML can be treated as a verification-infrastructure failure.",
+  ].join(" "));
+}
+
+function assertBatchTestReport(testResultsPath, status) {
+  if (status !== 0) return;
+  if (!fs.existsSync(testResultsPath)) {
+    fail([
+      "Unity batch test exited with code 0, but did not write the requested test results XML.",
+      `Missing testResults=${testResultsPath}`,
+      "Treat this as a verification-infrastructure failure, not as proof that tests passed.",
+    ].join(" "));
+  }
+
+  const stats = fs.statSync(testResultsPath);
+  if (stats.size <= 0) {
+    fail([
+      "Unity batch test wrote an empty test results XML.",
+      `Empty testResults=${testResultsPath}`,
+      "Treat this as a verification-infrastructure failure, not as proof that tests passed.",
+    ].join(" "));
+  }
 }
 
 if (command === "help" || hasFlag("--help")) {
@@ -323,15 +472,17 @@ if (command === "clean-stale-lockfile") {
 }
 
 if (command === "batch-test") {
+  const { unity, unityArgs, testResultsPath } = buildBatchTestCommand();
   assertPreflight("batch");
-  const { unity, unityArgs } = buildBatchTestCommand();
   console.log([unity, ...unityArgs.map((arg) => arg.includes(" ") ? `"${arg}"` : arg)].join(" "));
   if (!hasFlag("--execute")) {
     console.log("DRY RUN: add --execute to run Unity.");
     process.exit(0);
   }
   const result = spawnSync(unity, unityArgs, { cwd: root, stdio: "inherit" });
-  process.exit(result.status ?? 1);
+  const status = result.status ?? 1;
+  assertBatchTestReport(testResultsPath, status);
+  process.exit(status);
 }
 
 console.error(usage());

@@ -14,16 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Actions.ActionDefinition
   m_contentId:
     m_value: test.foundation.action.plan
-  m_tagCodes: 
-  m_displayName: "\u534F\u540C\u884C\u52A8"
+  m_tagCodes:
+  m_displayName: 协同行动
   m_description: "\u4EC5\u7528\u4E8E\u9A8C\u8BC1\u591A\u4E2A\u884C\u52A8\u5019\u9009\u3001\u724C\u684C\u884C\u52A8\u8BA1\u5212\u4E0E
     UIKit \u586B\u69FD\u4EA4\u4E92\u3002"
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_turnCost: 1
   m_canStartFromClick: 0
+  m_journalGroupName: 杂项
   m_participationSlots:
   - m_key: slot-1
     m_displayName: "\u53C2\u4E0E\u8005"
@@ -33,7 +34,7 @@ MonoBehaviour:
     - m_value: test.foundation.card
     m_requiredAllContentTagCodes: 40420f00
     m_requiredAnyContentTagCodes: e9030000
-    m_requiredNoneContentTagCodes: 
+    m_requiredNoneContentTagCodes:
     m_requiredAllAbilitySystemTagCodes: 90010000
     m_requiredAnyAbilitySystemTagCodes: d1070000
     m_requiredNoneAbilitySystemTagCodes: a20f0000

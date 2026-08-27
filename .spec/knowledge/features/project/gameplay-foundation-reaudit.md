@@ -218,11 +218,12 @@ metadata:
 ### 2026-08-11 模块 3.3 拖拽意图与输入边界订正
 
 - `TabletopCardDragInput` 是新输入系统到牌桌意图的薄适配组件，不是输入 owner，也没有牌桌写权限。它只订阅 `GameCore.InputSystem` 的正式 Click 动作。
-- `TabletopCardDragSession` 以屏幕像素位移判断点击或拖拽，以牌桌坐标保持鼠标按下点到牌堆锚点的偏移；相机缩放不再改变拖拽阈值，从卡牌边缘按下也不会跳牌。
+- `TabletopCardDragSession` 以牌桌世界位移判断点击或拖拽，对齐 StackCraft `clickThreshold = 0.02`；屏幕坐标只用于输入有效性校验，按下点到牌堆锚点的偏移、预览位置和释放请求都使用牌桌坐标。从卡牌边缘按下不会跳牌。
+- 2026-08-21 继续订正：StackCraft 在按下时立即拿起卡牌，`clickThreshold` 只决定释放时是否按点击处理。当前 `TabletopViewSettings.m_dragHeight = 0.1` 承接 `CardSettings.dragHeight`，拖拽预览在低于阈值时也跟随指针；拖拽锚点改为实际被拖走牌段的首张卡，拖最上层卡时预览整叠，拖中间卡时预览尾段。
 - `TabletopCardPointerReleaseIntent` 明确区分指针按下/释放牌桌位置与请求牌堆锚点。目标卡牌只是候选事实；空白放置仍由唯一 `Tabletop.TryPlaceStack` 复核并原子提交。
 - 删除输入组件上的命中层、最大射线距离、拖拽距离和牌桌平面手填字段。正式主相机与 `EventSystem` 只从 `GameManager` 读取，射线距离由相机远裁面推导，组件自身 Transform 定义牌桌平面。
 - StackCraft 的按下偏移、尾段拖动、点击/拖拽区分和目标高亮被吸收；输入回调内的拆堆、交易、装备、战斗、制作和直接 Transform 写状态被排除。
-- 新鲜证据：拖拽会话 `6/6`、Foundation 真实输入 `13/13`、全量 EditMode `425/426`（一条既有忽略）、全量 PlayMode `30/30`。
+- 2026-08-21 订正证据：`gameplay-static-preflight` 已禁止 `EventSystem.pixelDragThreshold` 回流到卡牌点击 / 拖拽判定，并要求作者源回写 `m_clickThreshold: 0.02`、`m_dragHeight: 0.1`，同时守卫按下即预览和牌段锚点；Unity 编译和 PlayMode 仍需编辑器可用后补新鲜验证。
 
 ### 2026-08-11 模块 3.4 牌桌视图对象订正
 

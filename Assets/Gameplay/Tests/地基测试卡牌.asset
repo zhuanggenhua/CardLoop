@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CharacterCardDefinition
   m_contentId:
     m_value: test.foundation.card
-  m_tagCodes: e9030000
-  m_displayName: Villager
-  m_description: A healthy villager.
+  m_tagCodes: e9030000ea157a00
+  m_displayName: 村民
+  m_description: 健康的村民。
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialUses: 1
   m_sellValue: 0
   m_countsTowardCardLimit: 1
   m_cardLimitBonus: 0
   m_periodicProductionCardId:
-    m_value: 
+    m_value:
   m_periodicProductionIntervalSeconds: 0
   m_automaticMovementIntervalSeconds: 0
   m_automaticMovementRadius: 0
@@ -40,6 +40,8 @@ MonoBehaviour:
     Address: "\u5361\u724C\u8868\u9762_\u89D2\u8272"
     Guid: 753f0937c1d64950b0f47e534f841748
     Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}
   m_abilitySystemPresetId: 1001
   m_attributeOverrides:
   - m_attributeCode: 1

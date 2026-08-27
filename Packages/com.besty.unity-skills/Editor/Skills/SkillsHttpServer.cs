@@ -193,12 +193,14 @@ namespace UnitySkills
         private static string _prefServerShouldRun;
         private static string _prefAutoStart;
         private static string _prefStartOnEditorLaunch;
+        private static string _prefStartOnEditorLaunchConfigured;
         private static string _prefTotalProcessed;
         private static string _prefLastPort;
         private static string _prefConsecutiveFailures;
         private static string PREF_SERVER_SHOULD_RUN => _prefServerShouldRun ??= PrefKey("ServerShouldRun");
         private static string PREF_AUTO_START => _prefAutoStart ??= PrefKey("AutoStart");
         private static string PREF_START_ON_EDITOR_LAUNCH => _prefStartOnEditorLaunch ??= PrefKey("StartOnEditorLaunch");
+        private static string PREF_START_ON_EDITOR_LAUNCH_CONFIGURED => _prefStartOnEditorLaunchConfigured ??= PrefKey("StartOnEditorLaunchConfigured");
         private static string PREF_TOTAL_PROCESSED => _prefTotalProcessed ??= PrefKey("TotalProcessed");
         private static string PREF_LAST_PORT => _prefLastPort ??= PrefKey("LastPort");
         private static string PREF_CONSECUTIVE_FAILURES => _prefConsecutiveFailures ??= PrefKey("ConsecutiveRestartFailures");
@@ -233,8 +235,26 @@ namespace UnitySkills
 
         public static bool StartOnEditorLaunch
         {
-            get => EditorPrefs.GetBool(PREF_START_ON_EDITOR_LAUNCH, false);
-            set => EditorPrefs.SetBool(PREF_START_ON_EDITOR_LAUNCH, value);
+            get
+            {
+                if (EditorPrefs.HasKey(PREF_START_ON_EDITOR_LAUNCH_CONFIGURED))
+                    return EditorPrefs.GetBool(PREF_START_ON_EDITOR_LAUNCH, true);
+
+                // 旧版本把“编辑器启动即开服”默认关掉，导致用户重开 Unity 后 REST 服务停着。
+                // 没有显式配置标记时，把旧默认迁移为开启；之后用户在面板里关闭会写入 configured。
+                if (EditorPrefs.HasKey(PREF_START_ON_EDITOR_LAUNCH) &&
+                    !EditorPrefs.GetBool(PREF_START_ON_EDITOR_LAUNCH, true))
+                {
+                    EditorPrefs.SetBool(PREF_START_ON_EDITOR_LAUNCH, true);
+                }
+
+                return EditorPrefs.GetBool(PREF_START_ON_EDITOR_LAUNCH, true);
+            }
+            set
+            {
+                EditorPrefs.SetBool(PREF_START_ON_EDITOR_LAUNCH, value);
+                EditorPrefs.SetBool(PREF_START_ON_EDITOR_LAUNCH_CONFIGURED, true);
+            }
         }
 
         private const string PrefKeyPreferredPort = "UnitySkills_PreferredPort";
@@ -1107,8 +1127,10 @@ namespace UnitySkills
         private static int _restoreRetryCount = 0;
         private static bool _editorLaunchPending;
         private static bool _cliColdStartPending;
+        private static bool _autoStartRetryScheduled;
         private const int MaxRestoreRetries = 3;
         private static readonly double[] RestoreRetryDelays = { 1.0, 2.0, 4.0 }; // seconds
+        private const double BusyAutoStartRetryDelay = 2.0;
 
         internal enum AutoStartReason
         {
@@ -1139,6 +1161,13 @@ namespace UnitySkills
             var reason = GetAutoStartReason(shouldRun && AutoStart, editorLaunchRequested, _cliColdStartPending);
             if (reason != AutoStartReason.None && !_isRunning)
             {
+                if (IsEditorBusyForAutoStart())
+                {
+                    SkillsLogger.LogVerbose($"Auto-start delayed ({reason}) because Unity is compiling or updating assets.");
+                    ScheduleAutoStartRetry(BusyAutoStartRetryDelay);
+                    return;
+                }
+
                 bool domainReload = reason == AutoStartReason.DomainReload;
                 int failures = domainReload ? EditorPrefs.GetInt(PREF_CONSECUTIVE_FAILURES, 0) : 0;
 
@@ -1185,7 +1214,7 @@ namespace UnitySkills
                 {
                     double delay = RestoreRetryDelays[_restoreRetryCount];
                     _restoreRetryCount++;
-                    ScheduleDelayedCall(delay, CheckAndRestoreServer);
+                    ScheduleAutoStartRetry(delay);
                 }
                 else
                 {
@@ -1226,6 +1255,22 @@ namespace UnitySkills
             if (editorLaunchRequested) return AutoStartReason.EditorLaunch;
             if (restoreRequested) return AutoStartReason.DomainReload;
             return AutoStartReason.None;
+        }
+
+        private static bool IsEditorBusyForAutoStart()
+        {
+            return EditorApplication.isCompiling || EditorApplication.isUpdating;
+        }
+
+        private static void ScheduleAutoStartRetry(double delaySeconds)
+        {
+            if (_autoStartRetryScheduled) return;
+            _autoStartRetryScheduled = true;
+            ScheduleDelayedCall(delaySeconds, () =>
+            {
+                _autoStartRetryScheduled = false;
+                CheckAndRestoreServer();
+            });
         }
 
         private static void CompletePendingAutoStart(AutoStartReason reason)
@@ -1774,6 +1819,11 @@ namespace UnitySkills
                 // Send HTTP response (thread-safe)
                 SendResponse(job);
             }
+            catch (ThreadAbortException)
+            {
+                // Domain Reload 会中断正在等待响应的后台线程，这是脚本重载的正常路径，
+                // 不应把它记成 Unity Console 的 Error。
+            }
             catch (Exception ex)
             {
                 // Best effort - try to send error response
@@ -2144,6 +2194,12 @@ namespace UnitySkills
                     bool editorLaunchRequested = _editorLaunchPending && StartOnEditorLaunch && !Application.isBatchMode;
                     if ((shouldRun && AutoStart) || editorLaunchRequested)
                     {
+                        if (IsEditorBusyForAutoStart())
+                        {
+                            ScheduleAutoStartRetry(BusyAutoStartRetryDelay);
+                            return;
+                        }
+
                         int failures = EditorPrefs.GetInt(PREF_CONSECUTIVE_FAILURES, 0);
                         if (failures < MaxConsecutiveFailures)
                         {

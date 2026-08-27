@@ -183,5 +183,70 @@
     "id": 7003,
     "Name": "Combat.Magic",
     "Desc": "战斗语义：魔法"
+  },
+  {
+    "id": 800,
+    "Name": "Card",
+    "Desc": "卡牌语义标签"
+  },
+  {
+    "id": 8001,
+    "Name": "Card.Category",
+    "Desc": "卡牌类别"
+  },
+  {
+    "id": 8001001,
+    "Name": "Card.Category.Resource",
+    "Desc": "卡牌类别：资源"
+  },
+  {
+    "id": 8001002,
+    "Name": "Card.Category.Character",
+    "Desc": "卡牌类别：角色"
+  },
+  {
+    "id": 8001003,
+    "Name": "Card.Category.Consumable",
+    "Desc": "卡牌类别：消耗品"
+  },
+  {
+    "id": 8001004,
+    "Name": "Card.Category.Material",
+    "Desc": "卡牌类别：材料"
+  },
+  {
+    "id": 8001005,
+    "Name": "Card.Category.Equipment",
+    "Desc": "卡牌类别：装备"
+  },
+  {
+    "id": 8001006,
+    "Name": "Card.Category.Structure",
+    "Desc": "卡牌类别：建筑"
+  },
+  {
+    "id": 8001007,
+    "Name": "Card.Category.Currency",
+    "Desc": "卡牌类别：货币"
+  },
+  {
+    "id": 8001008,
+    "Name": "Card.Category.Recipe",
+    "Desc": "卡牌类别：配方"
+  },
+  {
+    "id": 8001009,
+    "Name": "Card.Category.Mob",
+    "Desc": "卡牌类别：生物/敌对单位"
+  },
+  {
+    "id": 8001010,
+    "Name": "Card.Category.Area",
+    "Desc": "卡牌类别：地区"
+  },
+  {
+    "id": 8001011,
+    "Name": "Card.Category.Valuable",
+    "Desc": "卡牌类别：贵重物"
   }
 ]

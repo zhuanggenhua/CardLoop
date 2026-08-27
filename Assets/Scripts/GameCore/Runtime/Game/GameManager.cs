@@ -28,10 +28,9 @@ namespace GameCore
         /// </summary>
         public static EventSystem EventSystem => EventSystem.current;
         /// <summary>
-        /// 当前正式玩法相机入口。
-        /// 现阶段仍跟随 Unity 主相机语义，后续若切到模式相机或多相机入口，只改这里。
+        /// 当前正式玩法相机入口，只读取场景组合根显式注册的相机。
         /// </summary>
-        public static Camera MainCamera => Camera.main;
+        public static Camera MainCamera => _mainCamera;
         public static GameConfig Config => _instance.m_config;
         public static DatabaseRegistry Database => _instance.m_config.GetDatabaseRegistry();
         public static GameManager Instance => _instance;
@@ -55,6 +54,8 @@ namespace GameCore
 
         // Private Static Members
         private static GameManager _instance = null;
+        private static Camera _mainCamera = null;
+        private static UnityEngine.Object _mainCameraRegistrationSource = null;
         private Dictionary<Type, AGameSystem> m_systems = null;
         private bool m_startInvoked = false;
         private bool m_resourceRuntimeStarted = false;
@@ -165,7 +166,8 @@ namespace GameCore
                 return;
             }
 
-            ShutdownOwnedRuntime();
+            ShutdownOwnedRuntime(applicationQuit: false);
+            ClearMainCameraRegistration();
             _instance = null;
         }
 
@@ -173,11 +175,11 @@ namespace GameCore
         {
             if (_instance == this)
             {
-                ShutdownOwnedRuntime();
+                ShutdownOwnedRuntime(applicationQuit: true);
             }
         }
 
-        private void ShutdownOwnedRuntime()
+        private void ShutdownOwnedRuntime(bool applicationQuit)
         {
             if (m_shutdownComplete)
             {
@@ -185,11 +187,68 @@ namespace GameCore
             }
 
             SetStartupState(GameManagerStartupState.ShuttingDown);
-            ShutdownRuntime();
+            ShutdownRuntime(applicationQuit);
             m_shutdownComplete = true;
         }
 
         public static bool Exists() => _instance;
+
+        /// <summary>
+        /// 注册当前场景的正式玩法相机。正式代码通过 <see cref="MainCamera"/> 读取，不使用 Unity 标签查找。
+        /// </summary>
+        public static void RegisterMainCamera(Camera camera, UnityEngine.Object registrationSource)
+        {
+            if (camera == null)
+            {
+                throw new ArgumentNullException(nameof(camera));
+            }
+            if (registrationSource == null)
+            {
+                throw new ArgumentNullException(nameof(registrationSource));
+            }
+
+            if (_mainCamera != null && _mainCamera != camera)
+            {
+                throw new InvalidOperationException(
+                    $"正式玩法相机已经由 {FormatUnityObject(_mainCameraRegistrationSource)} 注册，不能再由 {FormatUnityObject(registrationSource)} 注册另一台相机。");
+            }
+            if (_mainCameraRegistrationSource != null && _mainCameraRegistrationSource != registrationSource)
+            {
+                throw new InvalidOperationException(
+                    $"正式玩法相机已经由 {FormatUnityObject(_mainCameraRegistrationSource)} 注册，不能再由 {FormatUnityObject(registrationSource)} 重复接管。");
+            }
+
+            _mainCamera = camera;
+            _mainCameraRegistrationSource = registrationSource;
+        }
+
+        /// <summary>
+        /// 注销当前场景的正式玩法相机。只允许注册入口清理自己提交的相机引用。
+        /// </summary>
+        public static void UnregisterMainCamera(Camera camera, UnityEngine.Object registrationSource)
+        {
+            if (camera == null || registrationSource == null)
+            {
+                return;
+            }
+            if (_mainCamera == camera && _mainCameraRegistrationSource == registrationSource)
+            {
+                ClearMainCameraRegistration();
+            }
+        }
+
+        private static void ClearMainCameraRegistration()
+        {
+            _mainCamera = null;
+            _mainCameraRegistrationSource = null;
+        }
+
+        private static string FormatUnityObject(UnityEngine.Object value)
+        {
+            return value == null
+                ? "已销毁或未注册对象"
+                : $"{value.GetType().Name}({value.name})";
+        }
 
         private void SetStartupState(GameManagerStartupState state)
         {
@@ -199,7 +258,7 @@ namespace GameCore
         private void HandleStartupFailure(Exception exception)
         {
             m_startupException = exception;
-            ShutdownRuntime();
+            ShutdownRuntime(applicationQuit: false);
             SetStartupState(GameManagerStartupState.Failed);
             Debug.LogException(new InvalidOperationException(
                 "GameManager 启动失败：YooAsset、Mod、GAS 或 GameCore 系统未完成初始化。", exception),
@@ -207,7 +266,7 @@ namespace GameCore
             enabled = false;
         }
 
-        private void ShutdownRuntime()
+        private void ShutdownRuntime(bool applicationQuit)
         {
             ShutdownSystems();
             m_startInvoked = false;
@@ -248,7 +307,14 @@ namespace GameCore
             {
                 try
                 {
-                    ResourceSystem.Shutdown();
+                    if (applicationQuit)
+                    {
+                        ResourceSystem.ShutdownForApplicationQuit();
+                    }
+                    else
+                    {
+                        ResourceSystem.Shutdown();
+                    }
                 }
                 catch (Exception exception)
                 {

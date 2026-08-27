@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Scenarios.ScenarioDefinition
   m_contentId:
     m_value: test.foundation.scenario.day-cycle
-  m_tagCodes: 
+  m_tagCodes:
   m_displayName: "\u65E5\u7EC8\u6548\u679C\u6D4B\u8BD5\u5267\u672C"
   m_description: "\u7528\u4E8E\u5728\u7EDF\u4E00\u573A\u666F\u8BD5\u73A9\u8FDB\u98DF\u3001\u51FA\u552E\u8D85\u9650\u5361\u3001\u906D\u9047\u53CD\u9988\u4E0E\u8DE8\u65E5\u81EA\u52A8\u5B58\u6863\u3002"
   m_icon:
-    Address: 
-    Guid: 
+    Address:
+    Guid:
     Locked: 1
   m_initialRegionId:
     m_value: test.foundation.region

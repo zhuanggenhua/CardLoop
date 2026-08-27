@@ -10,9 +10,11 @@ namespace Gameplay.Tabletop
 	internal static class TabletopCardStackPlacementSolver
 	{
 		private const float Epsilon = 0.0001f;
-		private const int MaxIterations = 64;
 
-		public static TabletopCardStackSpatialResult Solve(TabletopCardPlacementArea area, IReadOnlyList<TabletopCardStackSpatialBody> bodies)
+		public static TabletopCardStackSpatialResult Solve(
+			TabletopCardPlacementArea area,
+			IReadOnlyList<TabletopCardStackSpatialBody> bodies,
+			int maxIterations = TabletopCardPlacementRules.DefaultOverlapResolveMaxIterations)
 		{
 			if (area == null)
 			{
@@ -22,11 +24,18 @@ namespace Gameplay.Tabletop
 			{
 				throw new ArgumentNullException("bodies");
 			}
+			if (maxIterations <= 0)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(maxIterations),
+					maxIterations,
+					"牌桌重叠解算迭代次数必须大于 0。");
+			}
 			List<TabletopCardStackSpatialBody> solvedBodies = new List<TabletopCardStackSpatialBody>(bodies);
 			solvedBodies.Sort((TabletopCardStackSpatialBody left, TabletopCardStackSpatialBody right) => left.BottomCardId.Value.CompareTo(right.BottomCardId.Value));
 			ValidateUniqueBottomCardIds(solvedBodies);
 			int iterations;
-			for (iterations = 0; iterations < MaxIterations; iterations++)
+			for (iterations = 0; iterations < maxIterations; iterations++)
 			{
 				bool moved = ResolveAreaConstraints(area, solvedBodies);
 				if (!(moved | ResolveBodyOverlaps(solvedBodies)))
@@ -64,6 +73,11 @@ namespace Gameplay.Tabletop
 				for (int restrictedIndex = 0; restrictedIndex < area.RestrictedAreas.Count; restrictedIndex++)
 				{
 					Rect restricted = area.RestrictedAreas[restrictedIndex];
+					if (TabletopCardPlacementArea.IsFullWidthTopRestrictedBand(area.Bounds, restricted))
+					{
+						center = MoveBelowTopRestrictedBand(center, body.Size, restricted);
+						continue;
+					}
 					if (TryCalculateSeparation(center, body.Size, restricted.center, restricted.size, 1, out var separation))
 					{
 						center += separation;
@@ -78,6 +92,16 @@ namespace Gameplay.Tabletop
 				}
 			}
 			return moved;
+		}
+
+		private static Vector2 MoveBelowTopRestrictedBand(Vector2 center, Vector2 size, Rect restricted)
+		{
+			float topEdge = center.y + size.y * 0.5f;
+			if (topEdge > restricted.yMin + Epsilon)
+			{
+				center.y = restricted.yMin - size.y * 0.5f;
+			}
+			return center;
 		}
 
 		private static bool ResolveBodyOverlaps(List<TabletopCardStackSpatialBody> bodies)
@@ -121,6 +145,10 @@ namespace Gameplay.Tabletop
 				{
 					return true;
 				}
+				if (body.IsLocked)
+				{
+					continue;
+				}
 				for (int restrictedIndex = 0; restrictedIndex < area.RestrictedAreas.Count; restrictedIndex++)
 				{
 					Rect restricted = area.RestrictedAreas[restrictedIndex];
@@ -158,14 +186,14 @@ namespace Gameplay.Tabletop
 		private static bool FitsInside(Rect bounds, Vector2 center, Vector2 size)
 		{
 			Vector2 halfSize = size * 0.5f;
-			return center.x - halfSize.x >= bounds.xMin - 0.0001f && center.x + halfSize.x <= bounds.xMax + 0.0001f && center.y - halfSize.y >= bounds.yMin - 0.0001f && center.y + halfSize.y <= bounds.yMax + 0.0001f;
+			return center.x - halfSize.x >= bounds.xMin - Epsilon && center.x + halfSize.x <= bounds.xMax + Epsilon && center.y - halfSize.y >= bounds.yMin - Epsilon && center.y + halfSize.y <= bounds.yMax + Epsilon;
 		}
 
 		private static bool Overlaps(Vector2 firstCenter, Vector2 firstSize, Vector2 secondCenter, Vector2 secondSize)
 		{
 			Vector2 firstHalf = firstSize * 0.5f;
 			Vector2 secondHalf = secondSize * 0.5f;
-			return firstHalf.x + secondHalf.x - Mathf.Abs(firstCenter.x - secondCenter.x) > 0.0001f && firstHalf.y + secondHalf.y - Mathf.Abs(firstCenter.y - secondCenter.y) > 0.0001f;
+			return firstHalf.x + secondHalf.x - Mathf.Abs(firstCenter.x - secondCenter.x) > Epsilon && firstHalf.y + secondHalf.y - Mathf.Abs(firstCenter.y - secondCenter.y) > Epsilon;
 		}
 
 		private static bool TryCalculateSeparation(Vector2 firstCenter, Vector2 firstSize, Vector2 secondCenter, Vector2 secondSize, int coincidentDirection, out Vector2 separation)
@@ -174,26 +202,26 @@ namespace Gameplay.Tabletop
 			Vector2 secondHalf = secondSize * 0.5f;
 			float deltaX = firstCenter.x - secondCenter.x;
 			float penetrationX = firstHalf.x + secondHalf.x - Mathf.Abs(deltaX);
-			if (penetrationX <= 0.0001f)
+			if (penetrationX <= Epsilon)
 			{
 				separation = default(Vector2);
 				return false;
 			}
 			float deltaY = firstCenter.y - secondCenter.y;
 			float penetrationY = firstHalf.y + secondHalf.y - Mathf.Abs(deltaY);
-			if (penetrationY <= 0.0001f)
+			if (penetrationY <= Epsilon)
 			{
 				separation = default(Vector2);
 				return false;
 			}
-			if (penetrationX <= penetrationY)
+			if (penetrationX < penetrationY)
 			{
-				float direction = ((Mathf.Abs(deltaX) > 0.0001f) ? Mathf.Sign(deltaX) : ((float)coincidentDirection));
+				float direction = ((Mathf.Abs(deltaX) > Epsilon) ? Mathf.Sign(deltaX) : ((float)coincidentDirection));
 				separation = new Vector2(penetrationX * direction, 0f);
 			}
 			else
 			{
-				float direction2 = ((Mathf.Abs(deltaY) > 0.0001f) ? Mathf.Sign(deltaY) : ((float)coincidentDirection));
+				float direction2 = ((Mathf.Abs(deltaY) > Epsilon) ? Mathf.Sign(deltaY) : ((float)coincidentDirection));
 				separation = new Vector2(0f, penetrationY * direction2);
 			}
 			return true;

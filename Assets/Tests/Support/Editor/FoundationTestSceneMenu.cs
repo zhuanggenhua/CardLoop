@@ -8,6 +8,7 @@ using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -38,6 +39,11 @@ namespace Gameplay.Tests.Support.Editor
     {
         /// <summary>统一 Gameplay 地基运行验收场景的固定资产路径。</summary>
         internal const string ScenePath = "Assets/Scenes/FoundationTest.unity";
+
+		/// <summary>StackCraft 开局卡包同态验收场景的固定资产路径。</summary>
+		internal const string StackCraftParityScenePath = "Assets/Scenes/FoundationStackCraftParityTest.unity";
+
+		private const string StackCraftParitySceneName = "FoundationStackCraftParityTest";
 
         /// <summary>场景切换验收使用的第一张附加地图场景路径。</summary>
         internal const string MapScenePath = "Assets/Scenes/FoundationMapTest.unity";
@@ -87,31 +93,38 @@ namespace Gameplay.Tests.Support.Editor
 		private const string TestPackVendorPath = TestContentFolder + "/地基卡包商贩.asset";
 		private const string TestBeginningPackVendorPath = TestContentFolder + "/地基开端卡包商贩.asset";
 		private const string TestPurchaseCardPackActionPath = TestContentFolder + "/地基购买卡包行动.asset";
-		private const string TestChestPath = TestContentFolder + "/地基测试箱子.asset";
+        private const string TestChestPath = TestContentFolder + "/地基测试箱子.asset";
 		private const string TestDepositCurrencyIntoChestActionPath = TestContentFolder + "/地基存币行动.asset";
 		private const string TestWithdrawCurrencyFromChestActionPath = TestContentFolder + "/地基取币行动.asset";
         private const string TestQuestPath = TestContentFolder + "/地基测试任务.asset";
+		private const string TestStackCraftParityQuestPath =
+			TestContentFolder + "/地基StackCraft同态打开初始卡包任务.asset";
         private const string TestScenarioPath = TestContentFolder + "/地基测试剧本.asset";
+		private const string TestStackCraftParityScenarioPath = TestContentFolder + "/地基StackCraft同态测试剧本.asset";
         private const string TestSceneScenarioPath = TestContentFolder + "/地基场景测试剧本.asset";
 		private const string TestRegionPath = TestContentFolder + "/地基测试地区.asset";
+		private const string TestStackCraftParityRegionPath = TestContentFolder + "/地基StackCraft同态测试地区.asset";
 		private const string TestBattleRegionPath = TestContentFolder + "/地基战斗测试地区.asset";
 		private const string TestSceneRegionPath = TestContentFolder + "/地基场景测试地区.asset";
 		private const string TestSecondSceneRegionPath = TestContentFolder + "/地基第二场景测试地区.asset";
         private const string TabletopTestFolder = TestContentFolder + "/牌桌";
-        private const string TabletopCardViewPrefabPath = TabletopTestFolder + "/牌桌测试卡牌视图.prefab";
-		private const string TabletopActionProgressViewPrefabPath = TabletopTestFolder + "/牌桌测试行动进度.prefab";
-		private const string TabletopBattleAreaViewPrefabPath = TabletopTestFolder + "/牌桌测试战斗区域.prefab";
-		private const string TabletopProjectileViewPrefabPath = TabletopTestFolder + "/牌桌测试投射物.prefab";
-		private const string TabletopHitResultViewPrefabPath = TabletopTestFolder + "/牌桌测试命中结果.prefab";
-		private const string TabletopActionChoicePanelPrefabPath = TabletopTestFolder + "/TabletopActionChoicePanel.prefab";
-		private const string TabletopActionPlanPanelPrefabPath = TabletopTestFolder + "/TabletopActionPlanPanel.prefab";
-        private const string ScenarioTurnPanelPrefabPath = TabletopTestFolder + "/ScenarioTurnPanel.prefab";
-        private const string ScenarioJournalPanelPrefabPath = TabletopTestFolder + "/ScenarioJournalPanel.prefab";
-        private const string ScenarioPausePanelPrefabPath = TabletopTestFolder + "/ScenarioPausePanel.prefab";
-        private const string ScenarioSavePanelPrefabPath = TabletopTestFolder + "/ScenarioSavePanel.prefab";
-        private const string ConfirmationDialogPanelPrefabPath = TabletopTestFolder + "/ConfirmationDialogPanel.prefab";
-        private const string FoundationGameUiPrefabPath = TabletopTestFolder + "/FoundationGameUI.prefab";
-        private const string TabletopCardInfoPanelPrefabPath = TabletopTestFolder + "/TabletopCardInfoPanel.prefab";
+		private const string GameplayPrefabFolder = "Assets/Art/Prefabs";
+		private const string TabletopPrefabFolder = GameplayPrefabFolder + "/牌桌";
+		private const string GameplayUiPrefabFolder = GameplayPrefabFolder + "/UI";
+        private const string TabletopCardViewPrefabPath = TabletopPrefabFolder + "/卡牌视图.prefab";
+		private const string TabletopActionProgressViewPrefabPath = TabletopPrefabFolder + "/行动进度.prefab";
+		private const string TabletopBattleAreaViewPrefabPath = TabletopPrefabFolder + "/战斗区域.prefab";
+		private const string TabletopProjectileViewPrefabPath = TabletopPrefabFolder + "/投射物.prefab";
+		private const string TabletopHitResultViewPrefabPath = TabletopPrefabFolder + "/命中结果.prefab";
+		private const string TabletopActionChoicePanelPrefabPath = GameplayUiPrefabFolder + "/TabletopActionChoicePanel.prefab";
+		private const string TabletopActionPlanPanelPrefabPath = GameplayUiPrefabFolder + "/TabletopActionPlanPanel.prefab";
+        private const string ScenarioTurnPanelPrefabPath = GameplayUiPrefabFolder + "/ScenarioTurnPanel.prefab";
+        private const string ScenarioJournalPanelPrefabPath = GameplayUiPrefabFolder + "/ScenarioJournalPanel.prefab";
+        private const string ScenarioPausePanelPrefabPath = GameplayUiPrefabFolder + "/ScenarioPausePanel.prefab";
+        private const string ScenarioSavePanelPrefabPath = GameplayUiPrefabFolder + "/ScenarioSavePanel.prefab";
+        private const string ConfirmationDialogPanelPrefabPath = GameplayUiPrefabFolder + "/ConfirmationDialogPanel.prefab";
+        private const string FoundationGameUiPrefabPath = GameplayUiPrefabFolder + "/FoundationGameUI.prefab";
+        private const string TabletopCardInfoPanelPrefabPath = GameplayUiPrefabFolder + "/TabletopCardInfoPanel.prefab";
         private const string TabletopViewSettingsPath = TabletopTestFolder + "/牌桌测试视图设置.asset";
 		private const string ScenarioScreenEffectProfilePath = TabletopTestFolder + "/剧本屏幕效果配置.asset";
         private const string GameplaySpriteFolder = "Assets/Art/Sprites";
@@ -120,8 +133,16 @@ namespace Gameplay.Tests.Support.Editor
 		private const string GameplayModelFolder = "Assets/Art/Models";
         private const string GameplayAudioClipFolder = "Assets/Audio/SFX";
         private const string GameplayCardArtFolder = GameplaySpriteFolder + "/CardArts";
-        private const string StackCraftSpriteFolder = GameplaySpriteFolder + "/StackCraft";
-        private const string TabletopCardArtPath = GameplaySpriteFolder + "/卡牌占位图.png";
+		private const string StackCraftSpriteFolder = GameplaySpriteFolder + "/StackCraft";
+		private const string TabletopCardArtPath = GameplaySpriteFolder + "/卡牌占位图.png";
+		private const string StackCraftSquareSpritePath = StackCraftSpriteFolder + "/Square.png";
+		private const string StackCraftStatsCardSpritePath = StackCraftSpriteFolder + "/Stats_Card.png";
+		private const string StackCraftStatsCurrencySpritePath = StackCraftSpriteFolder + "/Stats_Currency.png";
+		private const string StackCraftStatsNutritionSpritePath = StackCraftSpriteFolder + "/Stats_Nutrition.png";
+		private const string StackCraftTimePacePausedSpritePath = StackCraftSpriteFolder + "/TimePace_0.png";
+		private const string StackCraftTimePaceNormalSpritePath = StackCraftSpriteFolder + "/TimePace_1.png";
+		private const string StackCraftTimePaceFastSpritePath = StackCraftSpriteFolder + "/TimePace_2.png";
+		private const int UnityUiLayer = 5;
         private const string VillagerCardArtPath = GameplayCardArtFolder + "/村民.png";
         private const string WoodCardArtPath = GameplayCardArtFolder + "/木头.png";
         private const string BerryCardArtPath = GameplayCardArtFolder + "/浆果.png";
@@ -129,11 +150,14 @@ namespace Gameplay.Tests.Support.Editor
         private const string RockCardArtPath = GameplayCardArtFolder + "/岩石.png";
         private const string StoneCardArtPath = GameplayCardArtFolder + "/石头.png";
         private const string CoinCardArtPath = GameplayCardArtFolder + "/金币.png";
+		private const string StackCraftPlaceholderCardArtPath = StackCraftSpriteFolder + "/CardArts/Placeholder.png";
         private const string GoblinCardArtPath = GameplayCardArtFolder + "/哥布林.png";
         private const string TreasureChestCardArtPath = GameplayCardArtFolder + "/宝箱.png";
         private const string WoodenChestCardArtPath = GameplayCardArtFolder + "/木箱.png";
-        private const string StarterPackCardArtPath = GameplayCardArtFolder + "/初始卡包.png";
-		private const string BeginningPackCardArtPath = GameplayCardArtFolder + "/开端卡包.png";
+        private const string UnusedStarterPackCardArtPath = GameplayCardArtFolder + "/初始卡包.png";
+		private const string UnusedBeginningPackCardArtPath = GameplayCardArtFolder + "/开端卡包.png";
+        private const string StarterPackCardArtPath = StackCraftSpriteFolder + "/PackArts/Starter.png";
+		private const string BeginningPackCardArtPath = StackCraftSpriteFolder + "/PackArts/Beginning.png";
 		private const string SoilCardArtPath = GameplayCardArtFolder + "/土壤.png";
 		private const string TreeCardArtPath = GameplayCardArtFolder + "/树.png";
 		private const string ChickenCardArtPath = GameplayCardArtFolder + "/鸡.png";
@@ -144,6 +168,20 @@ namespace Gameplay.Tests.Support.Editor
 		private const string CardSurfaceShaderPath = GameplayShaderFolder + "/卡牌表面.shadergraph";
 		private const string CardOutlineShaderPath = GameplayShaderFolder + "/卡牌轮廓.shadergraph";
 		private const string CardMeshPath = GameplayModelFolder + "/卡牌.fbx";
+		private const string PackMeshPath = GameplayModelFolder + "/卡包.fbx";
+		private const string EquipmentPanelMeshPath = GameplayModelFolder + "/装备面板.fbx";
+		private const string BoardMeshPath = GameplayModelFolder + "/牌桌.fbx";
+		private const string BoardBodyMaterialPath = GameplayMaterialFolder + "/牌桌主体_01.mat";
+		private const string BoardHeaderMaterialPath = GameplayMaterialFolder + "/牌桌页眉_01.mat";
+		private const string IslandBoardBodyMaterialPath = GameplayMaterialFolder + "/牌桌主体_02.mat";
+		private const string IslandBoardHeaderMaterialPath = GameplayMaterialFolder + "/牌桌页眉_02.mat";
+		private const string GrassBackgroundMaterialPath = GameplayMaterialFolder + "/草地背景.mat";
+		private const string WaterBackgroundMaterialPath = GameplayMaterialFolder + "/水面背景.mat";
+		private const string EquipmentPanelMaterialPath = GameplayMaterialFolder + "/装备面板.mat";
+		private const string CardBuyerSurfacePath = GameplayMaterialFolder + "/交易区.mat";
+		private const string CardBuyerCurrencyIconMaterialPath = GameplayMaterialFolder + "/货币图标.mat";
+		private static readonly Vector2 StackCraftTradeZoneSpawnOffset = new Vector2(0f, -1.4f);
+		private const int StackCraftConvertedTextStyleHashCode = -1183493901;
 		private const string CharacterCardSurfacePath = GameplayMaterialFolder + "/卡牌表面_角色.mat";
 		private const string MobCardSurfacePath = GameplayMaterialFolder + "/卡牌表面_生物.mat";
 		private const string AggressiveMobCardSurfacePath = GameplayMaterialFolder + "/卡牌表面_主动敌人.mat";
@@ -155,6 +193,7 @@ namespace Gameplay.Tests.Support.Editor
 		private const string ResourceCardSurfacePath = GameplayMaterialFolder + "/卡牌表面_资源.mat";
 		private const string StructureCardSurfacePath = GameplayMaterialFolder + "/卡牌表面_建筑.mat";
 		private const string ValuableCardSurfacePath = GameplayMaterialFolder + "/卡牌表面_贵重物.mat";
+		private const string PackCardSurfacePath = GameplayMaterialFolder + "/卡牌表面_卡包.mat";
 		private const string AreaCardSurfacePath = GameplayMaterialFolder + "/卡牌表面_地区.mat";
         private const string HitNormalSpritePath = GameplaySpriteFolder + "/普通命中图标.png";
         private const string HitMissSpritePath = GameplaySpriteFolder + "/未命中图标.png";
@@ -182,11 +221,11 @@ namespace Gameplay.Tests.Support.Editor
         private const string MagicHitAudioPath = TabletopAudioFolder + "/魔法命中音效.asset";
         private const string MissAudioPath = TabletopAudioFolder + "/未命中音效.asset";
         private const string CriticalAudioPath = TabletopAudioFolder + "/暴击音效.asset";
-        private const string TabletopCardViewAddress = "牌桌测试卡牌视图";
-		private const string TabletopActionProgressViewAddress = "牌桌测试行动进度";
-		private const string TabletopBattleAreaViewAddress = "牌桌测试战斗区域";
-		private const string TabletopProjectileViewAddress = "牌桌测试投射物";
-		private const string TabletopHitResultViewAddress = "牌桌测试命中结果";
+        private const string TabletopCardViewAddress = "卡牌视图";
+		private const string TabletopActionProgressViewAddress = "行动进度";
+		private const string TabletopBattleAreaViewAddress = "战斗区域";
+		private const string TabletopProjectileViewAddress = "投射物";
+		private const string TabletopHitResultViewAddress = "命中结果";
 		private const string TabletopCardArtAddress = "卡牌占位图";
         private const string VillagerCardArtAddress = "村民";
         private const string WoodCardArtAddress = "木头";
@@ -195,11 +234,12 @@ namespace Gameplay.Tests.Support.Editor
         private const string RockCardArtAddress = "岩石";
         private const string StoneCardArtAddress = "石头";
         private const string CoinCardArtAddress = "金币";
+		private const string StackCraftPlaceholderCardArtAddress = "CardArts_Placeholder";
         private const string GoblinCardArtAddress = "哥布林";
         private const string TreasureChestCardArtAddress = "宝箱";
         private const string WoodenChestCardArtAddress = "木箱";
-        private const string StarterPackCardArtAddress = "初始卡包";
-		private const string BeginningPackCardArtAddress = "开端卡包";
+        private const string StarterPackCardArtAddress = "PackArts_Starter";
+		private const string BeginningPackCardArtAddress = "PackArts_Beginning";
 		private const string SoilCardArtAddress = "土壤";
 		private const string TreeCardArtAddress = "树";
 		private const string ChickenCardArtAddress = "鸡";
@@ -218,7 +258,9 @@ namespace Gameplay.Tests.Support.Editor
 		private const string ResourceCardSurfaceAddress = "卡牌表面_资源";
 		private const string StructureCardSurfaceAddress = "卡牌表面_建筑";
 		private const string ValuableCardSurfaceAddress = "卡牌表面_贵重物";
+		private const string PackCardSurfaceAddress = "卡牌表面_卡包";
 		private const string AreaCardSurfaceAddress = "卡牌表面_地区";
+		private const string CardBuyerSurfaceAddress = "交易区";
 		private const string CardPickClipPath = GameplayAudioClipFolder + "/拿起卡牌.wav";
 		private const string CardDropClipPath = GameplayAudioClipFolder + "/放下卡牌.wav";
 		private const string CardSwipeClipPath = GameplayAudioClipFolder + "/卡牌滑动.wav";
@@ -235,7 +277,6 @@ namespace Gameplay.Tests.Support.Editor
 		private const string HitMagicClipPath = GameplayAudioClipFolder + "/魔法命中.wav";
 		private const string MissClipPath = GameplayAudioClipFolder + "/未命中.wav";
 		private const string CriticalClipPath = GameplayAudioClipFolder + "/暴击.wav";
-		private const string GameplayPrefabFolder = "Assets/Art/Prefabs";
 		private const string GameplayCardSmokeEffectPrefabPath = GameplayPrefabFolder + "/卡牌烟雾粒子.prefab";
 		private const string GameplayCardSmokeEffectAddress = "卡牌烟雾粒子";
 		private const string GameplayCardSmokeMaterialPath = GameplayMaterialFolder + "/卡牌烟雾材质.mat";
@@ -243,6 +284,27 @@ namespace Gameplay.Tests.Support.Editor
 		private const string UiSubmitClipPath = GameplayAudioClipFolder + "/界面点击.wav";
         private const string TestPanelFontPath =
             TabletopTestFolder + "/地基测试中文字体.asset";
+		private const string StackCraftSurfaceFontPath =
+			"Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
+		private static readonly Vector2 StackCraftPackInstanceViewSize = new(0.9f, 1.3000002f);
+		private static readonly Vector2 StackCraftTradeZoneViewSize = new(0.90000004f, 1.1250004f);
+		private static readonly Rect StackCraftBoardPlacementBounds = new Rect(-6f, -4f, 12f, 8f);
+		private static readonly Rect StackCraftBoardHeaderRestrictedArea = new Rect(-6f, 2.5f, 12f, 1.5f);
+		private static readonly Vector2 StackCraftBoardCardSize = new Vector2(0.8f, 1f);
+		private static readonly Vector2 StackCraftBoardCardMargin = new Vector2(0.1f, 0.1f);
+		private static readonly Vector2 StackCraftBoardStackStep = new Vector2(0f, -0.18f);
+		private const int StackCraftBoardOverlapResolveMaxIterations = 8;
+		private const float StackCraftBoardSpawnAttachRadius = 1f;
+		private static readonly Vector2 StackCraftBoardCardLimitBonusExpansionPerPoint = new Vector2(0.06f, 0.04f);
+		private static readonly Vector3 StackCraftBoardLocalBoundsSize = new Vector3(48f, 0f, 32f);
+		private const float StackCraftBoardSurfaceHeight = -0.05f;
+		private const uint StackCraftParityAuthoritativeRandomSeed = 20260821u;
+		private const int StackCraftBaseCardLimit = 24;
+		private const int StackCraftHungerPerCharacter = 2;
+		private const float StackCraftReferenceDayDurationSeconds = 120f;
+		private const float StackCraftAutomaticMovementIntervalSeconds = 5f;
+		private const float StackCraftAutomaticMovementRadius = 1f;
+		private const int StackCraftAutomaticMovementMaxAttempts = 5;
 		private const string RuntimeRootPrefabPath = TabletopTestFolder + "/FoundationTestRuntimeRoot.prefab";
 		private const string TestPanelFontSourcePath =
 			"Packages/com.besty.unity-skills/Editor/UI/Fonts/UnitySkillsCN-Regular.ttf";
@@ -256,9 +318,9 @@ namespace Gameplay.Tests.Support.Editor
         [MenuItem("Gameplay/地基/重建测试场景")]
         public static void RebuildTestScene()
         {
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             RebuildMapTestScene(MapScenePath, "FoundationMapMarker");
             RebuildMapTestScene(SecondMapScenePath, "FoundationSecondMapMarker");
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameConfig config = EnsureConfigAsset();
             EnsureTestCardAsset();
             EnsureTestProductAsset();
@@ -271,64 +333,205 @@ namespace Gameplay.Tests.Support.Editor
             EnsureTestQuestAsset();
             EnsureTestScenarioAssets();
             TabletopViewSettings viewSettings = EnsureTabletopTestAssets();
-			GameManager runtimeRootPrefab = EnsureRuntimeRootPrefab(config);
+			GameObject runtimeRootPrefab = EnsureRuntimeRootPrefab(config);
+			viewSettings = LoadPersistentTabletopViewSettings();
 
-            EditorSceneManager.MarkSceneDirty(scene);
-
-            GameObject testRoot = new("FoundationTest");
-			FoundationTestRuntimeEntry runtimeEntry = testRoot.AddComponent<FoundationTestRuntimeEntry>();
-            SerializedObject serializedEntry = new(runtimeEntry);
-			serializedEntry.FindProperty("m_runtimeRootPrefab").objectReferenceValue = runtimeRootPrefab;
-			serializedEntry.ApplyModifiedPropertiesWithoutUndo();
-			TabletopView tabletopView = CreateTabletopTestRoot(testRoot.transform, viewSettings);
-            GameObject cameraObject = new("Main Camera");
-            cameraObject.transform.SetParent(testRoot.transform);
-            cameraObject.tag = "MainCamera";
-            Camera camera = cameraObject.AddComponent<Camera>();
-            camera.orthographic = true;
-            camera.orthographicSize = 4.5f;
-            camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(0.055f, 0.065f, 0.075f, 1f);
-            camera.transform.position = new Vector3(0f, 10f, 0f);
-			camera.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-			ConfigurePostProcessingCamera(cameraObject);
-            ConfigureTemplateCameraShake(cameraObject.AddComponent<CameraShake>());
-			ConfigureTabletopCameraController(
-				cameraObject.AddComponent<TabletopCameraController>(),
-				tabletopView);
-
-            if (!EditorSceneManager.SaveScene(scene, ScenePath))
-            {
-                throw new MissingReferenceException($"无法保存测试场景：{ScenePath}");
-            }
-
-            VerifySavedSceneConfig(runtimeRootPrefab);
+			RebuildTabletopScene(
+				ScenePath,
+				"FoundationTest",
+				FoundationTestSceneHarness.TestScenarioContentId,
+				FoundationTestInitialLayout.StackDragAndActionTest,
+				0u,
+				runtimeRootPrefab,
+				viewSettings);
+			RebuildTabletopScene(
+				StackCraftParityScenePath,
+				StackCraftParitySceneName,
+				FoundationTestSceneHarness.TestStackCraftParityScenarioContentId,
+				FoundationTestInitialLayout.StackCraftStarterPack,
+				StackCraftParityAuthoritativeRandomSeed,
+				runtimeRootPrefab,
+				viewSettings);
             RemoveTestScenesFromBuildSettings();
             EnsureTestSceneCollector();
             AssetDatabase.SaveAssets();
             // batchmode 会在本方法返回后立即退出；先同步收完本轮导入，避免资源工作线程仍在通信时被强制清理。
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             RefreshEditorSimulateManifest();
+			NormalizeGeneratedYamlWhitespace();
 
             if (!Application.isBatchMode)
             {
-                Selection.activeObject = testRoot;
+				Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(StackCraftParityScenePath);
             }
 
             Debug.Log(
-                $"Gameplay 地基测试场景已重建：{ScenePath}。独立运行时使用 {RuntimeRootPrefabPath}。",
-                testRoot);
+                $"Gameplay 地基测试场景已重建：{ScenePath}，StackCraft 同态场景已重建：{StackCraftParityScenePath}。独立运行时使用 {RuntimeRootPrefabPath}。");
         }
 
-        private static void VerifySavedSceneConfig(GameManager expectedRuntimeRootPrefab)
+		private static void RebuildTabletopScene(
+			string scenePath,
+			string rootName,
+			string scenarioContentId,
+			FoundationTestInitialLayout initialLayout,
+			uint authoritativeRandomSeedOverride,
+			GameObject runtimeRootPrefab,
+			TabletopViewSettings viewSettings)
+		{
+			runtimeRootPrefab = LoadPersistentRuntimeRootPrefab();
+			Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+			EditorSceneManager.MarkSceneDirty(scene);
+			ApplyStackCraftMainRenderSettings();
+
+			GameObject testRoot = new(rootName);
+			FoundationTestRuntimeEntry runtimeEntry = testRoot.AddComponent<FoundationTestRuntimeEntry>();
+			SerializedObject serializedEntry = new(runtimeEntry);
+			serializedEntry.FindProperty("m_runtimeRootPrefab").objectReferenceValue = runtimeRootPrefab;
+			serializedEntry.ApplyModifiedPropertiesWithoutUndo();
+			CreateStackCraftDirectionalLight();
+			CreateStackCraftBackgroundSurface(testRoot.transform);
+			CreateStackCraftBoardSurface(testRoot.transform);
+			TabletopView tabletopView = CreateTabletopTestRoot(
+				testRoot.transform,
+				viewSettings,
+				scenarioContentId,
+				initialLayout,
+				authoritativeRandomSeedOverride);
+			GameObject cameraControllerObject = new("CameraController");
+			cameraControllerObject.transform.SetParent(testRoot.transform);
+			cameraControllerObject.transform.position = new Vector3(0f, 10f, -1f);
+			cameraControllerObject.transform.rotation = Quaternion.Euler(85f, 0f, 0f);
+
+			Camera camera = CreateMainCamera(cameraControllerObject.transform);
+			GameObject cameraObject = camera.gameObject;
+			ConfigureStackCraftMainCamera(camera);
+			cameraObject.AddComponent<PhysicsRaycaster>();
+			ConfigurePostProcessingCamera(cameraObject);
+			ConfigureTemplateCameraShake(cameraObject.AddComponent<CameraShake>());
+			ConfigureTabletopCameraController(
+				cameraControllerObject.AddComponent<TabletopCameraController>(),
+				tabletopView,
+				camera);
+
+			if (!EditorSceneManager.SaveScene(scene, scenePath))
+			{
+				throw new MissingReferenceException($"无法保存测试场景：{scenePath}");
+			}
+
+			VerifySavedSceneConfig(
+				runtimeRootPrefab,
+				scenePath,
+				scenarioContentId,
+				initialLayout,
+				authoritativeRandomSeedOverride);
+		}
+
+		/// <summary>生成测试场景唯一主相机，并确保音频监听随相机一起保存。</summary>
+		private static Camera CreateMainCamera(Transform parent)
+		{
+			GameObject cameraObject = new("Main Camera");
+			cameraObject.transform.SetParent(parent, false);
+			cameraObject.tag = "MainCamera";
+			Camera camera = cameraObject.AddComponent<Camera>();
+			cameraObject.AddComponent<AudioListener>();
+			return camera;
+		}
+
+		/// <summary>生成无父级的测试入口主相机，并移动到目标场景。</summary>
+		private static Camera CreateMainCamera(Scene scene)
+		{
+			GameObject cameraObject = new("Main Camera");
+			SceneManager.MoveGameObjectToScene(cameraObject, scene);
+			cameraObject.tag = "MainCamera";
+			Camera camera = cameraObject.AddComponent<Camera>();
+			cameraObject.AddComponent<AudioListener>();
+			return camera;
+		}
+
+		/// <summary>按 StackCraft CameraController.prefab 的主相机参数配置测试相机。</summary>
+		private static void ConfigureStackCraftMainCamera(Camera camera)
+		{
+			camera.orthographic = false;
+			camera.fieldOfView = 30f;
+			camera.nearClipPlane = 2f;
+			camera.farClipPlane = 40f;
+			camera.depth = -1f;
+			camera.clearFlags = CameraClearFlags.SolidColor;
+			camera.backgroundColor = new Color(0.1882353f, 0.21568628f, 0.22745098f, 1f);
+		}
+
+		/// <summary>按 StackCraft Main.unity 的场景环境光配置写入测试场景。</summary>
+		private static void ApplyStackCraftMainRenderSettings()
+		{
+			RenderSettings.fog = false;
+			RenderSettings.fogColor = new Color(0.5f, 0.5f, 0.5f, 1f);
+			RenderSettings.fogMode = FogMode.ExponentialSquared;
+			RenderSettings.fogDensity = 0.01f;
+			RenderSettings.fogStartDistance = 0f;
+			RenderSettings.fogEndDistance = 300f;
+			RenderSettings.ambientSkyColor = new Color(0.60480005f, 0.63552f, 0.72f, 1f);
+			RenderSettings.ambientEquatorColor = new Color(0.114f, 0.125f, 0.133f, 1f);
+			RenderSettings.ambientGroundColor = new Color(0.047f, 0.043f, 0.035f, 1f);
+			RenderSettings.ambientIntensity = 1f;
+			RenderSettings.ambientMode = AmbientMode.Flat;
+			RenderSettings.subtractiveShadowColor = new Color(0.42f, 0.478f, 0.627f, 1f);
+			RenderSettings.skybox = null;
+			RenderSettings.haloStrength = 0.5f;
+			RenderSettings.flareStrength = 1f;
+			RenderSettings.flareFadeSpeed = 3f;
+			RenderSettings.defaultReflectionMode = DefaultReflectionMode.Skybox;
+			RenderSettings.defaultReflectionResolution = 128;
+			RenderSettings.reflectionBounces = 1;
+			RenderSettings.reflectionIntensity = 1f;
+			RenderSettings.customReflection = null;
+			RenderSettings.sun = null;
+		}
+
+		/// <summary>按 StackCraft Main.unity 的 DirectionalLight 参数生成场景光源。</summary>
+		private static Light CreateStackCraftDirectionalLight()
+		{
+			GameObject lightObject = new("DirectionalLight");
+			lightObject.transform.position = new Vector3(0f, 3f, 0f);
+			lightObject.transform.rotation =
+				new Quaternion(0.1464466f, 0.8535535f, -0.35355338f, 0.35355338f);
+			lightObject.transform.localScale = Vector3.one;
+
+			Light light = lightObject.AddComponent<Light>();
+			light.type = LightType.Directional;
+			light.color = new Color(1f, 0.95686275f, 0.8392157f, 1f);
+			light.intensity = 1f;
+			light.range = 10f;
+			light.shadows = LightShadows.Hard;
+			light.shadowStrength = 0.7f;
+			light.shadowBias = 0.05f;
+			light.shadowNormalBias = 0.4f;
+			light.shadowNearPlane = 0.2f;
+			light.renderMode = LightRenderMode.Auto;
+			light.cullingMask = ~0;
+			light.bounceIntensity = 0f;
+			light.colorTemperature = 6570f;
+			light.useColorTemperature = false;
+
+			UniversalAdditionalLightData additionalLightData =
+				lightObject.AddComponent<UniversalAdditionalLightData>();
+			additionalLightData.usePipelineSettings = true;
+			return light;
+		}
+
+        private static void VerifySavedSceneConfig(
+			GameObject expectedRuntimeRootPrefab,
+			string scenePath,
+			string expectedScenarioId,
+			FoundationTestInitialLayout expectedInitialLayout,
+			uint expectedAuthoritativeRandomSeedOverride)
         {
-            Scene savedScene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            Scene savedScene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             if (savedScene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<GameManager>(true))
                 .Any())
             {
                 throw new System.InvalidOperationException(
-                    $"剧本内容场景不得重复保存进程级 {nameof(GameManager)}：{ScenePath}");
+                    $"剧本内容场景不得重复保存进程级 {nameof(GameManager)}：{scenePath}");
             }
 
             FoundationTestRuntimeEntry entry = savedScene.GetRootGameObjects()
@@ -337,19 +540,51 @@ namespace Gameplay.Tests.Support.Editor
             SerializedProperty runtimeRootProperty = entry == null
                 ? null
                 : new SerializedObject(entry).FindProperty("m_runtimeRootPrefab");
-            if (runtimeRootProperty?.objectReferenceValue != expectedRuntimeRootPrefab)
+			GameObject savedRuntimeRootPrefab = runtimeRootProperty?.objectReferenceValue as GameObject;
+            if (savedRuntimeRootPrefab == null ||
+				savedRuntimeRootPrefab != expectedRuntimeRootPrefab ||
+				!string.Equals(
+					AssetDatabase.GetAssetPath(savedRuntimeRootPrefab),
+					RuntimeRootPrefabPath,
+					StringComparison.Ordinal))
             {
                 throw new MissingReferenceException(
-                    $"保存后的测试场景没有引用唯一测试进程根预制体：{ScenePath}");
+                    $"保存后的测试场景没有引用唯一测试进程根预制体：{scenePath}");
             }
 
-            if (savedScene.GetRootGameObjects()
+            FoundationTestSceneHarness savedHarness = savedScene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<FoundationTestSceneHarness>(true))
-                .Count() != 1)
+                .SingleOrDefault();
+            if (savedHarness == null)
             {
                 throw new MissingReferenceException(
-                    $"保存后的测试场景没有唯一的 {nameof(FoundationTestSceneHarness)}：{ScenePath}");
+                    $"保存后的测试场景没有唯一的 {nameof(FoundationTestSceneHarness)}：{scenePath}");
             }
+
+			SerializedObject serializedHarness = new(savedHarness);
+			string savedScenarioId = RequireProperty(serializedHarness, "m_scenarioId")
+				.FindPropertyRelative("m_value").stringValue;
+			if (!string.Equals(savedScenarioId, expectedScenarioId, StringComparison.Ordinal))
+			{
+				throw new MissingReferenceException(
+					$"保存后的测试场景剧本 ID 不正确：{scenePath}，当前 {savedScenarioId}，期望 {expectedScenarioId}。");
+			}
+
+			FoundationTestInitialLayout savedInitialLayout =
+				(FoundationTestInitialLayout)RequireProperty(serializedHarness, "m_initialLayout").enumValueIndex;
+			if (savedInitialLayout != expectedInitialLayout)
+			{
+				throw new MissingReferenceException(
+					$"保存后的测试场景初始布局不正确：{scenePath}，当前 {savedInitialLayout}，期望 {expectedInitialLayout}。");
+			}
+
+			uint savedAuthoritativeRandomSeedOverride =
+				(uint)RequireProperty(serializedHarness, "m_authoritativeRandomSeedOverride").longValue;
+			if (savedAuthoritativeRandomSeedOverride != expectedAuthoritativeRandomSeedOverride)
+			{
+				throw new MissingReferenceException(
+					$"保存后的测试场景随机根种子不正确：{scenePath}，当前 {savedAuthoritativeRandomSeedOverride}，期望 {expectedAuthoritativeRandomSeedOverride}。");
+			}
 
             TabletopView savedTabletopView = savedScene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<TabletopView>(true))
@@ -360,7 +595,7 @@ namespace Gameplay.Tests.Support.Editor
             if (savedSettings?.objectReferenceValue == null)
             {
                 throw new MissingReferenceException(
-                    $"保存后的 {nameof(TabletopView)} 没有牌桌视图设置引用：{ScenePath}");
+                    $"保存后的 {nameof(TabletopView)} 没有牌桌视图设置引用：{scenePath}");
             }
 
 			TabletopCameraController savedCameraController = savedScene.GetRootGameObjects()
@@ -372,12 +607,12 @@ namespace Gameplay.Tests.Support.Editor
 			if (savedCameraTabletopView?.objectReferenceValue != savedTabletopView)
 			{
 				throw new MissingReferenceException(
-					$"保存后的主相机没有引用唯一 {nameof(TabletopView)}：{ScenePath}");
+					$"保存后的主相机没有引用唯一 {nameof(TabletopView)}：{scenePath}");
 			}
 
         }
 
-		private static GameManager EnsureRuntimeRootPrefab(GameConfig config)
+		private static GameObject EnsureRuntimeRootPrefab(GameConfig config)
 		{
 			GameObject root = new("FoundationTestRuntimeRoot");
 			try
@@ -404,14 +639,36 @@ namespace Gameplay.Tests.Support.Editor
 					throw new MissingReferenceException($"无法保存测试进程根预制体：{RuntimeRootPrefabPath}");
 				}
 
-				GameObject saved = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimeRootPrefabPath);
-				return saved?.GetComponent<GameManager>() ??
-					throw new MissingReferenceException($"无法重新载入测试进程根预制体：{RuntimeRootPrefabPath}");
+				AssetDatabase.SaveAssets();
+				return LoadPersistentRuntimeRootPrefab();
 			}
 			finally
 			{
 				UnityEngine.Object.DestroyImmediate(root);
 			}
+		}
+
+		private static GameObject LoadPersistentRuntimeRootPrefab()
+		{
+			AssetDatabase.ImportAsset(RuntimeRootPrefabPath, ImportAssetOptions.ForceSynchronousImport);
+			GameObject saved = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimeRootPrefabPath);
+			GameManager gameManager = saved == null ? null : saved.GetComponent<GameManager>();
+			if (gameManager == null)
+			{
+				throw new MissingReferenceException($"无法重新载入测试进程根预制体：{RuntimeRootPrefabPath}");
+			}
+
+			if (!EditorUtility.IsPersistent(saved) ||
+				!string.Equals(
+					AssetDatabase.GetAssetPath(saved),
+					RuntimeRootPrefabPath,
+					StringComparison.Ordinal))
+			{
+				throw new MissingReferenceException(
+					$"测试进程根不是可保存的 Prefab 作者资源：{RuntimeRootPrefabPath}");
+			}
+
+			return saved;
 		}
 
 		private static void ConfigureTestAudioSystem(Transform runtimeRoot, AudioSystem audioSystem)
@@ -537,18 +794,23 @@ namespace Gameplay.Tests.Support.Editor
 
 		private static void ConfigureTabletopCameraController(
 			TabletopCameraController cameraController,
-			TabletopView tabletopView)
+			TabletopView tabletopView,
+			Camera camera)
 		{
 			SerializedObject serializedController = new(cameraController);
 			SerializedProperty tabletopViewProperty =
 				serializedController.FindProperty("m_tabletopView");
-			if (tabletopViewProperty == null)
+			SerializedProperty cameraTransformProperty =
+				serializedController.FindProperty("m_cameraTransform");
+			if (tabletopViewProperty == null ||
+				cameraTransformProperty == null)
 			{
 				throw new MissingReferenceException(
-					$"{nameof(TabletopCameraController)} 缺少牌桌视图引用字段。");
+					$"{nameof(TabletopCameraController)} 缺少牌桌视图或唯一相机 Transform 字段。");
 			}
 
 			tabletopViewProperty.objectReferenceValue = tabletopView;
+			cameraTransformProperty.objectReferenceValue = camera.transform;
 			serializedController.ApplyModifiedPropertiesWithoutUndo();
 			EditorUtility.SetDirty(cameraController);
 		}
@@ -556,8 +818,48 @@ namespace Gameplay.Tests.Support.Editor
         private static void RebuildMapTestScene(string scenePath, string markerName)
         {
             Scene mapScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+			ApplyStackCraftMainRenderSettings();
+			CreateStackCraftDirectionalLight();
             GameObject marker = new(markerName);
             marker.AddComponent<MapInfo>();
+
+			bool isIslandScene = string.Equals(
+				scenePath,
+				SecondMapScenePath,
+				System.StringComparison.Ordinal);
+			if (isIslandScene)
+			{
+				CreateStackCraftBackgroundSurface(
+					null,
+					WaterBackgroundMaterialPath,
+					"StackCraft Island 水面背景材质自有副本");
+				CreateStackCraftBoardSurface(
+					null,
+					IslandBoardBodyMaterialPath,
+					IslandBoardHeaderMaterialPath,
+					"StackCraft Board02 主体材质自有副本",
+					"StackCraft Board02 页眉材质自有副本");
+			}
+			else
+			{
+				CreateStackCraftBackgroundSurface(
+					null,
+					GrassBackgroundMaterialPath,
+					"StackCraft Main 草地背景材质自有副本");
+				CreateStackCraftBoardSurface(
+					null,
+					BoardBodyMaterialPath,
+					BoardHeaderMaterialPath,
+					"StackCraft Board01 主体材质自有副本",
+					"StackCraft Board01 页眉材质自有副本");
+			}
+
+			GameObject cameraControllerObject = new("CameraController");
+			SceneManager.MoveGameObjectToScene(cameraControllerObject, mapScene);
+			cameraControllerObject.transform.position = new Vector3(0f, 10f, -1f);
+			cameraControllerObject.transform.rotation = Quaternion.Euler(85f, 0f, 0f);
+			Camera camera = CreateMainCamera(cameraControllerObject.transform);
+			ConfigureStackCraftMainCamera(camera);
 
             if (!EditorSceneManager.SaveScene(mapScene, scenePath))
             {
@@ -631,8 +933,8 @@ namespace Gameplay.Tests.Support.Editor
 				GoblinCardArtPath,
 				TreasureChestCardArtPath,
 				WoodenChestCardArtPath,
-				StarterPackCardArtPath,
-				BeginningPackCardArtPath,
+				UnusedStarterPackCardArtPath,
+				UnusedBeginningPackCardArtPath,
 				SoilCardArtPath,
 				TreeCardArtPath,
 				ChickenCardArtPath,
@@ -651,7 +953,11 @@ namespace Gameplay.Tests.Support.Editor
 				ResourceCardSurfacePath,
 				StructureCardSurfacePath,
 				ValuableCardSurfacePath,
+				PackCardSurfacePath,
 				AreaCardSurfacePath,
+				EquipmentPanelMaterialPath,
+				CardBuyerSurfacePath,
+				CardBuyerCurrencyIconMaterialPath,
 				ArrowProjectileSpritePath,
 				MagicProjectileSpritePath
 			};
@@ -684,13 +990,86 @@ namespace Gameplay.Tests.Support.Editor
             Debug.Log($"YooAsset EditorSimulate 清单已刷新：{result.PackageRootDirectory}");
         }
 
+		/// <summary>
+		/// 清理测试场景生成器写出的 Unity YAML 空字段尾随空白，避免同一入口每次重建都留下无意义 diff。
+		/// </summary>
+		private static void NormalizeGeneratedYamlWhitespace()
+		{
+			IEnumerable<string> candidateFiles = new[]
+				{
+					CollectorSettingPath,
+					ScenePath,
+					StackCraftParityScenePath,
+					MapScenePath,
+					SecondMapScenePath,
+					ConfigPath
+				}
+				.Concat(EnumerateGeneratedYamlFiles(TestContentFolder))
+				.Concat(EnumerateGeneratedYamlFiles(GameplayPrefabFolder))
+				.Distinct(StringComparer.Ordinal);
+
+			foreach (string assetPath in candidateFiles)
+			{
+				string absolutePath = ToProjectAbsolutePath(assetPath);
+				if (!System.IO.File.Exists(absolutePath))
+				{
+					continue;
+				}
+
+				string text = System.IO.File.ReadAllText(absolutePath);
+				string normalized = System.Text.RegularExpressions.Regex.Replace(
+					text,
+					@"[ \t]+(?=\r?\n|\z)",
+					string.Empty);
+				if (!string.Equals(text, normalized, StringComparison.Ordinal))
+				{
+					System.IO.File.WriteAllText(absolutePath, normalized);
+				}
+			}
+		}
+
+		private static IEnumerable<string> EnumerateGeneratedYamlFiles(string folderPath)
+		{
+			string absoluteFolderPath = ToProjectAbsolutePath(folderPath);
+			if (!System.IO.Directory.Exists(absoluteFolderPath))
+			{
+				return Enumerable.Empty<string>();
+			}
+
+			return System.IO.Directory
+				.EnumerateFiles(absoluteFolderPath, "*.*", System.IO.SearchOption.AllDirectories)
+				.Select(ToProjectAssetPath)
+				.Where(path =>
+					path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase) ||
+					path.EndsWith(".mat", StringComparison.OrdinalIgnoreCase) ||
+					path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) ||
+					path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase));
+		}
+
+		private static string ToProjectAbsolutePath(string assetPath)
+		{
+			string projectRoot = System.IO.Directory.GetParent(Application.dataPath)?.FullName
+				?? throw new MissingReferenceException("无法定位 Unity 项目根目录，不能安全清理生成的 YAML。");
+			return System.IO.Path.Combine(
+				projectRoot,
+				assetPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+		}
+
+		private static string ToProjectAssetPath(string absolutePath)
+		{
+			string projectRoot = System.IO.Directory.GetParent(Application.dataPath)?.FullName
+				?? throw new MissingReferenceException("无法定位 Unity 项目根目录，不能安全清理生成的 YAML。");
+			string relativePath = System.IO.Path.GetRelativePath(projectRoot, absolutePath);
+			return relativePath.Replace(System.IO.Path.DirectorySeparatorChar, '/');
+		}
+
 		private static void EnsureTestCardAsset()
 		{
 			EnsureTestCharacterCardAsset(
 				TestContentPath,
                 FoundationTestSceneHarness.TestContentId,
-                "Villager",
-                "A healthy villager.",
+                "村民",
+                "健康的村民。",
 				XTag.Faction_Player);
 		}
 
@@ -757,8 +1136,8 @@ namespace Gameplay.Tests.Support.Editor
             EnsureTestCardAsset(
                 TestProductPath,
                 FoundationTestSceneHarness.TestProductContentId,
-                "Wood",
-                "A wooden log.",
+                "木头",
+                "一截木材。",
                 XTag.Faction_Player);
 			WriteCardLimitAndTradeFields(TestProductPath, sellValue: 1, countsTowardLimit: true);
         }
@@ -828,11 +1207,77 @@ namespace Gameplay.Tests.Support.Editor
 				cardSurfacePath,
 				cardSurfaceAddress,
 				"卡牌表面");
-            WriteIntArray(serializedContent.FindProperty("m_tagCodes"), tagCode);
+			WriteCardViewSizeFields(serializedContent, overrideViewSize: false, Vector2.one);
+            WriteIntArray(
+				serializedContent.FindProperty("m_tagCodes"),
+				BuildCardTagCodes(cardSurfaceAddress, tagCode));
 			return serializedContent;
 		}
 
-		private static void WriteSoftSpriteReference(
+		/// <summary>按 StackCraft 卡面类别补齐 GAS 类别标签；业务标签仍由调用方显式传入。</summary>
+		private static int[] BuildCardTagCodes(string cardSurfaceAddress, int primaryTagCode)
+		{
+			List<int> tagCodes = new();
+			if (primaryTagCode != 0)
+			{
+				tagCodes.Add(primaryTagCode);
+			}
+
+			int categoryTagCode = ResolveStackCraftCategoryTagCode(cardSurfaceAddress);
+			if (categoryTagCode != 0 && !tagCodes.Contains(categoryTagCode))
+			{
+				tagCodes.Add(categoryTagCode);
+			}
+
+			return tagCodes.ToArray();
+		}
+
+		private static int ResolveStackCraftCategoryTagCode(string cardSurfaceAddress)
+		{
+			switch (cardSurfaceAddress)
+			{
+				case ResourceCardSurfaceAddress:
+					return XTag.Card_Category_Resource;
+				case CharacterCardSurfaceAddress:
+					return XTag.Card_Category_Character;
+				case ConsumableCardSurfaceAddress:
+					return XTag.Card_Category_Consumable;
+				case MaterialCardSurfaceAddress:
+					return XTag.Card_Category_Material;
+				case EquipmentCardSurfaceAddress:
+					return XTag.Card_Category_Equipment;
+				case StructureCardSurfaceAddress:
+				case CardBuyerSurfaceAddress:
+					return XTag.Card_Category_Structure;
+				case CurrencyCardSurfaceAddress:
+					return XTag.Card_Category_Currency;
+				case RecipeCardSurfaceAddress:
+					return XTag.Card_Category_Recipe;
+				case MobCardSurfaceAddress:
+				case AggressiveMobCardSurfaceAddress:
+					return XTag.Card_Category_Mob;
+				case AreaCardSurfaceAddress:
+					return XTag.Card_Category_Area;
+				case ValuableCardSurfaceAddress:
+					return XTag.Card_Category_Valuable;
+				case PackCardSurfaceAddress:
+					return 0;
+				default:
+					throw new MissingReferenceException(
+						$"未登记 StackCraft 卡牌表面类别，无法生成 GAS 类别标签：{cardSurfaceAddress}");
+			}
+		}
+
+		private static void WriteCardViewSizeFields(
+			SerializedObject serializedContent,
+			bool overrideViewSize,
+			Vector2 viewSize)
+		{
+			RequireProperty(serializedContent, "m_overrideViewSize").boolValue = overrideViewSize;
+			RequireProperty(serializedContent, "m_viewSize").vector2Value = viewSize;
+		}
+
+private static void WriteSoftSpriteReference(
 			SerializedObject serializedContent,
 			string propertyName,
 			string assetPath,
@@ -912,8 +1357,8 @@ namespace Gameplay.Tests.Support.Editor
                     cardArtAddress = GoblinCardArtAddress;
                     return;
                 case FoundationTestSceneHarness.TestBuyerCardContentId:
-                    cardArtPath = TreasureChestCardArtPath;
-                    cardArtAddress = TreasureChestCardArtAddress;
+					cardArtPath = StackCraftPlaceholderCardArtPath;
+					cardArtAddress = StackCraftPlaceholderCardArtAddress;
                     return;
                 case FoundationTestSceneHarness.TestChestContentId:
                     cardArtPath = WoodenChestCardArtPath;
@@ -1009,8 +1454,14 @@ namespace Gameplay.Tests.Support.Editor
 			}
 			if (content is CardPackDefinition)
 			{
-				cardSurfacePath = ValuableCardSurfacePath;
-				cardSurfaceAddress = ValuableCardSurfaceAddress;
+				cardSurfacePath = PackCardSurfacePath;
+				cardSurfaceAddress = PackCardSurfaceAddress;
+				return;
+			}
+			if (content is CardBuyerDefinition)
+			{
+				cardSurfacePath = CardBuyerSurfacePath;
+				cardSurfaceAddress = CardBuyerSurfaceAddress;
 				return;
 			}
 			if (content is PackVendorDefinition)
@@ -1079,19 +1530,22 @@ namespace Gameplay.Tests.Support.Editor
             SerializedObject serializedAction = WriteCommonContentFields(
                 action,
                 FoundationTestSceneHarness.TestActionContentId,
-                "Test Action",
+                "测试行动",
                 "仅用于验证行动作者源、参与条件、回合进度和权威随机结果经过 YooAsset 进入正式链路。");
             SerializedProperty slots = serializedAction.FindProperty("m_participationSlots");
             SerializedProperty turnCost = serializedAction.FindProperty("m_turnCost");
             SerializedProperty resultIntents = serializedAction.FindProperty("m_resultIntents");
             SerializedProperty resultBranches = serializedAction.FindProperty("m_resultBranches");
-            if (slots == null || turnCost == null || resultIntents == null || resultBranches == null)
+            SerializedProperty journalGroupName = serializedAction.FindProperty("m_journalGroupName");
+            if (slots == null || turnCost == null || resultIntents == null ||
+                resultBranches == null || journalGroupName == null)
             {
                 throw new MissingReferenceException(
-                    $"{nameof(ActionDefinition)} 的回合消耗、参与槽位、结果意图或随机分支字段已变更，测试行动生成器需要同步更新。");
+                    $"{nameof(ActionDefinition)} 的回合消耗、日志分组、参与槽位、结果意图或随机分支字段已变更，测试行动生成器需要同步更新。");
             }
 
             turnCost.intValue = 2;
+            journalGroupName.stringValue = "建造";
             slots.arraySize = 1;
             SerializedProperty slot = slots.GetArrayElementAtIndex(0);
             RequireRelative(slot, "m_displayName").stringValue = "参与者";
@@ -1149,13 +1603,16 @@ namespace Gameplay.Tests.Support.Editor
 			SerializedProperty turnCost = serializedAction.FindProperty("m_turnCost");
 			SerializedProperty resultIntents = serializedAction.FindProperty("m_resultIntents");
 			SerializedProperty resultBranches = serializedAction.FindProperty("m_resultBranches");
-			if (slots == null || turnCost == null || resultIntents == null || resultBranches == null)
+			SerializedProperty journalGroupName = serializedAction.FindProperty("m_journalGroupName");
+			if (slots == null || turnCost == null || resultIntents == null ||
+				resultBranches == null || journalGroupName == null)
 			{
 				throw new MissingReferenceException(
 					$"{nameof(ActionDefinition)} 的作者字段已变更，填槽测试行动生成器需要同步更新。");
 			}
 
 			turnCost.intValue = 1;
+			journalGroupName.stringValue = "杂项";
 			slots.arraySize = 1;
 			SerializedProperty slot = slots.GetArrayElementAtIndex(0);
 			RequireRelative(slot, "m_displayName").stringValue = "参与者";
@@ -1183,23 +1640,18 @@ namespace Gameplay.Tests.Support.Editor
 			EnsureTestCardAsset(
 				TestSellableCardPath,
 				FoundationTestSceneHarness.TestSellableCardContentId,
-				"Stone",
-				"A small stone.",
+				"石头",
+				"一块小石头。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestSellableCardPath, initialUses: 1, sellValue: 1, countsTowardLimit: true);
 			EnsureTestCardAsset(
 				TestCurrencyCardPath,
 				FoundationTestSceneHarness.TestCurrencyCardContentId,
-				"Coin",
-				"A shiny gold coin.",
+				"金币",
+				"一枚闪亮的金币。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestCurrencyCardPath, initialUses: 1, sellValue: 0, countsTowardLimit: false);
-			EnsureTestCardAsset(
-				TestBuyerCardPath,
-				FoundationTestSceneHarness.TestBuyerCardContentId,
-				"收购点",
-				"接收可售卡牌的固定交互节点。",
-				XTag.Faction_Player);
+			EnsureCardBuyerAsset();
 			WriteCardLimitAndTradeFields(TestBuyerCardPath, sellValue: 0, countsTowardLimit: false);
 			EnsureTestCardAsset(
 				TestEncounterCardPath,
@@ -1212,20 +1664,55 @@ namespace Gameplay.Tests.Support.Editor
 			EnsureTestDayCycleScenarioAsset();
 		}
 
+		private static void EnsureCardBuyerAsset()
+		{
+			CardDefinition existing = AssetDatabase.LoadAssetAtPath<CardDefinition>(TestBuyerCardPath);
+			if (existing != null && existing is not CardBuyerDefinition)
+			{
+				AssetDatabase.DeleteAsset(TestBuyerCardPath);
+				existing = null;
+			}
+
+			CardBuyerDefinition buyer = existing as CardBuyerDefinition;
+			if (buyer == null)
+			{
+				buyer = ScriptableObject.CreateInstance<CardBuyerDefinition>();
+				AssetDatabase.CreateAsset(buyer, TestBuyerCardPath);
+			}
+
+			SerializedObject serializedBuyer = WriteCardFields(
+				buyer,
+				FoundationTestSceneHarness.TestBuyerCardContentId,
+				"收购点",
+				"接收可售卡牌的固定交互节点。",
+				XTag.Faction_Player);
+			WriteCardViewSizeFields(
+				serializedBuyer,
+				overrideViewSize: true,
+				StackCraftTradeZoneViewSize);
+			RequireProperty(serializedBuyer, "m_currencyCardId")
+				.FindPropertyRelative("m_value").stringValue =
+					FoundationTestSceneHarness.TestCurrencyCardContentId;
+			RequireProperty(serializedBuyer, "m_currencySpawnOffset").vector2Value =
+				StackCraftTradeZoneSpawnOffset;
+			serializedBuyer.ApplyModifiedPropertiesWithoutUndo();
+			EditorUtility.SetDirty(buyer);
+		}
+
 		private static void EnsureCardPackTestAssets()
 		{
 			EnsureTestCardAsset(
 				TestCardPackFirstRewardPath,
 				FoundationTestSceneHarness.TestCardPackFirstRewardContentId,
-				"Berry Bush",
-				"Berries grow here.",
+				"浆果丛",
+				"这里生长着浆果。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestCardPackFirstRewardPath, initialUses: 5, sellValue: 3, countsTowardLimit: true);
 			EnsureTestCardAsset(
 				TestCardPackSecondRewardPath,
 				FoundationTestSceneHarness.TestCardPackSecondRewardContentId,
-				"Rock",
-				"A giant rock.",
+				"岩石",
+				"一块巨大的岩石。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestCardPackSecondRewardPath, initialUses: 3, sellValue: 0, countsTowardLimit: true);
 			EnsureBeginningPackBusinessAssets();
@@ -1245,9 +1732,14 @@ namespace Gameplay.Tests.Support.Editor
 			SerializedObject serializedPack = WriteCardFields(
 				pack,
 				FoundationTestSceneHarness.TestCardPackContentId,
-				"Starter",
-				"A Starter card pack.",
+				"初始卡包",
+				"一个初始卡包。",
 				XTag.Faction_Player);
+			WriteCardViewSizeFields(
+				serializedPack,
+				overrideViewSize: true,
+				StackCraftPackInstanceViewSize);
+			RequireProperty(serializedPack, "m_countsTowardCardLimit").boolValue = false;
 			SerializedProperty slots = RequireProperty(serializedPack, "m_slots");
 			slots.arraySize = 4;
 			WriteFixedCardPackSlot(
@@ -1275,8 +1767,8 @@ namespace Gameplay.Tests.Support.Editor
 			SerializedObject serializedAction = WriteCommonContentFields(
 				openAction,
 				FoundationTestSceneHarness.TestOpenCardPackActionContentId,
-				"Open Card Pack",
-				"Click a card pack multiple times to fully open it and claim all the cards inside."
+				"打开卡包",
+				"多次点击卡包，完全打开并取得里面的所有卡牌。"
 			);
 			RequireProperty(serializedAction, "m_turnCost").intValue = 0;
 			RequireProperty(serializedAction, "m_canStartFromClick").boolValue = true;
@@ -1291,6 +1783,8 @@ namespace Gameplay.Tests.Support.Editor
 				RequireRelative(actionSlots.GetArrayElementAtIndex(0), "m_allowedContentIds"),
 				FoundationTestSceneHarness.TestCardPackContentId,
 				FoundationTestSceneHarness.TestBeginningPackContentId);
+			RequireProperty(serializedAction, "m_conditions").arraySize = 0;
+
 			SerializedProperty intents = RequireProperty(serializedAction, "m_resultIntents");
 			intents.arraySize = 1;
 			SerializedProperty openIntent = intents.GetArrayElementAtIndex(0);
@@ -1319,29 +1813,29 @@ namespace Gameplay.Tests.Support.Editor
 			EnsureTestCardAsset(
 				TestBeginningEggPath,
 				FoundationTestSceneHarness.TestBeginningPackEggContentId,
-				"Egg",
-				"Cook it first before eating.",
+				"鸡蛋",
+				"先烹饪再食用。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestBeginningEggPath, initialUses: 1, sellValue: 1, countsTowardLimit: true);
 			EnsureTestCardAsset(
 				TestBeginningSoilPath,
 				FoundationTestSceneHarness.TestBeginningPackSoilContentId,
-				"Soil",
-				"A vital habitat for plants.",
+				"土壤",
+				"植物生长的土壤。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestBeginningSoilPath, initialUses: 1, sellValue: 3, countsTowardLimit: true);
 			EnsureTestCardAsset(
 				TestBeginningTreePath,
 				FoundationTestSceneHarness.TestBeginningPackTreeContentId,
-				"Tree",
-				"A tall tree.",
+				"树",
+				"一棵高大的树。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestBeginningTreePath, initialUses: 3, sellValue: 0, countsTowardLimit: true);
 			EnsureBeginningPackMobAsset(
 				TestBeginningChickenPath,
 				FoundationTestSceneHarness.TestBeginningPackChickenContentId,
-				"Chicken",
-				"A healthy chicken.",
+				"鸡",
+				"健康的鸡。",
 				XTag.Faction,
 				abilitySystemPresetId: NeutralCreatureAscPresetId,
 				hasAutomaticHostility: false,
@@ -1361,14 +1855,14 @@ namespace Gameplay.Tests.Support.Editor
 				intervalSeconds: 30f);
 			WriteAutomaticMovementFields(
 				TestBeginningChickenPath,
-				intervalSeconds: 5f,
-				radius: 1f,
-				maxAttempts: 5);
+				intervalSeconds: StackCraftAutomaticMovementIntervalSeconds,
+				radius: StackCraftAutomaticMovementRadius,
+				maxAttempts: StackCraftAutomaticMovementMaxAttempts);
 			EnsureBeginningPackMobAsset(
 				TestBeginningSlimePath,
 				FoundationTestSceneHarness.TestBeginningPackSlimeContentId,
-				"Slime",
-				"A slimy slime.",
+				"史莱姆",
+				"湿滑的史莱姆。",
 				XTag.Faction_Enemy,
 				abilitySystemPresetId: HostileCreatureAscPresetId,
 				hasAutomaticHostility: true,
@@ -1384,9 +1878,9 @@ namespace Gameplay.Tests.Support.Editor
 			WriteCardInstanceFields(TestBeginningSlimePath, initialUses: 1, sellValue: 1, countsTowardLimit: true);
 			WriteAutomaticMovementFields(
 				TestBeginningSlimePath,
-				intervalSeconds: 5f,
-				radius: 1f,
-				maxAttempts: 5);
+				intervalSeconds: StackCraftAutomaticMovementIntervalSeconds,
+				radius: StackCraftAutomaticMovementRadius,
+				maxAttempts: StackCraftAutomaticMovementMaxAttempts);
 			WriteAutomaticHostileBehaviorFields(
 				TestBeginningSlimePath,
 				aggroRadius: 5f,
@@ -1394,62 +1888,67 @@ namespace Gameplay.Tests.Support.Editor
 			EnsureTestCardAsset(
 				TestBeginningGoldenKeyPath,
 				FoundationTestSceneHarness.TestBeginningPackGoldenKeyContentId,
-				"Golden Key",
-				"A key of pure gold. Whatever it opens must be precious.",
+				"金钥匙",
+				"纯金制成的钥匙。能打开的东西应该很珍贵。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestBeginningGoldenKeyPath, initialUses: 1, sellValue: 3, countsTowardLimit: true);
 
 			EnsureRecipeActionAsset(
 				TestRecipeGrowingBerryActionPath,
 				FoundationTestSceneHarness.TestRecipeGrowingBerryActionContentId,
-				"Growing Berry",
-				"StackCraft recipe reference: Soil x1, Berry x1. Crafting duration 120 seconds.");
+				"种植浆果",
+				"StackCraft 配方参考：土壤 ×1，浆果 ×1。制作耗时 120 秒。",
+				"畜牧");
 			EnsureRecipeActionAsset(
 				TestRecipeBuildingHouseActionPath,
 				FoundationTestSceneHarness.TestRecipeBuildingHouseActionContentId,
-				"Building House",
-				"StackCraft recipe reference: Stone x1, Wood x2, Villager x1. Crafting duration 30 seconds.");
+				"建造房屋",
+				"StackCraft 配方参考：石头 ×1，木头 ×2，村民 ×1。制作耗时 30 秒。",
+				"建造");
 			EnsureRecipeActionAsset(
 				TestRecipeMakingLoveActionPath,
 				FoundationTestSceneHarness.TestRecipeMakingLoveActionContentId,
-				"Making Love",
-				"StackCraft recipe reference: House x1, Villager x2. Crafting duration 20 seconds.");
+				"孕育",
+				"StackCraft 配方参考：房屋 ×1，村民 ×2。制作耗时 20 秒。",
+				"畜牧");
 			EnsureRecipeActionAsset(
 				TestRecipeMakingTimberActionPath,
 				FoundationTestSceneHarness.TestRecipeMakingTimberActionContentId,
-				"Making Timber",
-				"StackCraft recipe reference: Wood x1, Villager x1. Crafting duration 10 seconds.");
+				"制作木材",
+				"StackCraft 配方参考：木头 ×1，村民 ×1。制作耗时 10 秒。",
+				"加工");
 			EnsureRecipeActionAsset(
 				TestRecipeCraftingStickActionPath,
 				FoundationTestSceneHarness.TestRecipeCraftingStickActionContentId,
-				"Crafting Stick",
-				"StackCraft recipe reference: Timber x1, Villager x1. Crafting duration 10 seconds.");
+				"制作木棍",
+				"StackCraft 配方参考：木材 ×1，村民 ×1。制作耗时 10 秒。",
+				"加工");
 
 			EnsureRecipeCardAsset(
 				TestRecipeGrowingBerryCardPath,
 				FoundationTestSceneHarness.TestRecipeGrowingBerryCardContentId,
-				"Recipe: Berry Bush",
-				"Soil x1, Berry x1.");
+				"配方：浆果丛",
+				"土壤 ×1，浆果 ×1。");
 			EnsureRecipeCardAsset(
 				TestRecipeBuildingHouseCardPath,
 				FoundationTestSceneHarness.TestRecipeBuildingHouseCardContentId,
-				"Recipe: House",
-				"Stone x1, Wood x2, Villager x1.");
+				"配方：房屋",
+				"石头 ×1，木头 ×2，村民 ×1。");
 			EnsureRecipeCardAsset(
 				TestRecipeMakingLoveCardPath,
 				FoundationTestSceneHarness.TestRecipeMakingLoveCardContentId,
-				"Recipe: Baby",
-				"House x1, Villager x2.");
+				"配方：婴儿",
+				"房屋 ×1，村民 ×2。");
 			EnsureRecipeCardAsset(
 				TestRecipeMakingTimberCardPath,
 				FoundationTestSceneHarness.TestRecipeMakingTimberCardContentId,
-				"Recipe: Timber",
-				"Wood x1, Villager x1.");
+				"配方：木材",
+				"木头 ×1，村民 ×1。");
 			EnsureRecipeCardAsset(
 				TestRecipeCraftingStickCardPath,
 				FoundationTestSceneHarness.TestRecipeCraftingStickCardContentId,
-				"Recipe: Wooden Stick",
-				"Timber x1, Villager x1.");
+				"配方：木棍",
+				"木材 ×1，村民 ×1。");
 
 			EnsureBeginningPackAsset();
 		}
@@ -1548,7 +2047,8 @@ namespace Gameplay.Tests.Support.Editor
 			string assetPath,
 			string contentId,
 			string displayName,
-			string description)
+			string description,
+			string journalGroupName)
 		{
 			ActionDefinition action = AssetDatabase.LoadAssetAtPath<ActionDefinition>(assetPath);
 			if (action == null)
@@ -1557,6 +2057,7 @@ namespace Gameplay.Tests.Support.Editor
 				AssetDatabase.CreateAsset(action, assetPath);
 			}
 			SerializedObject serializedAction = WriteCommonContentFields(action, contentId, displayName, description);
+			RequireProperty(serializedAction, "m_journalGroupName").stringValue = journalGroupName;
 			RequireProperty(serializedAction, "m_turnCost").intValue = 1;
 			RequireProperty(serializedAction, "m_canStartFromClick").boolValue = false;
 			RequireProperty(serializedAction, "m_participationSlots").arraySize = 0;
@@ -1595,9 +2096,14 @@ namespace Gameplay.Tests.Support.Editor
 			SerializedObject serializedPack = WriteCardFields(
 				pack,
 				FoundationTestSceneHarness.TestBeginningPackContentId,
-				"Beginning",
-				"A Beginning card pack.",
+				"开端卡包",
+				"一个开端卡包。",
 				XTag.Faction_Player);
+			WriteCardViewSizeFields(
+				serializedPack,
+				overrideViewSize: true,
+				StackCraftPackInstanceViewSize);
+			RequireProperty(serializedPack, "m_countsTowardCardLimit").boolValue = false;
 			SerializedProperty slots = RequireProperty(serializedPack, "m_slots");
 			slots.arraySize = 3;
 			for (int slotIndex = 0; slotIndex < slots.arraySize; slotIndex++)
@@ -1685,9 +2191,16 @@ namespace Gameplay.Tests.Support.Editor
 				displayName,
 				description,
 				XTag.Faction_Player);
+			WriteCardViewSizeFields(
+				serializedVendor,
+				overrideViewSize: true,
+				StackCraftTradeZoneViewSize);
 			RequireProperty(serializedVendor, "m_offeredPackId").FindPropertyRelative("m_value").stringValue = offeredPackId;
 			RequireProperty(serializedVendor, "m_price").intValue = price;
 			RequireProperty(serializedVendor, "m_minimumCompletedQuests").intValue = minimumCompletedQuests;
+			RequireProperty(serializedVendor, "m_countsTowardCardLimit").boolValue = false;
+			RequireProperty(serializedVendor, "m_packSpawnOffset").vector2Value =
+				StackCraftTradeZoneSpawnOffset;
 			serializedVendor.ApplyModifiedPropertiesWithoutUndo();
 			EditorUtility.SetDirty(vendor);
 		}
@@ -1709,12 +2222,19 @@ namespace Gameplay.Tests.Support.Editor
 				vendor,
 				FoundationTestSceneHarness.TestPackVendorContentId,
 				"卡包商贩",
-				"投入 Coin 购买 Starter 包。",
+				"投入金币购买初始卡包。",
 				XTag.Faction_Player);
+			WriteCardViewSizeFields(
+				serializedVendor,
+				overrideViewSize: true,
+				StackCraftTradeZoneViewSize);
 			RequireProperty(serializedVendor, "m_offeredPackId").FindPropertyRelative("m_value").stringValue =
 				FoundationTestSceneHarness.TestCardPackContentId;
 			RequireProperty(serializedVendor, "m_price").intValue = 2;
 			RequireProperty(serializedVendor, "m_minimumCompletedQuests").intValue = 0;
+			RequireProperty(serializedVendor, "m_countsTowardCardLimit").boolValue = false;
+			RequireProperty(serializedVendor, "m_packSpawnOffset").vector2Value =
+				StackCraftTradeZoneSpawnOffset;
 			serializedVendor.ApplyModifiedPropertiesWithoutUndo();
 			EditorUtility.SetDirty(vendor);
 
@@ -1722,7 +2242,7 @@ namespace Gameplay.Tests.Support.Editor
 				TestBeginningPackVendorPath,
 				FoundationTestSceneHarness.TestBeginningPackVendorContentId,
 				"开端卡包商贩",
-				"投入 Coin 购买 Beginning 包。",
+				"投入金币购买开端卡包。",
 				FoundationTestSceneHarness.TestBeginningPackContentId,
 				price: 3,
 				minimumCompletedQuests: 3);
@@ -1770,6 +2290,7 @@ namespace Gameplay.Tests.Support.Editor
 			SerializedProperty paymentCondition = conditions.GetArrayElementAtIndex(1);
 			paymentCondition.managedReferenceValue = new CardPaymentSourceAvailableCondition();
 			RequireRelative(paymentCondition, "m_paymentSlotKey").stringValue = "payment";
+
 			SerializedProperty intents = RequireProperty(serializedAction, "m_resultIntents");
 			intents.arraySize = 1;
 			SerializedProperty purchaseIntent = intents.GetArrayElementAtIndex(0);
@@ -1800,7 +2321,7 @@ namespace Gameplay.Tests.Support.Editor
 				chest,
 				FoundationTestSceneHarness.TestChestContentId,
 				"测试钱箱",
-				"拖入 Coin 可存储，单击可取出，并可直接作为商贩付款来源。",
+				"拖入金币可存储，单击可取出，并可直接作为商贩付款来源。",
 				XTag.Faction_Player);
 			RequireProperty(serializedChest, "m_capacity").intValue = 2;
 			RequireProperty(serializedChest, "m_currencyCardId")
@@ -2049,17 +2570,22 @@ namespace Gameplay.Tests.Support.Editor
 			SerializedProperty slots = RequireProperty(serializedAction, "m_participationSlots");
 			slots.arraySize = 2;
 			SerializedProperty soldSlot = slots.GetArrayElementAtIndex(0);
-			WriteExactContentSlot(
+			WriteAnyContentSlot(
 				soldSlot,
 				"sold",
-				"出售卡牌",
-				FoundationTestSceneHarness.TestSellableCardContentId);
+				"出售卡牌");
 			RequireRelative(soldSlot, "m_maximumParticipants").intValue = 0;
 			WriteExactContentSlot(
 				slots.GetArrayElementAtIndex(1),
 				"buyer",
 				"收购点",
 				FoundationTestSceneHarness.TestBuyerCardContentId);
+
+			SerializedProperty conditions = RequireProperty(serializedAction, "m_conditions");
+			conditions.arraySize = 1;
+			SerializedProperty saleCondition = conditions.GetArrayElementAtIndex(0);
+			saleCondition.managedReferenceValue = new CardSaleSourceAvailableCondition();
+			RequireRelative(saleCondition, "m_soldSlotKey").stringValue = "sold";
 
 			SerializedProperty intents = RequireProperty(serializedAction, "m_resultIntents");
 			intents.arraySize = 1;
@@ -2074,6 +2600,24 @@ namespace Gameplay.Tests.Support.Editor
 			serializedAction.ApplyModifiedPropertiesWithoutUndo();
 			action.EnsureLocalAuthoringKeys();
 			EditorUtility.SetDirty(action);
+		}
+
+		private static void WriteAnyContentSlot(
+			SerializedProperty slot,
+			string key,
+			string displayName)
+		{
+			RequireRelative(slot, "m_key").stringValue = key;
+			RequireRelative(slot, "m_displayName").stringValue = displayName;
+			RequireRelative(slot, "m_minimumParticipants").intValue = 1;
+			RequireRelative(slot, "m_maximumParticipants").intValue = 1;
+			WriteContentIdArray(RequireRelative(slot, "m_allowedContentIds"));
+			WriteIntArray(RequireRelative(slot, "m_requiredAllContentTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredAnyContentTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredNoneContentTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredAllAbilitySystemTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredAnyAbilitySystemTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredNoneAbilitySystemTagCodes"));
 		}
 
 		private static void WriteExactContentSlot(
@@ -2189,6 +2733,7 @@ namespace Gameplay.Tests.Support.Editor
                 FoundationTestSceneHarness.TestQuestContentId,
                 "地基测试任务",
                 "完成一次地基测试行动后完成，用于验证剧本任务子项消费已结算行动事实。");
+            RequireProperty(serializedQuest, "m_journalGroupName").stringValue = "基础";
             WriteContentIdArray(
                 serializedQuest.FindProperty("m_prerequisiteQuestIds"));
             SerializedProperty tasks = serializedQuest.FindProperty("m_tasks");
@@ -2212,6 +2757,38 @@ namespace Gameplay.Tests.Support.Editor
             EditorUtility.SetDirty(quest);
         }
 
+		private static void EnsureStackCraftParityQuestAsset()
+		{
+			QuestDefinition quest =
+				AssetDatabase.LoadAssetAtPath<QuestDefinition>(TestStackCraftParityQuestPath);
+			if (quest == null)
+			{
+				quest = ScriptableObject.CreateInstance<QuestDefinition>();
+				AssetDatabase.CreateAsset(quest, TestStackCraftParityQuestPath);
+			}
+
+			SerializedObject serializedQuest = WriteCommonContentFields(
+				quest,
+				FoundationTestSceneHarness.TestStackCraftParityQuestContentId,
+				"打开初始卡包",
+				"多次点击初始卡包，完全打开并取得里面的所有卡牌。");
+			RequireProperty(serializedQuest, "m_journalGroupName").stringValue = "入门";
+			WriteContentIdArray(serializedQuest.FindProperty("m_prerequisiteQuestIds"));
+			SerializedProperty tasks = RequireProperty(serializedQuest, "m_tasks");
+			tasks.arraySize = 1;
+			SerializedProperty task = tasks.GetArrayElementAtIndex(0);
+			task.managedReferenceValue = new ActionCompletionQuestTaskDefinition();
+			serializedQuest.ApplyModifiedPropertiesWithoutUndo();
+			serializedQuest.Update();
+			task = serializedQuest.FindProperty("m_tasks").GetArrayElementAtIndex(0);
+			RequireRelative(task, "m_actionId")
+				.FindPropertyRelative("m_value").stringValue =
+					FoundationTestSceneHarness.TestOpenCardPackActionContentId;
+			RequireRelative(task, "m_requiredCompletionCount").intValue = 1;
+			serializedQuest.ApplyModifiedPropertiesWithoutUndo();
+			EditorUtility.SetDirty(quest);
+		}
+
         private static void EnsureTestScenarioAssets()
         {
 			SceneAsset foundationScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
@@ -2233,14 +2810,31 @@ namespace Gameplay.Tests.Support.Editor
 				"地基战斗测试地区",
 				"阶段 B 组合验收中承接旅行角色与牌桌战斗的第二地区。",
 				string.Empty);
+			EnsureTestRegionAsset(
+				TestStackCraftParityRegionPath,
+				FoundationTestSceneHarness.TestStackCraftParityRegionContentId,
+				"地基模板同态测试地区",
+				"只用于验证模板开局初始卡包和开包玩家链的地区。",
+				StackCraftParitySceneName);
+			EnsureStackCraftParityQuestAsset();
             EnsureTestScenarioAsset(
                 TestScenarioPath,
                 FoundationTestSceneHarness.TestScenarioContentId,
                 "地基测试剧本",
                 "仅用于验证活动剧本统一拥有任务集合和世界回合生命周期。",
 				FoundationTestSceneHarness.TestRegionContentId,
+				FoundationTestSceneHarness.TestQuestContentId,
 				FoundationTestSceneHarness.TestRegionContentId,
 				FoundationTestSceneHarness.TestBattleRegionContentId);
+			EnsureTestScenarioAsset(
+				TestStackCraftParityScenarioPath,
+				FoundationTestSceneHarness.TestStackCraftParityScenarioContentId,
+				"地基模板同态测试剧本",
+				"只用于验证新 Gameplay 框架复现模板默认初始卡包开局。",
+				FoundationTestSceneHarness.TestStackCraftParityRegionContentId,
+				FoundationTestSceneHarness.TestStackCraftParityQuestContentId,
+				FoundationTestSceneHarness.TestStackCraftParityRegionContentId);
+			WriteStackCraftParityScenarioStats(TestStackCraftParityScenarioPath);
 
             SceneAsset initialScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MapScenePath);
             if (initialScene == null)
@@ -2275,6 +2869,7 @@ namespace Gameplay.Tests.Support.Editor
                 "地基场景测试剧本",
                 "仅用于验证剧本导演通过正式场景系统组合和释放剧本场景。",
 				FoundationTestSceneHarness.TestSceneRegionContentId,
+				FoundationTestSceneHarness.TestQuestContentId,
 				FoundationTestSceneHarness.TestSceneRegionContentId,
 				FoundationTestSceneHarness.TestSecondSceneRegionContentId);
         }
@@ -2314,9 +2909,10 @@ namespace Gameplay.Tests.Support.Editor
         private static void EnsureTestScenarioAsset(
             string assetPath,
             string contentId,
-            string displayName,
+			string displayName,
 			string description,
 			string initialRegionId,
+			string questId,
 			params string[] regionIds)
         {
             ScenarioDefinition scenario =
@@ -2349,12 +2945,32 @@ namespace Gameplay.Tests.Support.Editor
 			secondsPerTurn.floatValue = 0.35f;
             WriteContentIdArray(
                 serializedScenario.FindProperty("m_questIds"),
-                FoundationTestSceneHarness.TestQuestContentId);
+                questId);
             WriteTestBattleFormation(
                 serializedScenario.FindProperty("m_battleFormationRules"));
             serializedScenario.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(scenario);
         }
+
+		private static void WriteStackCraftParityScenarioStats(string assetPath)
+		{
+			ScenarioDefinition scenario =
+				AssetDatabase.LoadAssetAtPath<ScenarioDefinition>(assetPath);
+			if (scenario == null)
+			{
+				throw new MissingReferenceException($"StackCraft 同态测试剧本不存在，无法写入默认 HUD 统计：{assetPath}");
+			}
+
+			SerializedObject serializedScenario = new(scenario);
+			RequireProperty(serializedScenario, "m_turnsPerDay").intValue = 1;
+			RequireProperty(serializedScenario, "m_secondsPerTurn").floatValue =
+				StackCraftReferenceDayDurationSeconds;
+			SerializedProperty dayCycle = RequireProperty(serializedScenario, "m_dayCycleRules");
+			RequireRelative(dayCycle, "m_hungerPerCharacter").intValue = StackCraftHungerPerCharacter;
+			RequireRelative(dayCycle, "m_baseCardLimit").intValue = StackCraftBaseCardLimit;
+			serializedScenario.ApplyModifiedPropertiesWithoutUndo();
+			EditorUtility.SetDirty(scenario);
+		}
 
         private static void WriteTestTabletopPlacement(SerializedProperty placement)
         {
@@ -2369,17 +2985,28 @@ namespace Gameplay.Tests.Support.Editor
             SerializedProperty cardSize = placement.FindPropertyRelative("m_cardSize");
             SerializedProperty cardMargin = placement.FindPropertyRelative("m_cardMargin");
             SerializedProperty stackStep = placement.FindPropertyRelative("m_stackStep");
+            SerializedProperty overlapResolveMaxIterations =
+                placement.FindPropertyRelative("m_overlapResolveMaxIterations");
+            SerializedProperty spawnAttachRadius =
+                placement.FindPropertyRelative("m_spawnAttachRadius");
+            SerializedProperty cardLimitBonusExpansionPerPoint =
+                placement.FindPropertyRelative("m_cardLimitBonusExpansionPerPoint");
             if (bounds == null || restrictedAreas == null || cardSize == null || cardMargin == null ||
-                stackStep == null)
+                stackStep == null || overlapResolveMaxIterations == null || spawnAttachRadius == null ||
+                cardLimitBonusExpansionPerPoint == null)
             {
                 throw new MissingReferenceException("牌桌放置作者字段已变更，测试剧本生成器需要同步更新。");
             }
 
-            bounds.rectValue = new Rect(-5f, -3f, 10f, 6f);
-            restrictedAreas.arraySize = 0;
-            cardSize.vector2Value = new Vector2(0.8f, 1f);
-            cardMargin.vector2Value = new Vector2(0.1f, 0.1f);
-            stackStep.vector2Value = new Vector2(0f, -0.18f);
+            bounds.rectValue = StackCraftBoardPlacementBounds;
+            restrictedAreas.arraySize = 1;
+            restrictedAreas.GetArrayElementAtIndex(0).rectValue = StackCraftBoardHeaderRestrictedArea;
+            cardSize.vector2Value = StackCraftBoardCardSize;
+            cardMargin.vector2Value = StackCraftBoardCardMargin;
+            stackStep.vector2Value = StackCraftBoardStackStep;
+            overlapResolveMaxIterations.intValue = StackCraftBoardOverlapResolveMaxIterations;
+            spawnAttachRadius.floatValue = StackCraftBoardSpawnAttachRadius;
+            cardLimitBonusExpansionPerPoint.vector2Value = StackCraftBoardCardLimitBonusExpansionPerPoint;
         }
 
         private static void WriteTestBattleFormation(SerializedProperty formationRules)
@@ -2480,6 +3107,8 @@ namespace Gameplay.Tests.Support.Editor
         private static TabletopViewSettings EnsureTabletopTestAssets()
         {
             EnsureFolder(TabletopTestFolder);
+			EnsureFolder(TabletopPrefabFolder);
+			EnsureFolder(GameplayUiPrefabFolder);
             Sprite cardSprite = LoadRequiredSprite(TabletopCardArtPath, "项目卡牌占位图");
 			Sprite hitNormalSprite = LoadRequiredSprite(HitNormalSpritePath, "项目普通命中图标");
 			Sprite hitMissSprite = LoadRequiredSprite(HitMissSpritePath, "项目未命中图标");
@@ -2494,7 +3123,7 @@ namespace Gameplay.Tests.Support.Editor
 				"项目魔法投射物图片");
 
             EnsureTabletopCardViewPrefab(cardSprite);
-            EnsureTabletopActionProgressViewPrefab(cardSprite);
+            EnsureTabletopActionProgressViewPrefab();
 			EnsureTabletopBattleAreaViewPrefab(cardSprite);
 			EnsureTabletopProjectileViewPrefab(arrowProjectileSprite, magicProjectileSprite);
 			EnsureTabletopHitResultViewPrefab(
@@ -2623,6 +3252,8 @@ namespace Gameplay.Tests.Support.Editor
             SerializedProperty cardSmokeSortingOrder = serializedSettings.FindProperty("m_cardSmokeSortingOrder");
 			SerializedProperty hitResultSortingOrder = serializedSettings.FindProperty("m_hitResultSortingOrder");
             SerializedProperty dragFollowSharpness = serializedSettings.FindProperty("m_dragFollowSharpness");
+            SerializedProperty clickThreshold = serializedSettings.FindProperty("m_clickThreshold");
+            SerializedProperty dragHeight = serializedSettings.FindProperty("m_dragHeight");
             SerializedProperty moveDurationSeconds = serializedSettings.FindProperty("m_moveDurationSeconds");
             if (prefabAddress == null || actionProgressPrefabAddress == null ||
 				battleAreaPrefabAddress == null ||
@@ -2635,6 +3266,8 @@ namespace Gameplay.Tests.Support.Editor
 				cardSmokeSortingOrder == null ||
 				hitResultSortingOrder == null ||
                 dragFollowSharpness == null ||
+                clickThreshold == null ||
+                dragHeight == null ||
                 moveDurationSeconds == null)
             {
                 throw new MissingReferenceException(
@@ -2755,15 +3388,40 @@ namespace Gameplay.Tests.Support.Editor
 			cardSmokeSortingOrder.intValue = 150;
 			hitResultSortingOrder.intValue = 160;
             dragFollowSharpness.floatValue = 100f;
+            clickThreshold.floatValue = 0.02f;
+            dragHeight.floatValue = 0.1f;
             moveDurationSeconds.floatValue = 0.1f;
             serializedSettings.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             AssetDatabase.ForceReserializeAssets(new[] { TabletopViewSettingsPath });
-            return AssetDatabase.LoadAssetAtPath<TabletopViewSettings>(TabletopViewSettingsPath) ??
-                throw new MissingReferenceException(
-                    $"无法从 AssetDatabase 重新载入牌桌测试视图设置：{TabletopViewSettingsPath}");
+            return LoadPersistentTabletopViewSettings();
         }
+
+		private static TabletopViewSettings LoadPersistentTabletopViewSettings()
+		{
+			AssetDatabase.ImportAsset(TabletopViewSettingsPath, ImportAssetOptions.ForceSynchronousImport);
+			TabletopViewSettings settings =
+				AssetDatabase.LoadMainAssetAtPath(TabletopViewSettingsPath) as TabletopViewSettings ??
+				AssetDatabase.LoadAssetAtPath<TabletopViewSettings>(TabletopViewSettingsPath);
+			if (settings == null)
+			{
+				throw new MissingReferenceException(
+					$"无法从 AssetDatabase 重新载入牌桌测试视图设置：{TabletopViewSettingsPath}");
+			}
+
+			if (!EditorUtility.IsPersistent(settings) ||
+				!string.Equals(
+					AssetDatabase.GetAssetPath(settings),
+					TabletopViewSettingsPath,
+					StringComparison.Ordinal))
+			{
+				throw new MissingReferenceException(
+					$"牌桌测试视图设置没有从正式作者资源载入：{TabletopViewSettingsPath}");
+			}
+
+			return settings;
+		}
 
 		private static Sprite LoadRequiredSprite(string assetPath, string description)
 		{
@@ -2806,6 +3464,102 @@ namespace Gameplay.Tests.Support.Editor
 			}
 
 			return material;
+		}
+
+		private static void CreateStackCraftBoardSurface(Transform parent)
+		{
+			CreateStackCraftBoardSurface(
+				parent,
+				BoardBodyMaterialPath,
+				BoardHeaderMaterialPath,
+				"StackCraft Board01 主体材质自有副本",
+				"StackCraft Board01 页眉材质自有副本");
+		}
+
+		private static void CreateStackCraftBoardSurface(
+			Transform parent,
+			string bodyMaterialPath,
+			string headerMaterialPath,
+			string bodyMaterialDescription,
+			string headerMaterialDescription)
+		{
+			Mesh boardMesh = LoadRequiredMesh(BoardMeshPath, "StackCraft Board.fbx 自有副本");
+			Material bodyMaterial = LoadRequiredMaterial(
+				bodyMaterialPath,
+				bodyMaterialDescription);
+			Material headerMaterial = LoadRequiredMaterial(
+				headerMaterialPath,
+				headerMaterialDescription);
+
+			GameObject boardObject = new("牌桌底板");
+			boardObject.transform.SetParent(parent, false);
+			// 新框架中 Board 规则边界由牌桌/地区作者源承载；这里的 Board mesh 只做视觉底板，必须低于 Y=0 的卡牌交互平面。
+			boardObject.transform.localPosition = new Vector3(0f, StackCraftBoardSurfaceHeight, 0f);
+			boardObject.transform.localRotation = Quaternion.identity;
+			boardObject.transform.localScale = Vector3.one;
+
+			SkinnedMeshRenderer renderer = boardObject.AddComponent<SkinnedMeshRenderer>();
+			renderer.sharedMesh = boardMesh;
+			renderer.sharedMaterials = new[] { bodyMaterial, headerMaterial };
+			renderer.shadowCastingMode = ShadowCastingMode.On;
+			renderer.receiveShadows = true;
+			renderer.updateWhenOffscreen = true;
+			renderer.localBounds = new Bounds(Vector3.zero, StackCraftBoardLocalBoundsSize);
+		}
+
+		private static void CreateStackCraftBackgroundSurface(Transform parent)
+		{
+			CreateStackCraftBackgroundSurface(
+				parent,
+				GrassBackgroundMaterialPath,
+				"StackCraft Main 草地背景材质自有副本");
+		}
+
+		private static void CreateStackCraftBackgroundSurface(
+			Transform parent,
+			string materialPath,
+			string materialDescription)
+		{
+			Material backgroundMaterial = LoadRequiredMaterial(
+				materialPath,
+				materialDescription);
+
+			GameObject backgroundObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+			backgroundObject.name = "桌面背景";
+			backgroundObject.transform.SetParent(parent, false);
+			backgroundObject.transform.localPosition = new Vector3(0f, -10f, 0f);
+			backgroundObject.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+			backgroundObject.transform.localScale = new Vector3(10f, 1f, 10f);
+			ApplyStackCraftBackgroundTransform(backgroundObject.transform);
+
+			Collider collider = backgroundObject.GetComponent<Collider>();
+			if (collider != null)
+			{
+				Object.DestroyImmediate(collider);
+			}
+
+			MeshRenderer renderer = backgroundObject.GetComponent<MeshRenderer>();
+			renderer.sharedMaterial = backgroundMaterial;
+			renderer.shadowCastingMode = ShadowCastingMode.Off;
+			renderer.receiveShadows = false;
+			renderer.lightProbeUsage = LightProbeUsage.Off;
+			renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+		}
+
+		private static void ApplyStackCraftBackgroundTransform(Transform transform)
+		{
+			transform.localRotation = new Quaternion(0f, 1f, 0f, 0f);
+
+			// 背景是 StackCraft 场景级对账对象，四元数和欧拉提示都要按原 YAML 精确落盘。
+			SerializedObject serializedTransform = new(transform);
+			SerializedProperty localRotation = RequireProperty(serializedTransform, "m_LocalRotation");
+			RequireRelative(localRotation, "x").floatValue = 0f;
+			RequireRelative(localRotation, "y").floatValue = 1f;
+			RequireRelative(localRotation, "z").floatValue = 0f;
+			RequireRelative(localRotation, "w").floatValue = 0f;
+			RequireProperty(serializedTransform, "m_LocalEulerAnglesHint").vector3Value =
+				new Vector3(0f, 180f, 0f);
+			serializedTransform.ApplyModifiedPropertiesWithoutUndo();
 		}
 
 		private static AudioClipResolver EnsureAudioResolver(
@@ -2892,16 +3646,64 @@ namespace Gameplay.Tests.Support.Editor
 			return fontAsset;
 		}
 
+		private static TMP_FontAsset LoadStackCraftSurfaceFont()
+		{
+			TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(
+				StackCraftSurfaceFontPath);
+			if (fontAsset == null)
+			{
+				throw new MissingReferenceException(
+					$"缺少 StackCraft 卡牌 / 命中 UI 字体来源：{StackCraftSurfaceFontPath}");
+			}
+
+			return fontAsset;
+		}
+
+		private static void EnsureStackCraftSurfaceFontFallback(
+			TMP_FontAsset stackCraftFont,
+			TMP_FontAsset chineseFallbackFont)
+		{
+			if (stackCraftFont == null)
+			{
+				throw new MissingReferenceException("StackCraft 卡牌主字体为空，无法生成卡牌视图。");
+			}
+			if (chineseFallbackFont == null)
+			{
+				throw new MissingReferenceException("卡牌中文 fallback 字体为空，无法保证中文卡牌内容可显示。");
+			}
+
+			stackCraftFont.fallbackFontAssetTable ??= new List<TMP_FontAsset>();
+			if (stackCraftFont.fallbackFontAssetTable.Contains(chineseFallbackFont))
+			{
+				return;
+			}
+
+			stackCraftFont.fallbackFontAssetTable.Add(chineseFallbackFont);
+			EditorUtility.SetDirty(stackCraftFont);
+			AssetDatabase.SaveAssets();
+		}
+
         private static void EnsureTabletopCardViewPrefab(Sprite cardSprite)
         {
 			Mesh cardMesh = LoadRequiredMesh(CardMeshPath, "StackCraft 卡牌 FBX 自有副本");
+			Mesh packMesh = LoadRequiredMesh(PackMeshPath, "StackCraft Pack.fbx 自有副本");
+			Mesh equipmentPanelMesh = LoadRequiredMesh(
+				EquipmentPanelMeshPath,
+				"StackCraft EquipmentPanel.fbx 自有副本");
 			Material defaultSurfaceMaterial = LoadRequiredMaterial(
 				CharacterCardSurfacePath,
 				"StackCraft 角色卡面材质自有副本");
+			Material equipmentPanelMaterial = LoadRequiredMaterial(
+				EquipmentPanelMaterialPath,
+				"StackCraft EquipmentPanel 材质自有副本");
 			Material outlineMaterial = LoadRequiredMaterial(
 				CardOutlineShaderPath,
 				"StackCraft 卡牌轮廓材质自有副本");
-			TMP_FontAsset cardFont = EnsureTestPanelFont();
+			Material cardBuyerCurrencyIconMaterial = LoadRequiredMaterial(
+				CardBuyerCurrencyIconMaterialPath,
+				"StackCraft CardBuyer 货币图标材质自有副本");
+			TMP_FontAsset cardFont = LoadStackCraftSurfaceFont();
+			EnsureStackCraftSurfaceFontFallback(cardFont, EnsureTestPanelFont());
 			TMP_FontAsset previousDefaultFont = TMP_Settings.instance == null
 				? null
 				: TMP_Settings.defaultFontAsset;
@@ -2910,7 +3712,7 @@ namespace Gameplay.Tests.Support.Editor
 			{
 				TMP_Settings.defaultFontAsset = cardFont;
 			}
-                GameObject root = new("牌桌测试卡牌视图");
+                GameObject root = new("卡牌视图");
             try
             {
                 root.transform.localScale = Vector3.one;
@@ -2922,6 +3724,26 @@ namespace Gameplay.Tests.Support.Editor
                 BoxCollider collider = root.AddComponent<BoxCollider>();
                 collider.size = new Vector3(0.8f, 0f, 1.0000002f);
 
+				GameObject cardBuyerCurrencyIcon = GameObject.CreatePrimitive(PrimitiveType.Quad);
+				cardBuyerCurrencyIcon.name = "收购货币图标";
+				cardBuyerCurrencyIcon.transform.SetParent(root.transform, false);
+				SetStackCraftFaceTransform(
+					cardBuyerCurrencyIcon.transform,
+					new Vector3(0f, 0.001f, 0.15f));
+				cardBuyerCurrencyIcon.transform.localScale = new Vector3(0.7f, 0.7f, 1f);
+				if (cardBuyerCurrencyIcon.TryGetComponent(out Collider iconCollider))
+				{
+					Object.DestroyImmediate(iconCollider);
+				}
+				MeshRenderer cardBuyerCurrencyIconRenderer =
+					cardBuyerCurrencyIcon.GetComponent<MeshRenderer>();
+				cardBuyerCurrencyIconRenderer.sharedMaterial = cardBuyerCurrencyIconMaterial;
+				cardBuyerCurrencyIconRenderer.shadowCastingMode = ShadowCastingMode.Off;
+				cardBuyerCurrencyIconRenderer.receiveShadows = false;
+				cardBuyerCurrencyIconRenderer.lightProbeUsage = LightProbeUsage.Off;
+				cardBuyerCurrencyIconRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+				cardBuyerCurrencyIcon.SetActive(false);
+
 				GameObject titleTextObject = new("标题");
 				titleTextObject.transform.SetParent(root.transform, false);
 				SetStackCraftFaceTransform(titleTextObject.transform, new Vector3(0f, 0f, 0.4f));
@@ -2932,13 +3754,18 @@ namespace Gameplay.Tests.Support.Editor
 				titleLabel.fontSizeMax = 1.2f;
 				titleLabel.enableAutoSizing = true;
 				titleLabel.fontStyle = FontStyles.Normal;
-				titleLabel.alignment = TextAlignmentOptions.Midline;
 				titleLabel.color = Color.white;
 				titleLabel.text = string.Empty;
 				titleLabel.textWrappingMode = TextWrappingModes.NoWrap;
 				titleLabel.overflowMode = TextOverflowModes.Overflow;
 				titleLabel.rectTransform.sizeDelta = new Vector2(0.8f, 0.2f);
 				titleLabel.rectTransform.anchoredPosition = new Vector2(0f, 0.001f);
+				ApplyStackCraftTextParameters(
+					titleLabel,
+					fontSizeBase: 1f,
+					HorizontalAlignmentOptions.Left,
+					VerticalAlignmentOptions.Middle,
+					new Vector4(0.05f, 0.025f, 0.05f, 0.025f));
 
 				GameObject priceTextObject = new("价格");
 				priceTextObject.transform.SetParent(root.transform, false);
@@ -2950,13 +3777,18 @@ namespace Gameplay.Tests.Support.Editor
 				priceLabel.fontSizeMax = 1.5f;
 				priceLabel.enableAutoSizing = true;
 				priceLabel.fontStyle = FontStyles.Normal;
-				priceLabel.alignment = TextAlignmentOptions.Bottom;
 				priceLabel.color = Color.white;
 				priceLabel.text = string.Empty;
 				priceLabel.textWrappingMode = TextWrappingModes.NoWrap;
 				priceLabel.overflowMode = TextOverflowModes.Overflow;
 				priceLabel.rectTransform.sizeDelta = new Vector2(0.12f, 0.2f);
 				priceLabel.rectTransform.anchoredPosition = new Vector2(-0.25f, 0.001f);
+				ApplyStackCraftTextParameters(
+					priceLabel,
+					fontSizeBase: 1.5f,
+					HorizontalAlignmentOptions.Geometry,
+					VerticalAlignmentOptions.Geometry,
+					Vector4.zero);
 
 				GameObject nutritionTextObject = new("营养");
 				nutritionTextObject.transform.SetParent(root.transform, false);
@@ -2968,32 +3800,23 @@ namespace Gameplay.Tests.Support.Editor
 				nutritionLabel.fontSizeMax = 1.5f;
 				nutritionLabel.enableAutoSizing = true;
 				nutritionLabel.fontStyle = FontStyles.Normal;
-				nutritionLabel.alignment = TextAlignmentOptions.Bottom;
 				nutritionLabel.color = Color.white;
 				nutritionLabel.text = string.Empty;
 				nutritionLabel.textWrappingMode = TextWrappingModes.NoWrap;
 				nutritionLabel.overflowMode = TextOverflowModes.Overflow;
 				nutritionLabel.rectTransform.sizeDelta = new Vector2(0.14f, 0.2f);
 				nutritionLabel.rectTransform.anchoredPosition = new Vector2(0.258f, 0.001f);
-
-				GameObject usesTextObject = new("使用次数");
-				usesTextObject.transform.SetParent(root.transform, false);
-				SetStackCraftFaceTransform(usesTextObject.transform, new Vector3(0f, 0f, -0.43f));
-				TextMeshPro usesLabel = usesTextObject.AddComponent<TextMeshPro>();
-				usesLabel.font = cardFont;
-				usesLabel.fontSize = 0.30f;
-				usesLabel.fontStyle = FontStyles.Bold;
-				usesLabel.alignment = TextAlignmentOptions.Right;
-				usesLabel.color = Color.white;
-				usesLabel.text = string.Empty;
-				usesLabel.textWrappingMode = TextWrappingModes.NoWrap;
-				usesLabel.overflowMode = TextOverflowModes.Overflow;
-				usesLabel.rectTransform.sizeDelta = new Vector2(0.42f, 0.24f);
-				usesLabel.rectTransform.anchoredPosition = new Vector2(0.42f, 0.001f);
+				ApplyStackCraftTextParameters(
+					nutritionLabel,
+					fontSizeBase: 1.5f,
+					HorizontalAlignmentOptions.Geometry,
+					VerticalAlignmentOptions.Geometry,
+					Vector4.zero);
 
                 GameObject highlightRoot = new("候选高亮");
                 highlightRoot.transform.SetParent(root.transform, false);
 				highlightRoot.transform.localPosition = Vector3.zero;
+				highlightRoot.transform.localRotation = Quaternion.identity;
 				highlightRoot.transform.localScale = Vector3.one;
 				MeshFilter highlightMeshFilter = highlightRoot.AddComponent<MeshFilter>();
 				highlightMeshFilter.sharedMesh = cardMesh;
@@ -3007,6 +3830,20 @@ namespace Gameplay.Tests.Support.Editor
 				characterStatusRoot.transform.SetParent(root.transform, false);
 				characterStatusRoot.transform.localPosition = Vector3.zero;
 
+				GameObject equipmentPanelObject = new("装备面板");
+				equipmentPanelObject.transform.SetParent(characterStatusRoot.transform, false);
+				equipmentPanelObject.transform.localPosition = new Vector3(0f, 0.001f, -0.525f);
+				equipmentPanelObject.transform.localRotation = Quaternion.identity;
+				equipmentPanelObject.transform.localScale = Vector3.one;
+				MeshFilter equipmentPanelMeshFilter = equipmentPanelObject.AddComponent<MeshFilter>();
+				equipmentPanelMeshFilter.sharedMesh = equipmentPanelMesh;
+				MeshRenderer equipmentPanelRenderer = equipmentPanelObject.AddComponent<MeshRenderer>();
+				equipmentPanelRenderer.sharedMaterial = equipmentPanelMaterial;
+				equipmentPanelRenderer.shadowCastingMode = ShadowCastingMode.Off;
+				equipmentPanelRenderer.receiveShadows = false;
+				BoxCollider equipmentPanelCollider = equipmentPanelObject.AddComponent<BoxCollider>();
+				equipmentPanelCollider.size = new Vector3(0.45f, 0f, 0.15000002f);
+
 				GameObject healthTextObject = new("生命");
 				healthTextObject.transform.SetParent(characterStatusRoot.transform, false);
 				SetStackCraftFaceTransform(healthTextObject.transform, new Vector3(0f, 0f, -0.345f));
@@ -3016,25 +3853,36 @@ namespace Gameplay.Tests.Support.Editor
 				healthLabel.fontSizeMin = 0.5f;
 				healthLabel.fontSizeMax = 1.5f;
 				healthLabel.enableAutoSizing = true;
-				healthLabel.alignment = TextAlignmentOptions.BottomRight;
 				healthLabel.color = Color.white;
 				healthLabel.text = string.Empty;
 				healthLabel.textWrappingMode = TextWrappingModes.NoWrap;
 				healthLabel.overflowMode = TextOverflowModes.Overflow;
 				healthLabel.rectTransform.sizeDelta = new Vector2(0.14f, 0.2f);
 				healthLabel.rectTransform.anchoredPosition = new Vector2(0.254f, 0.001f);
+				ApplyStackCraftTextParameters(
+					healthLabel,
+					fontSizeBase: 1.5f,
+					HorizontalAlignmentOptions.Geometry,
+					VerticalAlignmentOptions.Geometry,
+					Vector4.zero);
 				characterStatusRoot.SetActive(false);
 
                 TabletopCardView cardView = root.AddComponent<TabletopCardView>();
                 SerializedObject serializedView = new(cardView);
 				serializedView.FindProperty("m_surfaceRenderer").objectReferenceValue = surfaceRenderer;
+				serializedView.FindProperty("m_surfaceMeshFilter").objectReferenceValue = meshFilter;
+				serializedView.FindProperty("m_defaultSurfaceMesh").objectReferenceValue = cardMesh;
+				serializedView.FindProperty("m_packSurfaceMesh").objectReferenceValue = packMesh;
+				serializedView.FindProperty("m_highlightMeshFilter").objectReferenceValue = highlightMeshFilter;
 				serializedView.FindProperty("m_surfaceTextureProperty").stringValue = "_OverlayTex";
 				serializedView.FindProperty("m_surfaceFlashProperty").stringValue = "_FlashAmount";
                 serializedView.FindProperty("m_highlightRoot").objectReferenceValue = highlightRoot;
+				serializedView.FindProperty("m_cardBuyerCurrencyIconRenderer").objectReferenceValue =
+					cardBuyerCurrencyIconRenderer;
+				serializedView.FindProperty("m_cardBuyerCurrencyTextureProperty").stringValue = "_MainTex";
 				serializedView.FindProperty("m_titleLabel").objectReferenceValue = titleLabel;
 				serializedView.FindProperty("m_priceLabel").objectReferenceValue = priceLabel;
 				serializedView.FindProperty("m_nutritionLabel").objectReferenceValue = nutritionLabel;
-				serializedView.FindProperty("m_usesLabel").objectReferenceValue = usesLabel;
 				serializedView.FindProperty("m_characterStatusRoot").objectReferenceValue = characterStatusRoot;
 				serializedView.FindProperty("m_healthLabel").objectReferenceValue = healthLabel;
 				serializedView.FindProperty("m_hurtFlashDelaySeconds").floatValue = 0.05f;
@@ -3047,7 +3895,7 @@ namespace Gameplay.Tests.Support.Editor
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, TabletopCardViewPrefabPath) == null)
                 {
-                    throw new MissingReferenceException($"无法保存牌桌测试卡牌视图：{TabletopCardViewPrefabPath}");
+                    throw new MissingReferenceException($"无法保存卡牌视图：{TabletopCardViewPrefabPath}");
                 }
             }
             finally
@@ -3067,9 +3915,10 @@ namespace Gameplay.Tests.Support.Editor
 			Sprite advantageSprite,
 			Sprite disadvantageSprite)
 		{
-			TMP_FontAsset fontAsset = EnsureTestPanelFont();
+			TMP_FontAsset fontAsset = LoadStackCraftSurfaceFont();
+			EnsureStackCraftSurfaceFontFallback(fontAsset, EnsureTestPanelFont());
 			GameObject root = new(
-				"牌桌测试命中结果",
+				"命中结果",
 				typeof(RectTransform),
 				typeof(Canvas),
 				typeof(CanvasRenderer),
@@ -3132,12 +3981,17 @@ namespace Gameplay.Tests.Support.Editor
 				damageLabel.fontSizeMax = 0.3f;
 				damageLabel.enableAutoSizing = false;
 				damageLabel.fontStyle = FontStyles.Normal;
-				damageLabel.alignment = TextAlignmentOptions.Center;
 				damageLabel.color = Color.white;
 				damageLabel.text = string.Empty;
 				damageLabel.textWrappingMode = TextWrappingModes.NoWrap;
 				damageLabel.overflowMode = TextOverflowModes.Overflow;
 				damageLabel.raycastTarget = false;
+				ApplyStackCraftTextParameters(
+					damageLabel,
+					fontSizeBase: 0.2f,
+					HorizontalAlignmentOptions.Geometry,
+					VerticalAlignmentOptions.Geometry,
+					Vector4.zero);
 
 				TabletopHitResultView hitResultView = root.AddComponent<TabletopHitResultView>();
 				SerializedObject serializedView = new(hitResultView);
@@ -3153,11 +4007,12 @@ namespace Gameplay.Tests.Support.Editor
 				serializedView.FindProperty("m_punchDurationSeconds").floatValue = 1f;
 				serializedView.ApplyModifiedPropertiesWithoutUndo();
 				root.SetActive(false);
+				SetLayerRecursively(root, UnityUiLayer);
 
 				if (PrefabUtility.SaveAsPrefabAsset(root, TabletopHitResultViewPrefabPath) == null)
 				{
 					throw new MissingReferenceException(
-						$"无法保存牌桌测试命中结果视图：{TabletopHitResultViewPrefabPath}");
+						$"无法保存命中结果视图：{TabletopHitResultViewPrefabPath}");
 				}
 			}
 			finally
@@ -3182,38 +4037,86 @@ namespace Gameplay.Tests.Support.Editor
 			serializedTransform.ApplyModifiedPropertiesWithoutUndo();
 		}
 
-        private static void EnsureTabletopActionProgressViewPrefab(Sprite cardSprite)
+		private static void ApplyStackCraftTextParameters(
+			TMP_Text text,
+			float fontSizeBase,
+			HorizontalAlignmentOptions horizontalAlignment,
+			VerticalAlignmentOptions verticalAlignment,
+			Vector4 margin)
+		{
+			text.horizontalAlignment = horizontalAlignment;
+			text.verticalAlignment = verticalAlignment;
+			text.margin = margin;
+
+			SerializedObject serializedText = new(text);
+			RequireProperty(serializedText, "m_fontSizeBase").floatValue = fontSizeBase;
+			RequireProperty(serializedText, "m_HorizontalAlignment").intValue = (int)horizontalAlignment;
+			RequireProperty(serializedText, "m_VerticalAlignment").intValue = (int)verticalAlignment;
+			RequireProperty(serializedText, "m_textAlignment").intValue = (int)TextAlignmentOptions.Converted;
+			RequireProperty(serializedText, "m_TextStyleHashCode").intValue =
+				StackCraftConvertedTextStyleHashCode;
+			RequireProperty(serializedText, "m_enableKerning").boolValue = true;
+			RequireProperty(serializedText, "m_margin").vector4Value = margin;
+			serializedText.ApplyModifiedPropertiesWithoutUndo();
+		}
+
+        private static void EnsureTabletopActionProgressViewPrefab()
         {
-            GameObject root = new("牌桌测试行动进度");
+			Sprite squareSprite = LoadRequiredSprite(
+				StackCraftSquareSpritePath,
+				"StackCraft Square 进度条图片自有副本");
+            GameObject root = new("行动进度", typeof(RectTransform));
             try
             {
-                root.transform.localScale = new Vector3(1.25f, 0.078125f, 1f);
-				root.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                SpriteRenderer backgroundRenderer = root.AddComponent<SpriteRenderer>();
-                backgroundRenderer.sprite = cardSprite;
-                backgroundRenderer.color = new Color(0.25f, 0.25f, 0.25f, 0.8f);
+				RectTransform rootTransform = root.GetComponent<RectTransform>();
+				rootTransform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+				rootTransform.localScale = Vector3.one;
+				rootTransform.anchorMin = new Vector2(0.5f, 0.5f);
+				rootTransform.anchorMax = new Vector2(0.5f, 0.5f);
+				rootTransform.pivot = new Vector2(0.5f, 0.5f);
+				rootTransform.sizeDelta = new Vector2(0.8f, 0.05f);
+				Canvas canvas = root.AddComponent<Canvas>();
+				canvas.renderMode = RenderMode.WorldSpace;
+				canvas.overrideSorting = true;
+				canvas.sortingOrder = 0;
+				root.AddComponent<CanvasRenderer>();
+                Image backgroundImage = root.AddComponent<Image>();
+                backgroundImage.color = new Color(0.25f, 0.25f, 0.25f, 0.8f);
+				backgroundImage.raycastTarget = false;
 
-                GameObject fillRoot = new("进度填充");
+                GameObject fillRoot = new("ProgressFill", typeof(RectTransform));
                 fillRoot.transform.SetParent(root.transform, false);
-                fillRoot.transform.localScale = Vector3.one;
-                SpriteRenderer fillRenderer = fillRoot.AddComponent<SpriteRenderer>();
-                fillRenderer.sprite = cardSprite;
-                fillRenderer.color = new Color(1f, 0.7974138f, 0f, 1f);
+				RectTransform fillTransform = fillRoot.GetComponent<RectTransform>();
+				fillTransform.anchorMin = Vector2.zero;
+				fillTransform.anchorMax = Vector2.one;
+				fillTransform.pivot = new Vector2(0.5f, 0.5f);
+				fillTransform.anchoredPosition = Vector2.zero;
+				fillTransform.sizeDelta = Vector2.zero;
+                Image fillImage = fillRoot.AddComponent<Image>();
+                fillImage.sprite = squareSprite;
+                fillImage.color = new Color(1f, 0.7974138f, 0f, 1f);
+				fillImage.raycastTarget = false;
+				fillImage.type = Image.Type.Filled;
+				fillImage.fillMethod = Image.FillMethod.Horizontal;
+				fillImage.fillAmount = 0.725f;
 
                 TabletopActionProgressView progressView =
                     root.AddComponent<TabletopActionProgressView>();
                 SerializedObject serializedProgressView = new(progressView);
-                serializedProgressView.FindProperty("m_backgroundRenderer").objectReferenceValue =
-                    backgroundRenderer;
-                serializedProgressView.FindProperty("m_fillRenderer").objectReferenceValue =
-                    fillRenderer;
+                serializedProgressView.FindProperty("m_backgroundImage").objectReferenceValue =
+                    backgroundImage;
+                serializedProgressView.FindProperty("m_progressFill").objectReferenceValue =
+                    fillImage;
+				serializedProgressView.FindProperty("m_displayOffset").vector3Value =
+					new Vector3(0f, 0f, 0.55f);
                 serializedProgressView.ApplyModifiedPropertiesWithoutUndo();
                 root.SetActive(false);
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, TabletopActionProgressViewPrefabPath) == null)
                 {
                     throw new MissingReferenceException(
-                        $"无法保存牌桌测试行动进度视图：{TabletopActionProgressViewPrefabPath}");
+                        $"无法保存行动进度视图：{TabletopActionProgressViewPrefabPath}");
                 }
             }
             finally
@@ -3224,7 +4127,7 @@ namespace Gameplay.Tests.Support.Editor
 
 		private static void EnsureTabletopBattleAreaViewPrefab(Sprite cardSprite)
 		{
-			GameObject root = new("牌桌测试战斗区域");
+			GameObject root = new("战斗区域");
 			try
 			{
 				root.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
@@ -3240,7 +4143,7 @@ namespace Gameplay.Tests.Support.Editor
 				if (PrefabUtility.SaveAsPrefabAsset(root, TabletopBattleAreaViewPrefabPath) == null)
 				{
 					throw new MissingReferenceException(
-						$"无法保存牌桌测试战斗区域视图：{TabletopBattleAreaViewPrefabPath}");
+						$"无法保存战斗区域视图：{TabletopBattleAreaViewPrefabPath}");
 				}
 			}
 			finally
@@ -3253,7 +4156,7 @@ namespace Gameplay.Tests.Support.Editor
 			Sprite arrowProjectileSprite,
 			Sprite magicProjectileSprite)
 		{
-			GameObject root = new("牌桌测试投射物");
+			GameObject root = new("投射物");
 			try
 			{
 				root.transform.localScale = Vector3.one;
@@ -3272,7 +4175,7 @@ namespace Gameplay.Tests.Support.Editor
 				if (PrefabUtility.SaveAsPrefabAsset(root, TabletopProjectileViewPrefabPath) == null)
 				{
 					throw new MissingReferenceException(
-						$"无法保存牌桌测试投射物视图：{TabletopProjectileViewPrefabPath}");
+						$"无法保存投射物视图：{TabletopProjectileViewPrefabPath}");
 				}
 			}
 			finally
@@ -3441,10 +4344,10 @@ namespace Gameplay.Tests.Support.Editor
                     "Label",
                     choiceTemplateRect,
                     fontAsset,
-                    "Action",
+                    "行动",
                     42f);
                 SetStretchRect(choiceText.rectTransform, 24f);
-                choiceTemplateObject.SetActive(false);
+				choiceTemplateObject.SetActive(false);
 
                 GameObject cancelObject = new(
                     "Cancel",
@@ -3466,7 +4369,7 @@ namespace Gameplay.Tests.Support.Editor
                     "Label",
                     cancelRect,
                     fontAsset,
-                    "Cancel",
+                    "取消",
                     36f);
                 SetStretchRect(cancelText.rectTransform, 16f);
 
@@ -3490,6 +4393,7 @@ namespace Gameplay.Tests.Support.Editor
                 choiceTemplateProperty.objectReferenceValue = choiceButton;
                 cancelProperty.objectReferenceValue = cancelButton;
                 serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, TabletopActionChoicePanelPrefabPath) == null)
                 {
@@ -3689,6 +4593,7 @@ namespace Gameplay.Tests.Support.Editor
 				serializedPanel.FindProperty("m_submitButton").objectReferenceValue = submitButton;
 				serializedPanel.FindProperty("m_cancelButton").objectReferenceValue = cancelButton;
 				serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
 				if (PrefabUtility.SaveAsPrefabAsset(root, TabletopActionPlanPanelPrefabPath) == null)
 				{
@@ -3789,16 +4694,25 @@ namespace Gameplay.Tests.Support.Editor
 
         private static void EnsureScenarioTurnPanelPrefab()
         {
-            Sprite uiSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
-            TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TestPanelFontPath);
-            if (uiSprite == null)
-            {
-                throw new MissingReferenceException("Unity UGUI 缺少内置 UI 皮肤图片，无法创建回合 HUD。");
-            }
-            if (fontAsset == null)
-            {
-                throw new MissingReferenceException($"缺少测试面板字体资产：{TestPanelFontPath}");
-            }
+			TMP_FontAsset statsFontAsset = LoadStackCraftSurfaceFont();
+			Sprite squareSprite = LoadRequiredSprite(
+				StackCraftSquareSpritePath,
+				"StackCraft HUD 时间进度条图片");
+			Sprite[] paceSprites =
+			{
+				LoadRequiredSprite(StackCraftTimePacePausedSpritePath, "StackCraft HUD 暂停速度图标"),
+				LoadRequiredSprite(StackCraftTimePaceNormalSpritePath, "StackCraft HUD 普通速度图标"),
+				LoadRequiredSprite(StackCraftTimePaceFastSpritePath, "StackCraft HUD 加速速度图标"),
+			};
+			Sprite nutritionStatsSprite = LoadRequiredSprite(
+				StackCraftStatsNutritionSpritePath,
+				"StackCraft HUD 营养统计图标");
+			Sprite currencyStatsSprite = LoadRequiredSprite(
+				StackCraftStatsCurrencySpritePath,
+				"StackCraft HUD 货币统计图标");
+			Sprite cardStatsSprite = LoadRequiredSprite(
+				StackCraftStatsCardSpritePath,
+				"StackCraft HUD 卡牌容量统计图标");
 
             GameObject root = new(
                 "ScenarioTurnPanel",
@@ -3812,160 +4726,196 @@ namespace Gameplay.Tests.Support.Editor
                 rootRect.offsetMin = Vector2.zero;
                 rootRect.offsetMax = Vector2.zero;
 
-                GameObject controlObject = new("TurnControl", typeof(RectTransform), typeof(Image));
-                controlObject.transform.SetParent(root.transform, false);
-                RectTransform controlRect = controlObject.GetComponent<RectTransform>();
-                SetAnchoredRect(
-                    controlRect,
-                    new Vector2(0.5f, 0f),
-                    new Vector2(0.5f, 0f),
-					new Vector2(520f, 196f),
-                    new Vector2(0f, 32f));
-                Image controlImage = controlObject.GetComponent<Image>();
-                controlImage.sprite = uiSprite;
-                controlImage.type = Image.Type.Sliced;
-                controlImage.color = new Color(0.035f, 0.055f, 0.075f, 0.94f);
-
-                TextMeshProUGUI turnLabel = CreatePanelText(
-                    "TurnLabel",
-                    controlRect,
-                    fontAsset,
-                    "第 1 天  0/2\n食物 0/0  货币 0  卡牌 0/0",
-                    28f);
-                SetAnchoredRect(
-                    turnLabel.rectTransform,
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(0.5f, 0.5f),
-					new Vector2(460f, 78f),
-					new Vector2(0f, 53f));
-
-				GameObject progressBackgroundObject = new(
-					"DayProgressBackground",
-					typeof(RectTransform),
-					typeof(Image));
-				progressBackgroundObject.transform.SetParent(controlRect, false);
-				RectTransform progressBackgroundRect =
-					progressBackgroundObject.GetComponent<RectTransform>();
-				SetAnchoredRect(
-					progressBackgroundRect,
-					new Vector2(0.5f, 0.5f),
-					new Vector2(0.5f, 0.5f),
-					new Vector2(460f, 12f),
-					new Vector2(0f, 2f));
-				Image progressBackground = progressBackgroundObject.GetComponent<Image>();
-				progressBackground.sprite = uiSprite;
-				progressBackground.type = Image.Type.Sliced;
-				progressBackground.color = new Color(0.02f, 0.025f, 0.03f, 0.9f);
-
-				GameObject progressFillObject = new(
-					"DayProgressFill",
-					typeof(RectTransform),
-					typeof(Image));
-				progressFillObject.transform.SetParent(progressBackgroundRect, false);
-				SetStretchRect(progressFillObject.GetComponent<RectTransform>(), 1f);
-				Image progressFill = progressFillObject.GetComponent<Image>();
-				progressFill.sprite = uiSprite;
-				progressFill.type = Image.Type.Filled;
-				progressFill.fillMethod = Image.FillMethod.Horizontal;
-				progressFill.fillOrigin = 0;
-				progressFill.color = new Color(0.22f, 0.72f, 0.52f, 1f);
-				progressFill.fillAmount = 0f;
-
-                GameObject confirmObject = new(
-                    "ConfirmTurn",
-                    typeof(RectTransform),
-                    typeof(Image),
-                    typeof(Button),
-					typeof(UINavigationTarget));
-                confirmObject.transform.SetParent(controlRect, false);
-                RectTransform confirmRect = confirmObject.GetComponent<RectTransform>();
-                SetAnchoredRect(
-                    confirmRect,
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(280f, 58f),
-					new Vector2(-80f, -49f));
-                Image confirmImage = confirmObject.GetComponent<Image>();
-                confirmImage.sprite = uiSprite;
-                confirmImage.type = Image.Type.Sliced;
-                confirmImage.color = new Color(0.17f, 0.5f, 0.55f, 1f);
-                Button confirmButton = confirmObject.GetComponent<Button>();
-                confirmButton.targetGraphic = confirmImage;
-				ColorBlock confirmColors = confirmButton.colors;
-				confirmColors.normalColor = Color.white;
-				confirmColors.highlightedColor = new Color(0.9f, 1f, 1f, 1f);
-				confirmColors.pressedColor = new Color(0.72f, 0.82f, 0.84f, 1f);
-				confirmColors.selectedColor = Color.white;
-				confirmColors.disabledColor = new Color(0.32f, 0.36f, 0.4f, 0.9f);
-				confirmColors.colorMultiplier = 1f;
-				confirmButton.colors = confirmColors;
-                TextMeshProUGUI confirmLabel = CreatePanelText(
-                    "Label",
-                    confirmRect,
-                    fontAsset,
-                    "推进回合",
-                    30f);
-                SetStretchRect(confirmLabel.rectTransform, 16f);
-
-				GameObject progressionModeObject = new(
-					"ProgressionMode",
+                GameObject dayTimeObject = new(
+					"ConfirmTurn",
 					typeof(RectTransform),
 					typeof(Image),
 					typeof(Button),
+					typeof(CanvasGroup),
 					typeof(UINavigationTarget));
-				progressionModeObject.transform.SetParent(controlRect, false);
-				RectTransform progressionModeRect = progressionModeObject.GetComponent<RectTransform>();
+                dayTimeObject.transform.SetParent(root.transform, false);
+                RectTransform dayTimeRect = dayTimeObject.GetComponent<RectTransform>();
+                SetAnchoredRect(
+                    dayTimeRect,
+                    new Vector2(0f, 1f),
+                    new Vector2(0f, 1f),
+					new Vector2(300f, 50f),
+                    new Vector2(30f, -30f));
+                Image dayTimeImage = dayTimeObject.GetComponent<Image>();
+                dayTimeImage.color = new Color(0f, 0f, 0f, 0.8f);
+				dayTimeImage.raycastTarget = true;
+				Button confirmButton = dayTimeObject.GetComponent<Button>();
+				confirmButton.targetGraphic = dayTimeImage;
+				ColorBlock confirmColors = confirmButton.colors;
+				confirmColors.normalColor = Color.white;
+				confirmColors.highlightedColor = Color.white;
+				confirmColors.pressedColor = new Color(0.86f, 0.86f, 0.86f, 1f);
+				confirmColors.selectedColor = Color.white;
+				confirmColors.disabledColor = new Color(1f, 1f, 1f, 0.5f);
+				confirmColors.colorMultiplier = 1f;
+				confirmButton.colors = confirmColors;
+				CanvasGroup dayTimeCanvasGroup = dayTimeObject.GetComponent<CanvasGroup>();
+				dayTimeCanvasGroup.alpha = 1f;
+				dayTimeCanvasGroup.interactable = true;
+				dayTimeCanvasGroup.blocksRaycasts = true;
+
+				GameObject progressFillObject = new(
+					"TimeProgress",
+					typeof(RectTransform),
+					typeof(Image));
+				progressFillObject.transform.SetParent(dayTimeRect, false);
+				SetStretchRect(progressFillObject.GetComponent<RectTransform>(), 0f);
+				Image progressFill = progressFillObject.GetComponent<Image>();
+				progressFill.sprite = squareSprite;
+				progressFill.type = Image.Type.Filled;
+				progressFill.fillMethod = Image.FillMethod.Horizontal;
+				progressFill.fillOrigin = 0;
+				progressFill.fillAmount = 0.7f;
+				progressFill.color = new Color(0.21960784f, 0.64705884f, 0.8784314f, 0.8f);
+				progressFill.raycastTarget = false;
+
+                TextMeshProUGUI turnLabel = CreatePanelText(
+                    "DayText",
+                    dayTimeRect,
+                    statsFontAsset,
+                    "第 N 天",
+                    30f);
+				RectTransform turnLabelRect = turnLabel.rectTransform;
+				turnLabelRect.anchorMin = Vector2.zero;
+				turnLabelRect.anchorMax = Vector2.one;
+				turnLabelRect.anchoredPosition = Vector2.zero;
+				turnLabelRect.sizeDelta = new Vector2(-20f, -20f);
+				turnLabelRect.pivot = new Vector2(0.5f, 0.5f);
+				ApplyStackCraftTextParameters(
+					turnLabel,
+					fontSizeBase: 30f,
+					HorizontalAlignmentOptions.Left,
+					VerticalAlignmentOptions.Middle,
+					Vector4.zero);
+
+				GameObject paceObject = new(
+					"PaceImage",
+					typeof(RectTransform),
+					typeof(Image));
+				paceObject.transform.SetParent(dayTimeRect, false);
+				RectTransform paceRect = paceObject.GetComponent<RectTransform>();
 				SetAnchoredRect(
-					progressionModeRect,
-					new Vector2(0.5f, 0.5f),
-					new Vector2(0.5f, 0.5f),
-					new Vector2(140f, 58f),
-					new Vector2(150f, -49f));
-				Image progressionModeImage = progressionModeObject.GetComponent<Image>();
-				progressionModeImage.sprite = uiSprite;
-				progressionModeImage.type = Image.Type.Sliced;
-				progressionModeImage.color = new Color(0.32f, 0.38f, 0.58f, 1f);
-				Button progressionModeButton = progressionModeObject.GetComponent<Button>();
-				progressionModeButton.targetGraphic = progressionModeImage;
-				ColorBlock progressionColors = progressionModeButton.colors;
-				progressionColors.normalColor = Color.white;
-				progressionColors.highlightedColor = new Color(0.94f, 0.96f, 1f, 1f);
-				progressionColors.pressedColor = new Color(0.72f, 0.76f, 0.9f, 1f);
-				progressionColors.selectedColor = Color.white;
-				progressionColors.disabledColor = new Color(0.32f, 0.34f, 0.4f, 0.9f);
-				progressionColors.colorMultiplier = 1f;
-				progressionModeButton.colors = progressionColors;
-				TextMeshProUGUI progressionModeLabel = CreatePanelText(
-					"Label",
-					progressionModeRect,
-					fontAsset,
-					"开启即时",
+					paceRect,
+					new Vector2(1f, 0.5f),
+					new Vector2(1f, 0.5f),
+					new Vector2(30f, 30f),
+					new Vector2(-10f, 0f));
+				Image paceImage = paceObject.GetComponent<Image>();
+				paceImage.sprite = paceSprites[1];
+				paceImage.raycastTarget = false;
+
+				GameObject statsObject = new(
+					"CardStatsUI",
+					typeof(RectTransform),
+					typeof(Image),
+					typeof(HorizontalLayoutGroup),
+					typeof(ContentSizeFitter),
+					typeof(CanvasGroup));
+				statsObject.transform.SetParent(root.transform, false);
+				RectTransform statsRect = statsObject.GetComponent<RectTransform>();
+				SetAnchoredRect(
+					statsRect,
+					new Vector2(0f, 1f),
+					new Vector2(0f, 1f),
+					new Vector2(0f, 50f),
+					new Vector2(360f, -30f));
+				Image statsBackground = statsObject.GetComponent<Image>();
+				statsBackground.color = new Color(0f, 0f, 0f, 0.8f);
+				statsBackground.raycastTarget = true;
+				HorizontalLayoutGroup statsLayout = statsObject.GetComponent<HorizontalLayoutGroup>();
+				statsLayout.padding = new RectOffset(0, 34, 0, 0);
+				statsLayout.childAlignment = TextAnchor.MiddleLeft;
+				statsLayout.spacing = 0f;
+				statsLayout.childForceExpandWidth = false;
+				statsLayout.childForceExpandHeight = false;
+				statsLayout.childControlWidth = true;
+				statsLayout.childControlHeight = false;
+				ContentSizeFitter statsFitter = statsObject.GetComponent<ContentSizeFitter>();
+				statsFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+				statsFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+				CanvasGroup statsCanvasGroup = statsObject.GetComponent<CanvasGroup>();
+				statsCanvasGroup.alpha = 1f;
+				statsCanvasGroup.interactable = true;
+				statsCanvasGroup.blocksRaycasts = true;
+
+				Image nutritionIcon = CreateStatsIcon(
+					"NutritionIcon",
+					statsRect,
+					nutritionStatsSprite);
+				TextMeshProUGUI nutritionLabel = CreateStatsLabel(
+					"NutritionLabel",
+					statsRect,
+					statsFontAsset,
+					"1/11");
+				Image currencyIcon = CreateStatsIcon(
+					"CurrencyIcon",
+					statsRect,
+					currencyStatsSprite);
+				TextMeshProUGUI currencyLabel = CreateStatsLabel(
+					"CurrencyLabel",
+					statsRect,
+					statsFontAsset,
+					"2/22");
+				Image cardCountIcon = CreateStatsIcon(
+					"CardIcon",
+					statsRect,
+					cardStatsSprite);
+				TextMeshProUGUI cardCountLabel = CreateStatsLabel(
+					"CardLabel",
+					statsRect,
+					statsFontAsset,
+					"3/33");
+
+				TextMeshProUGUI watermark = CreatePanelText(
+					"Watermark",
+					rootRect,
+					statsFontAsset,
+					"模板玩法演示",
 					24f);
-				SetStretchRect(progressionModeLabel.rectTransform, 10f);
+				SetAnchoredRect(
+					watermark.rectTransform,
+					new Vector2(0.5f, 0f),
+					new Vector2(0.5f, 0f),
+					new Vector2(600f, 40f),
+					Vector2.zero);
+				watermark.color = new Color(1f, 1f, 1f, 0.69803923f);
+				ApplyStackCraftTextParameters(
+					watermark,
+					fontSizeBase: 24f,
+					HorizontalAlignmentOptions.Center,
+					VerticalAlignmentOptions.Top,
+					Vector4.zero);
 
                 ScenarioTurnPanel panel = root.GetComponent<ScenarioTurnPanel>();
                 SerializedObject serializedPanel = new(panel);
-                SerializedProperty turnLabelProperty = serializedPanel.FindProperty("m_turnLabel");
-				SerializedProperty dayProgressFillProperty = serializedPanel.FindProperty("m_dayProgressFill");
-				SerializedProperty confirmTurnLabelProperty = serializedPanel.FindProperty("m_confirmTurnLabel");
-                SerializedProperty confirmButtonProperty = serializedPanel.FindProperty("m_confirmTurnButton");
-				SerializedProperty progressionModeButtonProperty = serializedPanel.FindProperty("m_progressionModeButton");
-				SerializedProperty progressionModeLabelProperty = serializedPanel.FindProperty("m_progressionModeLabel");
-                if (turnLabelProperty == null || dayProgressFillProperty == null ||
-					confirmTurnLabelProperty == null || confirmButtonProperty == null ||
-					progressionModeButtonProperty == null || progressionModeLabelProperty == null)
-                {
-                    throw new MissingReferenceException(
-                        $"{nameof(ScenarioTurnPanel)} 的预制体引用字段已变更，测试资源生成器需要同步更新。");
-                }
-
-                turnLabelProperty.objectReferenceValue = turnLabel;
-				dayProgressFillProperty.objectReferenceValue = progressFill;
-				confirmTurnLabelProperty.objectReferenceValue = confirmLabel;
-                confirmButtonProperty.objectReferenceValue = confirmButton;
-				progressionModeButtonProperty.objectReferenceValue = progressionModeButton;
-				progressionModeLabelProperty.objectReferenceValue = progressionModeLabel;
+                RequireProperty(serializedPanel, "m_turnLabel").objectReferenceValue = turnLabel;
+				RequireProperty(serializedPanel, "m_dayProgressFill").objectReferenceValue = progressFill;
+				RequireProperty(serializedPanel, "m_paceImage").objectReferenceValue = paceImage;
+				SerializedProperty paceIconsProperty = RequireProperty(serializedPanel, "m_paceIcons");
+				paceIconsProperty.arraySize = paceSprites.Length;
+				for (int paceIndex = 0; paceIndex < paceSprites.Length; paceIndex++)
+				{
+					paceIconsProperty.GetArrayElementAtIndex(paceIndex).objectReferenceValue = paceSprites[paceIndex];
+				}
+				RequireProperty(serializedPanel, "m_dayTimeGroup").objectReferenceValue = dayTimeCanvasGroup;
+				RequireProperty(serializedPanel, "m_cardStatsGroup").objectReferenceValue = statsCanvasGroup;
+				RequireProperty(serializedPanel, "m_nutritionIcon").objectReferenceValue = nutritionIcon;
+				RequireProperty(serializedPanel, "m_nutritionLabel").objectReferenceValue = nutritionLabel;
+				RequireProperty(serializedPanel, "m_currencyIcon").objectReferenceValue = currencyIcon;
+				RequireProperty(serializedPanel, "m_currencyLabel").objectReferenceValue = currencyLabel;
+				RequireProperty(serializedPanel, "m_cardCountIcon").objectReferenceValue = cardCountIcon;
+				RequireProperty(serializedPanel, "m_cardCountLabel").objectReferenceValue = cardCountLabel;
+				RequireProperty(serializedPanel, "m_confirmTurnLabel").objectReferenceValue = null;
+                RequireProperty(serializedPanel, "m_confirmTurnButton").objectReferenceValue = confirmButton;
+				RequireProperty(serializedPanel, "m_progressionModeButton").objectReferenceValue = null;
+				RequireProperty(serializedPanel, "m_progressionModeLabel").objectReferenceValue = null;
                 serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, ScenarioTurnPanelPrefabPath) == null)
                 {
@@ -3994,6 +4944,7 @@ namespace Gameplay.Tests.Support.Editor
                 RequireProperty(serializedManager, "m_stackName").stringValue = "game-menu";
                 serializedManager.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(uiManager);
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, FoundationGameUiPrefabPath) == null)
                 {
@@ -4155,6 +5106,7 @@ namespace Gameplay.Tests.Support.Editor
                 serializedPanel.FindProperty("m_settingsButton").objectReferenceValue = settingsButton;
                 serializedPanel.FindProperty("m_saveAndExitButton").objectReferenceValue = saveAndExitButton;
                 serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, ScenarioPausePanelPrefabPath) == null)
                 {
@@ -4397,6 +5349,7 @@ namespace Gameplay.Tests.Support.Editor
                 serializedPanel.FindProperty("m_saveAndExitButton").objectReferenceValue = saveAndExit;
                 serializedPanel.FindProperty("m_closeButton").objectReferenceValue = closeButton;
                 serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, ScenarioSavePanelPrefabPath) == null)
                 {
@@ -4502,6 +5455,7 @@ namespace Gameplay.Tests.Support.Editor
                 serializedPanel.FindProperty("m_cancelLabel").objectReferenceValue =
                     cancel.GetComponentInChildren<TextMeshProUGUI>();
                 serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, ConfirmationDialogPanelPrefabPath) == null)
                 {
@@ -4590,7 +5544,7 @@ namespace Gameplay.Tests.Support.Editor
 			UniversalAdditionalCameraData cameraData =
 				cameraObject.GetComponent<UniversalAdditionalCameraData>() ??
 				cameraObject.AddComponent<UniversalAdditionalCameraData>();
-			cameraData.renderPostProcessing = true;
+			cameraData.renderPostProcessing = false;
 		}
 
         private static Button CreateSavePanelButton(
@@ -4647,65 +5601,81 @@ namespace Gameplay.Tests.Support.Editor
                 rootRect.offsetMin = Vector2.zero;
                 rootRect.offsetMax = Vector2.zero;
 
-                GameObject contentRoot = new("CardInfo", typeof(RectTransform), typeof(Image));
+                GameObject contentRoot = new(
+					"InfoPanel",
+					typeof(RectTransform),
+					typeof(Image),
+					typeof(VerticalLayoutGroup),
+					typeof(ContentSizeFitter));
                 contentRoot.transform.SetParent(root.transform, false);
                 RectTransform contentRect = contentRoot.GetComponent<RectTransform>();
                 SetAnchoredRect(
                     contentRect,
-                    new Vector2(1f, 0f),
-                    new Vector2(1f, 0f),
-                    new Vector2(500f, 260f),
-                    new Vector2(-32f, 32f));
+                    Vector2.zero,
+                    Vector2.zero,
+                    new Vector2(400f, 0f),
+                    new Vector2(30f, 30f));
                 Image background = contentRoot.GetComponent<Image>();
-                background.sprite = uiSprite;
-                background.type = Image.Type.Sliced;
-                background.color = new Color(0.035f, 0.055f, 0.075f, 0.94f);
+                background.sprite = null;
+                background.type = Image.Type.Simple;
+                background.color = new Color(0f, 0f, 0f, 0.9019608f);
                 background.raycastTarget = false;
 
-                TextMeshProUGUI title = CreatePanelText(
-                    "Title",
-                    contentRect,
-                    fontAsset,
-                    string.Empty,
-                    36f);
-                title.alignment = TextAlignmentOptions.TopLeft;
-                SetAnchoredRect(
-                    title.rectTransform,
-                    new Vector2(0f, 1f),
-                    new Vector2(0f, 1f),
-                    new Vector2(448f, 50f),
-                    new Vector2(26f, -22f));
+				VerticalLayoutGroup layout = contentRoot.GetComponent<VerticalLayoutGroup>();
+				layout.childAlignment = TextAnchor.UpperLeft;
+				layout.childControlWidth = true;
+				layout.childControlHeight = true;
+				layout.childForceExpandWidth = false;
+				layout.childForceExpandHeight = false;
+				layout.spacing = 0f;
+				ContentSizeFitter fitter = contentRoot.GetComponent<ContentSizeFitter>();
+				fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+				fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                TextMeshProUGUI description = CreatePanelText(
-                    "Description",
-                    contentRect,
-                    fontAsset,
-                    string.Empty,
-                    28f);
-                description.alignment = TextAlignmentOptions.TopLeft;
-                description.textWrappingMode = TextWrappingModes.Normal;
-                SetAnchoredRect(
-                    description.rectTransform,
-                    new Vector2(0f, 1f),
-                    new Vector2(0f, 1f),
-                    new Vector2(448f, 152f),
-                    new Vector2(26f, -84f));
+				TextMeshProUGUI infoText = CreatePanelText(
+					"InfoText",
+					contentRect,
+					fontAsset,
+					string.Empty,
+					34f);
+				RectTransform infoTextRect = infoText.rectTransform;
+				infoTextRect.anchorMin = Vector2.zero;
+				infoTextRect.anchorMax = Vector2.zero;
+				infoTextRect.pivot = new Vector2(0.5f, 0.5f);
+				infoTextRect.anchoredPosition = Vector2.zero;
+				infoTextRect.sizeDelta = Vector2.zero;
+				infoText.textWrappingMode = TextWrappingModes.Normal;
+				infoText.color = new Color(1f, 1f, 1f, 0.8f);
+				infoText.lineSpacing = -15f;
+				infoText.paragraphSpacing = 20f;
+				ApplyStackCraftTextParameters(
+					infoText,
+					fontSizeBase: 34f,
+					HorizontalAlignmentOptions.Left,
+					(VerticalAlignmentOptions)1024,
+					new Vector4(20f, 20f, 20f, 20f));
 
                 TabletopCardInfoPanel panel = root.GetComponent<TabletopCardInfoPanel>();
                 SerializedObject serializedPanel = new(panel);
                 SerializedProperty contentRootProperty = serializedPanel.FindProperty("m_contentRoot");
-                SerializedProperty titleProperty = serializedPanel.FindProperty("m_titleLabel");
-                SerializedProperty descriptionProperty = serializedPanel.FindProperty("m_descriptionLabel");
-                if (contentRootProperty == null || titleProperty == null || descriptionProperty == null)
+                SerializedProperty infoLabelProperty = serializedPanel.FindProperty("m_infoLabel");
+				SerializedProperty headerSizeProperty = serializedPanel.FindProperty("m_headerSize");
+				SerializedProperty bodySizeProperty = serializedPanel.FindProperty("m_bodySize");
+                if (contentRootProperty == null ||
+					infoLabelProperty == null ||
+					headerSizeProperty == null ||
+					bodySizeProperty == null)
                 {
                     throw new MissingReferenceException(
                         $"{nameof(TabletopCardInfoPanel)} 的预制体引用字段已变更，测试资源生成器需要同步更新。");
                 }
 
                 contentRootProperty.objectReferenceValue = contentRoot;
-                titleProperty.objectReferenceValue = title;
-                descriptionProperty.objectReferenceValue = description;
+                infoLabelProperty.objectReferenceValue = infoText;
+				headerSizeProperty.intValue = 34;
+				bodySizeProperty.intValue = 30;
                 serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, TabletopCardInfoPanelPrefabPath) == null)
                 {
@@ -4722,7 +5692,8 @@ namespace Gameplay.Tests.Support.Editor
         private static void EnsureScenarioJournalPanelPrefab()
         {
             Sprite uiSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
-            TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TestPanelFontPath);
+            TMP_FontAsset fontAsset = LoadStackCraftSurfaceFont();
+			EnsureStackCraftSurfaceFontFallback(fontAsset, EnsureTestPanelFont());
             if (uiSprite == null || fontAsset == null)
             {
                 throw new MissingReferenceException("缺少剧本日志所需的内置图片或测试字体。");
@@ -4740,119 +5711,141 @@ namespace Gameplay.Tests.Support.Editor
                 rootRect.anchorMax = Vector2.one;
                 rootRect.offsetMin = Vector2.zero;
                 rootRect.offsetMax = Vector2.zero;
-                root.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.58f);
+                Image rootImage = root.GetComponent<Image>();
+                rootImage.sprite = uiSprite;
+                rootImage.type = Image.Type.Sliced;
+                rootImage.color = Color.clear;
+                rootImage.raycastTarget = false;
 
-                GameObject windowObject = new("JournalWindow", typeof(RectTransform), typeof(Image));
-                windowObject.transform.SetParent(root.transform, false);
-                RectTransform window = windowObject.GetComponent<RectTransform>();
+                GameObject menuPanelObject = new("MenuPanel", typeof(RectTransform));
+                menuPanelObject.transform.SetParent(root.transform, false);
+                RectTransform menuPanel = menuPanelObject.GetComponent<RectTransform>();
                 SetAnchoredRect(
-                    window,
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(920f, 650f),
-                    new Vector2(0f, 18f));
-                Image windowImage = windowObject.GetComponent<Image>();
-                windowImage.sprite = uiSprite;
-                windowImage.type = Image.Type.Sliced;
-                windowImage.color = new Color(0.045f, 0.06f, 0.07f, 1f);
+                    menuPanel,
+                    new Vector2(1f, 0.5f),
+                    new Vector2(1f, 0.5f),
+                    new Vector2(400f, 0f),
+                    new Vector2(0f, 0f));
+				menuPanel.anchorMin = new Vector2(1f, 0f);
+				menuPanel.anchorMax = new Vector2(1f, 1f);
+				menuPanel.offsetMin = new Vector2(-400f, 0f);
+				menuPanel.offsetMax = Vector2.zero;
 
-                TextMeshProUGUI title = CreatePanelText("Title", window, fontAsset, "当前任务", 40f);
-                SetAnchoredRect(
-                    title.rectTransform,
-                    new Vector2(0.5f, 1f),
-                    new Vector2(0.5f, 1f),
-                    new Vector2(520f, 58f),
-                    new Vector2(0f, -28f));
+				GameObject headerObject = new(
+					"Header",
+					typeof(RectTransform),
+					typeof(Image),
+					typeof(HorizontalLayoutGroup),
+					typeof(CanvasGroup),
+					typeof(ToggleGroup));
+				headerObject.transform.SetParent(menuPanel, false);
+				RectTransform header = headerObject.GetComponent<RectTransform>();
+				header.anchorMin = new Vector2(0f, 1f);
+				header.anchorMax = new Vector2(1f, 1f);
+				header.pivot = new Vector2(0.5f, 1f);
+				header.anchoredPosition = Vector2.zero;
+				header.sizeDelta = new Vector2(0f, 60f);
+				header.localScale = Vector3.one;
+				header.localRotation = Quaternion.identity;
+				Image headerImage = headerObject.GetComponent<Image>();
+				headerImage.sprite = uiSprite;
+				headerImage.color = new Color(0.5019608f, 0.5019608f, 0.5019608f, 0.9019608f);
+				headerImage.raycastTarget = false;
+				HorizontalLayoutGroup headerLayout = headerObject.GetComponent<HorizontalLayoutGroup>();
+				headerLayout.childAlignment = TextAnchor.UpperLeft;
+				headerLayout.childControlWidth = true;
+				headerLayout.childControlHeight = true;
+				headerLayout.childForceExpandWidth = true;
+				headerLayout.childForceExpandHeight = true;
+				headerLayout.spacing = 0f;
+				ToggleGroup headerToggleGroup = headerObject.GetComponent<ToggleGroup>();
+				headerToggleGroup.allowSwitchOff = false;
+
+				Toggle questsTab = CreateStackCraftJournalTabToggle(
+					"QuestsToggle",
+					header,
+					uiSprite,
+					fontAsset,
+					headerToggleGroup,
+					"任务",
+					isOn: true);
+				Toggle actionsTab = CreateStackCraftJournalTabToggle(
+					"RecipesToggle",
+					header,
+					uiSprite,
+					fontAsset,
+					headerToggleGroup,
+					"配方",
+					isOn: false);
+
+				Button menuToggle = CreateStackCraftJournalMenuButton(
+					"MenuToggle",
+					menuPanel,
+					uiSprite,
+					fontAsset);
+				TextMeshProUGUI menuToggleLabel = menuToggle.GetComponentInChildren<TextMeshProUGUI>(true);
+				if (menuToggleLabel == null)
+				{
+					throw new MissingReferenceException("剧本日志菜单折叠按钮缺少文字。");
+				}
 
                 Button closeButton = CreateSavePanelButton(
                     "Close",
-                    window,
+                    menuPanel,
                     uiSprite,
                     fontAsset,
                     "×",
                     new Vector2(1f, 1f),
                     new Vector2(1f, 1f),
-                    new Vector2(58f, 58f),
-                    new Vector2(-22f, -22f),
+                    new Vector2(1f, 1f),
+                    new Vector2(1200f, 1200f),
                     new Color(0.16f, 0.18f, 0.2f, 1f),
-                    38f);
+                    1f);
+				closeButton.gameObject.SetActive(false);
 
-                Button questsTab = CreateSavePanelButton(
-                    "QuestsTab",
-                    window,
-                    uiSprite,
-                    fontAsset,
-                    "任务",
-                    new Vector2(0f, 1f),
-                    new Vector2(0f, 1f),
-                    new Vector2(180f, 60f),
-                    new Vector2(32f, -104f),
-                    new Color(0.12f, 0.42f, 0.34f, 1f),
-                    32f);
-                Button actionsTab = CreateSavePanelButton(
-                    "ActionsTab",
-                    window,
-                    uiSprite,
-                    fontAsset,
-                    "已发现配方 / 行动",
-                    new Vector2(0f, 1f),
-                    new Vector2(0f, 1f),
-                    new Vector2(240f, 60f),
-                    new Vector2(224f, -104f),
-                    new Color(0.17f, 0.38f, 0.47f, 1f),
-                    30f);
-
-                GameObject viewportObject = new(
-                    "Viewport",
-                    typeof(RectTransform),
-                    typeof(Image),
-                    typeof(RectMask2D),
-                    typeof(ScrollRect));
-                viewportObject.transform.SetParent(window, false);
-                RectTransform viewport = viewportObject.GetComponent<RectTransform>();
-                SetAnchoredRect(
-                    viewport,
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(0.5f, 0.5f),
-                    new Vector2(856f, 458f),
-                    new Vector2(0f, -56f));
-                Image viewportImage = viewportObject.GetComponent<Image>();
-                viewportImage.sprite = uiSprite;
-                viewportImage.type = Image.Type.Sliced;
-                viewportImage.color = new Color(0.025f, 0.032f, 0.038f, 0.92f);
-
-                TextMeshProUGUI content = CreatePanelText(
-                    "Content",
-                    viewport,
-                    fontAsset,
-                    "暂无可见任务",
-                    34f);
-                content.alignment = TextAlignmentOptions.TopLeft;
-                content.textWrappingMode = TextWrappingModes.Normal;
-                content.lineSpacing = 8f;
-                RectTransform contentRect = content.rectTransform;
-                contentRect.anchorMin = new Vector2(0f, 1f);
-                contentRect.anchorMax = new Vector2(1f, 1f);
-                contentRect.pivot = new Vector2(0.5f, 1f);
-                contentRect.anchoredPosition = new Vector2(0f, -24f);
-                contentRect.sizeDelta = new Vector2(-56f, 0f);
-                ContentSizeFitter contentFitter = content.gameObject.AddComponent<ContentSizeFitter>();
-                contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                ScrollRect scrollRect = viewportObject.GetComponent<ScrollRect>();
-                scrollRect.content = contentRect;
-                scrollRect.viewport = viewport;
-                scrollRect.horizontal = false;
-                scrollRect.vertical = true;
-                scrollRect.movementType = ScrollRect.MovementType.Clamped;
+				CanvasGroup questsViewGroup = CreateStackCraftJournalView(
+					"QuestsView",
+					menuPanel,
+					uiSprite,
+					showByDefault: true,
+					out RectTransform questsView,
+					out ScrollRect questsScrollRect);
+				TextMeshProUGUI questsContent = CreateStackCraftJournalContent(
+					"QuestContent",
+					questsView,
+					questsScrollRect,
+					fontAsset,
+					"暂无任务");
+				CanvasGroup actionsViewGroup = CreateStackCraftJournalView(
+					"RecipesView",
+					menuPanel,
+					uiSprite,
+					showByDefault: false,
+					out RectTransform actionsView,
+					out ScrollRect actionsScrollRect);
+				TextMeshProUGUI actionsContent = CreateStackCraftJournalContent(
+					"RecipeContent",
+					actionsView,
+					actionsScrollRect,
+					fontAsset,
+					"暂无已发现配方");
 
                 ScenarioJournalPanel panel = root.GetComponent<ScenarioJournalPanel>();
                 SerializedObject serializedPanel = new(panel);
-                serializedPanel.FindProperty("m_questsTabButton").objectReferenceValue = questsTab;
-                serializedPanel.FindProperty("m_actionsTabButton").objectReferenceValue = actionsTab;
-                serializedPanel.FindProperty("m_titleLabel").objectReferenceValue = title;
-                serializedPanel.FindProperty("m_contentLabel").objectReferenceValue = content;
-                serializedPanel.FindProperty("m_closeButton").objectReferenceValue = closeButton;
+				RequireProperty(serializedPanel, "m_menuPanel").objectReferenceValue = menuPanel;
+				RequireProperty(serializedPanel, "m_questsTabToggle").objectReferenceValue = questsTab;
+				RequireProperty(serializedPanel, "m_actionsTabToggle").objectReferenceValue = actionsTab;
+				RequireProperty(serializedPanel, "m_menuToggleButton").objectReferenceValue = menuToggle;
+				RequireProperty(serializedPanel, "m_menuToggleLabel").objectReferenceValue = menuToggleLabel;
+				RequireProperty(serializedPanel, "m_headerGroup").objectReferenceValue =
+					headerObject.GetComponent<CanvasGroup>();
+				RequireProperty(serializedPanel, "m_questsViewGroup").objectReferenceValue = questsViewGroup;
+				RequireProperty(serializedPanel, "m_actionsViewGroup").objectReferenceValue = actionsViewGroup;
+				RequireProperty(serializedPanel, "m_questsContentLabel").objectReferenceValue = questsContent;
+				RequireProperty(serializedPanel, "m_actionsContentLabel").objectReferenceValue = actionsContent;
+				RequireProperty(serializedPanel, "m_closeButton").objectReferenceValue = closeButton;
                 serializedPanel.ApplyModifiedPropertiesWithoutUndo();
+				SetLayerRecursively(root, UnityUiLayer);
 
                 if (PrefabUtility.SaveAsPrefabAsset(root, ScenarioJournalPanelPrefabPath) == null)
                 {
@@ -4865,6 +5858,195 @@ namespace Gameplay.Tests.Support.Editor
                 Object.DestroyImmediate(root);
             }
         }
+
+		private static Toggle CreateStackCraftJournalTabToggle(
+			string objectName,
+			Transform parent,
+			Sprite sprite,
+			TMP_FontAsset fontAsset,
+			ToggleGroup group,
+			string label,
+			bool isOn)
+		{
+			GameObject buttonObject = new(
+				objectName,
+				typeof(RectTransform),
+				typeof(Image),
+				typeof(Toggle));
+			buttonObject.transform.SetParent(parent, false);
+			RectTransform rect = buttonObject.GetComponent<RectTransform>();
+			rect.anchorMin = Vector2.zero;
+			rect.anchorMax = Vector2.zero;
+			rect.pivot = new Vector2(0.5f, 0.5f);
+			rect.anchoredPosition = Vector2.zero;
+			rect.sizeDelta = Vector2.zero;
+			rect.localScale = Vector3.one;
+			rect.localRotation = Quaternion.identity;
+			Image image = buttonObject.GetComponent<Image>();
+			image.sprite = sprite;
+			image.color = new Color(0.21933962f, 0.6486481f, 0.8773585f, 1f);
+			TextMeshProUGUI text = CreatePanelText("Label", rect, fontAsset, label, 32f);
+			SetStretchRect(text.rectTransform, 0f);
+			text.rectTransform.anchoredPosition = new Vector2(0.000061035156f, 0f);
+			ApplyStackCraftTextParameters(
+				text,
+				fontSizeBase: 32f,
+				HorizontalAlignmentOptions.Center,
+				VerticalAlignmentOptions.Middle,
+				Vector4.zero);
+			Toggle toggle = buttonObject.GetComponent<Toggle>();
+			toggle.targetGraphic = text;
+			toggle.graphic = image;
+			toggle.group = group;
+			toggle.isOn = isOn;
+			ColorBlock colors = toggle.colors;
+			colors.selectedColor = Color.white;
+			toggle.colors = colors;
+			return toggle;
+		}
+
+		private static Button CreateStackCraftJournalMenuButton(
+			string objectName,
+			Transform parent,
+			Sprite sprite,
+			TMP_FontAsset fontAsset)
+		{
+			Button button = CreateSavePanelButton(
+				objectName,
+				parent,
+				sprite,
+				fontAsset,
+				">>",
+				new Vector2(0f, 1f),
+				new Vector2(0f, 1f),
+				new Vector2(60f, 60f),
+				new Vector2(-60f, -60f),
+				new Color(0f, 0f, 0f, 0.9019608f),
+				32f);
+			Image image = button.GetComponent<Image>();
+			image.type = Image.Type.Simple;
+			TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+			if (label == null)
+			{
+				throw new MissingReferenceException("StackCraft 剧本日志折叠按钮缺少文字组件。");
+			}
+
+			SetStretchRect(label.rectTransform, 0f);
+			ApplyStackCraftTextParameters(
+				label,
+				fontSizeBase: 32f,
+				HorizontalAlignmentOptions.Center,
+				VerticalAlignmentOptions.Middle,
+				Vector4.zero);
+			button.targetGraphic = label;
+			return button;
+		}
+
+		private static CanvasGroup CreateStackCraftJournalView(
+			string objectName,
+			Transform parent,
+			Sprite sprite,
+			bool showByDefault,
+			out RectTransform viewportRect,
+			out ScrollRect scrollRect)
+		{
+			GameObject viewObject = new(
+				objectName,
+				typeof(RectTransform),
+				typeof(Image),
+				typeof(ScrollRect),
+				typeof(CanvasGroup));
+			viewObject.transform.SetParent(parent, false);
+			RectTransform viewRect = viewObject.GetComponent<RectTransform>();
+			viewRect.anchorMin = Vector2.zero;
+			viewRect.anchorMax = Vector2.one;
+			viewRect.pivot = new Vector2(0.5f, 0.5f);
+			viewRect.anchoredPosition = new Vector2(0f, -30f);
+			viewRect.sizeDelta = new Vector2(0f, -60f);
+			viewRect.localScale = Vector3.one;
+			viewRect.localRotation = Quaternion.identity;
+			Image image = viewObject.GetComponent<Image>();
+			image.sprite = sprite;
+			image.type = Image.Type.Sliced;
+			image.color = new Color(0f, 0f, 0f, 0.9019608f);
+			CanvasGroup group = viewObject.GetComponent<CanvasGroup>();
+			group.alpha = showByDefault ? 1f : 0f;
+			group.interactable = true;
+			group.blocksRaycasts = showByDefault;
+
+			GameObject viewportObject = new(
+				"Viewport",
+				typeof(RectTransform),
+				typeof(Image),
+				typeof(Mask));
+			viewportObject.transform.SetParent(viewRect, false);
+			viewportRect = viewportObject.GetComponent<RectTransform>();
+			viewportRect.anchorMin = Vector2.zero;
+			viewportRect.anchorMax = Vector2.one;
+			viewportRect.pivot = new Vector2(0f, 1f);
+			viewportRect.anchoredPosition = Vector2.zero;
+			viewportRect.sizeDelta = Vector2.zero;
+			viewportRect.localScale = Vector3.one;
+			viewportRect.localRotation = Quaternion.identity;
+			Image viewportImage = viewportObject.GetComponent<Image>();
+			viewportImage.sprite = sprite;
+			viewportImage.type = Image.Type.Sliced;
+			viewportImage.color = Color.white;
+			Mask viewportMask = viewportObject.GetComponent<Mask>();
+			viewportMask.showMaskGraphic = false;
+
+			scrollRect = viewObject.GetComponent<ScrollRect>();
+			scrollRect.viewport = viewportRect;
+			scrollRect.horizontal = false;
+			scrollRect.vertical = true;
+			scrollRect.movementType = ScrollRect.MovementType.Elastic;
+			scrollRect.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+			scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+			scrollRect.horizontalScrollbarSpacing = -3f;
+			scrollRect.verticalScrollbarSpacing = -3f;
+			return group;
+		}
+
+		private static TextMeshProUGUI CreateStackCraftJournalContent(
+			string objectName,
+			RectTransform parent,
+			ScrollRect scrollRect,
+			TMP_FontAsset fontAsset,
+			string text)
+		{
+			TextMeshProUGUI content = CreatePanelText(objectName, parent, fontAsset, text, 30f);
+			content.alignment = TextAlignmentOptions.TopLeft;
+			content.textWrappingMode = TextWrappingModes.Normal;
+			content.lineSpacing = 0f;
+			ApplyStackCraftTextParameters(
+				content,
+				fontSizeBase: 30f,
+				HorizontalAlignmentOptions.Left,
+				VerticalAlignmentOptions.Top,
+				Vector4.zero);
+			RectTransform contentRect = content.rectTransform;
+			contentRect.anchorMin = new Vector2(0f, 1f);
+			contentRect.anchorMax = new Vector2(1f, 1f);
+			contentRect.pivot = new Vector2(0f, 1f);
+			contentRect.anchoredPosition = Vector2.zero;
+			contentRect.sizeDelta = Vector2.zero;
+			VerticalLayoutGroup layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
+			layout.padding.left = 20;
+			layout.padding.right = 20;
+			layout.padding.top = 10;
+			layout.padding.bottom = 10;
+			layout.childAlignment = TextAnchor.UpperLeft;
+			layout.childControlWidth = true;
+			layout.childControlHeight = true;
+			layout.childForceExpandWidth = false;
+			layout.childForceExpandHeight = false;
+			layout.spacing = 10f;
+			ContentSizeFitter contentFitter = content.gameObject.AddComponent<ContentSizeFitter>();
+			contentFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+			contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+			scrollRect.content = contentRect;
+			return content;
+		}
 
         private static TextMeshProUGUI CreatePanelText(
             string objectName,
@@ -4904,6 +6086,46 @@ namespace Gameplay.Tests.Support.Editor
             }
         }
 
+		private static Image CreateStatsIcon(string objectName, Transform parent, Sprite sprite)
+		{
+			GameObject iconObject = new(objectName, typeof(RectTransform), typeof(Image));
+			iconObject.transform.SetParent(parent, false);
+			RectTransform iconRect = iconObject.GetComponent<RectTransform>();
+			SetAnchoredRect(
+				iconRect,
+				Vector2.zero,
+				new Vector2(1f, 0.5f),
+				new Vector2(0f, 30f),
+				Vector2.zero);
+			Image icon = iconObject.GetComponent<Image>();
+			icon.sprite = sprite;
+			icon.preserveAspect = true;
+			icon.raycastTarget = false;
+			return icon;
+		}
+
+		private static TextMeshProUGUI CreateStatsLabel(
+			string objectName,
+			Transform parent,
+			TMP_FontAsset fontAsset,
+			string text)
+		{
+			TextMeshProUGUI label = CreatePanelText(objectName, parent, fontAsset, text, 30f);
+			SetAnchoredRect(
+				label.rectTransform,
+				Vector2.zero,
+				new Vector2(0.5f, 0.5f),
+				new Vector2(0f, 30f),
+				Vector2.zero);
+			ApplyStackCraftTextParameters(
+				label,
+				fontSizeBase: 30f,
+				HorizontalAlignmentOptions.Left,
+				VerticalAlignmentOptions.Middle,
+				Vector4.zero);
+			return label;
+		}
+
         private static void SetAnchoredRect(
             RectTransform rect,
             Vector2 anchor,
@@ -4919,6 +6141,15 @@ namespace Gameplay.Tests.Support.Editor
             rect.localScale = Vector3.one;
             rect.localRotation = Quaternion.identity;
         }
+
+		private static void SetLayerRecursively(GameObject root, int layer)
+		{
+			root.layer = layer;
+			foreach (Transform child in root.transform)
+			{
+				SetLayerRecursively(child.gameObject, layer);
+			}
+		}
 
         private static void SetStretchRect(RectTransform rect, float horizontalPadding)
         {
@@ -4949,8 +6180,12 @@ namespace Gameplay.Tests.Support.Editor
 
 		private static TabletopView CreateTabletopTestRoot(
 			Transform parent,
-			TabletopViewSettings viewSettings)
+			TabletopViewSettings viewSettings,
+			string scenarioContentId,
+			FoundationTestInitialLayout initialLayout,
+			uint authoritativeRandomSeedOverride)
 		{
+			viewSettings = LoadPersistentTabletopViewSettings();
 			if (viewSettings == null || !EditorUtility.IsPersistent(viewSettings))
             {
                 throw new MissingReferenceException(
@@ -4972,16 +6207,18 @@ namespace Gameplay.Tests.Support.Editor
                     $"{nameof(TabletopView)} 的视图设置写入后回读不一致，拒绝保存不完整测试场景。");
             }
 
-            TabletopCardDragInput dragInput = tabletopRoot.AddComponent<TabletopCardDragInput>();
-			TabletopInteraction tabletopInteraction = tabletopRoot.AddComponent<TabletopInteraction>();
+            tabletopRoot.AddComponent<TabletopCardDragInput>();
+			tabletopRoot.AddComponent<TabletopInteraction>();
 			tabletopRoot.AddComponent<ScenarioPauseInput>();
 
             FoundationTestSceneHarness controller =
                 tabletopRoot.AddComponent<FoundationTestSceneHarness>();
 			SerializedObject serializedController = new(controller);
-			serializedController.FindProperty("m_tabletopView").objectReferenceValue = tabletopView;
-			serializedController.FindProperty("m_dragInput").objectReferenceValue = dragInput;
-			serializedController.FindProperty("m_tabletopInteraction").objectReferenceValue = tabletopInteraction;
+			RequireProperty(serializedController, "m_scenarioId")
+				.FindPropertyRelative("m_value").stringValue = scenarioContentId;
+			RequireProperty(serializedController, "m_initialLayout").enumValueIndex = (int)initialLayout;
+			RequireProperty(serializedController, "m_authoritativeRandomSeedOverride").longValue =
+				authoritativeRandomSeedOverride;
             serializedController.ApplyModifiedPropertiesWithoutUndo();
 			return tabletopView;
         }
@@ -5048,6 +6285,7 @@ namespace Gameplay.Tests.Support.Editor
                 new[]
                 {
                     ScenePath,
+					StackCraftParityScenePath,
                     MapScenePath,
                     SecondMapScenePath
                 },

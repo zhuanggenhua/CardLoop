@@ -19,11 +19,19 @@ metadata:
 
 ## YAML 结构守卫
 
+- 进入 Unity 编辑器、Unity 自动化或 batchmode 前，先用项目工具做静态结构检查；正式入口是：
+
+```powershell
+node .spec/tools/unity-yaml-guard.mjs
+```
+
+该工具只检查会破坏 Unity 导入的结构问题：空 `.meta`、缺失或非法 GUID、`.unity` / `.prefab` 文件头损坏、Unity 对象块缺失，以及 `$1` 这类脚本替换残留。行尾风格、历史插件格式和普通换行差异不能作为损坏结论。
 - 整文件写回时必须保留 Unity YAML preamble、对象块原顺序和尾部空白；结果必须仍以标准头开头：
   - `%YAML 1.1`
   - `%TAG !u! tag:unity3d.com,2011:`
   - 第一条 `--- !u!...` 对象块
 - 禁止只拼对象块生成最终 `.unity` / `.prefab`；必须写回完整文件结构。
+- 禁止用会被 PowerShell 提前展开的字符串直接写 Unity 序列化文件。涉及 `$1`、`$&`、反向引用或正则替换时，必须使用 `apply_patch`、单引号 here-string、Node 脚本的字面字符串，或先在临时副本上验证输出；不得把 shell 字符串拼接当作 Unity YAML 写入器。
 - 写入后立即回读并检查：标准头数量、对象块数量、重复 fileID、本地 fileID 引用、GameObject 组件块是否存在、组件块 `m_GameObject` 是否指回正确宿主。
 - 批量替换必须保持字段缩进不变；缩进就是层级真相。写回后至少抽查关键字段仍在正确对象块和正确层级。
 
@@ -48,3 +56,9 @@ metadata:
 - 对 UI、Prefab、场景层级或组件挂载的写入，必须至少核对：同一父节点下是否出现同名 / 同职责副本、同一对象是否多出重复组件、原正式入口是否被新副本绕开。
 - 如果写入路径包含 Prefab 导出、实例 Apply、覆盖同步或批量回写，必须额外证明这次命中已有对象，而不是新追加一份。
 - `git diff --check` 和 `.spec` / 文档校验不能替代 Unity 资源结构回读；它们只证明文本层没有明显格式错误。
+
+## 已打开场景被外部写盘
+
+- 如果场景生成器、YAML 修复或外部进程改写了 Unity 正在打开的 `.unity` 文件，Unity 弹出重载确认是预期保护，不是用户手动改动，也不是编译错误。
+- 这类弹窗必须按目标场景处理：确认磁盘改动属于本轮目标后，优先接受磁盘版本；如果不接受，Unity 内存里的旧场景后续保存可能覆盖本轮写盘结果。
+- 需要自动确认时，只允许使用项目工具 `node .spec/tools/unity-confirm-scene-reload.mjs --project CardLoop --scene <SceneName> --confirm-reload-dialog`；该工具不是通用窗口点击器，不能用于未知弹窗。

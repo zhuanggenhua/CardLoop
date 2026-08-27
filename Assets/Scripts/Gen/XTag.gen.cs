@@ -46,6 +46,19 @@ namespace GAS.Runtime
         public const int Combat_Melee = 7001;
         public const int Combat_Ranged = 7002;
         public const int Combat_Magic = 7003;
+        public const int Card = 800;
+        public const int Card_Category = 8001;
+        public const int Card_Category_Resource = 8001001;
+        public const int Card_Category_Character = 8001002;
+        public const int Card_Category_Consumable = 8001003;
+        public const int Card_Category_Material = 8001004;
+        public const int Card_Category_Equipment = 8001005;
+        public const int Card_Category_Structure = 8001006;
+        public const int Card_Category_Currency = 8001007;
+        public const int Card_Category_Recipe = 8001008;
+        public const int Card_Category_Mob = 8001009;
+        public const int Card_Category_Area = 8001010;
+        public const int Card_Category_Valuable = 8001011;
 
         public static void InitTagList()
         {
@@ -88,6 +101,19 @@ namespace GAS.Runtime
                 { Combat_Melee, new GameplayTag(Combat_Melee, new int[] { Combat }, new int[] {  }) },
                 { Combat_Ranged, new GameplayTag(Combat_Ranged, new int[] { Combat }, new int[] {  }) },
                 { Combat_Magic, new GameplayTag(Combat_Magic, new int[] { Combat }, new int[] {  }) },
+                { Card, new GameplayTag(Card, new int[] {  }, new int[] { Card_Category, Card_Category_Resource, Card_Category_Character, Card_Category_Consumable, Card_Category_Material, Card_Category_Equipment, Card_Category_Structure, Card_Category_Currency, Card_Category_Recipe, Card_Category_Mob, Card_Category_Area, Card_Category_Valuable }) },
+                { Card_Category, new GameplayTag(Card_Category, new int[] { Card }, new int[] { Card_Category_Resource, Card_Category_Character, Card_Category_Consumable, Card_Category_Material, Card_Category_Equipment, Card_Category_Structure, Card_Category_Currency, Card_Category_Recipe, Card_Category_Mob, Card_Category_Area, Card_Category_Valuable }) },
+                { Card_Category_Resource, new GameplayTag(Card_Category_Resource, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Character, new GameplayTag(Card_Category_Character, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Consumable, new GameplayTag(Card_Category_Consumable, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Material, new GameplayTag(Card_Category_Material, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Equipment, new GameplayTag(Card_Category_Equipment, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Structure, new GameplayTag(Card_Category_Structure, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Currency, new GameplayTag(Card_Category_Currency, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Recipe, new GameplayTag(Card_Category_Recipe, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Mob, new GameplayTag(Card_Category_Mob, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Area, new GameplayTag(Card_Category_Area, new int[] { Card, Card_Category }, new int[] {  }) },
+                { Card_Category_Valuable, new GameplayTag(Card_Category_Valuable, new int[] { Card, Card_Category }, new int[] {  }) },
             },
             new Dictionary<int, string>()
             {
@@ -128,6 +154,19 @@ namespace GAS.Runtime
                 { Combat_Melee, "Combat.Melee" },
                 { Combat_Ranged, "Combat.Ranged" },
                 { Combat_Magic, "Combat.Magic" },
+                { Card, "Card" },
+                { Card_Category, "Card.Category" },
+                { Card_Category_Resource, "Card.Category.Resource" },
+                { Card_Category_Character, "Card.Category.Character" },
+                { Card_Category_Consumable, "Card.Category.Consumable" },
+                { Card_Category_Material, "Card.Category.Material" },
+                { Card_Category_Equipment, "Card.Category.Equipment" },
+                { Card_Category_Structure, "Card.Category.Structure" },
+                { Card_Category_Currency, "Card.Category.Currency" },
+                { Card_Category_Recipe, "Card.Category.Recipe" },
+                { Card_Category_Mob, "Card.Category.Mob" },
+                { Card_Category_Area, "Card.Category.Area" },
+                { Card_Category_Valuable, "Card.Category.Valuable" },
             }
             );
         }

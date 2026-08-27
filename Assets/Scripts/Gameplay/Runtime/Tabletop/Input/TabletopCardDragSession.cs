@@ -68,7 +68,7 @@ namespace Gameplay.Tabletop
 	/// </summary>
 	internal sealed class TabletopCardDragSession
 	{
-		private readonly float m_dragStartScreenDistanceSquared;
+		private readonly float m_clickThresholdSquared;
 
 		public bool IsActive { get; private set; }
 
@@ -82,19 +82,17 @@ namespace Gameplay.Tabletop
 
 		public Vector2 CurrentStackPosition { get; private set; }
 
-		private Vector2 PressPointerScreenPosition { get; set; }
-
 		private Vector2 PointerToStackTableOffset { get; set; }
 
-		public TabletopCardDragSession(float dragStartScreenDistance)
+		public TabletopCardDragSession(float clickThreshold)
 		{
-			if (!float.IsFinite(dragStartScreenDistance) || dragStartScreenDistance < 0f)
+			if (!float.IsFinite(clickThreshold) || clickThreshold < 0f)
 			{
 				throw new ArgumentOutOfRangeException(
-					nameof(dragStartScreenDistance),
-					"拖拽起始屏幕距离不能为负数或非有限值。");
+					nameof(clickThreshold),
+					"点击判定距离不能为负数或非有限值。");
 			}
-			m_dragStartScreenDistanceSquared = dragStartScreenDistance * dragStartScreenDistance;
+			m_clickThresholdSquared = clickThreshold * clickThreshold;
 		}
 
 		public void Begin(
@@ -117,7 +115,6 @@ namespace Gameplay.Tabletop
 			IsActive = true;
 			IsDragging = false;
 			CardId = cardId;
-			PressPointerScreenPosition = pointerScreenPosition;
 			PressPointerTablePosition = pointerTablePosition;
 			CurrentPointerTablePosition = pointerTablePosition;
 			CurrentStackPosition = stackPosition;
@@ -132,8 +129,8 @@ namespace Gameplay.Tabletop
 			CurrentPointerTablePosition = pointerTablePosition;
 			CurrentStackPosition = pointerTablePosition + PointerToStackTableOffset;
 			if (!IsDragging &&
-				(pointerScreenPosition - PressPointerScreenPosition).sqrMagnitude >=
-				m_dragStartScreenDistanceSquared)
+				(pointerTablePosition - PressPointerTablePosition).sqrMagnitude >=
+				m_clickThresholdSquared)
 			{
 				IsDragging = true;
 			}
@@ -184,7 +181,6 @@ namespace Gameplay.Tabletop
 			IsActive = false;
 			IsDragging = false;
 			CardId = default(TabletopCardId);
-			PressPointerScreenPosition = default;
 			PressPointerTablePosition = default;
 			CurrentPointerTablePosition = default;
 			CurrentStackPosition = default;

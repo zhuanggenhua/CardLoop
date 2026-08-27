@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using GameCore;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -58,9 +59,9 @@ namespace Gameplay.Tabletop
 		[Tooltip("参考模板命中结果的 DOPunchScale 持续 1 秒，完成后销毁；本项目播放完成后由 TabletopView 释放实例。")]
 		private float m_punchDurationSeconds = 1f;
 
-		private float m_elapsedSeconds;
 		private bool m_isPlaying;
 		private Vector3 m_baseScale = Vector3.one;
+		private Tween m_punchTween;
 
 		public bool IsPlaying => m_isPlaying;
 
@@ -114,8 +115,7 @@ namespace Gameplay.Tabletop
 			ApplyHitResult(isMissed, isCriticalHit, appliedDamage);
 			ApplyEffectiveness(matchupResult);
 			gameObject.SetActive(true);
-			m_elapsedSeconds = 0f;
-			m_isPlaying = true;
+			PlayPunchTween();
 		}
 
 		private void ApplyHitResult(bool isMissed, bool isCriticalHit, int appliedDamage)
@@ -170,23 +170,44 @@ namespace Gameplay.Tabletop
 			return sprite;
 		}
 
-		private void Update()
+		private void PlayPunchTween()
 		{
-			if (!m_isPlaying)
+			if (m_punchTween != null)
 			{
-				return;
+				m_punchTween.Kill();
+				m_punchTween = null;
 			}
 
-			m_elapsedSeconds += Time.unscaledDeltaTime;
-			float normalizedTime = Mathf.Clamp01(m_elapsedSeconds / m_punchDurationSeconds);
-			float punch = Mathf.Sin(normalizedTime * Mathf.PI * 3f) *
-				(1f - normalizedTime) *
-				m_punchScale;
-			transform.localScale = m_baseScale + new Vector3(punch, punch, 0f);
-			if (normalizedTime >= 1f)
+			m_isPlaying = true;
+			Tween punchTween = null;
+			punchTween = transform
+				.DOPunchScale(new Vector3(m_punchScale, m_punchScale, 0f), m_punchDurationSeconds)
+				.SetUpdate(true)
+				.SetTarget(this)
+				.SetLink(gameObject, LinkBehaviour.KillOnDisable)
+				.OnComplete(() =>
+				{
+					m_isPlaying = false;
+					gameObject.SetActive(false);
+				})
+				.OnKill(() =>
+				{
+					if (!ReferenceEquals(m_punchTween, punchTween))
+					{
+						return;
+					}
+					m_punchTween = null;
+				});
+			m_punchTween = punchTween;
+		}
+
+		private void OnDestroy()
+		{
+			if (m_punchTween != null)
 			{
+				m_punchTween.Kill();
+				m_punchTween = null;
 				m_isPlaying = false;
-				gameObject.SetActive(false);
 			}
 		}
 	}

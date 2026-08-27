@@ -13,11 +13,53 @@ namespace Gameplay.Tabletop
 	/// </summary>
 	public sealed class TabletopCardView : MonoBehaviour
 	{
+		private static readonly Vector3 PackVendorTitleLocalPosition = new Vector3(0f, 0f, 0f);
+		private static readonly Vector2 PackVendorTitleSize = new Vector2(0.7f, 0.4f);
+		private const float PackVendorTitleFontSize = 1.2f;
+		private static readonly Vector3 PackVendorTrackerLocalPosition = new Vector3(0f, 0f, 0.35f);
+		private static readonly Vector2 PackVendorTrackerSize = new Vector2(0.8f, 0.3f);
+		private const float PackVendorTrackerFontSize = 1.1f;
+		private static readonly Vector3 PackVendorPriceLocalPosition = new Vector3(0f, 0f, -0.35f);
+		private static readonly Vector2 PackVendorPriceSize = new Vector2(0.8f, 0.3f);
+		private const float PackVendorPriceFontSize = 1.1f;
+		private static readonly Vector2 StackCraftTextAnchoredPosition = new Vector2(0f, 0.001f);
+		private const float StackCraftVendorTextFontSizeMin = 18f;
+		private const float StackCraftVendorTextFontSizeMax = 72f;
+		private static readonly Vector3 PackInstanceTitleLocalPosition = new Vector3(0f, 0f, -0.43f);
+		private static readonly Vector2 PackInstanceTitleSize = new Vector2(0.8f, 0.2f);
+		private static readonly Vector4 PackInstanceTitleMargin = new Vector4(0.05f, 0.025f, 0.05f, 0.025f);
+		private static readonly Color PackInstanceTitleColor = new Color(1f, 1f, 1f, 0.6f);
+		private const float PackInstanceTitleFontSize = 1f;
+		private const float PackInstanceTitleMinFontSize = 0.4f;
+		private const float PackInstanceTitleMaxFontSize = 1f;
+		private static readonly Vector3 DefaultCardColliderSize = new Vector3(0.8f, 0f, 1.0000002f);
+		private static readonly Vector3 PackInstanceColliderSize = new Vector3(0.9f, 0f, 1.3000002f);
+
 		[Header("表现组件")]
 		[SerializeField]
 		[LabelText("表面渲染器")]
 		[Tooltip("卡牌表面的 MeshRenderer。StackCraft 卡面由同一个材质承载底板、插画覆盖层、颜色和受击闪光。")]
 		private Renderer m_surfaceRenderer;
+
+		[SerializeField]
+		[LabelText("表面网格")]
+		[Tooltip("卡牌表面的 MeshFilter。普通卡牌和卡包共用同一个视图组件，但必须按内容类型切换 StackCraft 对应 FBX。")]
+		private MeshFilter m_surfaceMeshFilter;
+
+		[SerializeField]
+		[LabelText("普通卡牌网格")]
+		[Tooltip("StackCraft Card.fbx 的自有副本，用于普通卡、商贩和收购点。")]
+		private Mesh m_defaultSurfaceMesh;
+
+		[SerializeField]
+		[LabelText("卡包网格")]
+		[Tooltip("StackCraft Pack.fbx 的自有副本，用于 CardPackDefinition，不能用普通卡牌网格缩放模拟。")]
+		private Mesh m_packSurfaceMesh;
+
+		[SerializeField]
+		[LabelText("高亮网格")]
+		[Tooltip("候选高亮的 MeshFilter。卡包切换 Pack.fbx 时，高亮轮廓必须同步切换。")]
+		private MeshFilter m_highlightMeshFilter;
 
 		[SerializeField]
 		[LabelText("表面纹理属性")]
@@ -35,6 +77,16 @@ namespace Gameplay.Tabletop
 		private GameObject m_highlightRoot;
 
 		[SerializeField]
+		[LabelText("收购点货币图标")]
+		[Tooltip("StackCraft CardBuyer 子物体 Icon 的 MeshRenderer，只在收购点卡牌上显示。")]
+		private MeshRenderer m_cardBuyerCurrencyIconRenderer;
+
+		[SerializeField]
+		[LabelText("收购点图标纹理属性")]
+		[Tooltip("StackCraft CurrencyIcon 材质接收货币图片的纹理属性名。")]
+		private string m_cardBuyerCurrencyTextureProperty = "_MainTex";
+
+		[SerializeField]
 		[LabelText("标题文本")]
 		[Tooltip("显示卡牌作者源名称。它属于卡牌本体表面，不替代右侧详情面板。")]
 		private TMP_Text m_titleLabel;
@@ -48,11 +100,6 @@ namespace Gameplay.Tabletop
 		[LabelText("营养文本")]
 		[Tooltip("显示 StackCraft 食物卡底部营养数字；非食物卡保持隐藏。")]
 		private TMP_Text m_nutritionLabel;
-
-		[SerializeField]
-		[LabelText("使用次数文本")]
-		[Tooltip("显示当前剩余使用次数；一次性卡牌不显示，避免无意义噪声。")]
-		private TMP_Text m_usesLabel;
 
 		[SerializeField]
 		[LabelText("角色状态节点")]
@@ -108,17 +155,27 @@ namespace Gameplay.Tabletop
 
 		private SpriteRenderer[] m_spriteRenderers;
 
+		private Renderer[] m_characterStatusRenderers;
+
 		private CardDefinition m_contentAsset;
 
 		private CharacterCard m_characterCard;
 
-		private int m_displayedRemainingUses = -1;
+		private int m_displayedPrice = int.MinValue;
+
+		private int m_displayedNutrition = int.MinValue;
 
 		private float m_displayedHealth = float.NaN;
 
 		private float m_displayedMaxHealth = float.NaN;
 
 		private Vector2 m_appliedCardSize = Vector2.one;
+
+		private Vector2 m_unscaledViewFootprint;
+
+		private Vector3 m_unscaledColliderCenter;
+
+		private bool m_hasUnscaledViewFootprint;
 
 		private Quaternion m_hurtBaseRotation = Quaternion.identity;
 
@@ -129,6 +186,8 @@ namespace Gameplay.Tabletop
 		private float m_surfaceFlashAmount;
 
 		private Sprite m_displayedArtwork;
+
+		private MaterialPropertyBlock m_cardBuyerCurrencyIconPropertyBlock;
 
 		public TabletopCard TabletopCard { get; private set; }
 
@@ -156,12 +215,29 @@ namespace Gameplay.Tabletop
 
 		public string DisplayedNutritionText => m_nutritionLabel == null ? string.Empty : m_nutritionLabel.text;
 
-		public string DisplayedUsesText => m_usesLabel == null ? string.Empty : m_usesLabel.text;
-
 		public bool IsHurtFeedbackActive => m_hurtTween != null && m_hurtTween.active;
+
+		public Vector2 AppliedCardSize => m_appliedCardSize;
 
 		/// <summary>当前卡牌表现的基础排序值，供附着在此卡牌上的纯表现元素对齐层级。</summary>
 		public int SortingOrder { get; private set; }
+
+		/// <summary>
+		/// 计算牌桌平面上一点到当前可见卡面矩形的最短距离，用于对齐 StackCraft 的 AttachRadius 目标吸附。
+		/// </summary>
+		internal float DistanceToVisibleFootprint(Vector2 tablePosition)
+		{
+			if (!float.IsFinite(tablePosition.x) || !float.IsFinite(tablePosition.y))
+			{
+				throw new ArgumentException("牌桌命中位置必须是有限坐标。", nameof(tablePosition));
+			}
+
+			Vector2 center = TabletopCoordinateSpace.ToTablePosition(transform.localPosition);
+			Vector2 halfSize = m_appliedCardSize * 0.5f;
+			float dx = Math.Max(Math.Abs(tablePosition.x - center.x) - halfSize.x, 0f);
+			float dy = Math.Max(Math.Abs(tablePosition.y - center.y) - halfSize.y, 0f);
+			return Mathf.Sqrt(dx * dx + dy * dy);
+		}
 
 		private void Awake()
 		{
@@ -192,8 +268,58 @@ namespace Gameplay.Tabletop
 			m_isInteractionHighlighted = false;
 			m_presentationHighlightRemainingSeconds = 0f;
 			ApplyHighlightVisibility();
+			HideCardBuyerCurrencyIcon();
+			ApplySurfaceMeshForContent(contentAsset);
 			RefreshSurfaceText();
+			ApplyCardPackInstanceSurface();
 			BindCharacterStatus(tabletopCard as CharacterCard);
+		}
+
+		private void ApplySurfaceMeshForContent(CardDefinition contentAsset)
+		{
+			if (m_surfaceMeshFilter == null)
+			{
+				throw new InvalidOperationException("卡牌视图预制体缺少表面 MeshFilter，无法按 StackCraft Card / Pack 独立 FBX 投影。");
+			}
+			if (m_defaultSurfaceMesh == null)
+			{
+				throw new InvalidOperationException("卡牌视图预制体缺少 StackCraft Card.fbx 自有副本网格引用。");
+			}
+
+			Mesh targetMesh = m_defaultSurfaceMesh;
+			Vector3 targetColliderSize = DefaultCardColliderSize;
+			if (contentAsset is CardPackDefinition)
+			{
+				if (m_packSurfaceMesh == null)
+				{
+					throw new InvalidOperationException("卡牌视图预制体缺少 StackCraft Pack.fbx 自有副本网格引用，不能把卡包显示成普通卡牌。");
+				}
+
+				targetMesh = m_packSurfaceMesh;
+				targetColliderSize = PackInstanceColliderSize;
+			}
+
+			m_surfaceMeshFilter.sharedMesh = targetMesh;
+			if (m_highlightMeshFilter != null)
+			{
+				m_highlightMeshFilter.sharedMesh = targetMesh;
+			}
+
+			ApplyUnscaledColliderFootprint(targetColliderSize);
+		}
+
+		private void ApplyUnscaledColliderFootprint(Vector3 colliderSize)
+		{
+			if (!TryGetComponent(out BoxCollider cardCollider))
+			{
+				throw new InvalidOperationException("卡牌视图预制体缺少 BoxCollider，无法对齐 StackCraft Card / Pack 可点击尺寸。");
+			}
+
+			cardCollider.size = colliderSize;
+			cardCollider.center = Vector3.zero;
+			m_unscaledViewFootprint = new Vector2(colliderSize.x, colliderSize.z);
+			m_unscaledColliderCenter = cardCollider.center;
+			m_hasUnscaledViewFootprint = true;
 		}
 
 		private void BindCharacterStatus(CharacterCard characterCard)
@@ -234,19 +360,17 @@ namespace Gameplay.Tabletop
 			{
 				return;
 			}
+			if (m_contentAsset is CardBuyerDefinition)
+			{
+				ApplyCardBuyerTextSurface();
+				return;
+			}
 			if (m_titleLabel != null)
 			{
 				m_titleLabel.text = m_contentAsset.DisplayName;
 			}
 			RefreshPriceText();
 			RefreshNutritionText();
-			if (m_usesLabel != null)
-			{
-				m_usesLabel.text = TabletopCard.RemainingUses > 1
-					? "x" + TabletopCard.RemainingUses.ToString()
-					: string.Empty;
-			}
-			m_displayedRemainingUses = TabletopCard.RemainingUses;
 		}
 
 		private void RefreshPriceText()
@@ -257,6 +381,7 @@ namespace Gameplay.Tabletop
 			}
 
 			int price = ResolvePriceValue(TabletopCard, m_contentAsset);
+			m_displayedPrice = price;
 			m_priceLabel.text = price > 0 ? price.ToString() : string.Empty;
 			m_priceLabel.gameObject.SetActive(price > 0);
 		}
@@ -268,11 +393,220 @@ namespace Gameplay.Tabletop
 				return;
 			}
 
-			int nutrition = m_contentAsset is FoodCardDefinition food
-				? food.NutritionPerUse
-				: 0;
+			int nutrition = ResolveNutritionValue(m_contentAsset);
+			m_displayedNutrition = nutrition;
 			m_nutritionLabel.text = nutrition > 0 ? nutrition.ToString() : string.Empty;
 			m_nutritionLabel.gameObject.SetActive(nutrition > 0);
+		}
+
+		/// <summary>
+		/// 用 StackCraft 卡包商贩表面语义覆盖普通卡面文字：标题显示卡包名，底部显示剩余价格，中部显示收藏进度。
+		/// </summary>
+		public void ApplyPackVendorSurface(
+			string offeredPackName,
+			int remainingPrice,
+			CardPackCollectionProgress progress)
+		{
+			if (string.IsNullOrWhiteSpace(offeredPackName))
+			{
+				throw new ArgumentException("卡包商贩表面必须显示被出售卡包的名称。", nameof(offeredPackName));
+			}
+			if (remainingPrice <= 0)
+			{
+				throw new ArgumentOutOfRangeException(nameof(remainingPrice), remainingPrice, "卡包商贩表面剩余价格必须大于 0。");
+			}
+
+			if (m_titleLabel != null)
+			{
+				ApplyPackVendorTextLayout(
+					m_titleLabel,
+					PackVendorTitleLocalPosition,
+					PackVendorTitleSize,
+					PackVendorTitleFontSize,
+					VerticalAlignmentOptions.Middle);
+				m_titleLabel.text = offeredPackName;
+			}
+			if (m_priceLabel != null)
+			{
+				ApplyPackVendorTextLayout(
+					m_priceLabel,
+					PackVendorPriceLocalPosition,
+					PackVendorPriceSize,
+					PackVendorPriceFontSize,
+					VerticalAlignmentOptions.Middle);
+				m_priceLabel.text = "价格：" + remainingPrice;
+				m_priceLabel.gameObject.SetActive(true);
+			}
+			if (m_nutritionLabel != null)
+			{
+				ApplyPackVendorTextLayout(
+					m_nutritionLabel,
+					PackVendorTrackerLocalPosition,
+					PackVendorTrackerSize,
+					PackVendorTrackerFontSize,
+					VerticalAlignmentOptions.Top);
+				string trackerText = BuildPackVendorTrackerText(progress);
+				m_nutritionLabel.text = trackerText;
+				m_nutritionLabel.gameObject.SetActive(trackerText.Length > 0);
+			}
+
+			m_displayedPrice = remainingPrice;
+			m_displayedNutrition = 0;
+		}
+
+		/// <summary>
+		/// 用 StackCraft CardBuyer 表面语义覆盖普通卡面：根材质显示交易区，标题显示出售，子图标显示货币。
+		/// </summary>
+		public void ApplyCardBuyerSurface(Sprite currencyArtwork)
+		{
+			if (currencyArtwork == null)
+			{
+				throw new ArgumentNullException(nameof(currencyArtwork));
+			}
+			if (m_contentAsset is not CardBuyerDefinition)
+			{
+				throw new InvalidOperationException("只有收购点卡牌才能应用 StackCraft CardBuyer 表面。");
+			}
+			if (m_cardBuyerCurrencyIconRenderer == null)
+			{
+				throw new InvalidOperationException("卡牌视图预制体缺少 StackCraft CardBuyer 货币图标渲染器。");
+			}
+			if (string.IsNullOrWhiteSpace(m_cardBuyerCurrencyTextureProperty))
+			{
+				throw new InvalidOperationException("卡牌视图缺少 StackCraft CardBuyer 货币图标纹理属性名。");
+			}
+			ApplyCardBuyerTextSurface();
+			if (m_cardBuyerCurrencyIconPropertyBlock == null)
+			{
+				m_cardBuyerCurrencyIconPropertyBlock = new MaterialPropertyBlock();
+			}
+			m_cardBuyerCurrencyIconRenderer.GetPropertyBlock(m_cardBuyerCurrencyIconPropertyBlock);
+			m_cardBuyerCurrencyIconPropertyBlock.SetTexture(
+				Shader.PropertyToID(m_cardBuyerCurrencyTextureProperty),
+				currencyArtwork.texture);
+			m_cardBuyerCurrencyIconRenderer.SetPropertyBlock(m_cardBuyerCurrencyIconPropertyBlock);
+			m_cardBuyerCurrencyIconRenderer.gameObject.SetActive(true);
+		}
+
+		private void ApplyCardBuyerTextSurface()
+		{
+			if (m_titleLabel != null)
+			{
+				Transform titleTransform = m_titleLabel.transform;
+				titleTransform.localPosition = new Vector3(0f, 0f, -0.35f);
+				if (titleTransform is RectTransform rectTransform)
+				{
+					rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+					rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+					rectTransform.pivot = new Vector2(0.5f, 0.5f);
+					rectTransform.anchoredPosition = StackCraftTextAnchoredPosition;
+					rectTransform.sizeDelta = new Vector2(0.8f, 0.3f);
+				}
+				m_titleLabel.text = "出售";
+				m_titleLabel.fontSize = 1.5f;
+				m_titleLabel.enableAutoSizing = false;
+				m_titleLabel.alignment = TextAlignmentOptions.Center;
+				m_titleLabel.margin = Vector4.zero;
+				m_titleLabel.color = Color.white;
+			}
+
+			ClearSurfaceText(m_priceLabel);
+			ClearSurfaceText(m_nutritionLabel);
+			m_displayedPrice = 0;
+			m_displayedNutrition = 0;
+		}
+
+		private void HideCardBuyerCurrencyIcon()
+		{
+			if (m_cardBuyerCurrencyIconRenderer != null)
+			{
+				m_cardBuyerCurrencyIconRenderer.gameObject.SetActive(false);
+			}
+		}
+
+		private void ApplyCardPackInstanceSurface()
+		{
+			if (m_contentAsset is not CardPackDefinition)
+			{
+				return;
+			}
+
+			if (m_titleLabel != null)
+			{
+				Transform titleTransform = m_titleLabel.transform;
+				titleTransform.localPosition = PackInstanceTitleLocalPosition;
+				if (titleTransform is RectTransform rectTransform)
+				{
+					rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+					rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+					rectTransform.pivot = new Vector2(0.5f, 0.5f);
+					rectTransform.anchoredPosition = StackCraftTextAnchoredPosition;
+					rectTransform.sizeDelta = PackInstanceTitleSize;
+				}
+				m_titleLabel.fontSize = PackInstanceTitleFontSize;
+				m_titleLabel.fontSizeMin = PackInstanceTitleMinFontSize;
+				m_titleLabel.fontSizeMax = PackInstanceTitleMaxFontSize;
+				m_titleLabel.enableAutoSizing = true;
+				m_titleLabel.alignment = TextAlignmentOptions.Center;
+				m_titleLabel.margin = PackInstanceTitleMargin;
+				m_titleLabel.color = PackInstanceTitleColor;
+			}
+
+			ClearSurfaceText(m_priceLabel);
+			ClearSurfaceText(m_nutritionLabel);
+			m_displayedPrice = 0;
+			m_displayedNutrition = 0;
+		}
+
+		private static void ApplyPackVendorTextLayout(
+			TMP_Text label,
+			Vector3 localPosition,
+			Vector2 size,
+			float fontSize,
+			VerticalAlignmentOptions verticalAlignment)
+		{
+			Transform textTransform = label.transform;
+			textTransform.localPosition = localPosition;
+			if (textTransform is RectTransform rectTransform)
+			{
+				rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+				rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+				rectTransform.pivot = new Vector2(0.5f, 0.5f);
+				rectTransform.anchoredPosition = StackCraftTextAnchoredPosition;
+				rectTransform.sizeDelta = size;
+			}
+			label.fontSize = fontSize;
+			label.fontSizeMin = StackCraftVendorTextFontSizeMin;
+			label.fontSizeMax = StackCraftVendorTextFontSizeMax;
+			label.enableAutoSizing = false;
+			label.horizontalAlignment = HorizontalAlignmentOptions.Center;
+			label.verticalAlignment = verticalAlignment;
+			label.margin = Vector4.zero;
+			label.color = Color.white;
+		}
+
+		private static void ClearSurfaceText(TMP_Text label)
+		{
+			if (label == null)
+			{
+				return;
+			}
+
+			label.text = string.Empty;
+			label.gameObject.SetActive(false);
+		}
+
+		private static string BuildPackVendorTrackerText(CardPackCollectionProgress progress)
+		{
+			if (progress.TotalCount == 0)
+			{
+				return string.Empty;
+			}
+			if (progress.IsComplete)
+			{
+				return "<color=#FFD700>已完成</color>";
+			}
+			return "已发现：\n" + progress.DiscoveredCount + "/" + progress.TotalCount;
 		}
 
 		private static int ResolvePriceValue(TabletopCard card, CardDefinition contentAsset)
@@ -286,6 +620,11 @@ namespace Gameplay.Tabletop
 				return vendorDefinition.Price;
 			}
 			return contentAsset.SellValue;
+		}
+
+		private static int ResolveNutritionValue(CardDefinition contentAsset)
+		{
+			return contentAsset is FoodCardDefinition food ? food.NutritionPerUse : 0;
 		}
 
 		private void OnDestroy()
@@ -305,14 +644,58 @@ namespace Gameplay.Tabletop
 			{
 				throw new ArgumentException("卡牌视图尺寸必须具有有限坐标和正数宽高。", "cardSize");
 			}
+			TryGetComponent(out BoxCollider cardCollider);
+			Vector2 unscaledViewFootprint = GetUnscaledViewFootprint(cardCollider);
 			m_appliedCardSize = cardSize;
-			base.transform.localScale = Vector3.one;
-			if (TryGetComponent(out BoxCollider cardCollider))
+			base.transform.localScale = new Vector3(
+				cardSize.x / unscaledViewFootprint.x,
+				1f,
+				cardSize.y / unscaledViewFootprint.y);
+			if (cardCollider != null)
 			{
-				cardCollider.size = new Vector3(cardSize.x, 0f, cardSize.y);
-				cardCollider.center = Vector3.zero;
+				cardCollider.size = new Vector3(unscaledViewFootprint.x, 0f, unscaledViewFootprint.y);
+				cardCollider.center = m_unscaledColliderCenter;
 			}
 			ApplySurfaceLayout();
+		}
+
+		private Vector2 GetUnscaledViewFootprint(BoxCollider cardCollider)
+		{
+			if (m_hasUnscaledViewFootprint)
+			{
+				return m_unscaledViewFootprint;
+			}
+			if (cardCollider != null)
+			{
+				Vector3 colliderSize = cardCollider.size;
+				if (float.IsFinite(colliderSize.x) &&
+					float.IsFinite(colliderSize.z) &&
+					colliderSize.x > 0f &&
+					colliderSize.z > 0f)
+				{
+					m_unscaledViewFootprint = new Vector2(colliderSize.x, colliderSize.z);
+					m_unscaledColliderCenter = cardCollider.center;
+					m_hasUnscaledViewFootprint = true;
+					return m_unscaledViewFootprint;
+				}
+			}
+			if (m_surfaceRenderer != null &&
+				m_surfaceRenderer.TryGetComponent(out MeshFilter surfaceMeshFilter) &&
+				surfaceMeshFilter.sharedMesh != null)
+			{
+				Vector3 meshSize = surfaceMeshFilter.sharedMesh.bounds.size;
+				if (float.IsFinite(meshSize.x) &&
+					float.IsFinite(meshSize.z) &&
+					meshSize.x > 0f &&
+					meshSize.z > 0f)
+				{
+					m_unscaledViewFootprint = new Vector2(meshSize.x, meshSize.z);
+					m_unscaledColliderCenter = Vector3.zero;
+					m_hasUnscaledViewFootprint = true;
+					return m_unscaledViewFootprint;
+				}
+			}
+			throw new InvalidOperationException("卡牌视图缺少可回读的未缩放 StackCraft 卡牌本体尺寸，无法把作者源尺寸投影到可见表面。");
 		}
 
 		public void ApplyPose(TabletopCardPose pose, float durationSeconds)
@@ -323,6 +706,7 @@ namespace Gameplay.Tabletop
 			{
 				CancelMoveTween();
 				base.transform.localPosition = pose.LocalPosition;
+				SyncPhysicsTransformsWhenPaused();
 				return;
 			}
 
@@ -333,6 +717,10 @@ namespace Gameplay.Tabletop
 				.SetUpdate(true)
 				.SetTarget(this)
 				.SetLink(gameObject, LinkBehaviour.KillOnDisable);
+			if (Time.timeScale == 0f)
+			{
+				moveTween.OnUpdate(Physics.SyncTransforms);
+			}
 			moveTween.OnKill(() =>
 			{
 				if (ReferenceEquals(m_moveTween, moveTween))
@@ -357,6 +745,7 @@ namespace Gameplay.Tabletop
 			{
 				m_isFollowingDragTarget = false;
 				base.transform.localPosition = pose.LocalPosition;
+				SyncPhysicsTransformsWhenPaused();
 			}
 			else
 			{
@@ -463,6 +852,14 @@ namespace Gameplay.Tabletop
 			}
 		}
 
+		private static void SyncPhysicsTransformsWhenPaused()
+		{
+			if (Time.timeScale == 0f)
+			{
+				Physics.SyncTransforms();
+			}
+		}
+
 		public void PlayHurtFeedback()
 		{
 			if (!float.IsFinite(m_hurtFlashDelaySeconds) || m_hurtFlashDelaySeconds < 0f)
@@ -527,7 +924,10 @@ namespace Gameplay.Tabletop
 			{
 				RefreshCharacterHealth();
 			}
-			if (TabletopCard != null && m_displayedRemainingUses != TabletopCard.RemainingUses)
+			if (TabletopCard != null &&
+				m_contentAsset != null &&
+				(m_displayedPrice != ResolvePriceValue(TabletopCard, m_contentAsset) ||
+				 m_displayedNutrition != ResolveNutritionValue(m_contentAsset)))
 			{
 				RefreshSurfaceText();
 			}
@@ -567,6 +967,22 @@ namespace Gameplay.Tabletop
 			{
 				m_surfaceRenderer.sortingOrder = sortingOrder;
 			}
+			if (m_characterStatusRoot != null)
+			{
+				m_characterStatusRenderers ??=
+					m_characterStatusRoot.GetComponentsInChildren<Renderer>(includeInactive: true);
+				for (int i = 0; i < m_characterStatusRenderers.Length; i++)
+				{
+					if (m_characterStatusRenderers[i] != null)
+					{
+						m_characterStatusRenderers[i].sortingOrder = sortingOrder + 1;
+					}
+				}
+			}
+			if (m_cardBuyerCurrencyIconRenderer != null)
+			{
+				m_cardBuyerCurrencyIconRenderer.sortingOrder = sortingOrder + 1;
+			}
 			if (m_healthLabel != null)
 			{
 				m_healthLabel.GetComponent<Renderer>().sortingOrder = sortingOrder + 1;
@@ -582,10 +998,6 @@ namespace Gameplay.Tabletop
 			if (m_nutritionLabel != null)
 			{
 				m_nutritionLabel.GetComponent<Renderer>().sortingOrder = sortingOrder + 2;
-			}
-			if (m_usesLabel != null)
-			{
-				m_usesLabel.GetComponent<Renderer>().sortingOrder = sortingOrder + 2;
 			}
 		}
 

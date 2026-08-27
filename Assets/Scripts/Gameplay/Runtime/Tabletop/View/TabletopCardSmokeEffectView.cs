@@ -43,7 +43,8 @@ namespace Gameplay.Tabletop
 			}
 
 			ParticleSystem.MainModule main = m_particleSystem.main;
-			m_durationSeconds = Mathf.Max(0.01f, main.duration + 0.1f);
+			ParticleSystem.MinMaxCurve startLifetime = main.startLifetime;
+			m_durationSeconds = Mathf.Max(0.01f, main.duration + startLifetime.constantMax);
 			m_elapsedSeconds = 0f;
 			transform.localPosition = TabletopCoordinateSpace.ToLocalPosition(tablePosition);
 			m_renderer.sortingOrder = sortingOrder;

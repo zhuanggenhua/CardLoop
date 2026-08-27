@@ -97,6 +97,34 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void Solve_StackCraftHeaderBandSnapsTopEdgeDownAtBoardSide()
+		{
+			TabletopCards state = new TabletopCards();
+			TabletopCard tabletopCard = state.CreateCard("test.header-edge-stack", Vector2.zero);
+			TabletopCardPlacementArea area = new TabletopCardPlacementArea(
+				new Rect(-6f, -4f, 12f, 8f),
+				new[] { new Rect(-6f, 2.5f, 12f, 1.5f) });
+			TabletopCardStackGeometry geometry = new TabletopCardStackGeometry(
+				new Vector2(0.8f, 1f),
+				new Vector2(0f, -0.18f),
+				new Vector2(0.1f, 0.1f));
+			TabletopCardStackSpatialBody body = geometry.CreateSpatialBody(
+				tabletopCard.Id,
+				new Vector2(5.55f, 3.45f),
+				3,
+				isLocked: false);
+
+			TabletopCardStackSpatialResult result = TabletopCardStackPlacementSolver.Solve(
+				area,
+				new TabletopCardStackSpatialBody[1] { body });
+
+			Vector2 position = result.GetPosition(tabletopCard.Id);
+			Assert.That(result.Converged, Is.True);
+			Assert.That(position.x, Is.EqualTo(5.55f).Within(0.0001f));
+			Assert.That(position.y, Is.EqualTo(1.95f).Within(0.0001f));
+		}
+
+		[Test]
 		public void StackGeometry_UsesAllMembersForFootprintCenterAndSize()
 		{
 			TabletopCards state = new TabletopCards();

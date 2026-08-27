@@ -21,6 +21,7 @@ namespace GameCore
 
         private PlayerInput m_playerInput = null;
         private readonly InputActionReleaseGate m_actionMapReleaseGate = new();
+        private readonly HashSet<object> m_gameplayInputLocks = new();
         private GameplayActions m_gameplayActions;
         private UIActions m_uiActions;
         private readonly List<InputActionSubscription> m_externalActionSubscriptions = new();
@@ -49,6 +50,7 @@ namespace GameCore
 
         public override void OnSystemStop()
         {
+            m_gameplayInputLocks.Clear();
             ClearExternalInputActionListeners();
             EventKit.Type.UnRegister<SceneTransitionStartedEvent>(OnSceneTransitionStarted);
             EventKit.Type.UnRegister<SceneTransitionEndedEvent>(OnSceneTransitionEnded);
@@ -60,6 +62,7 @@ namespace GameCore
         public override void OnSystemShutdown()
         {
             // 初始化中途失败时可能不会进入正常 Stop；记录持有真实 InputAction，可在清空动作字段前兜底解绑。
+            m_gameplayInputLocks.Clear();
             ClearExternalInputActionListeners();
             m_isInitialized = false;
             m_currentActionMap = EActionMap.None;
@@ -79,7 +82,8 @@ namespace GameCore
 
             return map switch
             {
-                EActionMap.Gameplay => m_gameplayActions.point.activeControl != null,
+                EActionMap.Gameplay => !IsGameplayInputLocked &&
+                    m_gameplayActions.point.activeControl != null,
                 EActionMap.UI => m_uiActions.point.activeControl != null,
                 _ => false
             };
@@ -110,7 +114,7 @@ namespace GameCore
         /// </summary>
         public Vector2 ReadGameplayVector2(EGameplayInputAction action)
         {
-            if (!m_isInitialized)
+            if (!m_isInitialized || IsGameplayInputLocked)
             {
                 return Vector2.zero;
             }
@@ -135,6 +139,41 @@ namespace GameCore
         public void RemoveControlsChangedListener(System.Action listener)
         {
             m_controlsChanged -= listener;
+        }
+
+        /// <summary>
+        /// Gameplay 输入被正式流程临时接管时为真；UI 输入不受影响。
+        /// </summary>
+        public bool IsGameplayInputLocked => m_gameplayInputLocks.Count > 0;
+
+        /// <summary>
+        /// 临时锁住 Gameplay 输入。只允许真实流程 owner 申请，重复申请说明调用生命周期错误。
+        /// </summary>
+        public void AddGameplayInputLock(object requester)
+        {
+            if (requester == null)
+            {
+                throw new ArgumentNullException(nameof(requester));
+            }
+            if (!m_gameplayInputLocks.Add(requester))
+            {
+                throw new InvalidOperationException("同一个请求方重复锁定 Gameplay 输入。");
+            }
+        }
+
+        /// <summary>
+        /// 释放 Gameplay 输入锁。释放不存在的锁属于内部生命周期错误，必须直接暴露。
+        /// </summary>
+        public void RemoveGameplayInputLock(object requester)
+        {
+            if (requester == null)
+            {
+                throw new ArgumentNullException(nameof(requester));
+            }
+            if (!m_gameplayInputLocks.Remove(requester))
+            {
+                throw new InvalidOperationException("请求方释放了并未持有的 Gameplay 输入锁。");
+            }
         }
 
         /// <summary>
@@ -177,12 +216,12 @@ namespace GameCore
 
         public bool IsGameplayActionPressed(EGameplayInputAction action)
         {
-            if (!m_isInitialized)
+            if (!m_isInitialized || IsGameplayInputLocked)
             {
                 return false;
             }
 
-            return GetGameplayAction(action).IsInProgress();
+            return GetGameplayAction(action).IsPressed();
         }
 
         /// <summary>
@@ -193,10 +232,10 @@ namespace GameCore
         {
             if (!m_isInitialized)
             {
-                return false;
+                return IsGameplayInputLocked;
             }
 
-            return IsBlocked(GetGameplayAction(action));
+            return IsGameplayInputLocked || IsBlocked(GetGameplayAction(action));
         }
 
         public bool IsUIActionPressed(EUIInputAction action)
@@ -206,7 +245,7 @@ namespace GameCore
                 return false;
             }
 
-            return GetUIAction(action).IsInProgress();
+            return GetUIAction(action).IsPressed();
         }
 
         public string GetCurrentControlDevicesSignature()

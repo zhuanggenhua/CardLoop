@@ -6,6 +6,7 @@ using Gameplay.Actions;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using YokiFrame;
 using Gameplay.Content;
 using Gameplay.Scenarios;
@@ -40,38 +41,88 @@ namespace Gameplay.Tabletop
 		private const string SectionBullet = "• ";
 
         [Header("面板组件")]
-        [SerializeField]
-        [LabelText("内容根节点")]
-        [Tooltip("没有可读卡牌时隐藏的详情内容根节点。")]
-        private GameObject m_contentRoot;
+		[SerializeField]
+		[LabelText("内容根节点")]
+		[Tooltip("没有可读卡牌时隐藏的详情内容根节点。")]
+		private GameObject m_contentRoot;
 
-        [SerializeField]
-        [LabelText("标题文本")]
-        [Tooltip("显示卡牌作者源名称。")]
-        private TMP_Text m_titleLabel;
+		[SerializeField]
+		[FormerlySerializedAs("m_titleLabel")]
+		[LabelText("信息文本")]
+		[Tooltip("按 StackCraft InfoPanel 格式显示标题和正文。")]
+		private TMP_Text m_infoLabel;
 
-        [SerializeField]
-        [LabelText("描述文本")]
-        [Tooltip("显示卡牌作者源描述。")]
-        private TMP_Text m_descriptionLabel;
+		[SerializeField]
+		[LabelText("标题字号")]
+		[Tooltip("对齐 StackCraft InfoPanel 的 headerSize。")]
+		private int m_headerSize = 34;
+
+		[SerializeField]
+		[LabelText("正文字号")]
+		[Tooltip("对齐 StackCraft InfoPanel 的 bodySize。")]
+		private int m_bodySize = 30;
 
         private TabletopView m_tabletopView;
 
 		private ScenarioRun m_scenarioRun;
 
+		private bool m_isSubscribed;
+
+		private bool m_sequenceMessageActive;
+
+		private string m_sequenceHeader = string.Empty;
+
+		private string m_sequenceBody = string.Empty;
+
+		private float m_sequenceMessageExpiresAt;
+
+		private bool m_journalEntryInfoActive;
+
+		private ContentId m_journalEntryInfoId;
+
+		private string m_journalEntryHeader = string.Empty;
+
+		private string m_journalEntryBody = string.Empty;
+
+		private string m_displayedTitle = string.Empty;
+
+		private string m_displayedDescription = string.Empty;
+
         /// <summary>当前显示的局内卡牌 ID；空值表示面板没有可读对象。</summary>
         public TabletopCardId DisplayedCardId { get; private set; }
 
+		/// <summary>当前是否由剧本流程提示覆盖卡牌悬浮信息。</summary>
+		public bool IsSequenceMessageActive => m_sequenceMessageActive;
+
+		/// <summary>当前显示的流程提示标题；空值表示没有流程提示。</summary>
+		public string DisplayedSequenceHeader => m_sequenceMessageActive ? m_sequenceHeader : string.Empty;
+
+		/// <summary>当前显示的流程提示正文；空值表示没有流程提示。</summary>
+		public string DisplayedSequenceBody => m_sequenceMessageActive ? m_sequenceBody : string.Empty;
+
+		/// <summary>当前是否由剧本日志条目悬浮信息覆盖卡牌详情。</summary>
+		public bool IsJournalEntryInfoActive => m_journalEntryInfoActive;
+
+		/// <summary>当前显示的剧本日志条目标题；空值表示没有日志条目信息。</summary>
+		public string DisplayedJournalEntryHeader =>
+			m_journalEntryInfoActive ? m_journalEntryHeader : string.Empty;
+
+		/// <summary>当前显示的剧本日志条目正文；空值表示没有日志条目信息。</summary>
+		public string DisplayedJournalEntryBody =>
+			m_journalEntryInfoActive ? m_journalEntryBody : string.Empty;
+
         /// <summary>当前实际显示的标题文本。</summary>
-        public string DisplayedTitle => m_titleLabel == null ? string.Empty : m_titleLabel.text;
+        public string DisplayedTitle => m_displayedTitle;
 
         /// <summary>当前实际显示的描述文本。</summary>
-        public string DisplayedDescription =>
-            m_descriptionLabel == null ? string.Empty : m_descriptionLabel.text;
+        public string DisplayedDescription => m_displayedDescription;
+
+		/// <summary>当前按 StackCraft InfoPanel rich text 格式生成的完整显示文本。</summary>
+		public string DisplayedInfoText => m_infoLabel == null ? string.Empty : m_infoLabel.text;
 
         protected override void OnInit(IUIData data = null)
         {
-            if (m_contentRoot == null || m_titleLabel == null || m_descriptionLabel == null)
+            if (m_contentRoot == null || m_infoLabel == null)
             {
                 throw new InvalidOperationException("牌桌卡牌详情面板预制体缺少必要 UI 引用。");
             }
@@ -90,9 +141,12 @@ namespace Gameplay.Tabletop
                     nameof(data));
             }
 
-            m_tabletopView = panelData.TabletopView;
+			m_tabletopView = panelData.TabletopView;
 			m_scenarioRun = panelData.ScenarioRun;
             m_tabletopView.ReadableCardChanged += Refresh;
+			EventKit.Type.Register<ScenarioSequenceMessageEvent>(OnScenarioSequenceMessage);
+			EventKit.Type.Register<ScenarioJournalEntryInfoEvent>(OnScenarioJournalEntryInfo);
+			m_isSubscribed = true;
             Refresh();
         }
 
@@ -108,24 +162,43 @@ namespace Gameplay.Tabletop
 
         private void Refresh()
         {
+			if (m_sequenceMessageActive)
+			{
+				DisplaySequenceMessage();
+				return;
+			}
+			if (m_journalEntryInfoActive)
+			{
+				DisplayJournalEntryInfo();
+				return;
+			}
+
             if (m_tabletopView == null ||
                 !m_tabletopView.TryGetReadableCard(out TabletopCard card, out var definition))
             {
                 DisplayedCardId = default;
-                m_titleLabel.text = string.Empty;
-                m_descriptionLabel.text = string.Empty;
+				ClearDisplayedInfo();
                 m_contentRoot.SetActive(false);
                 return;
             }
 
 			DisplayedCardId = card.Id;
-			m_titleLabel.text = definition.DisplayName;
-			m_descriptionLabel.text = BuildDescription(card, definition);
+			ApplyDisplayedInfo(definition.DisplayName, BuildDescription(card, definition));
 			m_contentRoot.SetActive(true);
 		}
 
 		private void LateUpdate()
 		{
+			if (m_sequenceMessageActive)
+			{
+				if (Time.realtimeSinceStartup >= m_sequenceMessageExpiresAt)
+				{
+					ClearSequenceMessage();
+					Refresh();
+				}
+				return;
+			}
+
 			if (m_tabletopView != null && DisplayedCardId.IsValid)
 			{
 				Refresh();
@@ -369,28 +442,138 @@ namespace Gameplay.Tabletop
 			return value.ToString("0.#", CultureInfo.InvariantCulture);
 		}
 
+		private void OnScenarioSequenceMessage(ScenarioSequenceMessageEvent messageEvent)
+		{
+			if (m_scenarioRun == null ||
+				!messageEvent.ScenarioId.Equals(m_scenarioRun.ScenarioId))
+			{
+				return;
+			}
+
+			m_sequenceMessageActive = true;
+			m_sequenceHeader = messageEvent.Header;
+			m_sequenceBody = messageEvent.Body;
+			m_sequenceMessageExpiresAt = Time.realtimeSinceStartup + messageEvent.DurationSeconds;
+			Refresh();
+		}
+
+		private void OnScenarioJournalEntryInfo(ScenarioJournalEntryInfoEvent infoEvent)
+		{
+			if (m_scenarioRun == null ||
+				!infoEvent.ScenarioId.Equals(m_scenarioRun.ScenarioId))
+			{
+				return;
+			}
+
+			if (infoEvent.IsVisible)
+			{
+				m_journalEntryInfoActive = true;
+				m_journalEntryInfoId = infoEvent.EntryId;
+				m_journalEntryHeader = infoEvent.Header;
+				m_journalEntryBody = infoEvent.Body;
+				Refresh();
+				return;
+			}
+
+			if (m_journalEntryInfoActive && m_journalEntryInfoId.Equals(infoEvent.EntryId))
+			{
+				ClearJournalEntryInfo();
+				Refresh();
+			}
+		}
+
+		private void DisplaySequenceMessage()
+		{
+			DisplayedCardId = default;
+			ApplyDisplayedInfo(m_sequenceHeader, m_sequenceBody);
+			m_contentRoot.SetActive(true);
+		}
+
+		private void DisplayJournalEntryInfo()
+		{
+			DisplayedCardId = default;
+			ApplyDisplayedInfo(m_journalEntryHeader, m_journalEntryBody);
+			m_contentRoot.SetActive(true);
+		}
+
+		private void ApplyDisplayedInfo(string header, string body)
+		{
+			m_displayedTitle = header ?? string.Empty;
+			m_displayedDescription = body ?? string.Empty;
+			m_infoLabel.text = FormatStackCraftInfoText(m_displayedTitle, m_displayedDescription);
+		}
+
+		private void ClearDisplayedInfo()
+		{
+			m_displayedTitle = string.Empty;
+			m_displayedDescription = string.Empty;
+			if (m_infoLabel != null)
+			{
+				m_infoLabel.text = string.Empty;
+			}
+		}
+
+		private string FormatStackCraftInfoText(string header, string body)
+		{
+			StringBuilder text = new();
+			if (!string.IsNullOrEmpty(header))
+			{
+				text.Append("<size=")
+					.Append(m_headerSize)
+					.Append('>')
+					.Append("[")
+					.Append(header)
+					.Append("]\n");
+			}
+			if (!string.IsNullOrEmpty(body))
+			{
+				text.Append("<size=")
+					.Append(m_bodySize)
+					.Append('>')
+					.Append(body);
+			}
+			return text.ToString();
+		}
+
+		private void ClearSequenceMessage()
+		{
+			m_sequenceMessageActive = false;
+			m_sequenceHeader = string.Empty;
+			m_sequenceBody = string.Empty;
+			m_sequenceMessageExpiresAt = 0f;
+		}
+
+		private void ClearJournalEntryInfo()
+		{
+			m_journalEntryInfoActive = false;
+			m_journalEntryInfoId = default;
+			m_journalEntryHeader = string.Empty;
+			m_journalEntryBody = string.Empty;
+		}
+
         private void Unbind()
         {
+			if (m_isSubscribed)
+			{
+				EventKit.Type.UnRegister<ScenarioSequenceMessageEvent>(OnScenarioSequenceMessage);
+				EventKit.Type.UnRegister<ScenarioJournalEntryInfoEvent>(OnScenarioJournalEntryInfo);
+				m_isSubscribed = false;
+			}
             if (m_tabletopView != null)
             {
                 m_tabletopView.ReadableCardChanged -= Refresh;
                 m_tabletopView = null;
             }
 			m_scenarioRun = null;
+			ClearSequenceMessage();
+			ClearJournalEntryInfo();
 
             DisplayedCardId = default;
-            if (m_contentRoot != null)
-            {
-                m_contentRoot.SetActive(false);
-            }
-            if (m_titleLabel != null)
-            {
-                m_titleLabel.text = string.Empty;
-            }
-            if (m_descriptionLabel != null)
-            {
-                m_descriptionLabel.text = string.Empty;
-            }
+			if (m_contentRoot != null)
+			{
+				m_contentRoot.SetActive(false);
+			}
+			ClearDisplayedInfo();
         }
     }
 }

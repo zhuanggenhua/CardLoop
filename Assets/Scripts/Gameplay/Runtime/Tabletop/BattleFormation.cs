@@ -262,15 +262,11 @@ namespace Gameplay.Tabletop
 
 			BattleSide side = battle.Sides[sideIndex];
 			Group group = m_groups[sideIndex];
-			int rankIndex = indexInSide / group.ColumnsPerRank;
-			int firstIndexInRank = rankIndex * group.ColumnsPerRank;
-			int countInRank = Math.Min(group.ColumnsPerRank, side.ParticipantCount - firstIndexInRank);
-			int columnIndex = indexInSide - firstIndexInRank;
-			float centeredColumnIndex = columnIndex - (countInRank - 1) * 0.5f;
-			Vector2 position = battle.AreaCenter +
-				group.CenterOffset +
-				group.ColumnStep * centeredColumnIndex +
-				group.RankStep * rankIndex;
+			Vector2 position = CalculateParticipantPosition(
+				battle.AreaCenter,
+				group,
+				indexInSide,
+				side.ParticipantCount);
 			pose = new TabletopCardPose(
 				TabletopCoordinateSpace.ToLocalPosition(position),
 				checked(baseSortingOrder + CalculateParticipantOrder(battle.Sides, sideIndex, indexInSide)));
@@ -293,7 +289,9 @@ namespace Gameplay.Tabletop
 				throw new ArgumentOutOfRangeException(nameof(additionalParticipantSideIndex));
 			}
 
-			int largestSideCount = 0;
+			bool hasParticipant = false;
+			Vector2 min = default;
+			Vector2 max = default;
 			for (int sideIndex = 0; sideIndex < battle.SideCount; sideIndex++)
 			{
 				int participantCount = battle.Sides[sideIndex].ParticipantCount;
@@ -301,14 +299,58 @@ namespace Gameplay.Tabletop
 				{
 					participantCount++;
 				}
-				largestSideCount = Math.Max(largestSideCount, participantCount);
+				Group group = m_groups[sideIndex];
+				for (int participantIndex = 0; participantIndex < participantCount; participantIndex++)
+				{
+					Vector2 position = CalculateParticipantPosition(
+						battle.AreaCenter,
+						group,
+						participantIndex,
+						participantCount);
+					if (!hasParticipant)
+					{
+						min = position;
+						max = position;
+						hasParticipant = true;
+						continue;
+					}
+					min = Vector2.Min(min, position);
+					max = Vector2.Max(max, position);
+				}
 			}
 
-			Vector2 cellSize = cardSize + m_areaMargin;
-			Vector2 areaSize = new Vector2(
-				cellSize.x * largestSideCount,
-				cellSize.y * battle.SideCount) + m_areaMargin * 2f;
-			return new Rect(battle.AreaCenter - areaSize * 0.5f, areaSize);
+			if (!hasParticipant)
+			{
+				min = battle.AreaCenter;
+				max = battle.AreaCenter;
+			}
+
+			Vector2 halfCardSize = cardSize * 0.5f;
+			min -= halfCardSize + m_areaMargin;
+			max += halfCardSize + m_areaMargin;
+			return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+		}
+
+		private static Vector2 CalculateParticipantPosition(
+			Vector2 areaCenter,
+			Group group,
+			int participantIndex,
+			int participantCount)
+		{
+			if (participantIndex < 0 || participantIndex >= participantCount)
+			{
+				throw new ArgumentOutOfRangeException(nameof(participantIndex));
+			}
+
+			int rankIndex = participantIndex / group.ColumnsPerRank;
+			int firstIndexInRank = rankIndex * group.ColumnsPerRank;
+			int countInRank = Math.Min(group.ColumnsPerRank, participantCount - firstIndexInRank);
+			int columnIndex = participantIndex - firstIndexInRank;
+			float centeredColumnIndex = columnIndex - (countInRank - 1) * 0.5f;
+			return areaCenter +
+				group.CenterOffset +
+				group.ColumnStep * centeredColumnIndex +
+				group.RankStep * rankIndex;
 		}
 
 		private static int FindSideIndex(

@@ -1,5 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using UnityEditor.SceneManagement;
+#endif
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -213,7 +216,7 @@ namespace CryingSnow.StackCraft
             if (travelers != null)
                 incomingTravelers = new List<CardData>(travelers);
 
-            yield return SceneManager.LoadSceneAsync(sceneName);
+            yield return LoadSceneAsync(sceneName);
 
             if (TimeManager.Instance != null)
                 TimeManager.Instance.SetExternalPause(false);
@@ -230,6 +233,19 @@ namespace CryingSnow.StackCraft
             }
 
             incomingTravelers.Clear();
+        }
+
+        private static AsyncOperation LoadSceneAsync(string sceneName)
+        {
+#if UNITY_EDITOR
+            // 参考模板没有进入 CardLoop Build Scene List，Editor 对照运行时按模板场景路径加载。
+            string scenePath = $"Assets/StackCraft/Scenes/{sceneName}.unity";
+            return EditorSceneManager.LoadSceneAsyncInPlayMode(
+                scenePath,
+                new LoadSceneParameters(LoadSceneMode.Single));
+#else
+            return SceneManager.LoadSceneAsync(sceneName);
+#endif
         }
         #endregion
     }

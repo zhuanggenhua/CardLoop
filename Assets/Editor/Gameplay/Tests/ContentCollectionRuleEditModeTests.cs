@@ -12,7 +12,6 @@ namespace Gameplay.Tests
 	public sealed class ContentCollectionRuleEditModeTests
 	{
 		private const string DefaultPackageName = "DefaultPackage";
-		private const string ContentTag = "gameplay-content";
 		private const string FoundationCardPath = "Assets/Gameplay/Tests/地基测试卡牌.asset";
 
 		[Test]
@@ -37,7 +36,7 @@ namespace Gameplay.Tests
 			for (int i = 0; i < result.CollectAssets.Count; i++)
 			{
 				CollectAssetInfo collected = result.CollectAssets[i];
-				if (!collected.AssetTags.Contains(ContentTag))
+				if (!collected.AssetTags.Contains(ContentAsset.YooAssetContentTag))
 				{
 					continue;
 				}
@@ -48,7 +47,7 @@ namespace Gameplay.Tests
 				Assert.That(
 					content,
 					Is.Not.Null,
-					$"带 {ContentTag} 构建标签的资源不是 Gameplay 内容作者资产：{collected.AssetInfo.AssetPath}");
+					$"带 {ContentAsset.YooAssetContentTag} 构建标签的资源不是 Gameplay 内容作者资产：{collected.AssetInfo.AssetPath}");
 				Assert.That(
 					collected.Address,
 					Is.Empty,

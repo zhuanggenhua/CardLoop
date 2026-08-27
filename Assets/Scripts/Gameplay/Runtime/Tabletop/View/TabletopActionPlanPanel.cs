@@ -131,11 +131,16 @@ namespace Gameplay.Tabletop
             ClearSlots();
         }
 
-        internal void AddCard(ActionPlanBinding binding, TabletopCardId cardId)
+        internal bool TryAddCard(ActionPlanBinding binding, TabletopCardId cardId)
         {
             RequireOpen();
-            m_scenarioRun.Tabletop.AddCardToActionPlan(m_plan, binding.Slot.Key, cardId);
+            if (!m_scenarioRun.Tabletop.TryAddCardToActionPlan(m_plan, binding.Slot.Key, cardId))
+            {
+                return false;
+            }
+
             Refresh();
+            return true;
         }
 
         internal void RemoveLastCard(ActionPlanBinding binding)

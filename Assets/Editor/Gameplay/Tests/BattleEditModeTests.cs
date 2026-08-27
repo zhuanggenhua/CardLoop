@@ -784,7 +784,7 @@ namespace Gameplay.Tests
 						Is.True);
 					Assert.That(presentation.SourceCardId, Is.EqualTo(attacker.Id));
 					Assert.That(presentation.TargetCardId, Is.EqualTo(defender.Id));
-					Assert.That(presentation.PresentationTagCode, Is.EqualTo(XTag.Combat_Ranged));
+					Assert.That(presentation.CombatTypeTagCode, Is.EqualTo(XTag.Combat_Ranged));
 					Assert.That(presentation.DurationSeconds, Is.EqualTo(0.5f).Within(0.0001f));
 					Assert.That(Mathf.RoundToInt(defender.CurrentHealth), Is.EqualTo(100));
 					Assert.That(resolvedEvent.HasValue, Is.False);
@@ -854,7 +854,7 @@ namespace Gameplay.Tests
 					Is.True);
 				Assert.That(presentation.SourceCardId, Is.EqualTo(attacker.Id));
 				Assert.That(presentation.TargetCardId, Is.EqualTo(defender.Id));
-				Assert.That(presentation.PresentationTagCode, Is.EqualTo(XTag.Combat_Melee));
+				Assert.That(presentation.CombatTypeTagCode, Is.EqualTo(XTag.Combat_Melee));
 				Assert.That(presentation.DurationSeconds, Is.EqualTo(0f));
 				Assert.That(presentation.RemainingSeconds, Is.EqualTo(0f));
 				Assert.That(
@@ -866,7 +866,7 @@ namespace Gameplay.Tests
 				Assert.That(
 					battle.TryGetExecutingAttackPresentation(out BattleAttackPresentation executing),
 					Is.True);
-				Assert.That(executing.PresentationTagCode, Is.EqualTo(XTag.Combat_Melee));
+				Assert.That(executing.CombatTypeTagCode, Is.EqualTo(XTag.Combat_Melee));
 			}
 			finally
 			{

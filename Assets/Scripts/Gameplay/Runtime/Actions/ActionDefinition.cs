@@ -24,6 +24,12 @@ namespace Gameplay.Actions
 		[Tooltip("开启后，玩家单击参与卡牌也会查询这项行动；关闭时只通过拖拽、填槽或其它正式入口启动。")]
 		private bool m_canStartFromClick;
 
+		[Header("日志")]
+		[SerializeField]
+		[LabelText("日志分组")]
+		[Tooltip("在 StackCraft 式 Recipes 日志中显示的折叠分组名。为空时归入 Recipes；该字段只影响展示，不参与行动匹配或结算。")]
+		private string m_journalGroupName;
+
 		[Header("参与槽位")]
 		[SerializeField]
 		[LabelText("参与槽位")]
@@ -78,6 +84,8 @@ namespace Gameplay.Actions
 
 		public bool CanStartFromClick => m_canStartFromClick;
 
+		public string JournalGroupName => m_journalGroupName ?? string.Empty;
+
 		protected override void ValidateContent(ContentValidationContext context)
 		{
 			base.ValidateContent(context);
@@ -88,11 +96,24 @@ namespace Gameplay.Actions
 					$"行动 {ContentId} 的消耗回合数不能为负数：{TurnCost}。",
 					this);
 			}
+			ValidateJournalGroupName(context);
 			HashSet<string> slotKeys = new(StringComparer.Ordinal);
 			ValidateSlots(context, slotKeys);
 			ValidateConditions(context, slotKeys);
 			ValidateResultIntents(context, ResultIntents, slotKeys);
 			ValidateResultBranches(context, slotKeys);
+		}
+
+		private void ValidateJournalGroupName(ContentValidationContext context)
+		{
+			if (!string.IsNullOrEmpty(JournalGroupName) &&
+				(JournalGroupName.Contains('\n') || JournalGroupName.Contains('\r')))
+			{
+				context.AddError(
+					"ACTION_JOURNAL_GROUP_INVALID",
+					$"行动 {ContentId} 的日志分组不能包含换行：{JournalGroupName}。",
+					this);
+			}
 		}
 
 		private void ValidateConditions(ContentValidationContext context, HashSet<string> slotKeys)

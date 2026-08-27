@@ -40,6 +40,46 @@ namespace Gameplay.Scenarios
 		private Image m_dayProgressFill;
 
 		[SerializeField]
+		[Tooltip("StackCraft HUD 当前时间推进图标。")]
+		private Image m_paceImage;
+
+		[SerializeField]
+		[Tooltip("StackCraft HUD 时间推进速度图标：0=暂停，1=正常，2=加速。")]
+		private Sprite[] m_paceIcons;
+
+		[SerializeField]
+		[Tooltip("StackCraft DayTimeUI 的显隐与输入射线控制组。")]
+		private CanvasGroup m_dayTimeGroup;
+
+		[SerializeField]
+		[Tooltip("StackCraft CardStatsUI 的显隐与输入射线控制组。")]
+		private CanvasGroup m_cardStatsGroup;
+
+		[SerializeField]
+		[Tooltip("StackCraft HUD 营养统计图标。")]
+		private Image m_nutritionIcon;
+
+		[SerializeField]
+		[Tooltip("StackCraft HUD 营养统计数值。")]
+		private TMP_Text m_nutritionLabel;
+
+		[SerializeField]
+		[Tooltip("StackCraft HUD 货币统计图标。")]
+		private Image m_currencyIcon;
+
+		[SerializeField]
+		[Tooltip("StackCraft HUD 货币统计数值。")]
+		private TMP_Text m_currencyLabel;
+
+		[SerializeField]
+		[Tooltip("StackCraft HUD 卡牌容量统计图标。")]
+		private Image m_cardCountIcon;
+
+		[SerializeField]
+		[Tooltip("StackCraft HUD 卡牌容量统计数值。")]
+		private TMP_Text m_cardCountLabel;
+
+		[SerializeField]
 		[Tooltip("显示当前推进模式下的主要操作。")]
 		private TMP_Text m_confirmTurnLabel;
 
@@ -74,6 +114,8 @@ namespace Gameplay.Scenarios
 
 		public bool CanSwitchProgressionMode { get; private set; }
 
+		public ScenarioTimePace DisplayedTimePace { get; private set; }
+
 		public ScenarioDayCyclePhase DisplayedDayCyclePhase { get; private set; }
 
 		public int DisplayedExcessCardCount { get; private set; }
@@ -91,14 +133,29 @@ namespace Gameplay.Scenarios
         protected override void OnInit(IUIData data = null)
         {
             if (m_turnLabel == null || m_dayProgressFill == null ||
-				m_confirmTurnButton == null || m_confirmTurnLabel == null ||
-				m_progressionModeButton == null || m_progressionModeLabel == null)
+				m_paceImage == null ||
+				m_dayTimeGroup == null || m_cardStatsGroup == null ||
+				m_nutritionIcon == null || m_nutritionLabel == null ||
+				m_currencyIcon == null || m_currencyLabel == null ||
+				m_cardCountIcon == null || m_cardCountLabel == null ||
+				m_confirmTurnButton == null)
             {
                 throw new InvalidOperationException("剧本回合 HUD 预制体缺少必要 UI 引用。");
             }
+			if (m_paceIcons == null ||
+				m_paceIcons.Length != 3 ||
+				m_paceIcons[(int)ScenarioTimePace.Paused] == null ||
+				m_paceIcons[(int)ScenarioTimePace.Normal] == null ||
+				m_paceIcons[(int)ScenarioTimePace.Fast] == null)
+			{
+				throw new InvalidOperationException("剧本回合 HUD 预制体缺少 StackCraft 三档时间速度图标。");
+			}
 
             m_confirmTurnButton.onClick.AddListener(ConfirmTurn);
-			m_progressionModeButton.onClick.AddListener(SwitchProgressionMode);
+			if (m_progressionModeButton != null)
+			{
+				m_progressionModeButton.onClick.AddListener(SwitchProgressionMode);
+			}
         }
 
         protected override void OnOpen(IUIData data = null)
@@ -131,6 +188,7 @@ namespace Gameplay.Scenarios
 			ScenarioTabletopStats stats = run.GetTabletopStats();
 			bool canConfirmTurn = CanUsePrimaryAction(run);
 			bool canSwitchProgressionMode = CanUseProgressionModeSwitch(run);
+			ScenarioTimePace displayedTimePace = GetDisplayedTimePace(run);
 			if (DisplayedTurnIndex != run.ConfirmedTurnIndex ||
 				DisplayedDay != run.CurrentDay ||
 				DisplayedTurnsInCurrentDay != run.ConfirmedTurnsInCurrentDay ||
@@ -142,6 +200,7 @@ namespace Gameplay.Scenarios
 				DisplayedCurrency != stats.Currency ||
 				DisplayedCardsOwned != stats.CardsOwned ||
 				DisplayedCardLimit != stats.CardLimit ||
+				DisplayedTimePace != displayedTimePace ||
 				CanConfirmTurn != canConfirmTurn ||
 				CanSwitchProgressionMode != canSwitchProgressionMode)
 			{
@@ -181,6 +240,12 @@ namespace Gameplay.Scenarios
 			if (director.ActiveRun.DayCyclePhase != ScenarioDayCyclePhase.Inactive)
 			{
 				director.ContinueDayCycle();
+				return;
+			}
+			if (director.ActiveRun.ProgressionMode == ActionProgressionMode.RealTime)
+			{
+				director.ActiveRun.CycleTimePace();
+				Refresh();
 				return;
 			}
 			director.ConfirmTurn();
@@ -244,21 +309,50 @@ namespace Gameplay.Scenarios
 			DisplayedCurrency = stats.Currency;
 			DisplayedCardsOwned = stats.CardsOwned;
 			DisplayedCardLimit = stats.CardLimit;
+			DisplayedTimePace = GetDisplayedTimePace(run);
 			CanConfirmTurn = CanUsePrimaryAction(run);
 			CanSwitchProgressionMode = CanUseProgressionModeSwitch(run);
-			m_turnLabel.text = GetTurnLabel(run, stats);
+			m_turnLabel.text = GetTurnLabel(run);
+			RefreshStatsLabels(stats);
 			m_dayProgressFill.fillAmount = DisplayedDayProgress;
-			m_confirmTurnButton.interactable = CanConfirmTurn;
-			m_confirmTurnLabel.text = GetPrimaryActionLabel(run);
-			m_progressionModeButton.interactable = CanSwitchProgressionMode;
-			m_progressionModeLabel.text = GetProgressionModeActionLabel(run);
+			m_paceImage.sprite = m_paceIcons[(int)DisplayedTimePace];
+			bool isDayHudVisible = run.DayCyclePhase == ScenarioDayCyclePhase.Inactive;
+			SetHudGroupVisible(m_dayTimeGroup, isDayHudVisible);
+			SetHudGroupVisible(m_cardStatsGroup, isDayHudVisible);
+			m_confirmTurnButton.interactable = CanUsePrimaryButton(run);
+			if (m_confirmTurnLabel != null)
+			{
+				m_confirmTurnLabel.text = GetPrimaryActionLabel(run);
+			}
+			if (m_progressionModeButton != null)
+			{
+				m_progressionModeButton.interactable = CanSwitchProgressionMode;
+			}
+			if (m_progressionModeLabel != null)
+			{
+				m_progressionModeLabel.text = GetProgressionModeActionLabel(run);
+			}
         }
+
+		private static void SetHudGroupVisible(CanvasGroup group, bool isVisible)
+		{
+			group.alpha = isVisible ? 1f : 0f;
+			group.blocksRaycasts = isVisible;
+		}
 
 		private static bool CanUsePrimaryAction(ScenarioRun run)
 		{
 			return run.DayCyclePhase != ScenarioDayCyclePhase.AwaitingExcessCardResolution &&
+				run.DayCyclePhase == ScenarioDayCyclePhase.Inactive &&
+				run.ProgressionMode == ActionProgressionMode.TurnBased;
+		}
+
+		private static bool CanUsePrimaryButton(ScenarioRun run)
+		{
+			return run.DayCyclePhase != ScenarioDayCyclePhase.AwaitingExcessCardResolution &&
 				(run.DayCyclePhase != ScenarioDayCyclePhase.Inactive ||
-				 run.ProgressionMode == ActionProgressionMode.TurnBased);
+				 run.ProgressionMode == ActionProgressionMode.TurnBased ||
+				 run.ProgressionMode == ActionProgressionMode.RealTime);
 		}
 
 		private static bool CanUseProgressionModeSwitch(ScenarioRun run)
@@ -268,29 +362,25 @@ namespace Gameplay.Scenarios
 				 run.CanReturnToTurnBasedProgression);
 		}
 
-		private static string GetTurnLabel(ScenarioRun run, ScenarioTabletopStats stats)
+		private void RefreshStatsLabels(ScenarioTabletopStats stats)
 		{
+			m_nutritionLabel.text = $"{stats.TotalFoodNutrition}/{stats.NutritionNeed}";
+			m_currencyLabel.text = $"{stats.Currency}";
+			m_cardCountLabel.text = $"{stats.CardsOwned}/{stats.CardLimit}";
+		}
+
+		private static string GetTurnLabel(ScenarioRun run)
+		{
+			if (run.DayCyclePhase == ScenarioDayCyclePhase.GameOver)
+			{
+				return "Game Over";
+			}
+
 			if (run.DayCyclePhase == ScenarioDayCyclePhase.Inactive)
 			{
-				return $"第 {run.CurrentDay} 天  {run.ConfirmedTurnsInCurrentDay}/{run.TurnsPerDay}\n" +
-					$"食物 {stats.TotalFoodNutrition}/{stats.NutritionNeed}  " +
-					$"货币 {stats.Currency}  卡牌 {stats.CardsOwned}/{stats.CardLimit}";
+				return $"Day {run.CurrentDay}";
 			}
-			if (!run.DayEncounterResult.HasValue)
-			{
-				return $"第 {run.CurrentDay} 天  日终";
-			}
-			ScenarioDayEncounterResult encounter = run.DayEncounterResult.Value;
-			if (!run.ContentIndex.TryGet(encounter.CardId, out CardDefinition card))
-			{
-				throw new InvalidOperationException($"日终遭遇引用的卡牌 {encounter.CardId} 已不在当前内容集合中。");
-			}
-			string encounterSummary = $"遭遇：{card.DisplayName} x{encounter.Count}";
-			if (string.IsNullOrWhiteSpace(encounter.NotificationMessage))
-			{
-				return $"第 {run.CurrentDay} 天  日终\n{encounterSummary}";
-			}
-			return $"第 {run.CurrentDay} 天  日终\n{encounter.NotificationMessage}\n{encounterSummary}";
+			return $"Day {run.CurrentDay}";
 		}
 
 		private static string GetPrimaryActionLabel(ScenarioRun run)
@@ -303,7 +393,26 @@ namespace Gameplay.Scenarios
 				ScenarioDayCyclePhase.GameOver => "返回标题",
 				_ => run.ProgressionMode == ActionProgressionMode.TurnBased
 					? "推进回合"
-					: "即时推进中"
+					: GetTimePaceActionLabel(run.TimePace)
+			};
+		}
+
+		private static ScenarioTimePace GetDisplayedTimePace(ScenarioRun run)
+		{
+			return run.DayCyclePhase == ScenarioDayCyclePhase.Inactive &&
+				run.ProgressionMode == ActionProgressionMode.RealTime
+					? run.TimePace
+					: ScenarioTimePace.Paused;
+		}
+
+		private static string GetTimePaceActionLabel(ScenarioTimePace pace)
+		{
+			return pace switch
+			{
+				ScenarioTimePace.Paused => "恢复速度",
+				ScenarioTimePace.Normal => "切换加速",
+				ScenarioTimePace.Fast => "暂停时间",
+				_ => throw new ArgumentOutOfRangeException(nameof(pace), pace, "未知剧本时间速度。")
 			};
 		}
 
