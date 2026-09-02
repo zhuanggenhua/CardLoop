@@ -79,7 +79,7 @@ namespace Gameplay.Tests
 				Assert.That(tabletop.TryGetBattlePose(enemy.Id, 100, out TabletopCardPose enemyPose), Is.True);
 				Assert.That(playerOnePose.LocalPosition, Is.EqualTo(new Vector3(-2.5f, 0f, 0f)));
 				Assert.That(playerTwoPose.LocalPosition, Is.EqualTo(new Vector3(-1.5f, 0f, 0f)));
-				Assert.That(playerThreePose.LocalPosition, Is.EqualTo(new Vector3(-2f, -1f, 0f)));
+				Assert.That(playerThreePose.LocalPosition, Is.EqualTo(new Vector3(-2f, 0f, -1f)));
 				Assert.That(enemyPose.LocalPosition, Is.EqualTo(new Vector3(2f, 0f, 0f)));
 				Assert.That(playerOnePose.SortingOrder, Is.EqualTo(100));
 				Assert.That(enemyPose.SortingOrder, Is.EqualTo(103));

@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Action
+  m_text: "\u884C\u52A8"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a95005e0104ad494d814c492e8e16a74, type: 2}
   m_sharedMaterial: {fileID: -1204229514610621180, guid: a95005e0104ad494d814c492e8e16a74, type: 2}
@@ -137,7 +137,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &1904007512657840184
+--- !u!1 &1391259119920134983
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -145,9 +145,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7572524686174618573}
-  - component: {fileID: 4458641067857620321}
-  - component: {fileID: 8629342212809764571}
+  - component: {fileID: 5750485717128238142}
+  - component: {fileID: 3583924946968951603}
+  - component: {fileID: 1472771955411297246}
   m_Layer: 5
   m_Name: Label
   m_TagString: Untagged
@@ -155,13 +155,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &7572524686174618573
+--- !u!224 &5750485717128238142
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1904007512657840184}
+  m_GameObject: {fileID: 1391259119920134983}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -174,21 +174,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -32, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &4458641067857620321
+--- !u!222 &3583924946968951603
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1904007512657840184}
+  m_GameObject: {fileID: 1391259119920134983}
   m_CullTransparentMesh: 1
---- !u!114 &8629342212809764571
+--- !u!114 &1472771955411297246
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1904007512657840184}
+  m_GameObject: {fileID: 1391259119920134983}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
@@ -202,7 +202,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Cancel
+  m_text: "\u53D6\u6D88"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a95005e0104ad494d814c492e8e16a74, type: 2}
   m_sharedMaterial: {fileID: -1204229514610621180, guid: a95005e0104ad494d814c492e8e16a74, type: 2}
@@ -306,7 +306,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7572524686174618573}
+  - {fileID: 5750485717128238142}
   m_Father: {fileID: 5088247134973017935}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}

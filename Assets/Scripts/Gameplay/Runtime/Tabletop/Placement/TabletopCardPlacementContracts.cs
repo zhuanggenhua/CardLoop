@@ -47,7 +47,7 @@ namespace Gameplay.Tabletop
 
 		[SerializeField]
 		[LabelText("出生吸附半径")]
-		[Tooltip("运行时产物出生后寻找附近同内容牌堆的半径；对齐 StackCraft Default_Card_Settings.spawnAttachRadius = 1。固定场地摆放不会自动使用该吸附。")]
+		[Tooltip("运行时产物出生后寻找附近可合堆牌堆的半径；对齐 StackCraft Default_Card_Settings.spawnAttachRadius = 1。固定场地摆放不会自动使用该吸附。")]
 		[Min(0f)]
 		private float m_spawnAttachRadius = TabletopCardPlacementRules.DefaultSpawnAttachRadius;
 
@@ -62,6 +62,25 @@ namespace Gameplay.Tabletop
 		[Tooltip("牌桌上每 1 点卡牌上限加成会让可放置边界向左右和上下各扩展的距离。对齐 StackCraft Board BlendShape：100 点从 12×8 扩到 24×16。")]
 		private Vector2 m_cardLimitBonusExpansionPerPoint = new Vector2(0.06f, 0.04f);
 
+		[Header("卡牌自动行为")]
+		[SerializeField]
+		[Min(0f)]
+		[LabelText("自动移动间隔秒数")]
+		[Tooltip("所有具备自动移动行为的卡牌共用的真实时间间隔；对齐 StackCraft CardSettings.moveInterval。")]
+		private float m_automaticMovementIntervalSeconds = TabletopCardPlacementRules.DefaultAutomaticMovementIntervalSeconds;
+
+		[SerializeField]
+		[Min(0f)]
+		[LabelText("自动移动半径")]
+		[Tooltip("所有具备自动移动行为的卡牌共用的单次移动距离；对齐 StackCraft CardSettings.moveRadius。")]
+		private float m_automaticMovementRadius = TabletopCardPlacementRules.DefaultAutomaticMovementRadius;
+
+		[SerializeField]
+		[Min(1)]
+		[LabelText("自动移动尝试次数")]
+		[Tooltip("所有具备自动移动行为的卡牌共用的每次移动目标尝试次数；对齐 StackCraft CardSettings.maxAttemptsPerMove。")]
+		private int m_automaticMovementMaxAttempts = TabletopCardPlacementRules.DefaultAutomaticMovementMaxAttempts;
+
 		public TabletopCardPlacementRules CreateRuntime()
 		{
 			return new TabletopCardPlacementRules(
@@ -70,7 +89,10 @@ namespace Gameplay.Tabletop
 				m_overlapResolveMaxIterations,
 				m_cardLimitBonusExpansionPerPoint,
 				m_spawnAttachRadius,
-				m_stacking?.CreateRuntime() ?? TabletopStackingRules.Empty);
+				m_stacking?.CreateRuntime() ?? TabletopStackingRules.Empty,
+				m_automaticMovementIntervalSeconds,
+				m_automaticMovementRadius,
+				m_automaticMovementMaxAttempts);
 		}
 	}
 
@@ -440,6 +462,20 @@ namespace Gameplay.Tabletop
 			return new Rect(center - size * 0.5f, size);
 		}
 
+		/// <summary>
+		/// 对齐 StackCraft 的拖拽中边界规则：只防止整叠牌离开桌面，不套用顶部页眉禁放区。
+		/// </summary>
+		internal Vector2 ClampStackPositionToBounds(
+			Rect bounds,
+			Vector2 stackPosition,
+			int cardCount,
+			Vector2 cardSize)
+		{
+			Rect footprint = CalculateFootprint(stackPosition, cardCount, cardSize);
+			Vector2 center = ClampCenterToBounds(bounds, footprint.center, footprint.size);
+			return center - (footprint.center - stackPosition);
+		}
+
 		internal TabletopCardStackSpatialBody CreateSpatialBody(TabletopCardId bottomCardId, Vector2 stackPosition, int cardCount, bool isLocked)
 		{
 			Rect footprint = CalculateFootprint(stackPosition, cardCount);
@@ -461,6 +497,22 @@ namespace Gameplay.Tabletop
 		{
 			return float.IsFinite(value.x) && float.IsFinite(value.y);
 		}
+
+		private static Vector2 ClampCenterToBounds(Rect bounds, Vector2 center, Vector2 size)
+		{
+			Vector2 halfSize = size * 0.5f;
+			float minX = bounds.xMin + halfSize.x;
+			float maxX = bounds.xMax - halfSize.x;
+			float minY = bounds.yMin + halfSize.y;
+			float maxY = bounds.yMax - halfSize.y;
+			if (minX > maxX || minY > maxY)
+			{
+				return bounds.center;
+			}
+			return new Vector2(
+				Mathf.Clamp(center.x, minX, maxX),
+				Mathf.Clamp(center.y, minY, maxY));
+		}
 	}
 
 	/// <summary>
@@ -470,6 +522,9 @@ namespace Gameplay.Tabletop
 	{
 		internal const int DefaultOverlapResolveMaxIterations = 8;
 		internal const float DefaultSpawnAttachRadius = 1f;
+		internal const float DefaultAutomaticMovementIntervalSeconds = 5f;
+		internal const float DefaultAutomaticMovementRadius = 1f;
+		internal const int DefaultAutomaticMovementMaxAttempts = 5;
 
 		private const int MaxCardLimitBonusPlacementExpansion = 100;
 
@@ -485,13 +540,23 @@ namespace Gameplay.Tabletop
 
 		public TabletopStackingRules StackingRules { get; }
 
+		/// <summary>所有自动移动卡牌共用的模板规则；卡牌是否启用该行为由卡牌类型决定。</summary>
+		public float AutomaticMovementIntervalSeconds { get; }
+
+		public float AutomaticMovementRadius { get; }
+
+		public int AutomaticMovementMaxAttempts { get; }
+
 		public TabletopCardPlacementRules(
 			TabletopCardPlacementArea area,
 			TabletopCardStackGeometry geometry,
 			int overlapResolveMaxIterations = DefaultOverlapResolveMaxIterations,
 			Vector2 cardLimitBonusExpansionPerPoint = default,
 			float spawnAttachRadius = DefaultSpawnAttachRadius,
-			TabletopStackingRules stackingRules = null)
+			TabletopStackingRules stackingRules = null,
+			float automaticMovementIntervalSeconds = DefaultAutomaticMovementIntervalSeconds,
+			float automaticMovementRadius = DefaultAutomaticMovementRadius,
+			int automaticMovementMaxAttempts = DefaultAutomaticMovementMaxAttempts)
 		{
 			Area = area ?? throw new ArgumentNullException("area");
 			if (!geometry.IsValid)
@@ -520,11 +585,35 @@ namespace Gameplay.Tabletop
 					spawnAttachRadius,
 					"牌桌出生吸附半径必须是大于或等于 0 的有限值。");
 			}
+			if (!float.IsFinite(automaticMovementIntervalSeconds) || automaticMovementIntervalSeconds <= 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(automaticMovementIntervalSeconds),
+					automaticMovementIntervalSeconds,
+					"牌桌自动移动间隔必须是大于 0 的有限秒数。");
+			}
+			if (!float.IsFinite(automaticMovementRadius) || automaticMovementRadius <= 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(automaticMovementRadius),
+					automaticMovementRadius,
+					"牌桌自动移动半径必须是大于 0 的有限值。");
+			}
+			if (automaticMovementMaxAttempts <= 0)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(automaticMovementMaxAttempts),
+					automaticMovementMaxAttempts,
+					"牌桌自动移动尝试次数必须大于 0。");
+			}
 			Geometry = geometry;
 			OverlapResolveMaxIterations = overlapResolveMaxIterations;
 			CardLimitBonusExpansionPerPoint = cardLimitBonusExpansionPerPoint;
 			SpawnAttachRadius = spawnAttachRadius;
 			StackingRules = stackingRules ?? TabletopStackingRules.Empty;
+			AutomaticMovementIntervalSeconds = automaticMovementIntervalSeconds;
+			AutomaticMovementRadius = automaticMovementRadius;
+			AutomaticMovementMaxAttempts = automaticMovementMaxAttempts;
 		}
 
 		public TabletopCardPlacementRules CreateForCardLimitBonus(int cardLimitBonus)
@@ -557,7 +646,10 @@ namespace Gameplay.Tabletop
 				OverlapResolveMaxIterations,
 				CardLimitBonusExpansionPerPoint,
 				SpawnAttachRadius,
-				StackingRules);
+				StackingRules,
+				AutomaticMovementIntervalSeconds,
+				AutomaticMovementRadius,
+				AutomaticMovementMaxAttempts);
 		}
 
 		/// <summary>随 StackCraft Board 的边界扩展同步移动顶部页眉禁放区，其它内部禁放区保持原世界位置。</summary>

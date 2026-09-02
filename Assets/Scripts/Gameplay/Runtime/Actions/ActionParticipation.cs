@@ -36,6 +36,11 @@ namespace Gameplay.Actions
 		[Tooltip("该槽位在同一次行动内允许的最多对象数量；0 表示不限制，例如任意数量角色共同参与一次行动。工位数量和并行行动数量不由这里表达。")]
 		private int m_maximumParticipants = 1;
 
+		[SerializeField]
+		[LabelText("整叠匹配允许同类超量")]
+		[Tooltip("只用于完整牌堆制作匹配：开启后，超过本槽位最多数量、但仍匹配本槽位条件的卡牌可以留在牌堆里，不会被本次行动绑定或消耗。用于承接 StackCraft 标准配方里 Resource 材料的“至少数量”语义。")]
+		private bool m_allowAdditionalMatchingParticipantsInStack;
+
 		[Header("固定内容")]
 		[SerializeField]
 		[ContentIdReference]
@@ -94,6 +99,8 @@ namespace Gameplay.Actions
 		public int MinimumParticipants => m_minimumParticipants;
 
 		public int MaximumParticipants => m_maximumParticipants;
+
+		public bool AllowAdditionalMatchingParticipantsInStack => m_allowAdditionalMatchingParticipantsInStack;
 
 		public IReadOnlyList<ContentId> AllowedContentIds => m_allowedContentIds ?? Array.Empty<ContentId>();
 

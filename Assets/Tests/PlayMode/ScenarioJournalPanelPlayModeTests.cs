@@ -23,7 +23,7 @@ namespace Gameplay.Tests
     /// <summary>验证统一地基场景通过正式 UIKit 查看当前任务和已发现配方 / 行动。</summary>
     public sealed class ScenarioJournalPanelPlayModeTests
     {
-        private const string FoundationScenePath = "Assets/Scenes/FoundationTest.unity";
+        private const string FoundationScenePath = "Assets/Scenes/地基测试.unity";
         private const string UnreadIndicatorGlyph = "●";
         private string m_saveDirectory;
         private int m_submitAudioRequestCount;

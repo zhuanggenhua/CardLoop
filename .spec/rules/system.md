@@ -13,7 +13,7 @@
 - 修改代码、配置、数据、资源、场景、状态或执行会改变外部结果的动作前，必须锁定四项前提：问题对象、真相来源、目标入口/环境、验收口径。
 - 四项任一缺失时，只能继续定位、补证据或问最小问题；不得先实施。
 - 用户给出本地路径、外部参考工程、网页、仓库、文档或资源目录作为参考来源时，必须先读取或验证该精确来源。
-- 不得把 FantasyWord 的项目事实、任务记录、旧世界观、截图证据或历史决策自动当成 CardLoop 事实。
+- 不得把任何旧来源项目的项目事实、任务记录、世界观、截图证据或历史决策自动当成 CardLoop 事实。
 
 ## 修复与验收
 
@@ -31,10 +31,10 @@
 ## Unity 与插件边界
 
 - 当前仓库 / Unity 工程名是 CardLoop；正式玩法层代码、程序集、命名空间和作者菜单默认使用 `Gameplay` 作为自有玩法职责归属。除项目事实、仓库路径、迁移记录和外部展示名外，不得再用 `CardLoop` 命名正式玩法模块；`GamePlay` 只是历史拼写，不得新增。
-- 当前阶段默认只打 Gameplay 地基和 StackCraft 吸收；《卡牌生存：无限》只作为知识记录和架构约束，除非用户当轮明确切换，不得提前实现职业、剧本、关卡、联机、Mod 业务或原创数值内容。
-- StackCraft 吸收必须按 [`knowledge/standards/workflow.md`](../knowledge/standards/workflow.md) 和 [`knowledge/standards/gameplay-architecture.md`](../knowledge/standards/gameplay-architecture.md) 执行；StackCraft 原脚本/原场景能运行、文档裁决完成、内部方法或测试入口存在，都不得声称新框架已吸收完成。
-- 吸收 StackCraft 玩法模块前，必须执行系统 skill `D:\codex-home\skills\absorb-reference\SKILL.md` 的父级职责检查；StackCraft 的目录、`Manager`、`System` 和单例边界不得直接变成 Gameplay 模块。
-- 同一玩法职责只能有一个正式 owner。行动、配方、制作、剧本目标、战斗、存档、资源加载、事件和 UI 绑定等职责，不得同时保留 Gameplay / GameCore 旧实现、StackCraft 参考实现和新增实现三套并行链路。
+- 框架分层必须按 [`knowledge/standards/framework-layering.md`](../knowledge/standards/framework-layering.md) 执行；依赖方向只能是 `Gameplay -> GameCore -> YokiFrame`，不得让 GameCore 引用 Gameplay 或项目业务，不得让 YokiFrame 承载游戏特定语义。
+- 当前阶段默认先打 CardLoop 自有 Gameplay 地基；《卡牌生存：无限》是自有产品愿景和架构约束，除非用户当轮明确切换，不得提前实现职业、剧本、关卡、联机、Mod 业务或原创数值内容。
+- 外部参考只允许作为候选证据；没有当轮明确裁决时，不得把来源项目的目录、`Manager`、`System`、单例、场景、资源路径或测试入口变成 CardLoop 正式主线。
+- 同一玩法职责只能有一个正式 owner。行动、配方、制作、剧本目标、战斗、存档、资源加载、事件和 UI 绑定等职责，不得同时保留旧实现、外部参考实现和新增实现三套并行链路。
 - 不得用桥接层、中转层、包装层、兼容壳、浅模块、空壳系统或第二套状态掩盖职责没有收口；设计模式、反模式和防护性架构裁决见 [`knowledge/standards/code-design.md`](../knowledge/standards/code-design.md)。
 - Gameplay 地基必须领域对象优先；对象模型、继承/组合、阶段门禁、Mod 和联机扩展按 [`knowledge/standards/gameplay-architecture.md`](../knowledge/standards/gameplay-architecture.md) 执行，不得把主结构拆成平铺的 State / Solver / Resolver / Projector / System 集合。
 - Gameplay 内容身份、内部 key、`Gameplay` / `GamePlay` / `CardLoop` 命名、GameCore 通用框架命名和生成物规则按 [`knowledge/standards/code-style.md`](../knowledge/standards/code-style.md) 执行；不得让作者手动维护第二套身份、第二套局部 key 或第二份生成真相。
@@ -49,3 +49,4 @@
 - 新增规则、更新规范、新建或修改 skill 前，必须先判断落点：系统 AGENTS、项目 AGENTS、系统 skill、项目 skill、任务/专项文档。
 - 不得把本该进 skill 的具体 SOP、参数、命令顺序、验收清单直接塞进根 AGENTS。
 - `.spec` 结构、知识索引、skill 路由有改动时，必须同步相关索引和说明。
+- 框架、目录、职责或模块 owner 的代码重构前，必须先完成文档单一口径、索引同步和 `spec-lint`；文档未收口时不得进入代码重构。

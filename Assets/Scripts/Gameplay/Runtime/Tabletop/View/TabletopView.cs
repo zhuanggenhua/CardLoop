@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using GAS.Runtime;
 using GameCore;
 using Gameplay.Content;
@@ -136,33 +137,34 @@ namespace Gameplay.Tabletop
 
 		private readonly List<HitResultEntry> m_hitResultViews = new List<HitResultEntry>();
 
-		private readonly Dictionary<ContentId, ResourceHandle<Sprite>> m_artHandles = new Dictionary<ContentId, ResourceHandle<Sprite>>();
+		private readonly Dictionary<ContentId, ResourceHandle<Texture2D>> m_artHandles = new Dictionary<ContentId, ResourceHandle<Texture2D>>();
 
 		private readonly Dictionary<ContentId, ResourceHandle<Material>> m_surfaceHandles =
 			new Dictionary<ContentId, ResourceHandle<Material>>();
 
-		private readonly Dictionary<ContentId, ResourceHandle<Sprite>> m_cardBuyerCurrencyArtHandles =
-			new Dictionary<ContentId, ResourceHandle<Sprite>>();
+		private readonly Dictionary<ContentId, ResourceHandle<Texture2D>> m_cardBuyerCurrencyArtHandles =
+			new Dictionary<ContentId, ResourceHandle<Texture2D>>();
 
-		private readonly Dictionary<ContentId, Sprite> m_cardBuyerCurrencyArtwork =
-			new Dictionary<ContentId, Sprite>();
+		private readonly Dictionary<ContentId, Texture2D> m_cardBuyerCurrencyArtwork =
+			new Dictionary<ContentId, Texture2D>();
 
 		private readonly HashSet<TabletopCardId> m_highlightedDropTargetCardIds =
 			new HashSet<TabletopCardId>();
+
+		private readonly Dictionary<TabletopCardId, Vector3> m_cardSpawnPresentationOrigins =
+			new Dictionary<TabletopCardId, Vector3>();
 
 		private readonly List<TabletopCardId> m_highlightRemovalBuffer = new List<TabletopCardId>();
 
 		private Tabletop m_tabletop;
 
-		private TabletopCardId m_dragPreviewCardId;
+		private TabletopCardId m_localDraggedStackAnchorCardId;
 
 		private TabletopCardId m_hoveredCardId;
 
 		private TabletopCardId m_selectedCardId;
 
-		private Vector2 m_dragPreviewPosition;
-
-		private bool m_hasDragPreview;
+		private bool m_hasLocalDraggedStack;
 
 		private ulong m_projectedCardRevision;
 
@@ -189,6 +191,8 @@ namespace Gameplay.Tabletop
 		internal float CardClickThreshold => m_settings == null ? 0.02f : m_settings.ClickThreshold;
 
 		internal float CardDragHeight => m_settings == null ? 0.1f : m_settings.DragHeight;
+
+		internal float CardAttachRadius => m_settings == null ? 0.25f : m_settings.AttachRadius;
 
 		/// <summary>
 		/// 绑定当前单局的唯一牌桌；卡牌状态、内容索引和活动战斗都由它统一拥有。
@@ -271,8 +275,6 @@ namespace Gameplay.Tabletop
 					else
 					{
 						ApplyCardPose(entry, stack, cardIndex);
-						EnsureArtwork(entry.Definition);
-						EnsureCardBuyerCurrencyArtwork(entry);
 					}
 				}
 			}
@@ -281,6 +283,13 @@ namespace Gameplay.Tabletop
 				if (!liveCardIds.Contains(cardId))
 				{
 					ReleaseView(cardId);
+				}
+			}
+			foreach (TabletopCardId cardId in new List<TabletopCardId>(m_cardSpawnPresentationOrigins.Keys))
+			{
+				if (!liveCardIds.Contains(cardId))
+				{
+					m_cardSpawnPresentationOrigins.Remove(cardId);
 				}
 			}
 			SetReadableCards(
@@ -323,7 +332,7 @@ namespace Gameplay.Tabletop
 			{
 				ReleaseView(cardId);
 			}
-			foreach (ResourceHandle<Sprite> handle in m_artHandles.Values)
+			foreach (ResourceHandle<Texture2D> handle in m_artHandles.Values)
 			{
 				ResourceSystem.ReleaseAsset(handle);
 			}
@@ -333,17 +342,17 @@ namespace Gameplay.Tabletop
 				ResourceSystem.ReleaseAsset(handle);
 			}
 			m_surfaceHandles.Clear();
-			foreach (ResourceHandle<Sprite> handle in m_cardBuyerCurrencyArtHandles.Values)
+			foreach (ResourceHandle<Texture2D> handle in m_cardBuyerCurrencyArtHandles.Values)
 			{
 				ResourceSystem.ReleaseAsset(handle);
 			}
 			m_cardBuyerCurrencyArtHandles.Clear();
 			m_cardBuyerCurrencyArtwork.Clear();
-			m_hasDragPreview = false;
-			m_dragPreviewCardId = default(TabletopCardId);
+			m_cardSpawnPresentationOrigins.Clear();
+			m_hasLocalDraggedStack = false;
+			m_localDraggedStackAnchorCardId = default(TabletopCardId);
 			m_highlightedDropTargetCardIds.Clear();
 			m_highlightRemovalBuffer.Clear();
-			m_dragPreviewPosition = default(Vector2);
 			m_tabletop = null;
 			m_projectedCardRevision = 0;
 			m_projectedBattleRevision = 0;
@@ -396,8 +405,23 @@ namespace Gameplay.Tabletop
 			return false;
 		}
 
+		/// <summary>
+		/// 读取当前被拖卡牌视图的实际牌桌坐标。
+		/// 释放判定必须使用视图已经落到的卡牌位置，不能退回鼠标坐标或未提交的逻辑请求坐标。
+		/// </summary>
+		internal Vector2 GetCardTablePosition(TabletopCardId cardId)
+		{
+			if (!m_views.TryGetValue(cardId, out ViewEntry entry) || entry.View == null)
+			{
+				throw new InvalidOperationException(
+					$"牌桌视图找不到释放卡牌 {cardId}，无法读取 StackCraft 的实际释放位置。" );
+			}
+
+			return TabletopCoordinateSpace.ToTablePosition(entry.View.transform.localPosition);
+		}
+
 		internal bool TryFindNearestCardViewWithinAttachRadius(
-			Vector2 tablePosition,
+			TabletopCardId sourceCardId,
 			TabletopCardStack excludedStack,
 			IReadOnlyList<TabletopCardId> allowedStackBottomCardIds,
 			out TabletopCardView view)
@@ -405,10 +429,6 @@ namespace Gameplay.Tabletop
 			if (m_settings == null)
 			{
 				throw new InvalidOperationException("牌桌视图缺少视图设置，无法按 StackCraft 目标吸附半径查找卡牌。");
-			}
-			if (!float.IsFinite(tablePosition.x) || !float.IsFinite(tablePosition.y))
-			{
-				throw new ArgumentException("牌桌目标吸附位置必须是有限坐标。", nameof(tablePosition));
 			}
 
 			float attachRadius = m_settings.AttachRadius;
@@ -422,31 +442,51 @@ namespace Gameplay.Tabletop
 				return false;
 			}
 
+			SyncPhysicsTransformsForStackCraftPointerQuery();
+			Vector3 overlapSphereCenter = RequireStackCraftOverlapSphereCenter(sourceCardId);
+			Collider[] hits = Physics.OverlapSphere(
+				overlapSphereCenter,
+				attachRadius,
+				Physics.DefaultRaycastLayers,
+				QueryTriggerInteraction.Ignore);
 			TabletopCardView bestView = null;
-			float bestDistance = attachRadius;
-			int bestSortingOrder = int.MinValue;
-			foreach (ViewEntry entry in m_views.Values)
+			float bestCenterSqrDistance = float.PositiveInfinity;
+			HashSet<TabletopCardStack> checkedStacks = new HashSet<TabletopCardStack>();
+			for (int hitIndex = 0; hitIndex < hits.Length; hitIndex++)
 			{
-				TabletopCardView candidate = entry.View;
-				if (candidate == null ||
-					!candidate.CardId.IsValid ||
-					(excludedStack != null && ReferenceEquals(candidate.TabletopCard?.Stack, excludedStack)) ||
-					(allowedStackBottomCardIds != null &&
-					 !ContainsCandidateStackBottomCardId(allowedStackBottomCardIds, candidate)))
+				// StackCraft 的吸附扫描只认卡牌根碰撞体，角色装备面板等子碰撞体不能扩大可吸附范围。
+				TabletopCardView hitView = hits[hitIndex].GetComponent<TabletopCardView>();
+				if (hitView == null ||
+					!hitView.CardId.IsValid ||
+					!m_views.TryGetValue(hitView.CardId, out ViewEntry hitEntry) ||
+					!ReferenceEquals(hitView, hitEntry.View) ||
+					hitEntry.TabletopCard == null ||
+					hitEntry.TabletopCard.Stack == null)
 				{
 					continue;
 				}
 
-				float distance = candidate.DistanceToVisibleFootprint(tablePosition);
-				if (distance <= attachRadius &&
-					(bestView == null ||
-					 distance < bestDistance - 0.0001f ||
-					 (Mathf.Abs(distance - bestDistance) <= 0.0001f &&
-					  candidate.SortingOrder > bestSortingOrder)))
+				TabletopCardStack candidateStack = hitEntry.TabletopCard.Stack;
+				TabletopCardId bottomCardId = candidateStack.BottomCard.Id;
+				if ((excludedStack != null && ReferenceEquals(candidateStack, excludedStack)) ||
+					(allowedStackBottomCardIds != null &&
+					 !ContainsCardId(allowedStackBottomCardIds, bottomCardId)) ||
+					!checkedStacks.Add(candidateStack) ||
+					!m_views.TryGetValue(bottomCardId, out ViewEntry bottomEntry) ||
+					bottomEntry.View == null)
 				{
-					bestView = candidate;
-					bestDistance = distance;
-					bestSortingOrder = candidate.SortingOrder;
+					continue;
+				}
+
+				float centerSqrDistance = GetStackCraftClosestCardCenterSqrDistance(
+						candidateStack,
+						overlapSphereCenter);
+				if (float.IsFinite(centerSqrDistance) &&
+					(bestView == null ||
+					 centerSqrDistance < bestCenterSqrDistance - 0.0001f))
+				{
+					bestView = bottomEntry.View;
+					bestCenterSqrDistance = centerSqrDistance;
 				}
 			}
 
@@ -454,57 +494,155 @@ namespace Gameplay.Tabletop
 			return view != null;
 		}
 
-		private static bool ContainsCandidateStackBottomCardId(
-			IReadOnlyList<TabletopCardId> stackBottomCardIds,
-			TabletopCardView candidate)
+		internal bool TryFindNearestVisibleCardViewWithinAttachRadius(
+			TabletopCardId sourceCardId,
+			TabletopCardStack excludedStack,
+			Func<TabletopCardView, CardDefinition, bool> predicate,
+			out TabletopCardView view)
 		{
-			TabletopCardStack candidateStack = candidate.TabletopCard?.Stack;
-			if (candidateStack == null)
+			if (m_settings == null)
 			{
+				throw new InvalidOperationException("牌桌视图缺少视图设置，无法按 StackCraft 目标吸附半径查找卡牌。");
+			}
+			if (predicate == null)
+			{
+				throw new ArgumentNullException(nameof(predicate));
+			}
+
+			float attachRadius = CardAttachRadius;
+			if (!float.IsFinite(attachRadius) || attachRadius < 0f)
+			{
+				throw new InvalidOperationException("牌桌视图设置的目标吸附半径必须是大于等于 0 的有限值。");
+			}
+			if (attachRadius <= 0f)
+			{
+				view = null;
 				return false;
 			}
-			TabletopCardId bottomCardId = candidateStack.BottomCard.Id;
-			for (int index = 0; index < stackBottomCardIds.Count; index++)
+
+			SyncPhysicsTransformsForStackCraftPointerQuery();
+			Vector3 overlapSphereCenter = RequireStackCraftOverlapSphereCenter(sourceCardId);
+			Collider[] hits = Physics.OverlapSphere(
+				overlapSphereCenter,
+				attachRadius,
+				Physics.DefaultRaycastLayers,
+				QueryTriggerInteraction.Ignore);
+			TabletopCardView bestView = null;
+			float bestCenterSqrDistance = float.PositiveInfinity;
+			for (int hitIndex = 0; hitIndex < hits.Length; hitIndex++)
 			{
-				if (stackBottomCardIds[index] == bottomCardId)
+				// 终端释放同样只用卡牌根碰撞体做物理命中，点击冒泡不参与吸附目标判定。
+				TabletopCardView hitView = hits[hitIndex].GetComponent<TabletopCardView>();
+				if (hitView == null ||
+					!hitView.CardId.IsValid ||
+					!m_views.TryGetValue(hitView.CardId, out ViewEntry entry) ||
+					!ReferenceEquals(hitView, entry.View) ||
+					entry.View == null ||
+					entry.TabletopCard == null ||
+					entry.TabletopCard.Stack == null ||
+					(excludedStack != null && ReferenceEquals(entry.TabletopCard.Stack, excludedStack)) ||
+					!predicate(entry.View, entry.Definition))
 				{
-					return true;
+					continue;
+				}
+
+				float sqrDistance = (entry.View.transform.position - overlapSphereCenter).sqrMagnitude;
+				if (bestView == null || sqrDistance < bestCenterSqrDistance - 0.0001f)
+				{
+					bestView = entry.View;
+					bestCenterSqrDistance = sqrDistance;
 				}
 			}
-			return false;
+
+			view = bestView;
+			return view != null;
 		}
 
-		internal void SetDragPreview(TabletopCardId cardId, Vector2 tablePosition)
+		private Vector3 RequireStackCraftOverlapSphereCenter(TabletopCardId sourceCardId)
 		{
-			if (!cardId.IsValid)
+			if (!sourceCardId.IsValid)
 			{
-				throw new ArgumentException("拖拽预览必须引用有效的局内卡牌。", "cardId");
+				throw new ArgumentException("StackCraft 目标扫描必须引用当前被拖动的有效卡牌。", nameof(sourceCardId));
 			}
-			if (!float.IsFinite(tablePosition.x) || !float.IsFinite(tablePosition.y))
+			if (!m_views.TryGetValue(sourceCardId, out ViewEntry entry) ||
+				entry.View == null)
 			{
-				throw new ArgumentException("拖拽预览位置必须是有限坐标。", "tablePosition");
+				throw new InvalidOperationException(
+					$"StackCraft 目标扫描找不到被拖动卡牌 {sourceCardId} 的当前视图，无法对齐模板的 Transform 命中语义。");
 			}
-			m_dragPreviewCardId = cardId;
-			m_dragPreviewPosition = tablePosition;
-			m_hasDragPreview = true;
-			ApplyDragPreview();
+			return entry.View.transform.position;
 		}
 
-		internal void ClearDragPreview()
+		private static void SyncPhysicsTransformsForStackCraftPointerQuery()
 		{
-			if (m_hasDragPreview)
+			// 本帧刚把拖拽卡牌 Transform 贴到鼠标位置，随后立刻用物理查询找释放目标。
+			// Unity 物理世界需要显式同步，才能对齐 StackCraft 直接用当前卡牌 Transform 命中。
+			Physics.SyncTransforms();
+		}
+
+		private float GetStackCraftClosestCardCenterSqrDistance(
+			TabletopCardStack stack,
+			Vector3 worldPosition)
+		{
+			float centerSqrDistance = float.PositiveInfinity;
+			for (int cardIndex = 0; cardIndex < stack.Cards.Count; cardIndex++)
 			{
-				TabletopCardStack previewStack = null;
+				if (!m_views.TryGetValue(stack.Cards[cardIndex].Id, out ViewEntry entry) ||
+					entry.View == null)
+				{
+					continue;
+				}
+
+				float sqrDistance = (entry.View.transform.position - worldPosition).sqrMagnitude;
+				if (sqrDistance < centerSqrDistance)
+				{
+					centerSqrDistance = sqrDistance;
+				}
+			}
+			return centerSqrDistance;
+		}
+
+		internal void SetLocalDraggedStack(TabletopCardId anchorCardId)
+		{
+			if (!anchorCardId.IsValid)
+			{
+				throw new ArgumentException("本地拖拽牌堆必须引用有效的局内卡牌。", nameof(anchorCardId));
+			}
+			if (IsBound &&
+				(m_projectedCardRevision != m_tabletop.Cards.Revision ||
+				 m_projectedBattleRevision != m_tabletop.BattleRevision))
+			{
+				// StackCraft 按下拆堆后立刻重投影原堆；不能等 LateUpdate 才让露出的卡牌回到正确层级。
+				Refresh();
+			}
+			m_localDraggedStackAnchorCardId = anchorCardId;
+			m_hasLocalDraggedStack = true;
+			ApplyLocalDraggedStackPose();
+		}
+
+		internal void ClearLocalDraggedStack()
+		{
+			if (m_hasLocalDraggedStack)
+			{
+				TabletopCardStack draggedStack = null;
 				if (IsBound)
 				{
-					m_tabletop.Cards.TryGetStackContaining(m_dragPreviewCardId, out previewStack);
+					m_tabletop.Cards.TryGetStackContaining(m_localDraggedStackAnchorCardId, out draggedStack);
 				}
-				m_hasDragPreview = false;
-				m_dragPreviewCardId = default(TabletopCardId);
-				m_dragPreviewPosition = default(Vector2);
-				if (previewStack != null)
+				m_hasLocalDraggedStack = false;
+				m_localDraggedStackAnchorCardId = default(TabletopCardId);
+				if (IsBound &&
+					(m_projectedCardRevision != m_tabletop.Cards.Revision ||
+					 m_projectedBattleRevision != m_tabletop.BattleRevision))
 				{
-					ApplyAuthoritativeStackPose(previewStack);
+					// StackCraft 释放后会立即对受影响牌堆 SetTargetPosition / ResolveOverlaps；
+					// 这里同步刷新整张牌桌，避免合堆、交易或战斗改变目标堆后等到下一帧才落位。
+					Refresh();
+					return;
+				}
+				if (draggedStack != null)
+				{
+					ApplyAuthoritativeStackPose(draggedStack);
 				}
 			}
 		}
@@ -660,6 +798,11 @@ namespace Gameplay.Tabletop
 
 		private void PlayPresentationCue(TabletopPresentationCue cue)
 		{
+			if (cue.Kind == TabletopPresentationCueKind.CardSpawn)
+			{
+				RecordCardSpawnPresentation(cue);
+				return;
+			}
 			if (cue.Kind == TabletopPresentationCueKind.CameraFocus)
 			{
 				return;
@@ -685,6 +828,52 @@ namespace Gameplay.Tabletop
 			}
 
 			RequestCardSmokeEffect(cue.TablePosition);
+		}
+
+		private void RecordCardSpawnPresentation(TabletopPresentationCue cue)
+		{
+			if (!cue.HasCardId || !cue.HasTablePosition)
+			{
+				throw new InvalidOperationException("卡牌出生表现提示必须同时携带局内卡牌和牌桌坐标。");
+			}
+			if (m_settings == null)
+			{
+				throw new InvalidOperationException("牌桌视图缺少视图设置，无法记录卡牌出生表现。");
+			}
+			if (m_views.TryGetValue(cue.CardId, out ViewEntry existingEntry) && existingEntry.View != null)
+			{
+				throw new InvalidOperationException(
+					$"卡牌 {cue.CardId} 已经有视图，不能再次登记出生表现。");
+			}
+			if (m_tabletop == null || !m_tabletop.Cards.TryGetCard(cue.CardId, out _))
+			{
+				throw new InvalidOperationException(
+					$"卡牌出生表现引用了不属于当前牌桌的卡牌：{cue.CardId}。");
+			}
+
+			Vector3 localSpawnPosition = TabletopCoordinateSpace.ToLocalPosition(cue.TablePosition);
+			localSpawnPosition.y = ResolveCardSpawnBaseHeight(cue) + cue.SpawnHeightOffset;
+			m_cardSpawnPresentationOrigins[cue.CardId] = localSpawnPosition;
+		}
+
+		private float ResolveCardSpawnBaseHeight(TabletopPresentationCue cue)
+		{
+			if (!cue.UsesDragHeight)
+			{
+				return 0f;
+			}
+			if (!cue.HasSpawnOriginCardId)
+			{
+				throw new InvalidOperationException("StackCraft 拖拽高度出生提示缺少来源卡牌。");
+			}
+			if (!m_views.TryGetValue(cue.SpawnOriginCardId, out ViewEntry originEntry) ||
+				originEntry.View == null)
+			{
+				throw new InvalidOperationException(
+					$"StackCraft 拖拽高度出生提示找不到来源卡牌视图：{cue.SpawnOriginCardId}。");
+			}
+
+			return originEntry.View.transform.localPosition.y;
 		}
 
 		private void PlayCardHighlight(TabletopPresentationCue cue)
@@ -810,77 +999,50 @@ namespace Gameplay.Tabletop
 				offeredPack.GetCollectionProgress(m_tabletop.IsContentDiscovered));
 		}
 
-		private void EnsureCardBuyerCurrencyArtwork(ViewEntry entry)
+		private void ApplyRequiredCardBuyerCurrencyArtwork(ViewEntry entry)
 		{
 			if (entry.View == null || entry.Definition is not CardBuyerDefinition buyerDefinition)
 			{
 				return;
 			}
-			if (m_cardBuyerCurrencyArtwork.TryGetValue(buyerDefinition.ContentId, out Sprite cachedArtwork))
+			if (m_cardBuyerCurrencyArtwork.TryGetValue(buyerDefinition.ContentId, out Texture2D cachedArtwork))
 			{
 				entry.View.ApplyCardBuyerSurface(cachedArtwork);
 				return;
 			}
-			if (m_cardBuyerCurrencyArtHandles.ContainsKey(buyerDefinition.ContentId))
-			{
-				return;
-			}
-			CardDefinition currencyDefinition = null;
+			CardDefinition currencyDefinition;
 			if (!buyerDefinition.CurrencyCardId.IsValid ||
 				!m_tabletop.ContentIndex.TryGet(
 					buyerDefinition.CurrencyCardId,
 					out currencyDefinition))
 			{
-				Debug.LogError(
-					$"收购点 {buyerDefinition.ContentId} 缺少有效货币内容 {buyerDefinition.CurrencyCardId}，无法显示 StackCraft CardBuyer 图标。",
-					this);
-				return;
+				throw new InvalidOperationException(
+					$"收购点 {buyerDefinition.ContentId} 缺少有效货币内容 {buyerDefinition.CurrencyCardId}，不能以缺少图标的状态进入牌桌。");
 			}
 
-			SoftAssetReference<Sprite> artReference = currencyDefinition.Artwork;
+			SoftAssetReference<Texture2D> artReference = currencyDefinition.Artwork;
 			if (artReference == null || !artReference.IsValid())
 			{
-				Debug.LogError(
-					$"收购点 {buyerDefinition.ContentId} 的货币 {currencyDefinition.ContentId} 缺少有效卡面图片，无法显示 StackCraft CardBuyer 图标。",
-					this);
-				return;
+				throw new InvalidOperationException(
+					$"收购点 {buyerDefinition.ContentId} 的货币 {currencyDefinition.ContentId} 缺少有效卡面图片，不能以缺少图标的状态进入牌桌。");
 			}
 
-			try
+			if (!m_cardBuyerCurrencyArtHandles.TryGetValue(
+				buyerDefinition.ContentId,
+				out ResourceHandle<Texture2D> handle))
 			{
-				ResourceHandle<Sprite> handle = ResourceSystem.LoadAssetAsync<Sprite>(artReference.Address);
+				handle = ResourceSystem.LoadAssetAsync<Texture2D>(artReference.Address);
 				m_cardBuyerCurrencyArtHandles.Add(buyerDefinition.ContentId, handle);
-				handle.RegisterCallback(delegate(Sprite artwork)
-				{
-					if (artwork != null)
-					{
-						m_cardBuyerCurrencyArtwork[buyerDefinition.ContentId] = artwork;
-					}
-					ApplyCardBuyerCurrencyArtwork(buyerDefinition.ContentId, artwork);
-				});
 			}
-			catch (Exception exception)
-			{
-				Debug.LogError(
-					$"无法加载收购点货币图标，收购点：{buyerDefinition.ContentId}，货币：{currencyDefinition.ContentId}，资源地址：{artReference.Address}。\n{exception}",
-					this);
-			}
-		}
 
-		private void ApplyCardBuyerCurrencyArtwork(ContentId buyerContentId, Sprite artwork)
-		{
+			Texture2D artwork = handle.WaitForCompletion();
 			if (artwork == null)
 			{
-				Debug.LogError($"收购点 {buyerContentId} 的货币图标加载结果为空。", this);
-				return;
+				throw new InvalidOperationException(
+					$"收购点 {buyerDefinition.ContentId} 的货币图标加载结果为空：{artReference.Address}。");
 			}
-			foreach (ViewEntry entry in m_views.Values)
-			{
-				if (entry.Definition.ContentId.Equals(buyerContentId) && entry.View != null)
-				{
-					entry.View.ApplyCardBuyerSurface(artwork);
-				}
-			}
+			m_cardBuyerCurrencyArtwork[buyerDefinition.ContentId] = artwork;
+			entry.View.ApplyCardBuyerSurface(artwork);
 		}
 
 		private void RefreshProjectileViews()
@@ -1436,16 +1598,90 @@ namespace Gameplay.Tabletop
 					{
 						value.View = component;
 						component.Bind(value.TabletopCard, value.Definition);
+						ApplyRequiredCardFace(value);
 						component.ApplySize(value.Definition.GetViewSize(m_tabletop.PlacementRules.Geometry.CardSize));
 						component.SetHighlighted(m_highlightedDropTargetCardIds.Contains(value.TabletopCard.Id));
-						ApplyCurrentPose(value);
-						EnsureCardSurface(value.Definition);
-						EnsureArtwork(value.Definition);
+						if (TryConsumeCardSpawnPresentationOrigin(
+							value.TabletopCard.Id,
+							out Vector3 spawnOrigin))
+						{
+							ApplyCardSpawnPresentationPose(value, spawnOrigin);
+						}
+						else
+						{
+							ApplyCurrentPose(value);
+						}
 						ApplyPackVendorSurface(value);
-						EnsureCardBuyerCurrencyArtwork(value);
+						ApplyRequiredCardBuyerCurrencyArtwork(value);
 					}
 				}
 			});
+		}
+
+		private bool TryConsumeCardSpawnPresentationOrigin(
+			TabletopCardId cardId,
+			out Vector3 spawnOrigin)
+		{
+			if (m_cardSpawnPresentationOrigins.TryGetValue(cardId, out spawnOrigin))
+			{
+				m_cardSpawnPresentationOrigins.Remove(cardId);
+				return true;
+			}
+			spawnOrigin = default;
+			return false;
+		}
+
+		private void ApplyCardSpawnPresentationPose(
+			ViewEntry entry,
+			Vector3 spawnOrigin)
+		{
+			TabletopCardStack stack = entry.TabletopCard.Stack;
+			if (stack == null)
+			{
+				return;
+			}
+
+			int cardIndex = stack.IndexOf(entry.TabletopCard.Id);
+			if (cardIndex < 0)
+			{
+				throw new InvalidOperationException(
+					$"卡牌 {entry.TabletopCard.Id} 声明属于牌堆，但牌堆成员中不存在该卡牌。");
+			}
+
+			TabletopCardLayoutParameters layoutParameters =
+				m_settings.CreateLayoutParameters(m_tabletop.PlacementRules.Geometry);
+			entry.View.ApplyPose(
+				new TabletopCardPose(spawnOrigin, layoutParameters.BaseSortingOrder),
+				0f,
+				m_settings.MoveEase);
+			StartCoroutine(ApplyCardSpawnPresentationTargetPoseNextFrame(entry.TabletopCard.Id));
+		}
+
+		private IEnumerator ApplyCardSpawnPresentationTargetPoseNextFrame(TabletopCardId cardId)
+		{
+			yield return null;
+
+			if (!IsBound ||
+				!m_views.TryGetValue(cardId, out ViewEntry entry) ||
+				entry.View == null)
+			{
+				yield break;
+			}
+
+			TabletopCardStack stack = entry.TabletopCard.Stack;
+			if (stack == null)
+			{
+				yield break;
+			}
+
+			int cardIndex = stack.IndexOf(cardId);
+			if (cardIndex < 0)
+			{
+				throw new InvalidOperationException(
+					$"卡牌 {cardId} 声明属于牌堆，但牌堆成员中不存在该卡牌。");
+			}
+
+			ApplyCardPose(entry, stack, cardIndex);
 		}
 
 		private void ApplyCurrentPose(ViewEntry entry)
@@ -1475,21 +1711,22 @@ namespace Gameplay.Tabletop
 						entry.TabletopCard.Id,
 						m_settings.BattleBaseSortingOrder,
 						out TabletopCardPose battlePose);
-				entry.View.SetCharacterStatusVisible(
-					hasBattlePose || cardIndex == stack.Cards.Count - 1);
+				// StackCraft 的生命数字属于角色卡自身，不按牌堆位置额外隐藏。
+				entry.View.SetCharacterStatusVisible(true);
 				if (hasBattlePose)
 				{
 					entry.View.ApplyPose(
 						battlePose,
-						immediate ? 0f : m_settings.MoveDurationSeconds);
+						immediate ? 0f : m_settings.MoveDurationSeconds,
+					m_settings.MoveEase);
 				}
 				else
 				{
-					int previewStartIndex = (m_hasDragPreview ? stack.IndexOf(m_dragPreviewCardId) : (-1));
-					if (previewStartIndex >= 0 && cardIndex >= previewStartIndex)
+					int draggedSegmentStartIndex = (m_hasLocalDraggedStack ? stack.IndexOf(m_localDraggedStackAnchorCardId) : (-1));
+					if (draggedSegmentStartIndex >= 0 && cardIndex >= draggedSegmentStartIndex)
 					{
-						int previewCardIndex = cardIndex - previewStartIndex;
-						entry.View.ApplyDragPose(CreateDragPreviewPose(stack, cardIndex, previewCardIndex), previewCardIndex == 0, m_settings.DragFollowSharpness);
+						int draggedSegmentIndex = cardIndex - draggedSegmentStartIndex;
+						entry.View.ApplyDragPose(CreateLocalDraggedStackPose(stack, cardIndex, draggedSegmentIndex), draggedSegmentIndex == 0, m_settings.DragFollowSharpness);
 					}
 					else
 					{
@@ -1498,28 +1735,29 @@ namespace Gameplay.Tabletop
 								stack,
 								cardIndex,
 								m_settings.CreateLayoutParameters(m_tabletop.PlacementRules.Geometry)),
-							immediate ? 0f : m_settings.MoveDurationSeconds);
+							immediate ? 0f : m_settings.MoveDurationSeconds,
+						m_settings.MoveEase);
 					}
 				}
 			}
 		}
 
-		private TabletopCardPose CreateDragPreviewPose(
+		private TabletopCardPose CreateLocalDraggedStackPose(
 			TabletopCardStack stack,
 			int cardIndex,
-			int previewCardIndex)
+			int draggedSegmentIndex)
 		{
 			TabletopCardLayoutParameters layoutParameters =
 				m_settings.CreateLayoutParameters(m_tabletop.PlacementRules.Geometry);
-			if (previewCardIndex == 0)
+			if (draggedSegmentIndex == 0)
 			{
 				return new TabletopCardPose(
-					TabletopCoordinateSpace.ToLocalPosition(m_dragPreviewPosition, m_settings.DragHeight),
+					TabletopCoordinateSpace.ToLocalPosition(stack.Position, m_settings.DragHeight),
 					layoutParameters.BaseSortingOrder);
 			}
 
-			Vector3 targetPosition = TabletopCoordinateSpace.ToLocalPosition(m_dragPreviewPosition, m_settings.DragHeight) +
-				layoutParameters.StackVisualStep * previewCardIndex;
+			Vector3 targetPosition = TabletopCoordinateSpace.ToLocalPosition(stack.Position, m_settings.DragHeight) +
+				layoutParameters.StackVisualStep * draggedSegmentIndex;
 			TabletopCard precedingCard = stack.Cards[cardIndex - 1];
 			if (m_views.TryGetValue(precedingCard.Id, out var precedingEntry) && precedingEntry.View != null)
 			{
@@ -1528,16 +1766,16 @@ namespace Gameplay.Tabletop
 
 			return new TabletopCardPose(
 				targetPosition,
-				checked(layoutParameters.BaseSortingOrder + previewCardIndex));
+				layoutParameters.BaseSortingOrder);
 		}
 
-		private void ApplyDragPreview()
+		private void ApplyLocalDraggedStackPose()
 		{
 			if (!IsBound)
 			{
 				return;
 			}
-			TabletopCardStack stack = m_tabletop.Cards.GetStackContaining(m_dragPreviewCardId);
+			TabletopCardStack stack = m_tabletop.Cards.GetStackContaining(m_localDraggedStackAnchorCardId);
 			ApplyAuthoritativeStackPose(stack);
 		}
 
@@ -1553,74 +1791,52 @@ namespace Gameplay.Tabletop
 			}
 		}
 
-		private void EnsureArtwork(CardDefinition contentAsset)
+		private void ApplyRequiredCardFace(ViewEntry entry)
 		{
-			SoftAssetReference<Sprite> artReference = contentAsset.Artwork;
-			if (artReference == null || !artReference.IsValid() || m_artHandles.ContainsKey(contentAsset.ContentId))
-			{
-				return;
-			}
-			try
-			{
-				ResourceHandle<Sprite> handle = ResourceSystem.LoadAssetAsync<Sprite>(artReference.Address);
-				m_artHandles.Add(contentAsset.ContentId, handle);
-				handle.RegisterCallback(delegate(Sprite artwork)
-				{
-					ApplyArtwork(contentAsset.ContentId, artwork);
-				});
-			}
-			catch (Exception arg)
-			{
-				Debug.LogError($"无法加载卡面图片，内容 ID：{contentAsset.ContentId}，资源地址：{artReference.Address}。\n{arg}", this);
-			}
+			Material surfaceMaterial = LoadRequiredCardSurface(entry.Definition);
+			Texture2D artwork = LoadRequiredCardArtwork(entry.Definition);
+			entry.View.SetSurfaceMaterial(surfaceMaterial);
+			entry.View.SetArtwork(artwork);
 		}
 
-		private void EnsureCardSurface(CardDefinition contentAsset)
+		private Texture2D LoadRequiredCardArtwork(CardDefinition contentAsset)
+		{
+			SoftAssetReference<Texture2D> artReference = contentAsset.Artwork;
+			if (artReference == null || !artReference.IsValid())
+			{
+				throw new InvalidOperationException(
+					$"卡牌 {contentAsset.ContentId} 缺少有效卡面图片引用，不能以默认卡面进入牌桌。");
+			}
+
+			if (!m_artHandles.TryGetValue(contentAsset.ContentId, out ResourceHandle<Texture2D> handle))
+			{
+				handle = ResourceSystem.LoadAssetAsync<Texture2D>(artReference.Address);
+				m_artHandles.Add(contentAsset.ContentId, handle);
+			}
+
+			Texture2D artwork = handle.WaitForCompletion();
+			return artwork ?? throw new InvalidOperationException(
+				$"卡牌 {contentAsset.ContentId} 的卡面图片加载结果为空：{artReference.Address}。");
+		}
+
+		private Material LoadRequiredCardSurface(CardDefinition contentAsset)
 		{
 			SoftAssetReference<Material> surfaceReference = contentAsset.CardSurface;
-			if (surfaceReference == null ||
-				!surfaceReference.IsValid() ||
-				m_surfaceHandles.ContainsKey(contentAsset.ContentId))
+			if (surfaceReference == null || !surfaceReference.IsValid())
 			{
-				return;
+				throw new InvalidOperationException(
+					$"卡牌 {contentAsset.ContentId} 缺少有效表面材质引用，不能以默认角色材质进入牌桌。");
 			}
-			try
+
+			if (!m_surfaceHandles.TryGetValue(contentAsset.ContentId, out ResourceHandle<Material> handle))
 			{
-				ResourceHandle<Material> handle = ResourceSystem.LoadAssetAsync<Material>(surfaceReference.Address);
+				handle = ResourceSystem.LoadAssetAsync<Material>(surfaceReference.Address);
 				m_surfaceHandles.Add(contentAsset.ContentId, handle);
-				handle.RegisterCallback(delegate(Material surfaceMaterial)
-				{
-					ApplyCardSurface(contentAsset.ContentId, surfaceMaterial);
-				});
 			}
-			catch (Exception exception)
-			{
-				Debug.LogError(
-					$"无法加载卡牌表面材质，内容 ID：{contentAsset.ContentId}，资源地址：{surfaceReference.Address}。\n{exception}",
-					this);
-			}
-		}
 
-		private void ApplyCardSurface(ContentId contentId, Material surfaceMaterial)
-		{
-			foreach (ViewEntry entry in m_views.Values)
-			{
-				if (entry.Definition.ContentId.Equals(contentId) && entry.View != null)
-				{
-					entry.View.SetSurfaceMaterial(surfaceMaterial);
-				}
-			}
-		}
-
-		private void ApplyArtwork(ContentId contentId, Sprite artwork)
-		{
-			foreach (ViewEntry entry in m_views.Values)
-			{
-				if (entry.Definition.ContentId.Equals(contentId) && entry.View != null)
-				{
-					entry.View.SetArtwork(artwork);
-				}
-			}
+			Material surfaceMaterial = handle.WaitForCompletion();
+			return surfaceMaterial ?? throw new InvalidOperationException(
+				$"卡牌 {contentAsset.ContentId} 的表面材质加载结果为空：{surfaceReference.Address}。");
 		}
 
 		private void ReleaseActionProgressView(ActionInstance action)

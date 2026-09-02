@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using GAS.Runtime;
 using GameCore;
@@ -10,6 +11,7 @@ using Gameplay.Tabletop.Actions;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEditor;
 using UnityEngine;
 using YokiFrame;
 using UEntity = Unity.Entities.Entity;
@@ -309,7 +311,6 @@ namespace Gameplay.Tests
 				bool handledInside = tabletop.TryDropBattleParticipant(
 					ally.Id,
 					battleArea.center,
-					new Vector2(25f, 25f),
 					out bool leftInside,
 					out TabletopCardStack placedInside);
 
@@ -322,7 +323,6 @@ namespace Gameplay.Tests
 				Vector2 fleePosition = new Vector2(battleArea.xMax + 10f, battleArea.yMax + 10f);
 				bool handledOutside = tabletop.TryDropBattleParticipant(
 					ally.Id,
-					fleePosition,
 					fleePosition,
 					out bool leftOutside,
 					out TabletopCardStack placedOutside);
@@ -383,7 +383,9 @@ namespace Gameplay.Tests
 			RuntimeTabletop tabletop = null;
 			try
 			{
-				tabletop = CreateBattleTabletop(ContentIndex.Build(new ContentAsset[] { definition }));
+				tabletop = CreateBattleTabletop(
+					ContentIndex.Build(new ContentAsset[] { definition }),
+					columnsPerRank: 1);
 				Battle destination = CreateTwoCharacterBattle(tabletop, definition.ContentId, Vector2.zero);
 				Battle mergedResult = CreateTwoCharacterBattle(
 				 tabletop,
@@ -412,17 +414,22 @@ namespace Gameplay.Tests
 			RuntimeTabletop tabletop = null;
 			try
 			{
-				tabletop = CreateBattleTabletop(ContentIndex.Build(new ContentAsset[] { definition }));
+				tabletop = CreateBattleTabletop(
+					ContentIndex.Build(new ContentAsset[] { definition }),
+					columnsPerRank: 1);
 				Battle destination = CreateTwoCharacterBattle(tabletop, definition.ContentId, Vector2.zero);
 				Battle source = CreateTwoCharacterBattle(
-				 tabletop,
+					tabletop,
 					definition.ContentId,
-					new Vector2(0.33f, 0f));
+					new Vector2(0f, -0.5f));
 				CharacterCard reinforcement = (CharacterCard)tabletop.CreateCard(
 					definition.ContentId,
 					Vector2.zero);
 				Assert.That(tabletop.ActiveBattles, Has.Count.EqualTo(2));
-
+				Assert.That(
+					tabletop.GetBattleArea(destination).Overlaps(tabletop.GetBattleArea(source)),
+					Is.False,
+					"增援前两场战斗区域必须不重叠，才能验证扩展后自动合并。");
 				tabletop.JoinBattle(destination, sideIndex: 0, reinforcement.Id);
 
 				Assert.That(tabletop.ActiveBattles, Has.Count.EqualTo(1));
@@ -550,6 +557,45 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void AdvanceRealTime_HostileEnemyUsesNearestPlayerEvenOutsideConfiguredAggroRadius()
+		{
+			CharacterCardDefinition playerDefinition = CreateCharacterCard(
+				"test.hostile-ai.outside-aggro.player",
+				abilitySystemPresetId: 1001);
+			CharacterCardDefinition enemyDefinition = CreateCharacterCard(
+				"test.hostile-ai.outside-aggro.enemy",
+				abilitySystemPresetId: 1004,
+				automaticAggroRadius: 5f,
+				automaticAttackRadius: 1.5f);
+			try
+			{
+				RuntimeTabletop tabletop = CreateBattleTabletop(
+					ContentIndex.Build(new ContentAsset[] { playerDefinition, enemyDefinition }),
+					seed: 12345u,
+					automaticMovementIntervalSeconds: 1f,
+					automaticMovementRadius: 1f,
+					automaticMovementMaxAttempts: 1);
+				CharacterCard player = (CharacterCard)tabletop.CreateCard(
+					playerDefinition.ContentId,
+					Vector2.zero);
+				CharacterCard enemy = (CharacterCard)tabletop.CreateCard(
+					enemyDefinition.ContentId,
+					new Vector2(10f, 0f));
+
+				tabletop.AdvanceRealTime(2.01f);
+
+				Assert.That(tabletop.ActiveBattles, Is.Empty);
+				Assert.That(enemy.Position.x, Is.LessThan(10f));
+				Assert.That(player.Position, Is.EqualTo(Vector2.zero));
+			}
+			finally
+			{
+				UnityEngine.Object.DestroyImmediate(playerDefinition);
+				UnityEngine.Object.DestroyImmediate(enemyDefinition);
+			}
+		}
+
+		[Test]
 		public void AdvanceRealTime_HostileEnemyStartsBattleAgainstNearbyPlayer()
 		{
 			CharacterCardDefinition playerDefinition = CreateCharacterCard(
@@ -558,16 +604,16 @@ namespace Gameplay.Tests
 			CharacterCardDefinition enemyDefinition = CreateCharacterCard(
 				"test.hostile-ai.enemy",
 				abilitySystemPresetId: 1004,
-				automaticMovementIntervalSeconds: 1f,
-				automaticMovementRadius: 1f,
-				automaticMovementMaxAttempts: 1,
 				automaticAggroRadius: 5f,
 				automaticAttackRadius: 1.5f);
 			try
 			{
 				RuntimeTabletop tabletop = CreateBattleTabletop(
 					ContentIndex.Build(new ContentAsset[] { playerDefinition, enemyDefinition }),
-					seed: 12345u);
+					seed: 12345u,
+					automaticMovementIntervalSeconds: 1f,
+					automaticMovementRadius: 1f,
+					automaticMovementMaxAttempts: 1);
 				CharacterCard player = (CharacterCard)tabletop.CreateCard(
 					playerDefinition.ContentId,
 					Vector2.zero);
@@ -575,7 +621,7 @@ namespace Gameplay.Tests
 					enemyDefinition.ContentId,
 					new Vector2(1f, 0f));
 
-				tabletop.AdvanceRealTime(1f);
+				tabletop.AdvanceRealTime(2.01f);
 
 				Assert.That(tabletop.ActiveBattles, Has.Count.EqualTo(1));
 				Battle battle = tabletop.ActiveBattles[0];
@@ -598,16 +644,16 @@ namespace Gameplay.Tests
 			CharacterCardDefinition enemyDefinition = CreateCharacterCard(
 				"test.hostile-ai.join-enemy",
 				abilitySystemPresetId: 1004,
-				automaticMovementIntervalSeconds: 1f,
-				automaticMovementRadius: 1f,
-				automaticMovementMaxAttempts: 1,
 				automaticAggroRadius: 5f,
 				automaticAttackRadius: 1.5f);
 			try
 			{
 				RuntimeTabletop tabletop = CreateBattleTabletop(
 					ContentIndex.Build(new ContentAsset[] { playerDefinition, enemyDefinition }),
-					seed: 54321u);
+					seed: 54321u,
+					automaticMovementIntervalSeconds: 1f,
+					automaticMovementRadius: 1f,
+					automaticMovementMaxAttempts: 1);
 				CharacterCard player = (CharacterCard)tabletop.CreateCard(
 					playerDefinition.ContentId,
 					Vector2.zero);
@@ -621,7 +667,7 @@ namespace Gameplay.Tests
 					new[] { existingEnemy.Id },
 					new[] { player.Id });
 
-				tabletop.AdvanceRealTime(1f);
+				tabletop.AdvanceRealTime(2.01f);
 
 				Assert.That(tabletop.ActiveBattles, Has.Count.EqualTo(1));
 				Assert.That(tabletop.ActiveBattles[0], Is.SameAs(battle));
@@ -990,7 +1036,7 @@ namespace Gameplay.Tests
 			{
 				RuntimeTabletop tabletop = CreateBattleTabletop(
 					ContentIndex.Build(new ContentAsset[] { definition }),
-					seed: 9876u);
+					seed: 1u);
 				CharacterCard attacker = (CharacterCard)tabletop.CreateCard(definition.ContentId, Vector2.zero);
 				CharacterCard defender = (CharacterCard)tabletop.CreateCard(definition.ContentId, Vector2.one);
 				SetBaseAndRecalculate(attacker, XAttribute.Attack, 10f);
@@ -1037,13 +1083,47 @@ namespace Gameplay.Tests
 			}
 		}
 
+		[Test]
+		public void AdvanceRealTime_DefeatedCharacterSpawnsConfiguredLoot()
+		{
+			CharacterCardDefinition characterDefinition = CreateCharacterCard("test.battle.defeat-loot");
+			CardDefinition lootDefinition = CreateOrdinaryCard("test.battle.defeat-loot.product");
+			RuntimeTabletop tabletop = null;
+			try
+			{
+				SetCardLoot(characterDefinition, lootDefinition.ContentId.Value);
+				ContentIndex contentIndex = ContentIndex.Build(
+					new ContentAsset[] { characterDefinition, lootDefinition });
+				tabletop = CreateBattleTabletop(contentIndex);
+				CharacterCard ally = (CharacterCard)tabletop.CreateCard(characterDefinition.ContentId, new Vector2(-1f, 0f));
+				CharacterCard defeated = (CharacterCard)tabletop.CreateCard(characterDefinition.ContentId, new Vector2(1f, 0f));
+				Battle battle = tabletop.StartBattle(new[] { ally.Id }, new[] { defeated.Id });
+				SetBaseAndRecalculate(defeated, XAttribute.Health, 0f);
+
+				tabletop.AdvanceRealTime(0.01f);
+
+				Assert.That(battle.IsEnded, Is.True);
+				Assert.That(tabletop.Cards.TryGetCard(defeated.Id, out _), Is.False);
+				Assert.That(
+					tabletop.Cards.Stacks.SelectMany(stack => stack.Cards)
+						.Count(card => card.ContentId == lootDefinition.ContentId),
+					Is.EqualTo(1));
+			}
+			finally
+			{
+				if (tabletop != null && !tabletop.IsEnded)
+				{
+					tabletop.End();
+				}
+				UnityEngine.Object.DestroyImmediate(characterDefinition);
+				UnityEngine.Object.DestroyImmediate(lootDefinition);
+			}
+		}
+
 		private static CharacterCardDefinition CreateCharacterCard(
 			string contentId,
 			int abilitySystemPresetId = 1001,
 			int automaticBattleAbilityCode = 20005,
-			float automaticMovementIntervalSeconds = 0f,
-			float automaticMovementRadius = 0f,
-			int automaticMovementMaxAttempts = 0,
 			float automaticAggroRadius = 0f,
 			float automaticAttackRadius = 0f)
 		{
@@ -1052,9 +1132,6 @@ namespace Gameplay.Tests
 				"{\"m_contentId\":{\"m_value\":\"" + contentId + "\"}," +
 				"\"m_abilitySystemPresetId\":" + abilitySystemPresetId +
 				",\"m_automaticBattleAbilityCode\":" + automaticBattleAbilityCode +
-				",\"m_automaticMovementIntervalSeconds\":" + automaticMovementIntervalSeconds +
-				",\"m_automaticMovementRadius\":" + automaticMovementRadius +
-				",\"m_automaticMovementMaxAttempts\":" + automaticMovementMaxAttempts +
 				",\"m_automaticAggroRadius\":" + automaticAggroRadius +
 				",\"m_automaticAttackRadius\":" + automaticAttackRadius + "}",
 				definition);
@@ -1068,6 +1145,17 @@ namespace Gameplay.Tests
 				"{\"m_contentId\":{\"m_value\":\"" + contentId + "\"}}",
 				definition);
 			return definition;
+		}
+
+		private static void SetCardLoot(CardDefinition source, string lootContentId)
+		{
+			SerializedObject serializedSource = new SerializedObject(source);
+			SerializedProperty loot = serializedSource.FindProperty("m_loot");
+			loot.arraySize = 1;
+			SerializedProperty entry = loot.GetArrayElementAtIndex(0);
+			entry.FindPropertyRelative("m_cardId").FindPropertyRelative("m_value").stringValue = lootContentId;
+			entry.FindPropertyRelative("m_weight").intValue = 1;
+			serializedSource.ApplyModifiedPropertiesWithoutUndo();
 		}
 
 		private static ActionDefinition CreateAction(string contentId, string participantContentId)
@@ -1110,17 +1198,24 @@ namespace Gameplay.Tests
 		private static RuntimeTabletop CreateBattleTabletop(
 			ContentIndex contentIndex,
 			uint seed = 12345u,
-			bool initializeRandom = true)
+			bool initializeRandom = true,
+			int columnsPerRank = 2,
+			float automaticMovementIntervalSeconds = TabletopCardPlacementRules.DefaultAutomaticMovementIntervalSeconds,
+			float automaticMovementRadius = TabletopCardPlacementRules.DefaultAutomaticMovementRadius,
+			int automaticMovementMaxAttempts = TabletopCardPlacementRules.DefaultAutomaticMovementMaxAttempts)
 		{
 			RuntimeTabletop tabletop = new RuntimeTabletop(
 				contentIndex,
-				TabletopTestPlacement.Rules,
+				TabletopTestPlacement.CreateRules(
+					automaticMovementIntervalSeconds,
+					automaticMovementRadius,
+					automaticMovementMaxAttempts),
 				_ => false,
 				(_, __) => { },
 				_ => { },
 				new BattleFormationRules(
-					new BattleSideFormationRules(new Vector2(-1f, 0f), Vector2.right, Vector2.down, 2),
-					new BattleSideFormationRules(new Vector2(1f, 0f), Vector2.left, Vector2.up, 2)));
+					new BattleSideFormationRules(new Vector2(-1f, 0f), Vector2.right, Vector2.down, columnsPerRank),
+					new BattleSideFormationRules(new Vector2(1f, 0f), Vector2.left, Vector2.up, columnsPerRank)));
 			if (initializeRandom)
 			{
 				tabletop.InitializeAuthoritativeRandom(seed);

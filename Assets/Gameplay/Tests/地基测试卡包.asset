@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.pack
   m_tagCodes: e9030000
-  m_displayName: 初始卡包
-  m_description: 一个初始卡包。
+  m_displayName: "\u521D\u59CB\u5361\u5305"
+  m_description: "\u4E00\u4E2A\u521D\u59CB\u5361\u5305\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,13 +28,10 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
-    Address: PackArts_Starter
-    Guid: fb0972332c914f5781f25629cd0af635
+    Address: "\u521D\u59CB\u5361\u5305"
+    Guid: c9616bb038c641edbc04766af61cabdb
     Locked: 1
   m_cardSurface:
     Address: "\u5361\u724C\u8868\u9762_\u5361\u5305"

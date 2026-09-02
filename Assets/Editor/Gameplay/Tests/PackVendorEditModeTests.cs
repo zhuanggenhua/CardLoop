@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Object = UnityEngine.Object;
+using YokiFrame;
 
 namespace Gameplay.Tests
 {
@@ -108,7 +109,8 @@ namespace Gameplay.Tests
 				"test.vendor.unlock.scenario",
 				region.ContentId.Value,
 				quest.ContentId.Value);
-			List<TabletopPresentationCue> cues = new List<TabletopPresentationCue>();
+			List<ScenarioSequencePresentationRequestEvent> requests =
+				new List<ScenarioSequencePresentationRequestEvent>();
 			ScenarioRun run = null;
 			try
 			{
@@ -121,7 +123,7 @@ namespace Gameplay.Tests
 				PackVendorCard vendorCard = (PackVendorCard)run.Tabletop.CreateCard(
 					vendor.ContentId,
 					new Vector2(2f, 0f));
-				run.Tabletop.PresentationCueRequested += OnPresentationCueRequested;
+				EventKit.Type.Register<ScenarioSequencePresentationRequestEvent>(OnPresentationRequested);
 
 				ActionCandidate candidate = run.FindActionCandidates(new TabletopCardPointerReleaseIntent(
 					workerCard.Id,
@@ -133,20 +135,18 @@ namespace Gameplay.Tests
 				run.StartAction(ActionRequest.FromCandidate(candidate));
 
 				Assert.That(run.QuestLog.GetQuest(quest.ContentId).Status, Is.EqualTo(QuestStatus.Completed));
-				Assert.That(cues, Has.Some.Matches<TabletopPresentationCue>(cue =>
-					cue.Kind == TabletopPresentationCueKind.CameraFocus &&
-					cue.HasTablePosition &&
-					cue.TablePosition == vendorCard.Position));
-				Assert.That(cues, Has.Some.Matches<TabletopPresentationCue>(cue =>
-					cue.Kind == TabletopPresentationCueKind.CardHighlight &&
-					cue.HasCardId &&
-					cue.CardId == vendorCard.Id));
+				Assert.That(requests, Has.Some.Matches<ScenarioSequencePresentationRequestEvent>(request =>
+					request.Header == "卡包已解锁" &&
+					request.HasTablePosition &&
+					request.TablePosition == vendorCard.Position &&
+					request.HasCardId &&
+					request.CardId == vendorCard.Id));
 			}
 			finally
 			{
 				if (run != null)
 				{
-					run.Tabletop.PresentationCueRequested -= OnPresentationCueRequested;
+					EventKit.Type.UnRegister<ScenarioSequencePresentationRequestEvent>(OnPresentationRequested);
 					run.End();
 				}
 				Object.DestroyImmediate(worker);
@@ -159,9 +159,9 @@ namespace Gameplay.Tests
 				Object.DestroyImmediate(scenario);
 			}
 
-			void OnPresentationCueRequested(TabletopPresentationCue cue)
+			void OnPresentationRequested(ScenarioSequencePresentationRequestEvent request)
 			{
-				cues.Add(cue);
+				requests.Add(request);
 			}
 		}
 
@@ -217,7 +217,7 @@ namespace Gameplay.Tests
 		{
 			CardPackDefinition pack = ScriptableObject.CreateInstance<CardPackDefinition>();
 			JsonUtility.FromJsonOverwrite(
-				"{\"m_contentId\":{\"m_value\":\"test.pack\"},\"m_slots\":[" +
+				"{\"m_contentId\":{\"m_value\":\"test.pack\"},\"m_countsTowardCardLimit\":false,\"m_slots\":[" +
 				"{\"m_entries\":[{\"m_cardId\":{\"m_value\":\"test.card.one\"},\"m_weight\":1}]," +
 				"\"m_recipeEntries\":[{\"m_actionId\":{\"m_value\":\"test.recipe\"},\"m_recipeCardId\":{\"m_value\":\"test.recipe.card\"}}]}," +
 				"{\"m_entries\":[{\"m_cardId\":{\"m_value\":\"test.card.one\"},\"m_weight\":1},{\"m_cardId\":{\"m_value\":\"test.card.two\"},\"m_weight\":1}]," +
@@ -344,7 +344,7 @@ namespace Gameplay.Tests
 			CardPackDefinition pack = ScriptableObject.CreateInstance<CardPackDefinition>();
 			JsonUtility.FromJsonOverwrite(
 				"{\"m_contentId\":{\"m_value\":\"" + contentId +
-				"\"},\"m_slots\":[{\"m_entries\":[{\"m_cardId\":{\"m_value\":\"" +
+				"\"},\"m_countsTowardCardLimit\":false,\"m_slots\":[{\"m_entries\":[{\"m_cardId\":{\"m_value\":\"" +
 				rewardCardId + "\"},\"m_weight\":1}]}]}",
 				pack);
 			return pack;
@@ -415,10 +415,11 @@ namespace Gameplay.Tests
 		private static VendorScenarioContext CreateScenario(int minimumCompletedQuests)
 		{
 			CardDefinition coin = CreateCard("test.vendor.coin");
+			JsonUtility.FromJsonOverwrite("{\"m_countsTowardCardLimit\":false}", coin);
 			CardDefinition reward = CreateCard("test.vendor.reward");
 			CardPackDefinition pack = ScriptableObject.CreateInstance<CardPackDefinition>();
 			JsonUtility.FromJsonOverwrite(
-				"{\"m_contentId\":{\"m_value\":\"test.vendor.pack\"},\"m_slots\":[{\"m_entries\":[{\"m_cardId\":{\"m_value\":\"test.vendor.reward\"},\"m_weight\":1}]}]}",
+				"{\"m_contentId\":{\"m_value\":\"test.vendor.pack\"},\"m_countsTowardCardLimit\":false,\"m_slots\":[{\"m_entries\":[{\"m_cardId\":{\"m_value\":\"test.vendor.reward\"},\"m_weight\":1}]}]}",
 				pack);
 			PackVendorDefinition vendor = CreateVendorDefinition(
 				"test.vendor.offer",

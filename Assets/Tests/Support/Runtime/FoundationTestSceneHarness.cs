@@ -95,6 +95,13 @@ namespace Gameplay.Tests.Support
 
 		public const string TestRecipeCraftingStickActionContentId = "test.foundation.recipe.crafting-stick";
 
+		public const string TestRecipeOutputHouseContentId = "test.foundation.recipe-output.house";
+
+		public const string TestRecipeOutputBabyContentId = "test.foundation.recipe-output.baby";
+
+		public const string TestRecipeOutputTimberContentId = "test.foundation.recipe-output.timber";
+
+		public const string TestRecipeOutputWoodenStickContentId = "test.foundation.recipe-output.wooden-stick";
 		public const string TestRecipeGrowingBerryCardContentId = "test.foundation.recipe-card.growing-berry";
 
 		public const string TestRecipeBuildingHouseCardContentId = "test.foundation.recipe-card.building-house";
@@ -182,6 +189,9 @@ namespace Gameplay.Tests.Support
 		private uint m_authoritativeRandomSeedOverride;
 
         /// <summary>测试牌桌是否已完成内容索引、视图和正式输入绑定。</summary>
+        public bool IsTabletopReady { get; private set; }
+
+        /// <summary>测试场景是否已完成牌桌核心绑定和必需 HUD 打开。</summary>
         public bool IsReady { get; private set; }
 
         /// <summary>测试场景当前牌桌直接拥有的卡牌与牌堆集合；写操作统一经过当前单局牌桌。</summary>
@@ -537,8 +547,9 @@ namespace Gameplay.Tests.Support
             EventKit.Type.Register<ScenarioRunChangedEvent>(OnScenarioRunChanged);
 			m_runChangeRegistered = true;
             inputSystem.SetActionMap(EActionMap.Gameplay);
+			IsTabletopReady = true;
 			Exception panelFailure = null;
-			yield return OpenRequiredHudPanelsAsync(includeScenarioHud: !isStackCraftParityLayout)
+			yield return OpenRequiredHudPanelsAsync(includeScenarioHud: true)
 				.ToCoroutine(exception => panelFailure = exception);
 			if (panelFailure != null)
 			{
@@ -734,6 +745,7 @@ namespace Gameplay.Tests.Support
 
 		private void OnDisable()
 		{
+			IsTabletopReady = false;
 			IsReady = false;
 			UIKit.ClosePanel<TabletopCardInfoPanel>();
 			UIKit.ClosePanel<ScenarioTurnPanel>();
@@ -769,6 +781,7 @@ namespace Gameplay.Tests.Support
 			LastActionCandidates = Array.Empty<ActionCandidate>();
 			if (m_scenarioRun == null)
 			{
+				IsTabletopReady = false;
 				IsReady = false;
 				return;
 			}
@@ -781,14 +794,16 @@ namespace Gameplay.Tests.Support
 				m_tabletopView,
 				RecordReleaseIntent,
 				m_tabletopInteraction.CanShowDropTargetHighlight);
+			IsTabletopReady = true;
 			IsReady = true;
 		}
 
-        private void RecordReleaseIntent(TabletopCardPointerReleaseIntent intent)
+        private bool RecordReleaseIntent(TabletopCardPointerReleaseIntent intent)
         {
             LastReleaseIntent = intent;
             ReleaseIntentCount++;
-            LastActionCandidates = m_tabletopInteraction.HandleRelease(intent);
+            bool keepReleasedPlacement = m_tabletopInteraction.HandleRelease(intent, out ActionCandidate[] candidates);
+            LastActionCandidates = candidates;
             if (intent.IsDrag && intent.TargetCardId.IsValid)
             {
                 ActionCandidateQueryCount++;
@@ -796,6 +811,7 @@ namespace Gameplay.Tests.Support
             Debug.Log(
                 $"牌桌释放意图：卡牌 {intent.CardId}，拖拽 {intent.IsDrag}，候选卡牌 {intent.TargetCardId}，可选行动 {LastActionCandidates.Count}。",
                 this);
+            return keepReleasedPlacement;
         }
 
         /// <summary>

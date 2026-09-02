@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.pack.beginning.golden-key
   m_tagCodes: e9030000f3157a00
-  m_displayName: 金钥匙
-  m_description: 纯金制成的钥匙。能打开的东西应该很珍贵。
+  m_displayName: "\u91D1\u94A5\u5319"
+  m_description: "\u7EAF\u91D1\u5236\u6210\u7684\u94A5\u5319\u3002\u80FD\u6253\u5F00\u7684\u4E1C\u897F\u5E94\u8BE5\u5F88\u73CD\u8D35\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u91D1\u94A5\u5319"

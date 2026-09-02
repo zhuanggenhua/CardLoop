@@ -16,8 +16,8 @@ namespace Gameplay.Tabletop
 		/// <summary>指针释放时的牌桌坐标。</summary>
 		public Vector2 ReleasePointerPosition { get; }
 
-		/// <summary>保持按下偏移后，请求放置的牌堆锚点。</summary>
-		public Vector2 RequestedStackPosition { get; }
+		/// <summary>StackCraft 释放时被拖卡牌自身的实际牌桌坐标；放置规则再以此计算最终落点。</summary>
+		public Vector2 ReleasedCardTablePosition { get; }
 
 		public bool IsDrag { get; }
 
@@ -27,7 +27,7 @@ namespace Gameplay.Tabletop
 			TabletopCardId cardId,
 			Vector2 pressPointerPosition,
 			Vector2 releasePointerPosition,
-			Vector2 requestedStackPosition,
+			Vector2 releasedCardTablePosition,
 			bool isDrag,
 			TabletopCardId targetCardId = default)
 		{
@@ -37,7 +37,7 @@ namespace Gameplay.Tabletop
 			}
 			EnsureFinite(pressPointerPosition, nameof(pressPointerPosition));
 			EnsureFinite(releasePointerPosition, nameof(releasePointerPosition));
-			EnsureFinite(requestedStackPosition, nameof(requestedStackPosition));
+			EnsureFinite(releasedCardTablePosition, nameof(releasedCardTablePosition));
 			if (!isDrag && targetCardId.IsValid)
 			{
 				throw new ArgumentException("点击释放不能携带拖拽目标卡牌。", nameof(targetCardId));
@@ -49,7 +49,7 @@ namespace Gameplay.Tabletop
 			CardId = cardId;
 			PressPointerPosition = pressPointerPosition;
 			ReleasePointerPosition = releasePointerPosition;
-			RequestedStackPosition = requestedStackPosition;
+			ReleasedCardTablePosition = releasedCardTablePosition;
 			IsDrag = isDrag;
 			TargetCardId = targetCardId;
 		}
@@ -81,6 +81,8 @@ namespace Gameplay.Tabletop
 		public Vector2 CurrentPointerTablePosition { get; private set; }
 
 		public Vector2 CurrentStackPosition { get; private set; }
+
+		private Vector2 PressStackPosition { get; set; }
 
 		private Vector2 PointerToStackTableOffset { get; set; }
 
@@ -118,22 +120,39 @@ namespace Gameplay.Tabletop
 			PressPointerTablePosition = pointerTablePosition;
 			CurrentPointerTablePosition = pointerTablePosition;
 			CurrentStackPosition = stackPosition;
+			PressStackPosition = stackPosition;
 			PointerToStackTableOffset = stackPosition - pointerTablePosition;
+		}
+
+		public Vector2 CalculateStackPosition(Vector2 pointerTablePosition)
+		{
+			EnsureActive();
+			EnsureFinite(pointerTablePosition, nameof(pointerTablePosition));
+			return pointerTablePosition + PointerToStackTableOffset;
 		}
 
 		public bool Update(Vector2 pointerScreenPosition, Vector2 pointerTablePosition)
 		{
+			return Update(
+				pointerScreenPosition,
+				pointerTablePosition,
+				CalculateStackPosition(pointerTablePosition));
+		}
+
+		public bool Update(
+			Vector2 pointerScreenPosition,
+			Vector2 pointerTablePosition,
+			Vector2 stackPosition)
+		{
 			EnsureActive();
 			EnsureFinite(pointerScreenPosition, nameof(pointerScreenPosition));
 			EnsureFinite(pointerTablePosition, nameof(pointerTablePosition));
+			EnsureFinite(stackPosition, nameof(stackPosition));
 			CurrentPointerTablePosition = pointerTablePosition;
-			CurrentStackPosition = pointerTablePosition + PointerToStackTableOffset;
-			if (!IsDragging &&
-				(pointerTablePosition - PressPointerTablePosition).sqrMagnitude >=
-				m_clickThresholdSquared)
-			{
-				IsDragging = true;
-			}
+			CurrentStackPosition = stackPosition;
+			IsDragging =
+				(CurrentStackPosition - PressStackPosition).sqrMagnitude >=
+				m_clickThresholdSquared;
 			return IsDragging;
 		}
 
@@ -142,7 +161,20 @@ namespace Gameplay.Tabletop
 			Vector2 pointerTablePosition,
 			TabletopCardId targetCardId = default)
 		{
-			Update(pointerScreenPosition, pointerTablePosition);
+			return End(
+				pointerScreenPosition,
+				pointerTablePosition,
+				CalculateStackPosition(pointerTablePosition),
+				targetCardId);
+		}
+
+		public TabletopCardPointerReleaseIntent End(
+			Vector2 pointerScreenPosition,
+			Vector2 pointerTablePosition,
+			Vector2 stackPosition,
+			TabletopCardId targetCardId = default)
+		{
+			Update(pointerScreenPosition, pointerTablePosition, stackPosition);
 			TabletopCardPointerReleaseIntent result = new TabletopCardPointerReleaseIntent(
 				CardId,
 				PressPointerTablePosition,
@@ -184,6 +216,7 @@ namespace Gameplay.Tabletop
 			PressPointerTablePosition = default;
 			CurrentPointerTablePosition = default;
 			CurrentStackPosition = default;
+			PressStackPosition = default;
 			PointerToStackTableOffset = default;
 		}
 	}

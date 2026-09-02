@@ -1,217 +1,58 @@
 ---
 name: unity-ui-development
-description: "Unity UI 开发入口，覆盖 UGUI 与 UI Toolkit。用于 Canvas、RectTransform、锚点、USS/UXML、VisualElement、EventSystem、按钮/滚动/下拉、背包/HUD/血条/菜单、TextMeshPro、响应式布局、运行时 UI 和 World Space Canvas。"
+description: "CardLoop 的 Unity UI 开发入口，裁决 UGUI、UI Toolkit、TextMeshPro、Prefab/场景 UI、编辑器 UI 和上游 UnitySkills UI 资料的项目落点。"
 ---
 
 # Unity UI Development
 
-## Overview
+本 skill 是 CardLoop 的 UI 任务薄入口，只写会改变项目执行方式的规则。Unity 通用教程、API 细节和示例代码不在这里复制；需要时按“上游资料入口”读取 `Packages/com.besty.unity-skills/unity-skills~/` 的对应模块或当前 Unity 官方文档。
 
-Unity provides two UI systems: UGUI (the established GameObject-based system) and UI Toolkit (the newer retained-mode system inspired by web technologies). This skill covers both systems, when to use each, and implementation patterns.
+## 角色定位
 
-## Choosing a UI System
+- `canonical-source`：本文件只裁决 CardLoop UI 的职责边界、默认技术路线、验收口径和禁止项。
+- `adapter`：Unity 官方 `ui` / `ui-ugui` / `ui-uitk` / `ui-imgui` / `optimize-text-mesh-pro` 只作为上游候选资料，不注册成项目平行 active skill。
+- `reference`：旧版通用教程正文不保留在 active 项目文档；需要 API 细节时读取上游 UnitySkills 模块或当前 Unity 官方文档。
 
-| Factor | UGUI | UI Toolkit |
-|--------|------|------------|
-| Runtime UI | Mature, full-featured | Supported (Unity 2023+) |
-| Editor UI | Not supported | Primary system for editor |
-| World-space UI | Excellent (World Space Canvas) | Limited |
-| Animation/Tweening | DOTween, Animator, LeanTween | USS transitions, C# manipulation |
-| Styling | Per-element, manual | USS stylesheets (CSS-like) |
-| Performance | Draw call heavy with many canvases | Retained mode, lighter draw calls |
-| Learning curve | Lower for Unity devs | Higher (web-like paradigm) |
-| VR/AR | Well-supported | Limited world-space support |
+## 默认技术路线
 
-**Recommendation:** Use UGUI for world-space UI, VR/AR, and projects needing maximum asset store compatibility. Use UI Toolkit for editor extensions, complex data-driven UIs (lists, trees), and projects on Unity 2023+.
+| UI 对象 | 默认路线 | 说明 |
+| --- | --- | --- |
+| 运行时 HUD、菜单、弹窗、牌桌、背包、滚动列表 | UGUI | 使用 Canvas / RectTransform / Button / ScrollRect / TMP；优先局部修 Prefab 或场景实例。 |
+| World Space 文字、血条、命中反馈、卡牌悬浮信息 | UGUI + TMP | 先确认 CanvasScaler、事件相机、排序层和字体 fallback，不新建第二套表现入口。 |
+| 编辑器窗口、Inspector、PropertyDrawer、数据校验面板 | UI Toolkit | 新建编辑器 UI 默认 UI Toolkit；维护已有 IMGUI 时才沿用 IMGUI。 |
+| UXML / USS / VisualElement / UIDocument | UI Toolkit | 需要 API 细节时读取 UnitySkills `uitoolkit` 模块和官方文档。 |
+| Figma、截图或视觉稿复刻 | 现有组件优先 | 先读真实 Prefab / 场景 / 组件层级，再决定最小实现；Figma 自动导入不作为当前项目承诺。 |
 
-## UGUI (Canvas-Based UI)
+## CardLoop 项目规则
 
-### Canvas Setup
+- 修改现有 UI 前，必须先读取真实 Prefab 或场景实例、CanvasScaler、LayoutGroup、RectTransform 锚点、事件入口和字体资产。
+- 用户只说“按钮能用”“菜单可点”“proper buttons”“working UI”时，默认只要求视觉层级和基础交互组件成立；只有明确要求业务逻辑时，才新增或修改 C# 业务脚本。
+- UI 只消费正式 Gameplay / GameCore 状态，不保存第二套业务真相；临时显示缓存必须能从正式 owner 重建。
+- 运行时 UI 归 Gameplay 业务层，通用 UI 基础设施归 GameCore，Unity 无业务 UI 原语和工具封装才可下沉 YokiFrame。
+- 同一 UI 职责只能有一个正式 owner；不得用新面板、临时桥接组件或测试专用脚本绕过已有 UISettings、Prefab 或正式场景入口。
+- 修改 Unity 序列化资产时必须遵守 `.spec/knowledge/standards/unity-serialization-safety.md`，保留 `.meta` 和 GUID，不手写 YAML 大片段。
 
-| Render Mode | Use For | Notes |
-|-------------|---------|-------|
-| Screen Space - Overlay | HUD, menus | Always on top, no camera needed |
-| Screen Space - Camera | Post-processing on UI | Assign render camera |
-| World Space | In-game signs, health bars | Set event camera for interaction |
+## TextMeshPro / 中文显示
 
-**Performance rule:** Separate static and dynamic UI into different Canvases. A Canvas rebuilds ALL children when any child changes.
+- CardLoop 默认使用 TextMeshPro，不新增 Unity 旧 `Text` 作为正式 UI。
+- 主字体资产应稳定覆盖基础中文/CJK 字形；大字符集、多语言和符号用动态 fallback，并控制构建体积。
+- 布局锁定后，计时器、计数器、动态名字等高频文本默认关闭 AutoSize，避免每帧触发布局和字体重算。
+- World Space 高频文字优先用 `TextMeshPro`；不要把大量频繁更新的 `TextMeshProUGUI` 长期放进同一个 World Space Canvas。
+- 多个粗体、描边、发光、斜体外观优先用 TMP Material Preset，不复制字体资产。
 
-### RectTransform Anchoring
+## 执行顺序
 
-```bash
-Anchor presets control how elements resize with parent:
-- Stretch-Stretch: Element fills parent (full-screen backgrounds)
-- Center-Center: Fixed size at center (popup dialogs)
-- Bottom-Left: Fixed corner position (minimap)
-- Top-Stretch: Stretches horizontally, fixed at top (nav bar)
-```
+1. 锁定 UI 对象、真相来源、目标入口和验收口径。
+2. 判断是现有 UGUI、现有 UI Toolkit、编辑器 UI，还是新 UI 入口。
+3. 读取对应 Prefab / 场景 / UXML / USS / C# owner 和命中的项目规范。
+4. 优先做局部属性或绑定修正；只有职责归属错误时才重构 owner。
+5. 更新必要文档或索引；只把可复用规则写入 `.spec/knowledge/` 或项目 skill。
+6. 用最低充分验证收口：静态检查、序列化引用检查、UI 组件检查；稳定交付候选或用户要求看效果时再截图验收。
 
-Set anchors via the RectTransform anchor preset widget (hold Alt+Shift to also set pivot and position). Use `anchorMin`, `anchorMax`, `offsetMin`, `offsetMax` in code.
+## 上游资料入口
 
-### Layout Components
-
-| Component | Purpose |
-|-----------|---------|
-| `HorizontalLayoutGroup` | Arrange children left-to-right |
-| `VerticalLayoutGroup` | Arrange children top-to-bottom |
-| `GridLayoutGroup` | Grid arrangement (inventory slots) |
-| `LayoutElement` | Override min/preferred/flexible size |
-| `ContentSizeFitter` | Auto-resize to content |
-| `AspectRatioFitter` | Maintain aspect ratio |
-
-Disable `Layout.childForceExpandWidth/Height` to prevent unwanted stretching.
-
-### Event Handling
-
-```csharp
-using UnityEngine.UI;
-using TMPro;
-
-[SerializeField] Button startButton;
-[SerializeField] TMP_InputField nameField;
-[SerializeField] Slider volumeSlider;
-
-void OnEnable()
-{
-    startButton.onClick.AddListener(OnStartClicked);
-    nameField.onEndEdit.AddListener(OnNameChanged);
-    volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
-}
-
-void OnDisable()
-{
-    startButton.onClick.RemoveListener(OnStartClicked);
-    nameField.onEndEdit.RemoveListener(OnNameChanged);
-    volumeSlider.onValueChanged.RemoveListener(OnVolumeChanged);
-}
-```
-
-Always `RemoveListener` in `OnDisable` to prevent leaks and ghost references.
-
-### TextMeshPro
-
-Always use TextMeshPro (`TMP_Text`, `TextMeshProUGUI`) over archived `Text`. Import TMP Essentials when prompted. Use rich text tags: `<color=#FF0000>`, `<b>`, `<size=24>`, `<sprite=0>` for inline icons.
-
-## UI Toolkit (USS/UXML)
-
-### Architecture
-
-```text
-UI Toolkit Stack:
-  UXML  -- Structure (like HTML)
-  USS   -- Styling (like CSS)
-  C#    -- Logic (like JavaScript)
-```
-
-### UXML Structure
-
-```xml
-<ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <ui:VisualElement class="container">
-        <ui:Label text="Player Stats" class="title" />
-        <ui:ProgressBar name="health-bar" title="HP" high-value="100" />
-        <ui:Button name="attack-btn" text="Attack" class="action-btn" />
-        <ui:ListView name="inventory-list" />
-    </ui:VisualElement>
-</ui:UXML>
-```
-
-### USS Styling
-
-```css
-.container {
-    flex-direction: column;
-    padding: 10px;
-    background-color: rgba(0, 0, 0, 0.8);
-    border-radius: 8px;
-}
-
-.title {
-    font-size: 24px;
-    color: white;
-    -unity-font-style: bold;
-    margin-bottom: 10px;
-}
-
-.action-btn {
-    height: 40px;
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 4px;
-    transition-duration: 0.2s;
-}
-
-.action-btn:hover {
-    background-color: #66BB6A;
-    scale: 1.05 1.05;
-}
-```
-
-Key USS differences from CSS: use `-unity-` prefix for Unity-specific properties. Flexbox is the layout model (default `flex-direction: column`). Use `transition-duration`, `transition-property` for animations.
-
-### C# Integration
-
-```csharp
-[RequireComponent(typeof(UIDocument))]
-public class StatsUI : MonoBehaviour
-{
-    void OnEnable()
-    {
-        var root = GetComponent<UIDocument>().rootVisualElement;
-        var healthBar = root.Q<ProgressBar>("health-bar");
-        var attackBtn = root.Q<Button>("attack-btn");
-        var inventory = root.Q<ListView>("inventory-list");
-
-        attackBtn.RegisterCallback<ClickEvent>(OnAttack);
-        healthBar.value = player.Health;
-
-        // ListView binding
-        inventory.makeItem = () => new Label();
-        inventory.bindItem = (element, index) =>
-            ((Label)element).text = items[index].Name;
-        inventory.itemsSource = items;
-    }
-}
-```
-
-Query elements with `Q<T>("name")` or `Q<T>(className: "class")`. Register callbacks with `RegisterCallback<EventType>`. Always query from `rootVisualElement`.
-
-### Data Binding (Unity 2023.2+)
-
-```csharp
-// Runtime data binding with [CreateProperty] and INotifyBindablePropertyChanged
-public class PlayerData : INotifyBindablePropertyChanged
-{
-    public event EventHandler<BindablePropertyChangedEventArgs> propertyChanged;
-    private int _health;
-
-    [CreateProperty]
-    public int Health
-    {
-        get => _health;
-        set { _health = value; Notify(); }
-    }
-    void Notify([CallerMemberName] string prop = "")
-        => propertyChanged?.Invoke(this, new BindablePropertyChangedEventArgs(prop));
-}
-```
-
-Bind in UXML with `binding-path="Health"` or in C# with `element.SetBinding("value", new DataBinding { dataSourcePath = ... })`.
-
-## Common UI Patterns
-
-| Pattern | UGUI Approach | UI Toolkit Approach |
-|---------|---------------|---------------------|
-| Popup dialog | Enable/disable child panel | Add/remove from visual tree |
-| Scroll list | ScrollRect + VerticalLayoutGroup | ListView (virtualized) |
-| Drag-and-drop | IBeginDragHandler, IDragHandler, IEndDragHandler | PointerManipulator |
-| Tab system | Toggle group + panels | RadioButtonGroup + display toggling |
-| Tooltip | Follow cursor panel | Manipulator + VisualElement positioning |
-| Screen fade | CanvasGroup.alpha tween | USS opacity transition |
-
-## 深挖入口
-
-- 复杂 Unity Editor / 场景 / Console 自动化：先查项目 skill `.spec/skills/unity-skills/SKILL.md`，再结合本项目本地包 `Packages/com.besty.unity-skills`、`Packages/com.aibridge.unity`。
-- UI Toolkit 专项 API、UXML / USS / `VisualElement` 细节：优先查项目 UnitySkills 模块 `.spec/skills/unity-skills/skills/uitoolkit/MODULE.md`，涉及 Unity API 版本时再按项目规则查当前官方文档。
-- CardLoop 运行时 UI 归属、Prefab / 场景 / 序列化安全：先查 `.spec/knowledge/README.md` 命中的项目事实和长期规范正文。
-
+- 通用 Unity UI：`Packages/com.besty.unity-skills/unity-skills~/skills/ui/SKILL.md`
+- UI Toolkit：`Packages/com.besty.unity-skills/unity-skills~/skills/uitoolkit/SKILL.md`
+- TMP / 资源 / 导入：`Packages/com.besty.unity-skills/unity-skills~/skills/importer/SKILL.md` 与项目字体资产事实
+- Prefab / Scene / 序列化：`Packages/com.besty.unity-skills/unity-skills~/skills/prefab/SKILL.md`、`Packages/com.besty.unity-skills/unity-skills~/skills/scene/SKILL.md`
+- 需要 Unity 版本 API 细节时，按项目规则先查询当前官方文档，再回到本文件裁决项目落点。

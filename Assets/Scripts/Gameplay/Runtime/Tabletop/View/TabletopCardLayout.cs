@@ -64,7 +64,11 @@ namespace Gameplay.Tabletop
 				throw new ArgumentOutOfRangeException("cardIndex", "卡牌成员索引不能为负数。");
 			}
 			Vector3 stackBasePosition = TabletopCoordinateSpace.ToLocalPosition(stackPosition);
-			return new TabletopCardPose(stackBasePosition + parameters.StackVisualStep * cardIndex, checked(parameters.BaseSortingOrder + cardIndex));
+			// StackCraft 的卡牌 Prefab 不用堆内递增 SortingOrder 表达牌间遮挡；
+			// 牌间层级由 Transform 高度和 StackStep 的 Z 偏移共同决定。
+			return new TabletopCardPose(
+				stackBasePosition + parameters.StackVisualStep * cardIndex,
+				parameters.BaseSortingOrder);
 		}
 	}
 }

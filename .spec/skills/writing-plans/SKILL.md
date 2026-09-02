@@ -5,7 +5,7 @@ description: 写长期计划或复杂实施计划时使用；本项目默认转�
 
 # Writing Plans（计划写作路由）
 
-本项目不复制 LumioAgent 的 `docs/plans/` 计划体系。用户说“长期计划”时，默认使用：
+本项目不复制外部模板的 `docs/plans/` 计划体系。用户说“长期计划”时，默认使用：
 
 `D:\codex-home\skills\planning-with-files\SKILL.md`
 
@@ -16,7 +16,7 @@ description: 写长期计划或复杂实施计划时使用；本项目默认转�
 - `.spec/tasks/` 只放轻量任务卡，不替代长期计划。
 - `openspec/` 继续放正式 proposal/change/spec。
 
-## 与 LumioAgent 差异
+## 与外部模板差异
 
 - 不默认写 `docs/plans/YYYY-MM-DD-*.md`。
 - 不默认要求提交计划文档。

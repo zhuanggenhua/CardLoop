@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: CardArts_Placeholder

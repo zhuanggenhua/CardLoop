@@ -8,10 +8,11 @@ CardLoop 是 Unity 卡牌生存项目。**主 Agent 调度,子 Agent 执行,Skil
 ## 项目是什么
 
 - Unity 工程根目录:`C:\Gamedev\Unity\Project\CardLoop`。
-- 来源工程:`C:\Gamedev\Unity\Project\FantasyWord`。
-- 当前迁移状态:已静态迁入 FantasyWord 的插件、本地 UPM 包、GameCore 运行时候选和可复用 AI workflow;迁入裁决见 [`../docs/FantasyWord-framework-migration.md`](../docs/FantasyWord-framework-migration.md)。
-- 当前验证状态:2026-08-01 已用 CardLoop 的 Unity `6000.5.4f1` 跑过新鲜 batchmode 验证,Package Resolve 与脚本编译通过;场景运行和业务启用仍需单独验证。
-- 当前边界:FantasyWord 的任务记录、业务知识库、截图证据、旧世界观和历史决策没有作为 CardLoop 正式事实接管。
+- 框架分层:YokiFrame 是底座,GameCore 是通用游戏解决方案,Gameplay 是 CardLoop 业务层;唯一口径见 [`knowledge/standards/framework-layering.md`](knowledge/standards/framework-layering.md)。
+- 外部来源、旧项目和官方 Unity skill 只提供候选能力与证据,不接管 CardLoop 项目事实。
+- 历史迁入证据:插件、本地 UPM 包、GameCore 运行时候选和可复用 AI workflow 的旧引入记录只作历史线索,不作为当前入口;是否正式启用必须回到当前仓库文档、源码和当轮验证证据。
+- 历史验证证据:2026-08-01 曾用 CardLoop 的 Unity `6000.5.4f1` 跑过 batchmode 验证,Package Resolve 与脚本编译通过;它只作为历史证据,不能替代当前场景运行和业务启用验证。
+- 当前边界:旧来源项目的任务记录、业务知识库、截图证据、世界观和历史决策没有作为 CardLoop 正式事实接管。
 
 ## 调度核心
 
@@ -39,7 +40,7 @@ CardLoop 是 Unity 卡牌生存项目。**主 Agent 调度,子 Agent 执行,Skil
 
 - **领任务先标记:** 动手前标为进行中;多宿主任务更新 `.spec/tasks/<slug>.md` 的 `status`;不自标 completed(归「审查闭环」)。
 - **先加载再动手:** 用 `before-you-code` 锁定问题对象、真相来源、目标入口/环境和验收口径,再按 `knowledge/README.md` 读取命中的知识正文。
-- **测试先行:** 用 `test-driven-development` 为核心逻辑、新玩法切片、已复现 bug 和高风险公开契约选择 TDD、回归测试或 Unity 验证方式;纯文档、规范、索引、注释和机械命名迁移不机械进入 TDD。
+- **验证分层:** 业务仍在变化、参考吸收或手感对齐阶段,先做源码 / 配置 / 资源 / Prefab 对账和最小静态守卫;只有行为已经稳定、公开契约明确、或 bug 已被复现时,才按 `test-driven-development` 选择 TDD、回归测试或 Unity 验证。不得把“补测试”当成推进未定业务的默认第一步。
 - **排障先找根因:** 遇到 bug / 测试失败 / 异常行为,先走 `systematic-debugging`;未完成根因调查不得动手修。
 - **设计先查规范:** 新增业务功能、拆职责、选设计模式、审查 SOLID / 反模式 / 防护性架构时,先读 [`knowledge/standards/code-design.md`](knowledge/standards/code-design.md)。
 - **不夹带(全仓单一权威):** 只做当前目标要求的改动,不顺手重构、不加未要求的功能、不引入任务外新依赖。

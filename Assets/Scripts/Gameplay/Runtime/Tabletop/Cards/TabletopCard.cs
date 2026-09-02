@@ -108,7 +108,13 @@ namespace Gameplay.Tabletop
 
 		public float PeriodicProductionElapsedSeconds { get; private set; }
 
+		/// <summary>参考模板首次周期产出前尚未消耗的随机等待秒数。</summary>
+		public float PeriodicProductionInitialDelaySeconds { get; private set; }
+
 		public float AutomaticMovementElapsedSeconds { get; private set; }
+
+		/// <summary>参考模板首次自动移动前尚未消耗的随机等待秒数。</summary>
+		public float AutomaticMovementInitialDelaySeconds { get; private set; }
 
 		/// <summary>当前直接拥有本卡牌空间位置和堆叠顺序的牌堆；移出牌桌后为空。</summary>
 		public TabletopCardStack Stack { get; private set; }
@@ -125,7 +131,9 @@ namespace Gameplay.Tabletop
 			ContentId contentId,
 			int remainingUses = 1,
 			float periodicProductionElapsedSeconds = 0f,
-			float automaticMovementElapsedSeconds = 0f)
+			float automaticMovementElapsedSeconds = 0f,
+			float periodicProductionInitialDelaySeconds = 0f,
+			float automaticMovementInitialDelaySeconds = 0f)
 		{
 			if (!id.IsValid)
 			{
@@ -156,12 +164,44 @@ namespace Gameplay.Tabletop
 					automaticMovementElapsedSeconds,
 					"牌桌卡牌自动移动已累计秒数必须是大于或等于 0 的有限值。");
 			}
+			if (!float.IsFinite(periodicProductionInitialDelaySeconds) || periodicProductionInitialDelaySeconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(periodicProductionInitialDelaySeconds),
+					periodicProductionInitialDelaySeconds,
+					"牌桌卡牌周期产出首延迟必须是大于或等于 0 的有限值。");
+			}
+			if (!float.IsFinite(automaticMovementInitialDelaySeconds) || automaticMovementInitialDelaySeconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(
+					nameof(automaticMovementInitialDelaySeconds),
+					automaticMovementInitialDelaySeconds,
+					"牌桌卡牌自动移动首延迟必须是大于或等于 0 的有限值。");
+			}
 
 			Id = id;
 			ContentId = contentId;
 			RemainingUses = remainingUses;
 			PeriodicProductionElapsedSeconds = periodicProductionElapsedSeconds;
+			PeriodicProductionInitialDelaySeconds = periodicProductionInitialDelaySeconds;
 			AutomaticMovementElapsedSeconds = automaticMovementElapsedSeconds;
+			AutomaticMovementInitialDelaySeconds = automaticMovementInitialDelaySeconds;
+		}
+
+		internal void SetAutomaticBehaviorInitialDelays(
+			float periodicProductionInitialDelaySeconds,
+			float automaticMovementInitialDelaySeconds)
+		{
+			if (!float.IsFinite(periodicProductionInitialDelaySeconds) || periodicProductionInitialDelaySeconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(nameof(periodicProductionInitialDelaySeconds));
+			}
+			if (!float.IsFinite(automaticMovementInitialDelaySeconds) || automaticMovementInitialDelaySeconds < 0f)
+			{
+				throw new ArgumentOutOfRangeException(nameof(automaticMovementInitialDelaySeconds));
+			}
+			PeriodicProductionInitialDelaySeconds = periodicProductionInitialDelaySeconds;
+			AutomaticMovementInitialDelaySeconds = automaticMovementInitialDelaySeconds;
 		}
 
 		/// <summary>创建本卡牌派生类型自己的运行状态快照；普通卡牌没有额外状态。</summary>
@@ -178,6 +218,8 @@ namespace Gameplay.Tabletop
 				RemainingUses,
 				PeriodicProductionElapsedSeconds,
 				AutomaticMovementElapsedSeconds,
+				PeriodicProductionInitialDelaySeconds,
+				AutomaticMovementInitialDelaySeconds,
 				CreateRuntimeStateSnapshot());
 		}
 
@@ -200,6 +242,16 @@ namespace Gameplay.Tabletop
 			if (deltaSeconds == 0f)
 			{
 				return 0;
+			}
+			if (PeriodicProductionInitialDelaySeconds > 0f)
+			{
+				float consumedDelay = Mathf.Min(deltaSeconds, PeriodicProductionInitialDelaySeconds);
+				PeriodicProductionInitialDelaySeconds -= consumedDelay;
+				deltaSeconds -= consumedDelay;
+				if (deltaSeconds <= 0f)
+				{
+					return 0;
+				}
 			}
 
 			PeriodicProductionElapsedSeconds += deltaSeconds;
@@ -232,6 +284,16 @@ namespace Gameplay.Tabletop
 			if (deltaSeconds == 0f)
 			{
 				return false;
+			}
+			if (AutomaticMovementInitialDelaySeconds > 0f)
+			{
+				float consumedDelay = Mathf.Min(deltaSeconds, AutomaticMovementInitialDelaySeconds);
+				AutomaticMovementInitialDelaySeconds -= consumedDelay;
+				deltaSeconds -= consumedDelay;
+				if (deltaSeconds <= 0f)
+				{
+					return false;
+				}
 			}
 
 			AutomaticMovementElapsedSeconds += deltaSeconds;

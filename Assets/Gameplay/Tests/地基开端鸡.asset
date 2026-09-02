@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.pack.beginning.chicken
   m_tagCodes: 40420f00f1157a00
-  m_displayName: 鸡
-  m_description: 健康的鸡。
+  m_displayName: "\u9E21"
+  m_description: "\u5065\u5EB7\u7684\u9E21\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value: test.foundation.pack.beginning.egg
   m_periodicProductionIntervalSeconds: 30
-  m_automaticMovementIntervalSeconds: 5
-  m_automaticMovementRadius: 1
-  m_automaticMovementMaxAttempts: 5
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u9E21"

@@ -12,9 +12,9 @@ description: 基于仓库真实证据生成代码库架构说明、UML/Mermaid �
 开始实质分析前，先判断并说明模式：
 
 - **Explore**：回答问题、总结架构、画 Mermaid/UML 图；不创建、不编辑文件。
-- **Artifact**：创建或更新架构文档。默认使用 `ARCHITECTURE.html`；只有用户明确要求 Markdown 时才写 Markdown。
+- **Artifact**：创建或更新架构文档。默认建议 `docs/architecture/codebase-architecture.html`；只有用户明确要求 Markdown 时才写 Markdown。
 
-请求不明确时用 Explore。Artifact 模式下，尊重用户给定路径；没有给路径时，先说明建议产物和位置，获得明确授权后再写入仓库根目录。不得未经授权替换已有架构文档。
+请求不明确时用 Explore。Artifact 模式下，尊重用户给定路径；没有给路径时，先说明建议产物和位置，获得明确授权后再写入 `docs/architecture/`。不得未经授权替换已有架构文档，不再默认写回仓库根目录。
 
 选择最小有用深度：
 
@@ -35,7 +35,7 @@ Explore 模式不要追问深度或主题；Artifact 模式默认 Small 和浅/�
 3. `.spec/knowledge/README.md`，按主题下钻项目知识。
 4. `.spec/rules/system.md`，确认硬红线。
 
-如果分析涉及 Unity 资源、序列化资产、第三方插件、GameCore/GAS、StackCraft 吸收或运行时边界，按 `.spec/knowledge/README.md` 继续读取对应正文。不得只凭目录名推断正式职责。
+如果分析涉及 Unity 资源、序列化资产、第三方插件、GameCore/GAS、外部参考候选吸收或运行时边界，按 `.spec/knowledge/README.md` 继续读取对应正文。不得只凭目录名推断正式职责。
 
 ## 仓库分析流程
 
@@ -88,7 +88,7 @@ Explore 模式不要追问深度或主题；Artifact 模式默认 Small 和浅/�
 
 ### 既有产物
 
-先搜索 `ARCHITECTURE.html`、`ARCHITECTURE.md`、`DESIGN.md` 和 `docs/` 下的架构文档。若已有产物，先说明它是否仍被当前代码支持，再询问是更新、替换还是仅作参考。
+先搜索 `docs/architecture/`、`DESIGN.md` 和 `docs/` 下的架构文档。若已有产物，先说明它是否仍被当前代码支持，再询问是更新、替换还是仅作参考。
 
 ### HTML 产物
 

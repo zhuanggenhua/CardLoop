@@ -14,7 +14,8 @@ namespace Gameplay.Tabletop
 		public static TabletopCardStackSpatialResult Solve(
 			TabletopCardPlacementArea area,
 			IReadOnlyList<TabletopCardStackSpatialBody> bodies,
-			int maxIterations = TabletopCardPlacementRules.DefaultOverlapResolveMaxIterations)
+			int maxIterations = TabletopCardPlacementRules.DefaultOverlapResolveMaxIterations,
+			bool enforceInitialAreaConstraints = true)
 		{
 			if (area == null)
 			{
@@ -32,13 +33,12 @@ namespace Gameplay.Tabletop
 					"牌桌重叠解算迭代次数必须大于 0。");
 			}
 			List<TabletopCardStackSpatialBody> solvedBodies = new List<TabletopCardStackSpatialBody>(bodies);
-			solvedBodies.Sort((TabletopCardStackSpatialBody left, TabletopCardStackSpatialBody right) => left.BottomCardId.Value.CompareTo(right.BottomCardId.Value));
 			ValidateUniqueBottomCardIds(solvedBodies);
 			int iterations;
 			for (iterations = 0; iterations < maxIterations; iterations++)
 			{
-				bool moved = ResolveAreaConstraints(area, solvedBodies);
-				if (!(moved | ResolveBodyOverlaps(solvedBodies)))
+				bool moved = enforceInitialAreaConstraints && ResolveAreaConstraints(area, solvedBodies);
+				if (!(moved | ResolveBodyOverlaps(area, solvedBodies)))
 				{
 					iterations++;
 					break;
@@ -50,9 +50,10 @@ namespace Gameplay.Tabletop
 
 		private static void ValidateUniqueBottomCardIds(IReadOnlyList<TabletopCardStackSpatialBody> bodies)
 		{
-			for (int i = 1; i < bodies.Count; i++)
+			HashSet<TabletopCardId> knownIds = new HashSet<TabletopCardId>();
+			for (int i = 0; i < bodies.Count; i++)
 			{
-				if (bodies[i - 1].BottomCardId == bodies[i].BottomCardId)
+				if (!knownIds.Add(bodies[i].BottomCardId))
 				{
 					throw new ArgumentException($"空间解算输入重复包含底牌为 {bodies[i].BottomCardId} 的堆栈。", "bodies");
 				}
@@ -78,7 +79,7 @@ namespace Gameplay.Tabletop
 						center = MoveBelowTopRestrictedBand(center, body.Size, restricted);
 						continue;
 					}
-					if (TryCalculateSeparation(center, body.Size, restricted.center, restricted.size, 1, out var separation))
+					if (TryCalculateSeparation(center, body.Size, restricted.center, restricted.size, out var separation))
 					{
 						center += separation;
 					}
@@ -104,7 +105,7 @@ namespace Gameplay.Tabletop
 			return center;
 		}
 
-		private static bool ResolveBodyOverlaps(List<TabletopCardStackSpatialBody> bodies)
+		private static bool ResolveBodyOverlaps(TabletopCardPlacementArea area, List<TabletopCardStackSpatialBody> bodies)
 		{
 			bool moved = false;
 			for (int firstIndex = 0; firstIndex < bodies.Count; firstIndex++)
@@ -113,27 +114,40 @@ namespace Gameplay.Tabletop
 				{
 					TabletopCardStackSpatialBody first = bodies[firstIndex];
 					TabletopCardStackSpatialBody second = bodies[secondIndex];
-					if (TryCalculateSeparation(first.FootprintCenter, first.Size, second.FootprintCenter, second.Size, (first.BottomCardId.Value >= second.BottomCardId.Value) ? 1 : (-1), out var separation) && (!first.IsLocked || !second.IsLocked))
+					if (TryCalculateSeparation(first.FootprintCenter, first.Size, second.FootprintCenter, second.Size, out var separation) && (!first.IsLocked || !second.IsLocked))
 					{
 						if (first.IsLocked)
 						{
-							bodies[secondIndex] = second.WithPosition(second.Position - separation);
+							bodies[secondIndex] = EnforceBoardPlacementRules(area, second.WithPosition(second.Position - separation));
 						}
 						else if (second.IsLocked)
 						{
-							bodies[firstIndex] = first.WithPosition(first.Position + separation);
+							bodies[firstIndex] = EnforceBoardPlacementRules(area, first.WithPosition(first.Position + separation));
 						}
 						else
 						{
 							Vector2 halfSeparation = separation * 0.5f;
-							bodies[firstIndex] = first.WithPosition(first.Position + halfSeparation);
-							bodies[secondIndex] = second.WithPosition(second.Position - halfSeparation);
+							bodies[firstIndex] = EnforceBoardPlacementRules(area, first.WithPosition(first.Position + halfSeparation));
+							bodies[secondIndex] = EnforceBoardPlacementRules(area, second.WithPosition(second.Position - halfSeparation));
 						}
 						moved = true;
 					}
 				}
 			}
 			return moved;
+		}
+
+		private static TabletopCardStackSpatialBody EnforceBoardPlacementRules(
+			TabletopCardPlacementArea area,
+			TabletopCardStackSpatialBody body)
+		{
+			Vector2 center = ClampToBounds(area.Bounds, body.FootprintCenter, body.Size);
+			if (area.TryGetFullWidthTopRestrictedBand(out Rect band))
+			{
+				center = MoveBelowTopRestrictedBand(center, body.Size, band);
+				center = ClampToBounds(area.Bounds, center, body.Size);
+			}
+			return body.WithPosition(center - body.FootprintCenterOffset);
 		}
 
 		private static bool HasUnresolvedConstraints(TabletopCardPlacementArea area, IReadOnlyList<TabletopCardStackSpatialBody> bodies)
@@ -145,6 +159,14 @@ namespace Gameplay.Tabletop
 				{
 					return true;
 				}
+				for (int otherIndex = i + 1; otherIndex < bodies.Count; otherIndex++)
+				{
+					TabletopCardStackSpatialBody other = bodies[otherIndex];
+					if (Overlaps(body.FootprintCenter, body.Size, other.FootprintCenter, other.Size))
+					{
+						return true;
+					}
+				}
 				if (body.IsLocked)
 				{
 					continue;
@@ -153,14 +175,6 @@ namespace Gameplay.Tabletop
 				{
 					Rect restricted = area.RestrictedAreas[restrictedIndex];
 					if (Overlaps(body.FootprintCenter, body.Size, restricted.center, restricted.size))
-					{
-						return true;
-					}
-				}
-				for (int otherIndex = i + 1; otherIndex < bodies.Count; otherIndex++)
-				{
-					TabletopCardStackSpatialBody other = bodies[otherIndex];
-					if (Overlaps(body.FootprintCenter, body.Size, other.FootprintCenter, other.Size))
 					{
 						return true;
 					}
@@ -196,7 +210,7 @@ namespace Gameplay.Tabletop
 			return firstHalf.x + secondHalf.x - Mathf.Abs(firstCenter.x - secondCenter.x) > Epsilon && firstHalf.y + secondHalf.y - Mathf.Abs(firstCenter.y - secondCenter.y) > Epsilon;
 		}
 
-		private static bool TryCalculateSeparation(Vector2 firstCenter, Vector2 firstSize, Vector2 secondCenter, Vector2 secondSize, int coincidentDirection, out Vector2 separation)
+		private static bool TryCalculateSeparation(Vector2 firstCenter, Vector2 firstSize, Vector2 secondCenter, Vector2 secondSize, out Vector2 separation)
 		{
 			Vector2 firstHalf = firstSize * 0.5f;
 			Vector2 secondHalf = secondSize * 0.5f;
@@ -216,12 +230,12 @@ namespace Gameplay.Tabletop
 			}
 			if (penetrationX < penetrationY)
 			{
-				float direction = ((Mathf.Abs(deltaX) > Epsilon) ? Mathf.Sign(deltaX) : ((float)coincidentDirection));
+				float direction = Mathf.Sign(deltaX);
 				separation = new Vector2(penetrationX * direction, 0f);
 			}
 			else
 			{
-				float direction2 = ((Mathf.Abs(deltaY) > Epsilon) ? Mathf.Sign(deltaY) : ((float)coincidentDirection));
+				float direction2 = Mathf.Sign(deltaY);
 				separation = new Vector2(0f, penetrationY * direction2);
 			}
 			return true;

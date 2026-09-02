@@ -1181,8 +1181,8 @@ namespace Gameplay.Tests
 		public void CompletedSaleAction_AdvancesCardSaleQuest()
 		{
 			CardDefinition sellable = CreateCard("test.scenario-sell.sellable");
-			CardDefinition buyer = CreateCard("test.scenario-sell.buyer");
 			CardDefinition coin = CreateCard("test.scenario-sell.coin");
+			CardBuyerDefinition buyer = CreateBuyer("test.scenario-sell.buyer", coin.ContentId);
 			SetSellValue(sellable, 2);
 			ActionDefinition action = CreateSaleAction(
 				"test.scenario-sell.action",
@@ -1716,6 +1716,16 @@ namespace Gameplay.Tests
 			JsonUtility.FromJsonOverwrite(
 				"{\"m_contentId\":{\"m_value\":\"" + contentId + "\"}}",
 				definition);
+			return definition;
+		}
+
+		private static CardBuyerDefinition CreateBuyer(string contentId, ContentId currencyCardId)
+		{
+			CardBuyerDefinition definition = ScriptableObject.CreateInstance<CardBuyerDefinition>();
+			SerializedObject serialized = new(definition);
+			serialized.FindProperty("m_contentId").FindPropertyRelative("m_value").stringValue = contentId;
+			serialized.FindProperty("m_currencyCardId").FindPropertyRelative("m_value").stringValue = currencyCardId.Value;
+			serialized.ApplyModifiedPropertiesWithoutUndo();
 			return definition;
 		}
 

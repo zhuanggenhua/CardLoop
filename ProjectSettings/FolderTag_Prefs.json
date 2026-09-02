@@ -67,7 +67,7 @@
                 },
                 "_recursive": false,
                 "_tag": "GAS生成代码",
-                "_desc": "当前包含 FantasyWord.GAS.GeneratedRuntime.asmdef 和 XAbility/XAttribute/XAttrSet/XCue 等 .gen.cs。这里是 GAS 相关生成代码，不手改。"
+                "_desc": "当前包含 GAS.GeneratedRuntime.asmdef 和 XAbility/XAttribute/XAttrSet/XCue 等 .gen.cs。这里是 GAS 相关生成代码，不手改。"
             },
             {
                 "_guid": "b3bcb62bbd9fc5347893edd77219197b",

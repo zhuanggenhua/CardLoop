@@ -15,13 +15,13 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.region.stackcraft-parity
   m_tagCodes:
-  m_displayName: 地基模板同态测试地区
-  m_description: 只用于验证模板开局初始卡包和开包玩家链的地区。
+  m_displayName: "\u5730\u57FA\u6A21\u677F\u540C\u6001\u6D4B\u8BD5\u5730\u533A"
+  m_description: "\u53EA\u7528\u4E8E\u9A8C\u8BC1\u6A21\u677F\u5F00\u5C40\u521D\u59CB\u5361\u5305\u548C\u5F00\u5305\u73A9\u5BB6\u94FE\u7684\u5730\u533A\u3002"
   m_icon:
     Address:
     Guid:
     Locked: 1
-  m_sceneAddress: FoundationStackCraftParityTest
+  m_sceneAddress: 模板同态测试
   m_tabletopPlacement:
     m_bounds:
       serializedVersion: 2
@@ -115,6 +115,7 @@ MonoBehaviour:
         m_requiredTargetBottomContentTagCodes: f3157a00
         m_requiresSameContent: 0
     m_cardLimitBonusExpansionPerPoint: {x: 0.06, y: 0.04}
+    m_automaticMovementIntervalSeconds: 5
+    m_automaticMovementRadius: 1
+    m_automaticMovementMaxAttempts: 5
   m_arrivalPosition: {x: 0, y: 0}
-
-

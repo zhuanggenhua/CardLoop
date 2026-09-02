@@ -24,7 +24,7 @@ namespace Gameplay.Scenarios
 			ContentIndex contentIndex,
 			TabletopCardIdSequence cardIdSequence,
 			Func<ContentId, bool> isContentDiscovered,
-			Action<ContentId, ActionSettlementResult> actionCompleted,
+			Action<TabletopActionCompletion> actionCompleted,
 			Action<IReadOnlyList<ContentId>> cardsDefeated,
 			BattleFormationRules battleFormationRules,
 			uint authoritativeRandomSeed)
@@ -57,7 +57,7 @@ namespace Gameplay.Scenarios
 			ContentIndex contentIndex,
 			TabletopCardIdSequence cardIdSequence,
 			Func<ContentId, bool> isContentDiscovered,
-			Action<ContentId, ActionSettlementResult> actionCompleted,
+			Action<TabletopActionCompletion> actionCompleted,
 			Action<IReadOnlyList<ContentId>> cardsDefeated,
 			BattleFormationRules battleFormationRules,
 			ScenarioRegionSnapshot snapshot)

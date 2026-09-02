@@ -310,7 +310,12 @@ namespace Gameplay.Tests.Support.Editor
 				sourcePosition,
 				isDrag: true,
 				controller.TargetCardId);
-			ActionCandidate[] candidates = interaction.HandleRelease(intent);
+			bool keepReleasedPlacement = interaction.HandleRelease(intent, out ActionCandidate[] candidates);
+			if (!keepReleasedPlacement)
+			{
+				throw new InvalidOperationException(
+					"Foundation E2E 拖拽释放不应进入 UI 填槽恢复路径。");
+			}
 			if (candidates.Length != 1)
 			{
 				throw new InvalidOperationException(

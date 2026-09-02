@@ -117,27 +117,44 @@ namespace YokiFrame
 
         public async UniTask<T> LoadAssetUniTaskAsync<T>(string path, CancellationToken ct) where T : Object
         {
-            mHandle = mPackage.LoadAssetAsync<T>(path);
-            await mHandle.ToUniTask(cancellationToken: ct);
-            return mHandle.GetAssetObject<T>();
+            AssetHandle handle = mPackage.LoadAssetAsync<T>(path);
+            mHandle = handle;
+            await handle.ToUniTask(cancellationToken: ct);
+            EnsureHandleReadable(handle, path, ct);
+            if (handle.Status != EOperationStatus.Succeeded)
+                return null;
+            return handle.GetAssetObject<T>();
         }
 
         public async UniTask<T[]> LoadAllAssetsUniTaskAsync<T>(string path, CancellationToken ct) where T : Object
         {
-            mAllHandle = mPackage.LoadAllAssetsAsync<T>(path);
-            await mAllHandle.ToUniTask(cancellationToken: ct);
-            if (mAllHandle.Status != EOperationStatus.Succeeded)
+            AllAssetsHandle handle = mPackage.LoadAllAssetsAsync<T>(path);
+            mAllHandle = handle;
+            await handle.ToUniTask(cancellationToken: ct);
+            EnsureHandleReadable(handle, path, ct);
+            if (handle.Status != EOperationStatus.Succeeded)
                 return Array.Empty<T>();
-            return ConvertAll<T>(mAllHandle.AllAssetObjects);
+            return ConvertAll<T>(handle.AllAssetObjects);
         }
 
         public async UniTask<SubAssetsResult<T>> LoadSubAssetsUniTaskAsync<T>(string path, CancellationToken ct) where T : Object
         {
-            mSubHandle = mPackage.LoadSubAssetsAsync<T>(path);
-            await mSubHandle.ToUniTask(cancellationToken: ct);
-            if (mSubHandle.Status != EOperationStatus.Succeeded)
+            SubAssetsHandle handle = mPackage.LoadSubAssetsAsync<T>(path);
+            mSubHandle = handle;
+            await handle.ToUniTask(cancellationToken: ct);
+            EnsureHandleReadable(handle, path, ct);
+            if (handle.Status != EOperationStatus.Succeeded)
                 return default;
-            return ConvertSub<T>(mSubHandle.SubAssetObjects);
+            return ConvertSub<T>(handle.SubAssetObjects);
+        }
+
+        private static void EnsureHandleReadable(HandleBase handle, string path, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (handle == null || !handle.IsValid)
+            {
+                throw new InvalidOperationException($"YooAsset 资源句柄已失效，不能读取加载结果：{path}。");
+            }
         }
 #endif
     }

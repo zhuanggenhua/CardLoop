@@ -58,7 +58,8 @@ namespace Gameplay.Tabletop.Actions
 					return chest.CurrencyCardId == contentId;
 				case ActionDefinition action:
 					return ContainsCurrencyCardId(action.ResultIntents, contentId) ||
-						ContainsCurrencyCardId(action.ResultBranches, contentId);
+						ContainsCurrencyCardId(action.ResultBranches, contentId) ||
+						ContainsPurchasePaymentCardId(action, contentId);
 				default:
 					return false;
 			}
@@ -84,6 +85,7 @@ namespace Gameplay.Tabletop.Actions
 							AddCurrencyCardIds(branches[branchIndex].ResultIntents, currencyCardIds);
 						}
 					}
+					AddPurchasePaymentCardIds(action, currencyCardIds);
 					break;
 			}
 		}
@@ -137,6 +139,116 @@ namespace Gameplay.Tabletop.Actions
 			{
 				currencyCardIds.Add(contentId);
 			}
+		}
+
+		private static bool ContainsPurchasePaymentCardId(ActionDefinition action, ContentId contentId)
+		{
+			IReadOnlyList<ActionResultIntent> intents = action.ResultIntents;
+			for (int intentIndex = 0; intentIndex < intents.Count; intentIndex++)
+			{
+				if (intents[intentIndex] is PurchaseCardPackResultIntent purchase &&
+					ContainsPaymentSlotCard(action, purchase.PaymentSlotKey, contentId))
+				{
+					return true;
+				}
+			}
+			IReadOnlyList<ActionResultBranchDefinition> branches = action.ResultBranches;
+			for (int branchIndex = 0; branchIndex < branches.Count; branchIndex++)
+			{
+				ActionResultBranchDefinition branch = branches[branchIndex];
+				if (branch == null)
+				{
+					continue;
+				}
+				IReadOnlyList<ActionResultIntent> branchIntents = branch.ResultIntents;
+				for (int intentIndex = 0; intentIndex < branchIntents.Count; intentIndex++)
+				{
+					if (branchIntents[intentIndex] is PurchaseCardPackResultIntent purchase &&
+						ContainsPaymentSlotCard(action, purchase.PaymentSlotKey, contentId))
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		private static void AddPurchasePaymentCardIds(ActionDefinition action, ISet<ContentId> currencyCardIds)
+		{
+			IReadOnlyList<ActionResultIntent> intents = action.ResultIntents;
+			for (int intentIndex = 0; intentIndex < intents.Count; intentIndex++)
+			{
+				if (intents[intentIndex] is PurchaseCardPackResultIntent purchase)
+				{
+					AddPaymentSlotCardIds(action, purchase.PaymentSlotKey, currencyCardIds);
+				}
+			}
+			IReadOnlyList<ActionResultBranchDefinition> branches = action.ResultBranches;
+			for (int branchIndex = 0; branchIndex < branches.Count; branchIndex++)
+			{
+				ActionResultBranchDefinition branch = branches[branchIndex];
+				if (branch == null)
+				{
+					continue;
+				}
+				IReadOnlyList<ActionResultIntent> branchIntents = branch.ResultIntents;
+				for (int intentIndex = 0; intentIndex < branchIntents.Count; intentIndex++)
+				{
+					if (branchIntents[intentIndex] is PurchaseCardPackResultIntent purchase)
+					{
+						AddPaymentSlotCardIds(action, purchase.PaymentSlotKey, currencyCardIds);
+					}
+				}
+			}
+		}
+
+		private static bool ContainsPaymentSlotCard(ActionDefinition action, string paymentSlotKey, ContentId contentId)
+		{
+			ActionSlotDefinition slot = FindPaymentSlot(action, paymentSlotKey);
+			if (slot == null)
+			{
+				return false;
+			}
+			IReadOnlyList<ContentId> allowedContentIds = slot.AllowedContentIds;
+			for (int contentIndex = 0; contentIndex < allowedContentIds.Count; contentIndex++)
+			{
+				if (allowedContentIds[contentIndex] == contentId)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private static void AddPaymentSlotCardIds(ActionDefinition action, string paymentSlotKey, ISet<ContentId> currencyCardIds)
+		{
+			ActionSlotDefinition slot = FindPaymentSlot(action, paymentSlotKey);
+			if (slot == null)
+			{
+				return;
+			}
+			IReadOnlyList<ContentId> allowedContentIds = slot.AllowedContentIds;
+			for (int contentIndex = 0; contentIndex < allowedContentIds.Count; contentIndex++)
+			{
+				AddCurrencyCardId(currencyCardIds, allowedContentIds[contentIndex]);
+			}
+		}
+
+		private static ActionSlotDefinition FindPaymentSlot(ActionDefinition action, string paymentSlotKey)
+		{
+			IReadOnlyList<ActionSlotDefinition> slots = action.ParticipationSlots;
+			if (ActionLocalKeyUtility.IsValidKey(paymentSlotKey))
+			{
+				for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)
+				{
+					if (slots[slotIndex] != null && slots[slotIndex].Key == paymentSlotKey)
+					{
+						return slots[slotIndex];
+					}
+				}
+				return null;
+			}
+			return slots.Count == 1 ? slots[0] : null;
 		}
 	}
 }

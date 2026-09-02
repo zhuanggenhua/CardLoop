@@ -4,6 +4,7 @@ using Gameplay.Actions;
 using Gameplay.Content;
 using Gameplay.Quests;
 using Gameplay.Scenarios;
+using Gameplay.Tabletop;
 using Gameplay.Tabletop.Actions;
 using NUnit.Framework;
 using UnityEngine;
@@ -236,24 +237,16 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
-		public void CardDefinition_RejectsAutomaticMovementWithoutPositiveRadiusAndAttempts()
+		public void TabletopRules_RejectAutomaticMovementWithoutPositiveRadiusAndAttempts()
 		{
-			CardDefinition content = CreateContent("test.automatic-movement.validation");
+			TabletopCardPlacementDefinition placement = new TabletopCardPlacementDefinition();
 			JsonUtility.FromJsonOverwrite(
-				"{\"m_automaticMovementIntervalSeconds\":1.0}",
-				content);
-			try
-			{
-				ContentValidationReport report = ContentValidator.ValidateContentAssets(
-					new ContentAsset[] { content });
+				"{\"m_automaticMovementIntervalSeconds\":1.0," +
+				"\"m_automaticMovementRadius\":0.0," +
+				"\"m_automaticMovementMaxAttempts\":0}",
+				placement);
 
-				Assert.That(ContainsIssue(report, "CARD_AUTOMATIC_MOVEMENT_RADIUS_INVALID"), Is.True);
-				Assert.That(ContainsIssue(report, "CARD_AUTOMATIC_MOVEMENT_ATTEMPTS_INVALID"), Is.True);
-			}
-			finally
-			{
-				Object.DestroyImmediate(content);
-			}
+			Assert.Throws<ArgumentOutOfRangeException>(() => placement.CreateRuntime());
 		}
 
 		[Test]

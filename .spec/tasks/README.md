@@ -28,4 +28,4 @@
 
 - **只放在途卡**(pending / in_progress)。
 - 任务完成后直接删除卡文件(历史在 git,不设归档目录;清理见 `spec-steward` 流程 C)。
-- FantasyWord 的旧任务卡未作为 CardLoop 当前任务迁入。
+- 旧来源项目的任务卡未作为 CardLoop 当前任务迁入。

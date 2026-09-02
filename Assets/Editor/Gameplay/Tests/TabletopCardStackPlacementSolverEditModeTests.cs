@@ -26,7 +26,7 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
-		public void Solve_SeparatesCoincidentBodiesWithStableIdOrder()
+		public void Solve_SeparatesCoincidentBodiesUsingInputPairOrder()
 		{
 			TabletopCards state = new TabletopCards();
 			TabletopCard first = state.CreateCard("test.first", Vector2.zero);
@@ -41,8 +41,8 @@ namespace Gameplay.Tests
 			Vector2 firstPosition = result.GetPosition(first.Id);
 			Vector2 secondPosition = result.GetPosition(second.Id);
 			Assert.That<bool>(result.Converged, (IResolveConstraint)(object)Is.True);
-			Assert.That<float>(firstPosition.x, (IResolveConstraint)(object)Is.LessThan((object)secondPosition.x));
-			Assert.That<float>(secondPosition.x - firstPosition.x, (IResolveConstraint)(object)Is.GreaterThanOrEqualTo((object)2f));
+			Assert.That<float>(secondPosition.y, (IResolveConstraint)(object)Is.GreaterThan((object)firstPosition.y));
+			Assert.That<float>(secondPosition.y - firstPosition.y, (IResolveConstraint)(object)Is.GreaterThanOrEqualTo((object)2f));
 		}
 
 		[Test]
@@ -93,7 +93,7 @@ namespace Gameplay.Tests
 			TabletopCardStackSpatialBody body = SingleCardGeometry.CreateSpatialBody(tabletopCard.Id, Vector2.zero, 1, isLocked: false);
 			TabletopCardStackSpatialResult result = TabletopCardStackPlacementSolver.Solve(area, new TabletopCardStackSpatialBody[1] { body });
 			Assert.That<bool>(result.Converged, (IResolveConstraint)(object)Is.True);
-			Assert.That<float>(result.GetPosition(tabletopCard.Id).x, (IResolveConstraint)(object)Is.GreaterThanOrEqualTo((object)2f));
+			Assert.That<float>(result.GetPosition(tabletopCard.Id).y, (IResolveConstraint)(object)Is.GreaterThanOrEqualTo((object)2f));
 		}
 
 		[Test]
@@ -122,6 +122,27 @@ namespace Gameplay.Tests
 			Assert.That(result.Converged, Is.True);
 			Assert.That(position.x, Is.EqualTo(5.55f).Within(0.0001f));
 			Assert.That(position.y, Is.EqualTo(1.95f).Within(0.0001f));
+		}
+
+		[Test]
+		public void Solve_WhenInitialAreaConstraintsDisabledDoesNotMoveUnrelatedOutOfBoundsStack()
+		{
+			TabletopCards state = new TabletopCards();
+			TabletopCard tabletopCard = state.CreateCard("test.stackcraft-overlap-only", Vector2.zero);
+			TabletopCardPlacementArea area = new TabletopCardPlacementArea(new Rect(-5f, -4f, 10f, 8f));
+			TabletopCardStackSpatialBody body = SingleCardGeometry.CreateSpatialBody(
+				tabletopCard.Id,
+				new Vector2(-20f, 20f),
+				1,
+				isLocked: false);
+
+			TabletopCardStackSpatialResult result = TabletopCardStackPlacementSolver.Solve(
+				area,
+				new TabletopCardStackSpatialBody[1] { body },
+				enforceInitialAreaConstraints: false);
+
+			Assert.That(result.GetPosition(tabletopCard.Id), Is.EqualTo(new Vector2(-20f, 20f)));
+			Assert.That(result.Converged, Is.False);
 		}
 
 		[Test]

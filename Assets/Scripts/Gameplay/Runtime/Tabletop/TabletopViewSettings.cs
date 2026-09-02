@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using GAS.Runtime;
 using GameCore;
 using Sirenix.OdinInspector;
@@ -50,7 +51,7 @@ namespace Gameplay.Tabletop
 
 		[SerializeField]
 		[LabelText("基础排序值")]
-		[Tooltip("卡牌视图的基础渲染排序值，堆栈成员索引会在此基础上递增。")]
+		[Tooltip("卡牌、卡包和卡面文字共用的基础渲染排序值；对齐 StackCraft 默认 Renderer 排序 0，牌间遮挡由 Transform 层级表达。")]
 		private int m_baseSortingOrder;
 
 		[Header("牌桌音效")]
@@ -112,8 +113,8 @@ namespace Gameplay.Tabletop
 
 		[SerializeField]
 		[LabelText("卡牌烟雾粒子排序值")]
-		[Tooltip("牌桌卡牌烟雾粒子的渲染排序值；只影响表现层级，不改变规则状态。")]
-		private int m_cardSmokeSortingOrder = 150;
+		[Tooltip("牌桌卡牌烟雾粒子的渲染排序值；对齐 StackCraft PuffParticle 的默认排序 0，只影响表现层级，不改变规则状态。")]
+		private int m_cardSmokeSortingOrder = 0;
 
 		[SerializeField]
 		[LabelText("命中结果排序值")]
@@ -175,7 +176,7 @@ namespace Gameplay.Tabletop
 
 		[SerializeField]
 		[LabelText("目标吸附半径")]
-		[Tooltip("拖拽释放时，若指针没有直接射中目标卡牌，则在拖拽牌段首张卡周围按该半径查找最近候选；对齐 StackCraft attachRadius = 0.25。")]
+		[Tooltip("拖拽释放时，在拖拽牌段首张卡周围按该半径查找最近合法候选；对齐 StackCraft attachRadius = 0.25，不使用鼠标射线抢普通合堆目标。")]
 		[Min(0f)]
 		private float m_attachRadius = 0.25f;
 
@@ -190,6 +191,11 @@ namespace Gameplay.Tabletop
 		[Tooltip("牌堆权威位置变化后，卡牌移动到目标姿态的补间时长；对齐 StackCraft moveDuration = 0.1。")]
 		[Min(0f)]
 		private float m_moveDurationSeconds = 0.1f;
+
+		[SerializeField]
+		[LabelText("普通移动缓动")]
+		[Tooltip("牌堆权威位置变化后，卡牌移动到目标姿态使用的缓动；对齐 StackCraft moveEase。")]
+		private Ease m_moveEase = Ease.OutQuad;
 
 		public SoftAssetReference<GameObject> CardViewPrefab => m_cardViewPrefab;
 
@@ -221,6 +227,8 @@ namespace Gameplay.Tabletop
 
 		public float MoveDurationSeconds => m_moveDurationSeconds;
 
+		public Ease MoveEase => m_moveEase;
+
 		public AudioClipResolver MissAudio => m_missAudio;
 
 		public AudioClipResolver CriticalAudio => m_criticalAudio;
@@ -229,6 +237,7 @@ namespace Gameplay.Tabletop
 		{
 			return cue switch
 			{
+				TabletopPresentationCueKind.CardSpawn => null,
 				TabletopPresentationCueKind.CardPick => m_cardPickAudio,
 				TabletopPresentationCueKind.CardDrop => m_cardDropAudio,
 				TabletopPresentationCueKind.CardSwipe => m_cardSwipeAudio,

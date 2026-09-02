@@ -12,7 +12,7 @@ namespace Gameplay.Tests
 	public sealed class TabletopCardLayoutEditModeTests
 	{
 		[Test]
-		public void Calculate_UsesBottomToTopIndexForVisualOffsetAndSorting()
+		public void Calculate_UsesBottomToTopIndexForVisualOffsetWithoutChangingSortingOrder()
 		{
 			TabletopCards state = new TabletopCards();
 			TabletopCard bottom = state.CreateCard("test.bottom", new Vector2(3f, 4f));
@@ -21,10 +21,10 @@ namespace Gameplay.Tests
 			TabletopCardLayoutParameters parameters = new TabletopCardLayoutParameters(new Vector3(0.1f, 0.2f, -0.05f), 10);
 			TabletopCardPose bottomPose = TabletopCardLayout.Calculate(stack, 0, parameters);
 			TabletopCardPose topPose = TabletopCardLayout.Calculate(stack, 1, parameters);
-			Assert.That<Vector3>(bottomPose.LocalPosition, (IResolveConstraint)(object)Is.EqualTo((object)new Vector3(3f, 4f, 0f)));
-			Assert.That<Vector3>(topPose.LocalPosition, (IResolveConstraint)(object)Is.EqualTo((object)new Vector3(3.1f, 4.2f, -0.05f)));
+			Assert.That<Vector3>(bottomPose.LocalPosition, (IResolveConstraint)(object)Is.EqualTo((object)new Vector3(3f, 0f, 4f)));
+			Assert.That<Vector3>(topPose.LocalPosition, (IResolveConstraint)(object)Is.EqualTo((object)new Vector3(3.1f, 0.2f, 3.95f)));
 			Assert.That<int>(bottomPose.SortingOrder, (IResolveConstraint)(object)Is.EqualTo((object)10));
-			Assert.That<int>(topPose.SortingOrder, (IResolveConstraint)(object)Is.EqualTo((object)11));
+			Assert.That<int>(topPose.SortingOrder, (IResolveConstraint)(object)Is.EqualTo((object)10));
 		}
 
 		[Test]

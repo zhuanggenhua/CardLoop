@@ -6,7 +6,6 @@ metadata:
   role: project-reference
   source: project-source + package-entry
   status: 已交付
-  verified_at: 2026-08-04
   update_triggers: database-schema-change, persistence-contract-change, serializable-dictionary-change, content-id-change
 ---
 

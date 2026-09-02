@@ -6,7 +6,6 @@ metadata:
   role: adapter
   source: EX-GAS-2.0 README + local 2.0.4 source
   status: 已交付
-  verified_at: 2026-08-13
   update_triggers: package-version-change, public-api-change, generator-change
 ---
 

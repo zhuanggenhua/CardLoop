@@ -6,7 +6,6 @@ metadata:
   role: project-reference
   source: official-entry + project-source
   status: 已交付
-  verified_at: 2026-08-04
   update_triggers: broaudio-version-change, sound-library-change, audio-channel-change, playback-lifecycle-change
 ---
 

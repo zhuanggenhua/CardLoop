@@ -2,9 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Gameplay.Actions;
 using Gameplay.Content;
+using Gameplay.Scenarios;
 using Gameplay.Tabletop;
+using Gameplay.Tabletop.Actions;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using UnityEngine;
@@ -17,6 +20,11 @@ namespace Gameplay.Tests
 	/// </summary>
 	public sealed class TabletopCardsEditModeTests
 	{
+		private sealed class AutomaticMovementCardDefinition : CardDefinition
+		{
+			public override bool UsesAutomaticMovement => true;
+		}
+
 		[Test]
 		public void Tabletop_OwnsOnePlacementRuleSetUsedByEveryPlacement()
 		{
@@ -156,6 +164,63 @@ namespace Gameplay.Tests
 				Object.DestroyImmediate(tradeZone);
 				Object.DestroyImmediate(booster);
 			}
+		}
+
+		[Test]
+		public void DragClamp_UsesStackCraftBoardBoundsWithoutHeaderRestriction()
+		{
+			TabletopCards cards = new TabletopCards();
+			TabletopCard top = cards.CreateCard("test.drag-clamp.top", Vector2.zero);
+			TabletopCard tail = cards.CreateCard("test.drag-clamp.tail", Vector2.zero);
+			TabletopCardStack stack = cards.MergeStackOnto(tail.Id, top.Id);
+			TabletopCardPlacementRules placementRules = new TabletopCardPlacementRules(
+				new TabletopCardPlacementArea(
+					new Rect(-6f, -4f, 12f, 8f),
+					new[] { new Rect(-6f, 2.5f, 12f, 1.5f) }),
+				new TabletopCardStackGeometry(
+					new Vector2(0.8f, 1f),
+					new Vector2(0f, -0.18f),
+					new Vector2(0.1f, 0.1f)));
+
+			Vector2 clamped = cards.ClampStackPositionToBounds(
+				stack.TopCard.Id,
+				new Vector2(99f, 99f),
+				placementRules);
+
+			Assert.That(clamped.x, Is.EqualTo(5.55f).Within(0.0001f));
+			Assert.That(clamped.y, Is.EqualTo(3.45f).Within(0.0001f));
+			Assert.That(
+				clamped.y,
+				Is.GreaterThan(2.5f),
+				"StackCraft 拖拽中只执行 Board.ClampToBounds；顶部页眉禁放区要等释放时的 EnforcePlacementRules 再处理。");
+		}
+
+		[Test]
+		public void MoveStackDuringLocalDrag_UpdatesStackTargetWithoutStructuralRevision()
+		{
+			TabletopCards cards = new TabletopCards();
+			TabletopCard top = cards.CreateCard("test.drag-live-position.top", Vector2.zero);
+			TabletopCard tail = cards.CreateCard("test.drag-live-position.tail", Vector2.zero);
+			TabletopCardStack stack = cards.MergeStackOnto(tail.Id, top.Id);
+			TabletopCardPlacementRules placementRules = new TabletopCardPlacementRules(
+				new TabletopCardPlacementArea(new Rect(-6f, -4f, 12f, 8f)),
+				new TabletopCardStackGeometry(
+					new Vector2(0.8f, 1f),
+					new Vector2(0f, -0.18f),
+					new Vector2(0.1f, 0.1f)));
+			ulong revisionBeforeDragMove = cards.Revision;
+
+			Vector2 clamped = cards.MoveStackDuringLocalDrag(
+				stack.TopCard.Id,
+				new Vector2(2f, 1f),
+				placementRules);
+
+			Assert.That(stack.Position, Is.EqualTo(clamped));
+			Assert.That(stack.Position, Is.EqualTo(new Vector2(2f, 1f)));
+			Assert.That(
+				cards.Revision,
+				Is.EqualTo(revisionBeforeDragMove),
+				"StackCraft SetDragTargetPosition 在拖拽中只改当前牌堆目标位置；如果递增结构版本，释放清理会误触整桌 Refresh，造成非拖拽牌闪动。");
 		}
 
 		[Test]
@@ -378,7 +443,15 @@ namespace Gameplay.Tests
 				CollectionAssert.AreEqual((IEnumerable)new TabletopCard[2] { middle, top }, (IEnumerable)placed.Cards);
 				Assert.That<TabletopCardStack>(tabletop.Cards.GetStackContaining(middle.Id), (IResolveConstraint)(object)Is.SameAs((object)placed));
 				Assert.That<TabletopCardStack>(tabletop.Cards.GetStackContaining(top.Id), (IResolveConstraint)(object)Is.SameAs((object)placed));
-				Assert.That<float>(tabletop.Cards.GetStackContaining(blocker.Id).Position.x - placed.Position.x, (IResolveConstraint)(object)Is.GreaterThanOrEqualTo((object)2f), "重叠解算必须移动整堆，不能把同一堆的中间卡和顶牌拆成两个空间对象。", Array.Empty<object>());
+				TabletopCardStack blockerStack = tabletop.Cards.GetStackContaining(blocker.Id);
+				Rect placedFootprint = placementRules.Geometry.CalculateFootprint(placed.Position, placed.Cards.Count);
+				Rect blockerFootprint = placementRules.Geometry.CalculateFootprint(
+					blockerStack.Position,
+					blockerStack.Cards.Count);
+				Assert.That(
+					placedFootprint.Overlaps(blockerFootprint),
+					Is.False,
+					"重叠解算必须把拖拽尾段当作一个整堆推离阻挡牌堆，不能把中间卡和顶牌拆成两个空间对象。");
 			}
 			finally
 			{
@@ -414,36 +487,132 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
-		public void TryPlaceStack_WhenAreaCannotFitCardRejectsWithoutPartialMutation()
+		public void TryPlaceStack_WhenOverlapCannotFullyResolveStillAcceptsStackCraftDrop()
 		{
-			CardDefinition cardDefinition = ScriptableObject.CreateInstance<CardDefinition>();
-			JsonUtility.FromJsonOverwrite("{\"m_contentId\":{\"m_value\":\"test.reject-place-card\"}}", (object)cardDefinition);
+			TabletopCards state = new TabletopCards();
+			TabletopCard bottom = state.CreateCard("test.stackcraft-drop.bottom", new Vector2(-1f, 0f));
+			TabletopCard top = state.CreateCard("test.stackcraft-drop.top", new Vector2(-1f, 0f));
+			TabletopCard lockedBlocker = state.CreateCard("test.stackcraft-drop.locked", new Vector2(1f, 0f), isPlacementLocked: true);
+			state.MergeStackOnto(top.Id, bottom.Id);
+			TabletopCardPlacementRules placementRules = new TabletopCardPlacementRules(
+				new TabletopCardPlacementArea(new Rect(-2f, -1f, 4f, 2f)),
+				new TabletopCardStackGeometry(new Vector2(2f, 2f), Vector2.zero));
+			ulong originalRevision = state.Revision;
+
+			bool accepted = state.TryPlaceStack(top.Id, new Vector2(1f, 0f), placementRules, out TabletopCardStack placed);
+
+			Assert.That<bool>(accepted, (IResolveConstraint)(object)Is.True);
+			Assert.That<TabletopCardStack>(placed, (IResolveConstraint)(object)Is.Not.Null);
+			Assert.That<ulong>(state.Revision, (IResolveConstraint)(object)Is.GreaterThan((object)originalRevision));
+			Assert.That<int>(state.StackCount, (IResolveConstraint)(object)Is.EqualTo((object)3));
+			CollectionAssert.AreEqual((IEnumerable)new TabletopCard[1] { bottom }, (IEnumerable)state.GetStackContaining(bottom.Id).Cards);
+			CollectionAssert.AreEqual((IEnumerable)new TabletopCard[1] { top }, (IEnumerable)placed.Cards);
+			Assert.That<TabletopCardStack>(state.GetStackContaining(top.Id), (IResolveConstraint)(object)Is.SameAs((object)placed));
+			Assert.That<TabletopCardStack>(state.GetStackContaining(lockedBlocker.Id), (IResolveConstraint)(object)Is.Not.SameAs((object)placed));
+			Assert.That<float>(placed.Position.x, (IResolveConstraint)(object)Is.InRange(-1f, 1f));
+			Assert.That<float>(placed.Position.y, (IResolveConstraint)(object)Is.EqualTo((object)0f).Within(0.0001f));
+		}
+
+		[Test]
+		public void TryDropStackOnto_ReflowsNeighbouringStacksAfterMerge()
+		{
+			CardDefinition resource = null;
+			bool gasRuntimeInitialized = false;
 			try
 			{
-				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[1] { cardDefinition });
+				InvokeFormalGasBootstrap("Shutdown");
+				InvokeFormalGasBootstrap("EnsureInitialized");
+				gasRuntimeInitialized = true;
+				resource = ScriptableObject.CreateInstance<CardDefinition>();
+				JsonUtility.FromJsonOverwrite(
+					"{\"m_contentId\":{\"m_value\":\"test.drop-merge.reflow.resource\"},\"m_tagCodes\":[" +
+					GAS.Runtime.XTag.Card_Category_Resource +
+					"]}",
+					resource);
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { resource });
 				TabletopCardPlacementRules placementRules = new TabletopCardPlacementRules(
-					new TabletopCardPlacementArea(new Rect(-2f, -1f, 4f, 2f)),
-					new TabletopCardStackGeometry(new Vector2(2f, 2f), Vector2.zero));
-				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(contentIndex, placementRules, _ => false, (_, __) => { }, _ => { });
-				Vector2 requestedPosition = new Vector2(-1f, 0f);
-				TabletopCard bottom = tabletop.CreateCard(cardDefinition.ContentId, requestedPosition);
-				TabletopCard top = tabletop.CreateCard(cardDefinition.ContentId, requestedPosition);
-				tabletop.MergeStackOnto(top.Id, bottom.Id);
-				tabletop.CreateCard(cardDefinition.ContentId, new Vector2(1f, 0f), isPlacementLocked: true);
-				Vector2 originalPosition = tabletop.Cards.GetStackContaining(bottom.Id).Position;
-				ulong originalRevision = tabletop.Cards.Revision;
-				TabletopCardStack placed;
-				bool accepted = tabletop.TryPlaceStack(top.Id, new Vector2(1f, 0f), out placed);
-				Assert.That<bool>(accepted, (IResolveConstraint)(object)Is.False);
-				Assert.That<TabletopCardStack>(placed, (IResolveConstraint)(object)Is.Null);
-				Assert.That<ulong>(tabletop.Cards.Revision, (IResolveConstraint)(object)Is.EqualTo((object)originalRevision));
-				Assert.That<int>(tabletop.Cards.StackCount, (IResolveConstraint)(object)Is.EqualTo((object)2));
-				Assert.That<Vector2>(tabletop.Cards.GetStackContaining(bottom.Id).Position, (IResolveConstraint)(object)Is.EqualTo((object)originalPosition));
-				CollectionAssert.AreEqual((IEnumerable)new TabletopCard[2] { bottom, top }, (IEnumerable)tabletop.Cards.GetStackContaining(bottom.Id).Cards);
+					new TabletopCardPlacementArea(new Rect(-10f, -10f, 20f, 20f)),
+					new TabletopCardStackGeometry(new Vector2(2f, 2f), new Vector2(0f, -1f)),
+					stackingRules: TabletopStackingRulesDefinition.CreateStackCraftDefault().CreateRuntime());
+				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
+					contentIndex,
+					placementRules,
+					_ => false,
+					(_, __) => { },
+					_ => { });
+				TabletopCard target = tabletop.CreateCard(resource.ContentId, Vector2.zero);
+				TabletopCard source = tabletop.CreateCard(resource.ContentId, new Vector2(4f, 0f));
+				TabletopCard blocker = tabletop.CreateCard(resource.ContentId, new Vector2(4f, -4f));
+				Vector2 blockingPosition = new Vector2(0f, -2.5f);
+				tabletop.Cards.MoveStackDuringLocalDrag(blocker.Id, blockingPosition, placementRules);
+				ulong revisionAfterSetup = tabletop.Cards.Revision;
+
+				bool accepted = tabletop.TryDropStackOnto(source.Id, target.Id, source.Stack.Position, out TabletopCardStack merged);
+
+				Assert.That(accepted, Is.True);
+				CollectionAssert.AreEqual(new TabletopCard[] { target, source }, merged.Cards);
+				TabletopCardStack blockerStack = tabletop.Cards.GetStackContaining(blocker.Id);
+				Assert.That(
+					blockerStack.Position,
+					Is.Not.EqualTo(blockingPosition),
+					"StackCraft 普通合堆后会立即 ResolveOverlaps，合堆变长压到邻近牌堆时不能等下一帧或其它链路再推开。");
+				Assert.That(tabletop.Cards.Revision, Is.GreaterThan(revisionAfterSetup));
 			}
 			finally
 			{
-				Object.DestroyImmediate((Object)(object)cardDefinition);
+				if (resource != null)
+				{
+					Object.DestroyImmediate(resource);
+				}
+				if (gasRuntimeInitialized)
+				{
+					InvokeFormalGasBootstrap("Shutdown");
+				}
+			}
+		}
+
+		[Test]
+		public void CreateCard_AutomaticBehaviorsWaitForTemplateInitialDelay()
+		{
+			CardDefinition producer = ScriptableObject.CreateInstance<CardDefinition>();
+			CardDefinition product = ScriptableObject.CreateInstance<CardDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.auto-delay.producer\"}," +
+				"\"m_periodicProductionCardId\":{\"m_value\":\"test.auto-delay.product\"}," +
+				"\"m_periodicProductionIntervalSeconds\":1.0}",
+				producer);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.auto-delay.product\"}}",
+				product);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { producer, product });
+				TabletopCardPlacementRules rules = TabletopTestPlacement.CreateRules(1f, 1f, 1);
+				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
+					contentIndex,
+					rules,
+					_ => false,
+					(_, __) => { },
+					_ => { });
+				tabletop.InitializeAuthoritativeRandom(12345u);
+				TabletopCard card = tabletop.CreateCard(producer.ContentId, Vector2.zero);
+
+				Assert.That(card.PeriodicProductionInitialDelaySeconds, Is.InRange(0.5f, 1.0f));
+				Assert.That(card.AutomaticMovementInitialDelaySeconds, Is.InRange(0.5f, 1.0f));
+				tabletop.AdvanceRealTime(1.49f);
+
+				Assert.That(CountCards(tabletop, product.ContentId), Is.Zero);
+				Assert.That(card.Position, Is.EqualTo(Vector2.zero));
+
+				tabletop.AdvanceRealTime(0.52f);
+
+				Assert.That(CountCards(tabletop, product.ContentId), Is.EqualTo(1));
+				Assert.That(card.Position, Is.Not.EqualTo(Vector2.zero));
+			}
+			finally
+			{
+				Object.DestroyImmediate(producer);
+				Object.DestroyImmediate(product);
 			}
 		}
 
@@ -451,22 +620,20 @@ namespace Gameplay.Tests
 		public void AdvanceRealTime_AutomaticMovementMovesOnlySelectedCard()
 		{
 			CardDefinition staticCard = ScriptableObject.CreateInstance<CardDefinition>();
-			CardDefinition movingCard = ScriptableObject.CreateInstance<CardDefinition>();
+			AutomaticMovementCardDefinition movingCard = ScriptableObject.CreateInstance<AutomaticMovementCardDefinition>();
 			JsonUtility.FromJsonOverwrite(
 				"{\"m_contentId\":{\"m_value\":\"test.auto-move.static\"}}",
 				staticCard);
 			JsonUtility.FromJsonOverwrite(
-				"{\"m_contentId\":{\"m_value\":\"test.auto-move.moving\"}," +
-				"\"m_automaticMovementIntervalSeconds\":1.0," +
-				"\"m_automaticMovementRadius\":2.0," +
-				"\"m_automaticMovementMaxAttempts\":1}",
+				"{\"m_contentId\":{\"m_value\":\"test.auto-move.moving\"}}",
 				movingCard);
 			try
 			{
 				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { staticCard, movingCard });
+				TabletopCardPlacementRules rules = TabletopTestPlacement.CreateRules(1f, 2f, 1);
 				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
 					contentIndex,
-					TabletopTestPlacement.Rules,
+					rules,
 					_ => false,
 					(_, __) => { },
 					_ => { });
@@ -483,7 +650,7 @@ namespace Gameplay.Tests
 				Assert.That(tabletop.Cards.GetStackContaining(middle.Id), Is.SameAs(original));
 				CollectionAssert.AreEqual(new TabletopCard[] { bottom, middle, top }, original.Cards);
 
-				tabletop.AdvanceRealTime(0.02f);
+				tabletop.AdvanceRealTime(1.02f);
 
 				TabletopCardStack moved = tabletop.Cards.GetStackContaining(middle.Id);
 				Assert.That(tabletop.Cards.StackCount, Is.EqualTo(2));
@@ -500,26 +667,75 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void AdvanceRealTime_AutomaticMovementDetachesBeforePatrolEvenWhenNoMoveCandidateIsValid()
+		{
+			CardDefinition staticCard = ScriptableObject.CreateInstance<CardDefinition>();
+			AutomaticMovementCardDefinition movingCard = ScriptableObject.CreateInstance<AutomaticMovementCardDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.auto-move.detach-static\"}}",
+				staticCard);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.auto-move.detach-moving\"}}",
+				movingCard);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { staticCard, movingCard });
+				TabletopCardPlacementRules rules = TabletopTestPlacement.CreateRules(
+					automaticMovementIntervalSeconds: 1f,
+					automaticMovementRadius: 10000f,
+					automaticMovementMaxAttempts: 1);
+				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
+					contentIndex,
+					rules,
+					_ => false,
+					(_, __) => { },
+					_ => { });
+				tabletop.InitializeAuthoritativeRandom(12345u);
+				Vector2 originalPosition = new Vector2(-2f, 1f);
+				TabletopCard bottom = tabletop.CreateCard(staticCard.ContentId, originalPosition);
+				TabletopCard middle = tabletop.CreateCard(movingCard.ContentId, originalPosition);
+				TabletopCard top = tabletop.CreateCard(staticCard.ContentId, originalPosition);
+				tabletop.MergeStackOnto(middle.Id, bottom.Id);
+				TabletopCardStack original = tabletop.MergeStackOnto(top.Id, bottom.Id);
+
+				tabletop.AdvanceRealTime(2.01f);
+
+				TabletopCardStack detached = tabletop.Cards.GetStackContaining(middle.Id);
+				Assert.That(tabletop.Cards.StackCount, Is.EqualTo(2));
+				Assert.That(detached, Is.Not.SameAs(original));
+				CollectionAssert.AreEqual(new TabletopCard[] { middle }, detached.Cards);
+				CollectionAssert.AreEqual(new TabletopCard[] { bottom, top }, original.Cards);
+				Assert.That(
+					detached.Position,
+					Is.EqualTo(originalPosition),
+					"StackCraft 的 CardAI 会在巡逻判点前先 DetachFromStack；候选移动失败也不能把卡留在旧堆里。");
+			}
+			finally
+			{
+				Object.DestroyImmediate(staticCard);
+				Object.DestroyImmediate(movingCard);
+			}
+		}
+
+		[Test]
 		public void AdvanceRealTime_AutomaticMovementRetentionKeepsCardsWithinCapacity()
 		{
 			CardDefinition enclosure = ScriptableObject.CreateInstance<CardDefinition>();
-			CardDefinition movingCard = ScriptableObject.CreateInstance<CardDefinition>();
+			AutomaticMovementCardDefinition movingCard = ScriptableObject.CreateInstance<AutomaticMovementCardDefinition>();
 			JsonUtility.FromJsonOverwrite(
 				"{\"m_contentId\":{\"m_value\":\"test.auto-move.retention\"}," +
 				"\"m_automaticMovementRetentionCapacity\":1}",
 				enclosure);
 			JsonUtility.FromJsonOverwrite(
-				"{\"m_contentId\":{\"m_value\":\"test.auto-move.retained-card\"}," +
-				"\"m_automaticMovementIntervalSeconds\":1.0," +
-				"\"m_automaticMovementRadius\":2.0," +
-				"\"m_automaticMovementMaxAttempts\":1}",
+				"{\"m_contentId\":{\"m_value\":\"test.auto-move.retained-card\"}}",
 				movingCard);
 			try
 			{
 				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { enclosure, movingCard });
+				TabletopCardPlacementRules rules = TabletopTestPlacement.CreateRules(1f, 2f, 1);
 				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
 					contentIndex,
-					TabletopTestPlacement.Rules,
+					rules,
 					_ => false,
 					(_, __) => { },
 					_ => { });
@@ -531,7 +747,7 @@ namespace Gameplay.Tests
 				tabletop.MergeStackOnto(retained.Id, bottom.Id);
 				TabletopCardStack original = tabletop.MergeStackOnto(released.Id, bottom.Id);
 
-				tabletop.AdvanceRealTime(1.01f);
+				tabletop.AdvanceRealTime(2.01f);
 
 				TabletopCardStack retainedStack = tabletop.Cards.GetStackContaining(retained.Id);
 				TabletopCardStack releasedStack = tabletop.Cards.GetStackContaining(released.Id);
@@ -552,19 +768,17 @@ namespace Gameplay.Tests
 		[Test]
 		public void AdvanceRealTime_LocalInputHeldCardSkipsAutomaticMovementUntilReleased()
 		{
-			CardDefinition movingCard = ScriptableObject.CreateInstance<CardDefinition>();
+			AutomaticMovementCardDefinition movingCard = ScriptableObject.CreateInstance<AutomaticMovementCardDefinition>();
 			JsonUtility.FromJsonOverwrite(
-				"{\"m_contentId\":{\"m_value\":\"test.auto-move.local-input\"}," +
-				"\"m_automaticMovementIntervalSeconds\":1.0," +
-				"\"m_automaticMovementRadius\":2.0," +
-				"\"m_automaticMovementMaxAttempts\":1}",
+				"{\"m_contentId\":{\"m_value\":\"test.auto-move.local-input\"}}",
 				movingCard);
 			try
 			{
 				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[] { movingCard });
+				TabletopCardPlacementRules rules = TabletopTestPlacement.CreateRules(1f, 2f, 1);
 				Gameplay.Tabletop.Tabletop tabletop = new Gameplay.Tabletop.Tabletop(
 					contentIndex,
-					TabletopTestPlacement.Rules,
+					rules,
 					_ => false,
 					(_, __) => { },
 					_ => { });
@@ -583,7 +797,7 @@ namespace Gameplay.Tests
 
 				Assert.That(tabletop.Cards.GetStackContaining(card.Id).Position, Is.EqualTo(originalPosition));
 
-				tabletop.AdvanceRealTime(0.02f);
+				tabletop.AdvanceRealTime(1.02f);
 
 				Assert.That(tabletop.Cards.GetStackContaining(card.Id).Position, Is.Not.EqualTo(originalPosition));
 			}
@@ -615,6 +829,7 @@ namespace Gameplay.Tests
 					_ => false,
 					(_, __) => { },
 					_ => { });
+				tabletop.InitializeAuthoritativeRandom(12345u);
 				TabletopCard card = tabletop.CreateCard(producer.ContentId, Vector2.zero);
 
 				tabletop.HoldAutomaticBehaviorForLocalInput(card.Id);
@@ -628,7 +843,7 @@ namespace Gameplay.Tests
 
 				Assert.That(CountCards(tabletop, product.ContentId), Is.Zero);
 
-				tabletop.AdvanceRealTime(0.02f);
+				tabletop.AdvanceRealTime(1.02f);
 
 				Assert.That(CountCards(tabletop, product.ContentId), Is.EqualTo(1));
 			}
@@ -661,6 +876,7 @@ namespace Gameplay.Tests
 					_ => false,
 					(_, __) => { },
 					_ => { });
+				tabletop.InitializeAuthoritativeRandom(12345u);
 				List<TabletopPresentationCue> cues = new List<TabletopPresentationCue>();
 				tabletop.PresentationCueRequested += cues.Add;
 				TabletopCard source = tabletop.CreateCard(producer.ContentId, Vector2.zero);
@@ -670,18 +886,89 @@ namespace Gameplay.Tests
 				Assert.That(CountCards(tabletop, product.ContentId), Is.Zero);
 				Assert.That(cues, Is.Empty);
 
-				tabletop.AdvanceRealTime(0.02f);
+				tabletop.AdvanceRealTime(1.02f);
 
 				Assert.That(CountCards(tabletop, product.ContentId), Is.EqualTo(1));
-				Assert.That(cues, Has.Count.EqualTo(1));
-				Assert.That(cues[0].Kind, Is.EqualTo(TabletopPresentationCueKind.CardSmoke));
+				Assert.That(cues, Has.Count.EqualTo(2));
+				Assert.That(cues[0].Kind, Is.EqualTo(TabletopPresentationCueKind.CardSpawn));
+				Assert.That(cues[0].HasCardId, Is.True);
 				Assert.That(cues[0].HasTablePosition, Is.True);
 				Assert.That(cues[0].TablePosition, Is.EqualTo(source.Position));
+				Assert.That(cues[0].UsesDragHeight, Is.False);
+				Assert.That(cues[0].SpawnHeightOffset, Is.Zero);
+				Assert.That(cues[1].Kind, Is.EqualTo(TabletopPresentationCueKind.CardSmoke));
+				Assert.That(cues[1].HasTablePosition, Is.True);
+				Assert.That(cues[1].TablePosition, Is.EqualTo(source.Position));
 			}
 			finally
 			{
 				Object.DestroyImmediate(producer);
 				Object.DestroyImmediate(product);
+			}
+		}
+
+		[Test]
+		public void AdvanceRealTime_ExtraCardInCraftingStackSkipsPeriodicProduction()
+		{
+			CardDefinition material = ScriptableObject.CreateInstance<CardDefinition>();
+			CardDefinition producer = ScriptableObject.CreateInstance<CardDefinition>();
+			CardDefinition product = ScriptableObject.CreateInstance<CardDefinition>();
+			ActionDefinition action = ScriptableObject.CreateInstance<ActionDefinition>();
+			ScenarioRegionDefinition region = ScriptableObject.CreateInstance<ScenarioRegionDefinition>();
+			ScenarioDefinition scenario = ScriptableObject.CreateInstance<ScenarioDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.crafting-extra.material\"}}",
+				material);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.crafting-extra.producer\"}," +
+				"\"m_periodicProductionCardId\":{\"m_value\":\"test.crafting-extra.product\"}," +
+				"\"m_periodicProductionIntervalSeconds\":1.0}",
+				producer);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.crafting-extra.product\"}}",
+				product);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.crafting-extra.action\"}," +
+				"\"m_turnCost\":2,\"m_allowExcessCardsInStack\":true," +
+				"\"m_participationSlots\":[{\"m_key\":\"material\",\"m_minimumParticipants\":1," +
+				"\"m_maximumParticipants\":1,\"m_allowedContentIds\":[{\"m_value\":\"test.crafting-extra.material\"}]}]}",
+				action);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.crafting-extra.region\"}}",
+				region);
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"test.crafting-extra.scenario\"}," +
+				"\"m_initialRegionId\":{\"m_value\":\"test.crafting-extra.region\"}," +
+				"\"m_regionIds\":[{\"m_value\":\"test.crafting-extra.region\"}]}",
+				scenario);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(
+					new ContentAsset[] { material, producer, product, action, region, scenario });
+				ScenarioRun run = new ScenarioRun(scenario, contentIndex, 12345u);
+				run.DiscoverContent(action.ContentId);
+				Gameplay.Tabletop.Tabletop tabletop = run.Tabletop;
+				TabletopCard materialCard = tabletop.CreateCard(material.ContentId, Vector2.zero);
+				TabletopCard producerCard = tabletop.CreateCard(producer.ContentId, Vector2.zero);
+				tabletop.Cards.MergeStackOnto(producerCard.Id, materialCard.Id);
+				TabletopCardStack craftStack = tabletop.Cards.GetStackContaining(materialCard.Id);
+				ActionCandidate[] candidates = run.FindStackActionCandidates(craftStack);
+				Assert.That(candidates, Has.Length.EqualTo(1));
+				run.StartAction(ActionRequest.FromCandidate(candidates[0]));
+
+				tabletop.AdvanceRealTime(1.01f);
+
+				Assert.That(CountCards(tabletop, product.ContentId), Is.Zero);
+				Assert.That(producerCard.PeriodicProductionElapsedSeconds, Is.Zero);
+			}
+			finally
+			{
+				Object.DestroyImmediate(material);
+				Object.DestroyImmediate(producer);
+				Object.DestroyImmediate(product);
+				Object.DestroyImmediate(action);
+				Object.DestroyImmediate(region);
+				Object.DestroyImmediate(scenario);
 			}
 		}
 
@@ -700,6 +987,30 @@ namespace Gameplay.Tests
 				}
 			}
 			return count;
+		}
+
+		private static void InvokeFormalGasBootstrap(string methodName)
+		{
+			Type bootstrapType = typeof(GameCore.GameManager).Assembly.GetType(
+				"GameCore.FormalAbilityRuntimeBootstrap",
+				throwOnError: true);
+			MethodInfo method = bootstrapType.GetMethod(
+				methodName,
+				BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			if (method == null)
+			{
+				throw new InvalidOperationException($"找不到 FormalAbilityRuntimeBootstrap.{methodName}。");
+			}
+			try
+			{
+				method.Invoke(null, null);
+			}
+			catch (TargetInvocationException exception) when (exception.InnerException != null)
+			{
+				throw new InvalidOperationException(
+					$"通过项目正式入口调用 EX-GAS 生命周期 {methodName} 失败。",
+					exception.InnerException);
+			}
 		}
 	}
 }

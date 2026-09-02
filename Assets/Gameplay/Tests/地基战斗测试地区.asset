@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.region.battle
   m_tagCodes:
-  m_displayName: 地基战斗测试地区
-  m_description: 第二阶段组合验收中承接旅行角色与牌桌战斗的第二地区。
+  m_displayName: "\u5730\u57FA\u6218\u6597\u6D4B\u8BD5\u5730\u533A"
+  m_description: "\u7B2C\u4E8C\u9636\u6BB5\u7EC4\u5408\u9A8C\u6536\u4E2D\u627F\u63A5\u65C5\u884C\u89D2\u8272\u4E0E\u724C\u684C\u6218\u6597\u7684\u7B2C\u4E8C\u5730\u533A\u3002"
   m_icon:
     Address:
     Guid:
@@ -115,4 +115,7 @@ MonoBehaviour:
         m_requiredTargetBottomContentTagCodes: f3157a00
         m_requiresSameContent: 0
     m_cardLimitBonusExpansionPerPoint: {x: 0.06, y: 0.04}
+    m_automaticMovementIntervalSeconds: 5
+    m_automaticMovementRadius: 1
+    m_automaticMovementMaxAttempts: 5
   m_arrivalPosition: {x: 0, y: 0}

@@ -26,6 +26,7 @@ function usage() {
     "  node .spec/tools/unity-verify.mjs preflight --mode editor-automation --tool aibridge --fallback",
     "  node .spec/tools/unity-verify.mjs clean-stale-lockfile --confirm-stale-lockfile",
     "  node .spec/tools/unity-verify.mjs batch-test --unity <Unity.exe> --testPlatform <EditMode|PlayMode> --testResults <file> --logFile <file> [--testFilter <name>] [--execute]",
+    "  node .spec/tools/unity-verify.mjs batch-execute --unity <Unity.exe> --executeMethod <Namespace.Type.Method> --logFile <file> --successLog <text> [--execute]",
     "",
     "Rules:",
     "  - UnitySkills is the default editor automation tool.",
@@ -402,6 +403,32 @@ function buildBatchTestCommand() {
   return { unity, unityArgs, testResultsPath };
 }
 
+function buildBatchExecuteCommand() {
+  const unity = readOption("--unity");
+  const executeMethod = readOption("--executeMethod");
+  const logFile = readOption("--logFile");
+  const successLog = readOption("--successLog");
+  if (!unity || !executeMethod || !logFile || !successLog) {
+    console.error(usage());
+    process.exit(1);
+  }
+  if (!/^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*){2,}$/.test(executeMethod)) {
+    fail(`--executeMethod is not a fully qualified static method: ${executeMethod}`);
+  }
+
+  const logFilePath = path.resolve(logFile);
+  const unityArgs = [
+    "-batchmode",
+    "-nographics",
+    "-projectPath", root,
+    "-executeMethod", executeMethod,
+    "-quit",
+    "-logFile", logFilePath,
+  ];
+  assertNoUnsafeUnityArgs(unityArgs);
+  return { unity, unityArgs, logFilePath, successLog };
+}
+
 function assertBatchTestFilterPolicy(testPlatform, testFilter) {
   if (testPlatform !== "PlayMode" || !testFilter) return;
 
@@ -445,6 +472,36 @@ function assertBatchTestReport(testResultsPath, status) {
       "Treat this as a verification-infrastructure failure, not as proof that tests passed.",
     ].join(" "));
   }
+
+  const xml = fs.readFileSync(testResultsPath, "utf8");
+  const testRunMatch = /<test-run\b[^>]*\btotal="(\d+)"/.exec(xml);
+  if (!testRunMatch) {
+    fail([
+      "Unity batch test wrote a results XML without a readable <test-run total=\"...\"> summary.",
+      `Unreadable testResults=${testResultsPath}`,
+      "Treat this as a verification-infrastructure failure, not as proof that tests passed.",
+    ].join(" "));
+  }
+
+  const totalTests = Number(testRunMatch[1]);
+  if (!Number.isFinite(totalTests) || totalTests <= 0) {
+    fail([
+      "Unity batch test wrote a results XML, but no tests were executed.",
+      `Zero-test testResults=${testResultsPath}`,
+      "Treat this as a verification-infrastructure failure; check the test filter instead of counting this as validation.",
+    ].join(" "));
+  }
+}
+
+function assertBatchExecuteLog(logFilePath, successLog, status) {
+  if (status !== 0) return;
+  if (!fs.existsSync(logFilePath)) {
+    fail(`Unity batch execute exited with code 0, but did not write the requested log: ${logFilePath}`);
+  }
+  const log = fs.readFileSync(logFilePath, "utf8");
+  if (!log.includes(successLog)) {
+    fail(`Unity batch execute log is missing the required success marker: ${successLog}`);
+  }
 }
 
 if (command === "help" || hasFlag("--help")) {
@@ -482,6 +539,20 @@ if (command === "batch-test") {
   const result = spawnSync(unity, unityArgs, { cwd: root, stdio: "inherit" });
   const status = result.status ?? 1;
   assertBatchTestReport(testResultsPath, status);
+  process.exit(status);
+}
+
+if (command === "batch-execute") {
+  const { unity, unityArgs, logFilePath, successLog } = buildBatchExecuteCommand();
+  assertPreflight("batch");
+  console.log([unity, ...unityArgs.map((arg) => arg.includes(" ") ? `"${arg}"` : arg)].join(" "));
+  if (!hasFlag("--execute")) {
+    console.log("DRY RUN: add --execute to run Unity.");
+    process.exit(0);
+  }
+  const result = spawnSync(unity, unityArgs, { cwd: root, stdio: "inherit" });
+  const status = result.status ?? 1;
+  assertBatchExecuteLog(logFilePath, successLog, status);
   process.exit(status);
 }
 

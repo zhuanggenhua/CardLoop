@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using DG.Tweening;
+using GAS.Runtime;
 using GameCore;
 using Gameplay.Content;
 using Sirenix.OdinInspector;
@@ -107,6 +109,11 @@ namespace Gameplay.Tabletop
 		private GameObject m_characterStatusRoot;
 
 		[SerializeField]
+		[LabelText("装备面板节点")]
+		[Tooltip("StackCraft 只有玩家角色卡 Prefab 带装备面板；当前合成卡牌 Prefab 必须按卡牌类别标签显隐，避免普通卡和怪物卡额外参与物理命中。")]
+		private GameObject m_equipmentPanelRoot;
+
+		[SerializeField]
 		[LabelText("生命文本")]
 		[Tooltip("直接显示角色唯一 EX-GAS Health/MaxHealth 当前值。")]
 		private TMP_Text m_healthLabel;
@@ -185,7 +192,7 @@ namespace Gameplay.Tabletop
 
 		private float m_surfaceFlashAmount;
 
-		private Sprite m_displayedArtwork;
+		private Texture2D m_displayedArtwork;
 
 		private MaterialPropertyBlock m_cardBuyerCurrencyIconPropertyBlock;
 
@@ -200,9 +207,12 @@ namespace Gameplay.Tabletop
 		public bool DisplaysCharacterStatus =>
 			m_characterStatusRoot != null && m_characterStatusRoot.activeSelf;
 
+		public bool DisplaysEquipmentPanel =>
+			m_equipmentPanelRoot != null && m_equipmentPanelRoot.activeSelf;
+
 		public string DisplayedHealthText => m_healthLabel == null ? string.Empty : m_healthLabel.text;
 
-		public Sprite DisplayedArtwork => m_displayedArtwork;
+		public Texture2D DisplayedArtwork => m_displayedArtwork;
 
 		public bool DisplaysArtwork => DisplayedArtwork != null;
 
@@ -221,23 +231,6 @@ namespace Gameplay.Tabletop
 
 		/// <summary>当前卡牌表现的基础排序值，供附着在此卡牌上的纯表现元素对齐层级。</summary>
 		public int SortingOrder { get; private set; }
-
-		/// <summary>
-		/// 计算牌桌平面上一点到当前可见卡面矩形的最短距离，用于对齐 StackCraft 的 AttachRadius 目标吸附。
-		/// </summary>
-		internal float DistanceToVisibleFootprint(Vector2 tablePosition)
-		{
-			if (!float.IsFinite(tablePosition.x) || !float.IsFinite(tablePosition.y))
-			{
-				throw new ArgumentException("牌桌命中位置必须是有限坐标。", nameof(tablePosition));
-			}
-
-			Vector2 center = TabletopCoordinateSpace.ToTablePosition(transform.localPosition);
-			Vector2 halfSize = m_appliedCardSize * 0.5f;
-			float dx = Math.Max(Math.Abs(tablePosition.x - center.x) - halfSize.x, 0f);
-			float dy = Math.Max(Math.Abs(tablePosition.y - center.y) - halfSize.y, 0f);
-			return Mathf.Sqrt(dx * dx + dy * dy);
-		}
 
 		private void Awake()
 		{
@@ -269,10 +262,41 @@ namespace Gameplay.Tabletop
 			m_presentationHighlightRemainingSeconds = 0f;
 			ApplyHighlightVisibility();
 			HideCardBuyerCurrencyIcon();
+			ApplyEquipmentPanelVisibility(contentAsset);
 			ApplySurfaceMeshForContent(contentAsset);
 			RefreshSurfaceText();
 			ApplyCardPackInstanceSurface();
 			BindCharacterStatus(tabletopCard as CharacterCard);
+		}
+
+		private void ApplyEquipmentPanelVisibility(CardDefinition contentAsset)
+		{
+			bool shouldShowEquipmentPanel = HasExactContentTagCode(
+				contentAsset,
+				XTag.Card_Category_Character);
+			if (m_equipmentPanelRoot == null)
+			{
+				if (shouldShowEquipmentPanel)
+				{
+					throw new InvalidOperationException("卡牌视图预制体缺少角色装备面板节点，无法对齐 StackCraft 玩家角色卡。");
+				}
+				return;
+			}
+
+			m_equipmentPanelRoot.SetActive(shouldShowEquipmentPanel);
+		}
+
+		private static bool HasExactContentTagCode(ContentAsset contentAsset, int tagCode)
+		{
+			IReadOnlyList<int> tagCodes = contentAsset.TagCodes;
+			for (int tagIndex = 0; tagIndex < tagCodes.Count; tagIndex++)
+			{
+				if (tagCodes[tagIndex] == tagCode)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		private void ApplySurfaceMeshForContent(CardDefinition contentAsset)
@@ -326,6 +350,13 @@ namespace Gameplay.Tabletop
 		{
 			if (characterCard == null)
 			{
+				m_characterCard = null;
+				m_displayedHealth = float.NaN;
+				m_displayedMaxHealth = float.NaN;
+				if (m_healthLabel != null)
+				{
+					m_healthLabel.text = string.Empty;
+				}
 				if (m_characterStatusRoot != null)
 				{
 					m_characterStatusRoot.SetActive(false);
@@ -457,7 +488,7 @@ namespace Gameplay.Tabletop
 		/// <summary>
 		/// 用 StackCraft CardBuyer 表面语义覆盖普通卡面：根材质显示交易区，标题显示出售，子图标显示货币。
 		/// </summary>
-		public void ApplyCardBuyerSurface(Sprite currencyArtwork)
+		public void ApplyCardBuyerSurface(Texture2D currencyArtwork)
 		{
 			if (currencyArtwork == null)
 			{
@@ -483,7 +514,7 @@ namespace Gameplay.Tabletop
 			m_cardBuyerCurrencyIconRenderer.GetPropertyBlock(m_cardBuyerCurrencyIconPropertyBlock);
 			m_cardBuyerCurrencyIconPropertyBlock.SetTexture(
 				Shader.PropertyToID(m_cardBuyerCurrencyTextureProperty),
-				currencyArtwork.texture);
+				currencyArtwork);
 			m_cardBuyerCurrencyIconRenderer.SetPropertyBlock(m_cardBuyerCurrencyIconPropertyBlock);
 			m_cardBuyerCurrencyIconRenderer.gameObject.SetActive(true);
 		}
@@ -698,7 +729,7 @@ namespace Gameplay.Tabletop
 			throw new InvalidOperationException("卡牌视图缺少可回读的未缩放 StackCraft 卡牌本体尺寸，无法把作者源尺寸投影到可见表面。");
 		}
 
-		public void ApplyPose(TabletopCardPose pose, float durationSeconds)
+		public void ApplyPose(TabletopCardPose pose, float durationSeconds, Ease moveEase)
 		{
 			m_isFollowingDragTarget = false;
 			ApplySortingOrder(pose.SortingOrder);
@@ -706,14 +737,14 @@ namespace Gameplay.Tabletop
 			{
 				CancelMoveTween();
 				base.transform.localPosition = pose.LocalPosition;
-				SyncPhysicsTransformsWhenPaused();
+				SyncPhysicsTransformsAfterImmediatePose();
 				return;
 			}
 
 			CancelMoveTween();
 			Tween moveTween = transform
 				.DOLocalMove(pose.LocalPosition, durationSeconds)
-				.SetEase(Ease.OutQuad)
+				.SetEase(moveEase)
 				.SetUpdate(true)
 				.SetTarget(this)
 				.SetLink(gameObject, LinkBehaviour.KillOnDisable);
@@ -745,7 +776,7 @@ namespace Gameplay.Tabletop
 			{
 				m_isFollowingDragTarget = false;
 				base.transform.localPosition = pose.LocalPosition;
-				SyncPhysicsTransformsWhenPaused();
+				SyncPhysicsTransformsAfterImmediatePose();
 			}
 			else
 			{
@@ -755,7 +786,7 @@ namespace Gameplay.Tabletop
 			}
 		}
 
-		public void SetArtwork(Sprite artwork)
+		public void SetArtwork(Texture2D artwork)
 		{
 			m_displayedArtwork = artwork;
 			if (artwork == null)
@@ -773,7 +804,7 @@ namespace Gameplay.Tabletop
 			Material material = m_surfaceRenderer.sharedMaterial;
 			if (!(material == null) && material.HasProperty(m_surfaceTextureProperty))
 			{
-				SetSurfaceTexture(m_surfaceTextureProperty, artwork.texture);
+				SetSurfaceTexture(m_surfaceTextureProperty, artwork);
 				return;
 			}
 			throw new InvalidOperationException(
@@ -852,12 +883,10 @@ namespace Gameplay.Tabletop
 			}
 		}
 
-		private static void SyncPhysicsTransformsWhenPaused()
+		private static void SyncPhysicsTransformsAfterImmediatePose()
 		{
-			if (Time.timeScale == 0f)
-			{
-				Physics.SyncTransforms();
-			}
+			// 当前项目关闭了 Physics auto sync；即时写入卡牌 Transform 后，后续射线和吸附必须命中当前画面位置。
+			Physics.SyncTransforms();
 		}
 
 		public void PlayHurtFeedback()
@@ -934,8 +963,11 @@ namespace Gameplay.Tabletop
 			if (m_isFollowingDragTarget)
 			{
 				float interpolation = 1f - Mathf.Exp((0f - m_dragFollowSharpness) * Time.unscaledDeltaTime);
-				base.transform.localPosition = Vector3.Lerp(base.transform.localPosition, m_dragTargetLocalPosition, interpolation);
-				if ((base.transform.localPosition - m_dragTargetLocalPosition).sqrMagnitude <= 1E-06f)
+				base.transform.localPosition = Vector3.LerpUnclamped(
+					base.transform.localPosition,
+					m_dragTargetLocalPosition,
+					interpolation);
+				if ((base.transform.localPosition - m_dragTargetLocalPosition).sqrMagnitude < 0.0001f)
 				{
 					base.transform.localPosition = m_dragTargetLocalPosition;
 					m_isFollowingDragTarget = false;
@@ -975,29 +1007,29 @@ namespace Gameplay.Tabletop
 				{
 					if (m_characterStatusRenderers[i] != null)
 					{
-						m_characterStatusRenderers[i].sortingOrder = sortingOrder + 1;
+						m_characterStatusRenderers[i].sortingOrder = sortingOrder;
 					}
 				}
 			}
 			if (m_cardBuyerCurrencyIconRenderer != null)
 			{
-				m_cardBuyerCurrencyIconRenderer.sortingOrder = sortingOrder + 1;
+				m_cardBuyerCurrencyIconRenderer.sortingOrder = sortingOrder;
 			}
 			if (m_healthLabel != null)
 			{
-				m_healthLabel.GetComponent<Renderer>().sortingOrder = sortingOrder + 1;
+				m_healthLabel.GetComponent<Renderer>().sortingOrder = sortingOrder;
 			}
 			if (m_titleLabel != null)
 			{
-				m_titleLabel.GetComponent<Renderer>().sortingOrder = sortingOrder + 2;
+				m_titleLabel.GetComponent<Renderer>().sortingOrder = sortingOrder;
 			}
 			if (m_priceLabel != null)
 			{
-				m_priceLabel.GetComponent<Renderer>().sortingOrder = sortingOrder + 2;
+				m_priceLabel.GetComponent<Renderer>().sortingOrder = sortingOrder;
 			}
 			if (m_nutritionLabel != null)
 			{
-				m_nutritionLabel.GetComponent<Renderer>().sortingOrder = sortingOrder + 2;
+				m_nutritionLabel.GetComponent<Renderer>().sortingOrder = sortingOrder;
 			}
 		}
 

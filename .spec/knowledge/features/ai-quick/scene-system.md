@@ -6,7 +6,6 @@ metadata:
   role: project-reference
   source: official-entry + project-source
   status: 已交付
-  verified_at: 2026-08-11
   update_triggers: yokiframe-version-change, scene-lifecycle-change, resource-package-change, map-transition-change
 ---
 
@@ -28,13 +27,19 @@ metadata:
 
 ## 当前流程
 
-`SceneSystem` 串行执行：开始过场 -> 淡出 -> 发送场景卸载 / 加载事实 -> `SceneKit` 以 `Single` 模式加载目标场景 -> 淡入 -> 发布成功并结束过场。StackCraft 的切换时序被吸收，固定场景名和直接 `SceneManager.LoadScene*` 没有进入正式链路。
+`SceneSystem` 串行执行：开始过场 -> 淡出 -> 发送场景卸载 / 加载事实 -> `SceneKit` 以 `Single` 模式加载目标场景 -> 淡入 -> 发布成功并结束过场。固定场景名和直接 `SceneManager.LoadScene*` 不进入正式链路。
 
 开始剧本时，`ScenarioDirector` 先解析内容和剧本定义；若 `InitialSceneAddress` 非空，则等待 `SceneSystem` 完成切换，之后才创建并发布 `ScenarioRun`。结束剧本时先让旧局失效并释放本局内容句柄，再通过同一个 `SceneSystem` 返回来源场景。剧本内旅行仍是后续模块，不由 `MapSystem` 或另一个 Gameplay 场景包装提前接管。
 
 剧本的空初始场景地址表示“在当前场景运行”，不会被解释成卸载最后一张场景。场景地址只是 YooAsset 资源定位，不是 Gameplay 内容 ID。
 
 `GameManager` 是 `DontDestroyOnLoad` 的唯一进程宿主。由 `SceneSystem` 加载的普通剧本场景和返回场景不得再配置第二个 `GameManager`；进程宿主场景也不能被当作普通剧本场景重复装入。
+
+## CardLoop 当前测试场景
+
+`Assets/Scenes/地基测试.unity` 是综合地基回归入口，覆盖当前已接入的牌桌、内容、行动和场景生命周期；专项测试场景只验证自己的入口职责，不作为第二套正式游戏入口。`Assets/Scenes/地基标题测试.unity` 只验证标题入口，`Assets/Scenes/地基地图测试.unity` 和 `Assets/Scenes/地基第二地图测试.unity` 只验证地区切换与两张地图场景。
+
+这些场景是职责隔离，不是多套场景管理器，也不是多套正式游戏入口；它们都由同一个 `SceneSystem` 和同一个 `ResourceSystem` 管理。`Assets/Scenes/SampleScene.unity` 是 Unity 默认示例，`Assets/Settings/Scenes/URP2DSceneTemplate.unity` 是设置模板，二者不属于 CardLoop 测试场景集合，保留原名。
 
 Mod 包卸载前必须先切离由该包提供的活动场景；`ResourceSystem` 会拒绝销毁仍被 SceneKit 使用的包，避免场景还在运行时资源包已经消失。
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GAS.General;
 using GAS.Runtime;
 using Gameplay.Content;
 using Gameplay.Tabletop;
@@ -51,12 +52,15 @@ namespace Gameplay.Tabletop.Actions
 	/// </summary>
 	internal static class ActionResultSettlement
 	{
+		private const float StackCraftPackSpawnHeightOffset = 0.1f;
+
 		internal static ActionResultPlan Compile(
 			ActionDefinition action,
 			ActionCandidate candidate,
 			string resultBranchKey,
 			ContentIndex contentIndex,
 			TabletopCards cards,
+			TabletopCardPlacementRules placementRules,
 			Func<ContentId, bool> isContentDiscovered,
 			ref Unity.Mathematics.Random authoritativeRandom)
 		{
@@ -75,6 +79,10 @@ namespace Gameplay.Tabletop.Actions
 			if (cards == null)
 			{
 				throw new ArgumentNullException(nameof(cards));
+			}
+			if (placementRules == null)
+			{
+				throw new ArgumentNullException(nameof(placementRules));
 			}
 			if (isContentDiscovered == null)
 			{
@@ -99,14 +107,14 @@ namespace Gameplay.Tabletop.Actions
 			HashSet<TabletopCardId> exploredCardSet = new HashSet<TabletopCardId>();
 			for (int i = 0; i < action.ResultIntents.Count; i++)
 			{
-				AddIntent(action, candidate.Bindings, action.ResultIntents[i], contentIndex, cards, isContentDiscovered, ref authoritativeRandom, removals, removalSet, uses, useSet, creations, researchDiscoveries, packPurchases, chestCurrencyChanges, equipCards, unequipCards, soldContentIds, exploredContentIds, exploredCardSet);
+				AddIntent(action, candidate.Bindings, action.ResultIntents[i], contentIndex, cards, placementRules, isContentDiscovered, ref authoritativeRandom, removals, removalSet, uses, useSet, creations, researchDiscoveries, packPurchases, chestCurrencyChanges, equipCards, unequipCards, soldContentIds, exploredContentIds, exploredCardSet);
 			}
 			if (action.ResultBranches.Count > 0)
 			{
 				ActionResultBranchDefinition branch = FindBranch(action, resultBranchKey);
 				for (int j = 0; j < branch.ResultIntents.Count; j++)
 				{
-					AddIntent(action, candidate.Bindings, branch.ResultIntents[j], contentIndex, cards, isContentDiscovered, ref authoritativeRandom, removals, removalSet, uses, useSet, creations, researchDiscoveries, packPurchases, chestCurrencyChanges, equipCards, unequipCards, soldContentIds, exploredContentIds, exploredCardSet);
+					AddIntent(action, candidate.Bindings, branch.ResultIntents[j], contentIndex, cards, placementRules, isContentDiscovered, ref authoritativeRandom, removals, removalSet, uses, useSet, creations, researchDiscoveries, packPurchases, chestCurrencyChanges, equipCards, unequipCards, soldContentIds, exploredContentIds, exploredCardSet);
 				}
 			}
 			return new ActionResultPlan(removals, uses, creations, researchDiscoveries, packPurchases, chestCurrencyChanges, equipCards, unequipCards, soldContentIds, exploredContentIds);
@@ -244,7 +252,9 @@ namespace Gameplay.Tabletop.Actions
 			}
 			TabletopCards cards = tabletop.Cards;
 			ActionResultPlan plan = action.ResultPlan;
-			List<TabletopCardCreationRequest> creations = new List<TabletopCardCreationRequest>(
+			List<TabletopCardCreationRequest> preUseCreations = new List<TabletopCardCreationRequest>(
+				plan.TotalCreationCount + plan.ResearchDiscoveries.Count);
+			List<TabletopCardCreationRequest> postUseCreations = new List<TabletopCardCreationRequest>(
 				plan.TotalCreationCount + plan.ResearchDiscoveries.Count);
 			List<ContentId> discoveries = new List<ContentId>(plan.ResearchDiscoveries.Count);
 			List<ContentId> createdCardIds = new List<ContentId>();
@@ -290,23 +300,15 @@ namespace Gameplay.Tabletop.Actions
 				}
 				TabletopCardStack anchorStack = cards.GetStackContaining(creation.AnchorCardId);
 				Vector2 creationPosition = anchorStack.Position + creation.PositionOffset;
-				if (creation.CreateAsSingleStack)
-				{
-					creations.Add(new TabletopCardCreationRequest(
-						creation.ContentId,
-						creation.Count,
-						creationPosition,
-						anchorStack.BottomCard.Id));
-					continue;
-				}
-				for (int creationIndex = 0; creationIndex < creation.Count; creationIndex++)
-				{
-					creations.Add(new TabletopCardCreationRequest(
-						creation.ContentId,
-						1,
-						creationPosition,
-						anchorStack.BottomCard.Id));
-				}
+				AddCreationRequests(
+					creation,
+					creationPosition,
+					anchorStack.BottomCard.Id,
+					ShouldCreateBeforeUsingAnchor(plan.UseCardIds, creation.AnchorCardId),
+					creation.SpawnPresentationHeightOffset,
+					creation.UseDragHeightForSpawn,
+					preUseCreations,
+					postUseCreations);
 				if (!isContentDiscovered(creation.ContentId) && plannedDiscoveries.Add(creation.ContentId))
 				{
 					discoveries.Add(creation.ContentId);
@@ -340,11 +342,18 @@ namespace Gameplay.Tabletop.Actions
 				}
 				ResearchDiscoveryEntrySpec selected = available[authoritativeRandom.NextInt(available.Count)];
 				TabletopCardStack anchorStack = cards.GetStackContaining(research.AnchorCardId);
-				creations.Add(new TabletopCardCreationRequest(
+				AddCreationRequest(
 					selected.RecipeCardId,
 					1,
 					anchorStack.Position,
-					anchorStack.BottomCard.Id));
+					anchorStack.BottomCard.Id,
+					ShouldCreateBeforeUsingAnchor(plan.UseCardIds, research.AnchorCardId),
+					research.AnchorCardId,
+					research.AllowAnchorStackSpawnAttach,
+					research.SpawnPresentationHeightOffset,
+					research.UseDragHeightForSpawn,
+					preUseCreations,
+					postUseCreations);
 				plannedDiscoveries.Add(selected.ActionId);
 				discoveries.Add(selected.ActionId);
 				if (!isContentDiscovered(selected.RecipeCardId) && plannedDiscoveries.Add(selected.RecipeCardId))
@@ -368,10 +377,20 @@ namespace Gameplay.Tabletop.Actions
 			{
 				RequireUnequipCardCanCommit(action.ActionId, tabletop, plan.UnequipCards[unequipIndex]);
 			}
+			if (preUseCreations.Count > 0)
+			{
+				tabletop.RequireCardChangesCanBeCommitted(
+					Array.Empty<TabletopCardId>(),
+					preUseCreations,
+					Array.Empty<TabletopCardRestorationRequest>(),
+					requirePlacementConverged: false);
+			}
 			tabletop.RequireCardChangesCanBeCommitted(
 				effectiveRemovals,
-				creations,
-				restorations);
+				postUseCreations,
+				restorations,
+				requirePlacementConverged: postUseCreations.Count == 0);
+			CreateCardStacks(tabletop, preUseCreations, createdCardIds);
 			for (int equipIndex = 0; equipIndex < plan.EquipCards.Count; equipIndex++)
 			{
 				EquipCardSpec equip = plan.EquipCards[equipIndex];
@@ -438,20 +457,7 @@ namespace Gameplay.Tabletop.Actions
 				TabletopCardRestorationRequest restoration = restorations[restoreIndex];
 				tabletop.RestoreCardSnapshot(restoration.Snapshot, restoration.Position);
 			}
-			for (int l = 0; l < creations.Count; l++)
-			{
-				TabletopCardCreationRequest creation2 = creations[l];
-				tabletop.CreateCardStack(
-					creation2.ContentId,
-					creation2.Count,
-					creation2.Position,
-					allowSpawnAttach: true,
-					spawnAttachIgnoredStackCardId: creation2.SpawnAttachIgnoredStackCardId);
-				for (int createdIndex = 0; createdIndex < creation2.Count; createdIndex++)
-				{
-					createdCardIds.Add(creation2.ContentId);
-				}
-			}
+			CreateCardStacks(tabletop, postUseCreations, createdCardIds);
 			return new ActionSettlementResult(
 				discoveries,
 				exploredContentIds,
@@ -460,6 +466,126 @@ namespace Gameplay.Tabletop.Actions
 				soldContentIds,
 				equippedCardIds,
 				presentationCues);
+		}
+
+		private static void AddCreationRequests(
+			CardCreationSpec creation,
+			Vector2 creationPosition,
+			TabletopCardId anchorStackBottomCardId,
+			bool createBeforeCardUse,
+			float spawnPresentationHeightOffset,
+			bool useDragHeightForSpawn,
+			List<TabletopCardCreationRequest> preUseCreations,
+			List<TabletopCardCreationRequest> postUseCreations)
+		{
+			if (creation.CreateAsSingleStack)
+			{
+				AddCreationRequest(
+					creation.ContentId,
+					creation.Count,
+					creationPosition,
+					anchorStackBottomCardId,
+					createBeforeCardUse,
+					creation.AnchorCardId,
+					creation.AllowAnchorStackSpawnAttach,
+					spawnPresentationHeightOffset,
+					creation.UseDragHeightForSpawn,
+					preUseCreations,
+					postUseCreations);
+				return;
+			}
+
+			for (int creationIndex = 0; creationIndex < creation.Count; creationIndex++)
+			{
+				AddCreationRequest(
+					creation.ContentId,
+					1,
+					creationPosition,
+					anchorStackBottomCardId,
+					createBeforeCardUse,
+					creation.AnchorCardId,
+					creation.AllowAnchorStackSpawnAttach,
+					spawnPresentationHeightOffset,
+					creation.UseDragHeightForSpawn,
+					preUseCreations,
+					postUseCreations);
+			}
+		}
+
+		private static void AddCreationRequest(
+			ContentId contentId,
+			int count,
+			Vector2 position,
+			TabletopCardId anchorStackBottomCardId,
+			bool createBeforeCardUse,
+			TabletopCardId anchorCardId,
+			bool allowAnchorStackSpawnAttach,
+			float spawnPresentationHeightOffset,
+			bool useDragHeightForSpawn,
+			List<TabletopCardCreationRequest> preUseCreations,
+			List<TabletopCardCreationRequest> postUseCreations)
+		{
+			if (createBeforeCardUse)
+			{
+				preUseCreations.Add(new TabletopCardCreationRequest(
+					contentId,
+					count,
+					position,
+					placementLockedStackCardId: anchorCardId,
+					spawnPresentationHeightOffset: spawnPresentationHeightOffset,
+					spawnPresentationOriginCardId: useDragHeightForSpawn ? anchorCardId : default,
+					useDragHeightForSpawn: useDragHeightForSpawn));
+				return;
+			}
+
+			TabletopCardId spawnAttachIgnoredStackCardId =
+				allowAnchorStackSpawnAttach ? default : anchorStackBottomCardId;
+			postUseCreations.Add(new TabletopCardCreationRequest(
+				contentId,
+				count,
+				position,
+				spawnAttachIgnoredStackCardId: spawnAttachIgnoredStackCardId,
+				spawnPresentationHeightOffset: spawnPresentationHeightOffset,
+				useDragHeightForSpawn: useDragHeightForSpawn));
+		}
+
+		private static bool ShouldCreateBeforeUsingAnchor(
+			IReadOnlyList<TabletopCardId> useCardIds,
+			TabletopCardId anchorCardId)
+		{
+			for (int useIndex = 0; useIndex < useCardIds.Count; useIndex++)
+			{
+				if (useCardIds[useIndex] == anchorCardId)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private static void CreateCardStacks(
+			Gameplay.Tabletop.Tabletop tabletop,
+			IReadOnlyList<TabletopCardCreationRequest> creations,
+			List<ContentId> createdCardIds)
+		{
+			for (int creationIndex = 0; creationIndex < creations.Count; creationIndex++)
+			{
+				TabletopCardCreationRequest creation = creations[creationIndex];
+				tabletop.CreateCardStack(
+					creation.ContentId,
+					creation.Count,
+				creation.Position,
+				allowSpawnAttach: true,
+				spawnAttachIgnoredStackCardId: creation.SpawnAttachIgnoredStackCardId,
+				placementLockedStackCardId: creation.PlacementLockedStackCardId,
+				spawnPresentationHeightOffset: creation.SpawnPresentationHeightOffset,
+				spawnPresentationOriginCardId: creation.SpawnPresentationOriginCardId,
+				useDragHeightForSpawn: creation.UseDragHeightForSpawn);
+				for (int createdIndex = 0; createdIndex < creation.Count; createdIndex++)
+				{
+					createdCardIds.Add(creation.ContentId);
+				}
+			}
 		}
 
 		private static List<TabletopPresentationCue> CreatePresentationCues(
@@ -627,12 +753,95 @@ namespace Gameplay.Tabletop.Actions
 			}
 		}
 
+		private static void AddExplorationLoot(
+			ActionDefinition action,
+			IReadOnlyList<ActionSlotBinding> bindings,
+			ExploreLootResultIntent intent,
+			ContentIndex contentIndex,
+			TabletopCards cards,
+			ref Unity.Mathematics.Random authoritativeRandom,
+			List<CardCreationSpec> creations)
+		{
+			if (authoritativeRandom.state == 0u)
+			{
+				throw new InvalidOperationException(
+					$"探索行动 {action.ContentId} 需要牌桌权威随机流，但随机流尚未初始化。");
+			}
+
+			string areaSlotKey = ResolveResultSlotKey(action, intent.AreaSlotKey, "探索区域");
+			ActionSlotBinding areaBinding = FindBinding(action.ContentId, bindings, areaSlotKey);
+			for (int cardIndex = 0; cardIndex < areaBinding.CardIds.Count; cardIndex++)
+			{
+				TabletopCardId areaCardId = areaBinding.CardIds[cardIndex];
+				if (!cards.TryGetCard(areaCardId, out TabletopCard areaCard) ||
+					!contentIndex.TryGet(areaCard.ContentId, out CardDefinition areaDefinition) ||
+					!HasContentTag(areaDefinition, XTag.Card_Category_Area) ||
+					areaDefinition.Loot.Count == 0)
+				{
+					continue;
+				}
+
+				int totalWeight = 0;
+				for (int lootIndex = 0; lootIndex < areaDefinition.Loot.Count; lootIndex++)
+				{
+					CardLootEntry entry = areaDefinition.Loot[lootIndex]
+						?? throw new InvalidOperationException(
+							$"区域卡 {areaDefinition.ContentId} 的探索产出包含空条目。");
+					if (entry.Weight <= 0 ||
+						!contentIndex.TryGet(entry.CardId, out CardDefinition _))
+					{
+						throw new InvalidOperationException(
+							$"区域卡 {areaDefinition.ContentId} 的探索产出 {entry.CardId} 或权重无效。");
+					}
+					totalWeight = checked(totalWeight + entry.Weight);
+				}
+
+				if (totalWeight <= 0)
+				{
+					throw new InvalidOperationException(
+						$"区域卡 {areaDefinition.ContentId} 没有可抽取的探索产出。");
+				}
+
+				int roll = authoritativeRandom.NextInt(totalWeight);
+				for (int lootIndex = 0; lootIndex < areaDefinition.Loot.Count; lootIndex++)
+				{
+					CardLootEntry entry = areaDefinition.Loot[lootIndex];
+					if (roll < entry.Weight)
+					{
+						creations.Add(new CardCreationSpec(
+							entry.CardId,
+							1,
+							areaCardId,
+							allowAnchorStackSpawnAttach: true));
+						return;
+					}
+					roll -= entry.Weight;
+				}
+				throw new InvalidOperationException(
+					$"区域卡 {areaDefinition.ContentId} 的探索产出权重抽取没有命中任何条目。");
+			}
+		}
+
+		private static bool HasContentTag(ContentAsset contentAsset, int tagCode)
+		{
+			IReadOnlyList<int> tagCodes = contentAsset.TagCodes;
+			for (int i = 0; i < tagCodes.Count; i++)
+			{
+				if (TagHelper.HasTag(tagCodes[i], tagCode))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		private static void AddIntent(
 			ActionDefinition action,
 			IReadOnlyList<ActionSlotBinding> bindings,
 			ActionResultIntent intent,
 			ContentIndex contentIndex,
 			TabletopCards cards,
+			TabletopCardPlacementRules placementRules,
 			Func<ContentId, bool> isContentDiscovered,
 			ref Unity.Mathematics.Random authoritativeRandom,
 			List<TabletopCardId> removals,
@@ -659,6 +868,18 @@ namespace Gameplay.Tabletop.Actions
 					cards,
 					exploredContentIds,
 					exploredCardSet);
+				return;
+			}
+			if (intent is ExploreLootResultIntent exploreLootIntent)
+			{
+				AddExplorationLoot(
+					action,
+					bindings,
+					exploreLootIntent,
+					contentIndex,
+					cards,
+					ref authoritativeRandom,
+					creations);
 				return;
 			}
 			if (intent is EquipCardResultIntent equipIntent)
@@ -743,6 +964,7 @@ namespace Gameplay.Tabletop.Actions
 					withdrawIntent,
 					contentIndex,
 					cards,
+					placementRules,
 					creations,
 					chestCurrencyChanges);
 				return;
@@ -1178,28 +1400,58 @@ namespace Gameplay.Tabletop.Actions
 			ChestCard chest = RequireBoundChest(action, cards, chestBinding, "存币");
 			ChestCardDefinition chestDefinition = RequireChestDefinition(action, contentIndex, chest);
 			int currentStored = GetPlannedChestStoredCurrencyCount(chest, chestCurrencyChanges);
-			int depositAmount = Math.Min(currencyBinding.CardIds.Count, chest.Capacity - currentStored);
+			TabletopCardStack sourceStack = RequireStackCraftDepositSourceStack(
+				action,
+				cards,
+				currencyBinding,
+				chest);
+			int remainingCapacity = chest.Capacity - currentStored;
+			int depositAmount = 0;
+			for (int i = 0; i < sourceStack.Cards.Count && depositAmount < remainingCapacity; i++)
+			{
+				TabletopCard currencyCard = sourceStack.Cards[i];
+				if (currencyCard.ContentId != chestDefinition.CurrencyCardId)
+				{
+					continue;
+				}
+				TabletopCardId currencyCardId = currencyCard.Id;
+				if (currencyCardId == chest.Id || useSet.Contains(currencyCardId) || !removalSet.Add(currencyCardId))
+				{
+					throw new InvalidOperationException($"箱子存币行动 {action.ContentId} 重复修改存入货币卡 {currencyCardId}。");
+				}
+				removals.Add(currencyCardId);
+				depositAmount++;
+			}
 			if (depositAmount <= 0)
 			{
 				throw new InvalidOperationException($"箱子存币行动 {action.ContentId} 没有可存入的容量或货币。");
 			}
 
-			for (int i = 0; i < depositAmount; i++)
-			{
-				TabletopCardId currencyCardId = currencyBinding.CardIds[i];
-				if (currencyCardId == chest.Id || useSet.Contains(currencyCardId) || !removalSet.Add(currencyCardId))
-				{
-					throw new InvalidOperationException($"箱子存币行动 {action.ContentId} 重复修改存入货币卡 {currencyCardId}。");
-				}
-				if (!cards.TryGetCard(currencyCardId, out TabletopCard currencyCard) ||
-					currencyCard.ContentId != chestDefinition.CurrencyCardId)
-				{
-					throw new InvalidOperationException(
-						$"箱子存币行动 {action.ContentId} 只能存入箱子 {chest.ContentId} 声明的货币 {chestDefinition.CurrencyCardId}。");
-				}
-				removals.Add(currencyCardId);
-			}
 			AddChestCurrencyChange(chestCurrencyChanges, chest, depositAmount);
+		}
+
+		private static TabletopCardStack RequireStackCraftDepositSourceStack(
+			ActionDefinition action,
+			TabletopCards cards,
+			ActionSlotBinding currencyBinding,
+			ChestCard chest)
+		{
+			if (currencyBinding.CardIds.Count <= 0)
+			{
+				throw new InvalidOperationException($"箱子存币行动 {action.ContentId} 必须绑定拖拽牌堆顶端货币。");
+			}
+			TabletopCardId currencyAnchorCardId = currencyBinding.CardIds[0];
+			TabletopCardStack sourceStack = cards.GetStackContaining(currencyAnchorCardId);
+			if (ReferenceEquals(sourceStack, chest.Stack))
+			{
+				throw new InvalidOperationException($"箱子存币行动 {action.ContentId} 的货币牌堆和钱箱目标不能是同一个牌堆。");
+			}
+			if (sourceStack.TopCard.Id != currencyAnchorCardId)
+			{
+				throw new InvalidOperationException(
+					$"箱子存币行动 {action.ContentId} 必须从拖拽牌堆顶端货币开始，对齐 StackCraft ChestLogic.OnStack。");
+			}
+			return sourceStack;
 		}
 
 		private static void AddChestWithdrawal(
@@ -1208,6 +1460,7 @@ namespace Gameplay.Tabletop.Actions
 			WithdrawCurrencyFromChestResultIntent intent,
 			ContentIndex contentIndex,
 			TabletopCards cards,
+			TabletopCardPlacementRules placementRules,
 			List<CardCreationSpec> creations,
 			List<ChestCurrencyChangeSpec> chestCurrencyChanges)
 		{
@@ -1215,13 +1468,24 @@ namespace Gameplay.Tabletop.Actions
 			ActionSlotBinding chestBinding = FindBinding(action.ContentId, bindings, chestSlotKey);
 			ChestCard chest = RequireBoundChest(action, cards, chestBinding, "取币");
 			ChestCardDefinition chestDefinition = RequireChestDefinition(action, contentIndex, chest);
+			TabletopCardStack chestStack = cards.GetStackContaining(chest.Id);
+			if (chestStack.Cards.Count != 1)
+			{
+				throw new InvalidOperationException(
+					$"箱子取币行动 {action.ContentId} 必须在箱子单独成堆时执行，对齐 StackCraft ChestLogic.OnClick。");
+			}
 			int currentStored = GetPlannedChestStoredCurrencyCount(chest, chestCurrencyChanges);
 			if (currentStored <= 0)
 			{
 				throw new InvalidOperationException($"箱子取币行动 {action.ContentId} 绑定的箱子没有可取出的货币。");
 			}
 			AddChestCurrencyChange(chestCurrencyChanges, chest, -1);
-			creations.Add(new CardCreationSpec(chestDefinition.CurrencyCardId, 1, chest.Id));
+			Vector2 chestSize = cards.ResolveCardSize(chest.ContentId, placementRules.Geometry);
+			creations.Add(new CardCreationSpec(
+				chestDefinition.CurrencyCardId,
+				1,
+				chest.Id,
+				positionOffset: new Vector2(chestSize.x, 0f)));
 		}
 
 		private static ChestCard RequireBoundChest(
@@ -1320,9 +1584,11 @@ namespace Gameplay.Tabletop.Actions
 			}
 			int paymentAmount = 0;
 			int remainingPrice = vendorCard.RemainingPrice;
-			for (int i = 0; i < paymentBinding.CardIds.Count && paymentAmount < remainingPrice; i++)
+			IReadOnlyList<TabletopCardId> paymentCardIds =
+				GetPaymentCardIdsInCurrentStackBottomFirst(action, cards, paymentBinding);
+			for (int i = 0; i < paymentCardIds.Count && paymentAmount < remainingPrice; i++)
 			{
-				TabletopCardId paymentCardId = paymentBinding.CardIds[i];
+				TabletopCardId paymentCardId = paymentCardIds[i];
 				if (paymentCardId == vendorCardId || useSet.Contains(paymentCardId))
 				{
 					throw new InvalidOperationException($"卡包购买行动 {action.ContentId} 重复修改付款卡 {paymentCardId}。");
@@ -1338,10 +1604,14 @@ namespace Gameplay.Tabletop.Actions
 					int amountFromChest = Math.Min(remainingPrice - paymentAmount, currentStored);
 					if (amountFromChest <= 0)
 					{
-						continue;
+						break;
 					}
 					AddChestCurrencyChange(chestCurrencyChanges, chest, -amountFromChest);
 					paymentAmount += amountFromChest;
+					if (paymentAmount < remainingPrice)
+					{
+						break;
+					}
 					continue;
 				}
 
@@ -1375,8 +1645,40 @@ namespace Gameplay.Tabletop.Actions
 					vendorDefinition.OfferedPackId,
 					1,
 					vendorCardId,
-					positionOffset: vendorDefinition.PackSpawnOffset));
+					positionOffset: vendorDefinition.PackSpawnOffset,
+					allowAnchorStackSpawnAttach: true));
 			}
+		}
+
+		private static IReadOnlyList<TabletopCardId> GetPaymentCardIdsInCurrentStackBottomFirst(
+			ActionDefinition action,
+			TabletopCards cards,
+			ActionSlotBinding paymentBinding)
+		{
+			if (paymentBinding.CardIds.Count <= 1)
+			{
+				return paymentBinding.CardIds;
+			}
+
+			TabletopCardStack sourceStack = cards.GetStackContaining(paymentBinding.CardIds[0]);
+			HashSet<TabletopCardId> paymentSet = new HashSet<TabletopCardId>(paymentBinding.CardIds);
+			List<TabletopCardId> ordered = new List<TabletopCardId>(paymentBinding.CardIds.Count);
+			for (int i = sourceStack.Cards.Count - 1; i >= 0; i--)
+			{
+				TabletopCardId cardId = sourceStack.Cards[i].Id;
+				if (!paymentSet.Contains(cardId))
+				{
+					continue;
+				}
+				ordered.Add(cardId);
+				paymentSet.Remove(cardId);
+			}
+			if (paymentSet.Count != 0)
+			{
+				throw new InvalidOperationException(
+					$"卡包购买行动 {action.ContentId} 的付款槽位必须来自同一个被释放牌堆。");
+			}
+			return ordered;
 		}
 
 		private static void RequirePackPurchaseCanCommit(
@@ -1488,7 +1790,10 @@ namespace Gameplay.Tabletop.Actions
 						availableRecipes[authoritativeRandom.NextInt(availableRecipes.Count)];
 					researchDiscoveries.Add(new ResearchDiscoverySpec(
 						new[] { new ResearchDiscoveryEntrySpec(selected.ActionId, selected.RecipeCardId) },
-						packCardId));
+						packCardId,
+						allowAnchorStackSpawnAttach: true,
+						spawnPresentationHeightOffset: StackCraftPackSpawnHeightOffset,
+						useDragHeightForSpawn: true));
 					return;
 				}
 			}
@@ -1517,7 +1822,13 @@ namespace Gameplay.Tabletop.Actions
 				CardPackEntry entry = slot.Entries[i];
 				if (roll < entry.Weight)
 				{
-					creations.Add(new CardCreationSpec(entry.CardId, 1, packCardId));
+					creations.Add(new CardCreationSpec(
+						entry.CardId,
+						1,
+						packCardId,
+						allowAnchorStackSpawnAttach: true,
+						spawnPresentationHeightOffset: StackCraftPackSpawnHeightOffset,
+						useDragHeightForSpawn: true));
 					return;
 				}
 				roll -= entry.Weight;
@@ -1826,9 +2137,18 @@ namespace Gameplay.Tabletop.Actions
 
 		internal TabletopCardId AnchorCardId { get; }
 
+		internal bool AllowAnchorStackSpawnAttach { get; }
+
+		internal float SpawnPresentationHeightOffset { get; }
+
+		internal bool UseDragHeightForSpawn { get; }
+
 		internal ResearchDiscoverySpec(
 			IReadOnlyList<ResearchDiscoveryEntrySpec> entries,
-			TabletopCardId anchorCardId)
+			TabletopCardId anchorCardId,
+			bool allowAnchorStackSpawnAttach = false,
+			float spawnPresentationHeightOffset = 0f,
+			bool useDragHeightForSpawn = false)
 		{
 			m_entries = new List<ResearchDiscoveryEntrySpec>(
 				entries ?? throw new ArgumentNullException(nameof(entries))).ToArray();
@@ -1840,7 +2160,16 @@ namespace Gameplay.Tabletop.Actions
 			{
 				throw new ArgumentException("研究结果位置必须引用有效牌桌卡牌。", nameof(anchorCardId));
 			}
+			if (!float.IsFinite(spawnPresentationHeightOffset) || spawnPresentationHeightOffset < 0f)
+			{
+				throw new ArgumentException(
+					"研究结果卡牌生成表现高度偏移必须是大于等于 0 的有限值。",
+					nameof(spawnPresentationHeightOffset));
+			}
 			AnchorCardId = anchorCardId;
+			AllowAnchorStackSpawnAttach = allowAnchorStackSpawnAttach;
+			SpawnPresentationHeightOffset = spawnPresentationHeightOffset;
+			UseDragHeightForSpawn = useDragHeightForSpawn;
 		}
 	}
 
@@ -1859,23 +2188,41 @@ namespace Gameplay.Tabletop.Actions
 
 		internal Vector2 PositionOffset { get; }
 
+		internal bool AllowAnchorStackSpawnAttach { get; }
+
+		internal float SpawnPresentationHeightOffset { get; }
+
+		internal bool UseDragHeightForSpawn { get; }
+
 		internal CardCreationSpec(
 			ContentId contentId,
 			int count,
 			TabletopCardId anchorCardId,
 			bool createAsSingleStack = false,
-			Vector2 positionOffset = default)
+			Vector2 positionOffset = default,
+			bool allowAnchorStackSpawnAttach = false,
+			float spawnPresentationHeightOffset = 0f,
+			bool useDragHeightForSpawn = false)
 		{
 			if (float.IsNaN(positionOffset.x) || float.IsNaN(positionOffset.y) ||
 				float.IsInfinity(positionOffset.x) || float.IsInfinity(positionOffset.y))
 			{
 				throw new ArgumentException("卡牌生成偏移必须是有限数值。", nameof(positionOffset));
 			}
+			if (!float.IsFinite(spawnPresentationHeightOffset) || spawnPresentationHeightOffset < 0f)
+			{
+				throw new ArgumentException(
+					"卡牌生成表现高度偏移必须是大于等于 0 的有限值。",
+					nameof(spawnPresentationHeightOffset));
+			}
 			ContentId = contentId;
 			Count = count;
 			AnchorCardId = anchorCardId;
 			CreateAsSingleStack = createAsSingleStack;
 			PositionOffset = positionOffset;
+			AllowAnchorStackSpawnAttach = allowAnchorStackSpawnAttach;
+			SpawnPresentationHeightOffset = spawnPresentationHeightOffset;
+			UseDragHeightForSpawn = useDragHeightForSpawn;
 		}
 	}
 }

@@ -27,4 +27,6 @@
 | 编号 | 决策 | 状态 |
 |------|------|------|
 | 0001 | [ai-rules 吸收裁决](0001-ai-rules-absorption.md) | 生效 |
-| 0002 | [联机后端裁决:FishNet](0002-fishnet-networking.md) | 生效 |
+| 0002 | [联机后端裁决:FishNet](0002-fishnet-networking.md) | 被 0003 取代 |
+| 0003 | [联机后端裁决:Mirror](0003-mirror-networking.md) | 生效 |
+| 0004 | [联机薄协议骨架先行](0004-networking-protocol-skeleton.md) | 生效 |

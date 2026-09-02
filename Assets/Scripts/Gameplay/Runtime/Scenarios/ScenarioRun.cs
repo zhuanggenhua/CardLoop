@@ -557,21 +557,69 @@ namespace Gameplay.Scenarios
 		public ActionCandidate[] FindActionCandidates(TabletopCardPointerReleaseIntent intent)
 		{
 			RequireActive();
+			List<ActionDefinition> discoveredActions = GetDiscoveredActionDefinitions(
+				action => intent.IsDrag || action.CanStartFromClick);
+			ActionCandidate[] candidates = Tabletop.FindCandidates(intent, discoveredActions);
+			return FilterCandidatesByCurrentConditions(candidates);
+		}
+
+		/// <summary>
+		/// 按 StackCraft 制作语义，用完整牌堆组成查询当前可直接启动的行动。
+		/// </summary>
+		public ActionCandidate[] FindStackActionCandidates(TabletopCardStack stack)
+		{
+			return FindStackActionCandidates(Tabletop, stack);
+		}
+
+		private ActionCandidate[] FindStackActionCandidates(
+			Gameplay.Tabletop.Tabletop tabletop,
+			TabletopCardStack stack)
+		{
+			RequireActive();
+			if (tabletop == null)
+			{
+				throw new ArgumentNullException(nameof(tabletop));
+			}
+			if (stack == null)
+			{
+				throw new ArgumentNullException(nameof(stack));
+			}
+
+			ActionCandidate[] candidates = tabletop.FindStackCandidates(
+				stack,
+				GetDiscoveredActionDefinitions(_ => true));
+			return FilterCandidatesByCurrentConditions(tabletop, candidates);
+		}
+
+		private List<ActionDefinition> GetDiscoveredActionDefinitions(
+			Func<ActionDefinition, bool> predicate)
+		{
 			List<ActionDefinition> discoveredActions = new List<ActionDefinition>();
 			for (int i = 0; i < m_contentIndex.AllAssets.Count; i++)
 			{
 				if (m_contentIndex.AllAssets[i] is ActionDefinition action &&
 					IsContentDiscovered(action.ContentId) &&
-					(intent.IsDrag || action.CanStartFromClick))
+					(predicate == null || predicate(action)))
 				{
 					discoveredActions.Add(action);
 				}
 			}
-			ActionCandidate[] candidates = Tabletop.FindCandidates(intent, discoveredActions);
+			return discoveredActions;
+		}
+
+		private ActionCandidate[] FilterCandidatesByCurrentConditions(ActionCandidate[] candidates)
+		{
+			return FilterCandidatesByCurrentConditions(Tabletop, candidates);
+		}
+
+		private ActionCandidate[] FilterCandidatesByCurrentConditions(
+			Gameplay.Tabletop.Tabletop tabletop,
+			ActionCandidate[] candidates)
+		{
 			List<ActionCandidate> available = new List<ActionCandidate>(candidates.Length);
 			for (int i = 0; i < candidates.Length; i++)
 			{
-				if (AreActionConditionsMet(candidates[i].Action, candidates[i].Bindings))
+				if (AreActionConditionsMet(tabletop, candidates[i].Action, candidates[i].Bindings))
 				{
 					available.Add(candidates[i]);
 				}
@@ -582,7 +630,18 @@ namespace Gameplay.Scenarios
 		/// <summary>提交已由玩家确认的行动请求，并在单局边界复核当前发现权限。</summary>
 		public ActionInstance StartAction(ActionRequest request)
 		{
+			return StartAction(Tabletop, request);
+		}
+
+		private ActionInstance StartAction(
+			Gameplay.Tabletop.Tabletop tabletop,
+			ActionRequest request)
+		{
 			RequireActive();
+			if (tabletop == null)
+			{
+				throw new ArgumentNullException(nameof(tabletop));
+			}
 			if (request == null)
 			{
 				throw new ArgumentNullException(nameof(request));
@@ -591,15 +650,52 @@ namespace Gameplay.Scenarios
 			{
 				throw new InvalidOperationException($"行动 {request.ActionId} 尚未在当前剧本单局中发现，不能启动。");
 			}
-			ActionCandidate candidate = Tabletop.CreateCandidateFromRequest(request);
-			if (!AreActionConditionsMet(candidate.Action, candidate.Bindings))
+			ActionCandidate candidate = tabletop.CreateCandidateFromRequest(request);
+			if (!AreActionConditionsMet(tabletop, candidate.Action, candidate.Bindings))
 			{
 				throw new InvalidOperationException($"行动 {request.ActionId} 的当前单局可用条件不成立。");
 			}
-			return Tabletop.StartAction(request);
+			return tabletop.StartAction(request);
+		}
+
+		/// <summary>
+		/// 按 StackCraft 制作语义启动完整牌堆的 ready 行动：多配方同时匹配时由牌桌权威随机流按配方候选权重选择。
+		/// </summary>
+		internal bool TryStartReadyStackAction(
+			IReadOnlyList<ActionCandidate> candidates,
+			out ActionCandidate selectedCandidate)
+		{
+			return TryStartReadyStackAction(Tabletop, candidates, out selectedCandidate);
+		}
+
+		private bool TryStartReadyStackAction(
+			Gameplay.Tabletop.Tabletop tabletop,
+			IReadOnlyList<ActionCandidate> candidates,
+			out ActionCandidate selectedCandidate)
+		{
+			RequireActive();
+			if (tabletop == null)
+			{
+				throw new ArgumentNullException(nameof(tabletop));
+			}
+			if (!tabletop.TrySelectReadyStackActionCandidate(candidates, out selectedCandidate))
+			{
+				return false;
+			}
+
+			StartAction(tabletop, ActionRequest.FromCandidate(selectedCandidate));
+			return true;
 		}
 
 		private bool AreActionConditionsMet(
+			ActionDefinition action,
+			IReadOnlyList<ActionSlotBinding> bindings)
+		{
+			return AreActionConditionsMet(Tabletop, action, bindings);
+		}
+
+		private bool AreActionConditionsMet(
+			Gameplay.Tabletop.Tabletop tabletop,
 			ActionDefinition action,
 			IReadOnlyList<ActionSlotBinding> bindings)
 		{
@@ -607,7 +703,7 @@ namespace Gameplay.Scenarios
 				action,
 				bindings,
 				m_contentIndex,
-				Tabletop.Cards,
+				tabletop.Cards,
 				QuestLog.CompletedQuestCount);
 			for (int i = 0; i < action.Conditions.Count; i++)
 			{
@@ -1273,10 +1369,23 @@ namespace Gameplay.Scenarios
 			}
 		}
 
-		private void OnActionCompleted(
-			ContentId actionId,
-			ActionSettlementResult result)
+		private void RequireOwnedTabletop(Gameplay.Tabletop.Tabletop tabletop)
 		{
+			for (int i = 0; i < m_regionOrder.Count; i++)
+			{
+				if (ReferenceEquals(m_regionOrder[i].Tabletop, tabletop))
+				{
+					return;
+				}
+			}
+			throw new InvalidOperationException($"剧本 {ScenarioId} 收到了不属于本单局地区的牌桌行动完成回调。");
+		}
+
+		private void OnActionCompleted(TabletopActionCompletion completion)
+		{
+			RequireOwnedTabletop(completion.Tabletop);
+			ContentId actionId = completion.ActionId;
+			ActionSettlementResult result = completion.Result;
 			if (result == null)
 			{
 				throw new ArgumentNullException(nameof(result));
@@ -1319,6 +1428,24 @@ namespace Gameplay.Scenarios
 			{
 				FinishExcessCardResolution();
 			}
+			TryStartNextStackCraftAction(completion);
+		}
+
+		private void TryStartNextStackCraftAction(TabletopActionCompletion completion)
+		{
+			ActionInstance action = completion.Action;
+			Gameplay.Tabletop.Tabletop tabletop = completion.Tabletop;
+			TabletopCardStack completedStack = completion.CompletedStack;
+			if (!action.Action.RecheckStackAfterCompletion ||
+				completedStack == null ||
+				!tabletop.ContainsStack(completedStack) ||
+				tabletop.HasActiveActionOnStack(completedStack))
+			{
+				return;
+			}
+
+			ActionCandidate[] candidates = FindStackActionCandidates(tabletop, completedStack);
+			TryStartReadyStackAction(tabletop, candidates, out _);
 		}
 
 		private void OnCardsDefeated(IReadOnlyList<ContentId> defeatedCardIds)

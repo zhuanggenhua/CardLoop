@@ -23,12 +23,16 @@ MonoBehaviour:
     Locked: 1
   m_turnCost: 0
   m_canStartFromClick: 0
+  m_allowExcessCardsInStack: 0
+  m_recheckStackAfterCompletion: 0
+  m_recipeSelectionWeight: 1
   m_journalGroupName:
   m_participationSlots:
   - m_key: payment
     m_displayName: "\u8D27\u5E01"
     m_minimumParticipants: 1
     m_maximumParticipants: 0
+    m_allowAdditionalMatchingParticipantsInStack: 0
     m_allowedContentIds:
     - m_value: test.foundation.day-cycle.currency
     - m_value: test.foundation.chest
@@ -42,6 +46,7 @@ MonoBehaviour:
     m_displayName: "\u5546\u8D29"
     m_minimumParticipants: 1
     m_maximumParticipants: 1
+    m_allowAdditionalMatchingParticipantsInStack: 0
     m_allowedContentIds:
     - m_value: test.foundation.pack.vendor
     - m_value: test.foundation.pack.beginning.vendor
@@ -52,23 +57,23 @@ MonoBehaviour:
     m_requiredAnyAbilitySystemTagCodes:
     m_requiredNoneAbilitySystemTagCodes:
   m_conditions:
-  - rid: 7366053338002227787
-  - rid: 7366053338002227788
+  - rid: 7366053433846530276
+  - rid: 7366053433846530277
   m_resultIntents:
-  - rid: 7366053338002227789
+  - rid: 7366053433846530278
   m_resultBranches: []
   references:
     version: 2
     RefIds:
-    - rid: 7366053338002227787
+    - rid: 7366053433846530276
       type: {class: PackVendorUnlockedCondition, ns: Gameplay.Actions, asm: Gameplay.Runtime}
       data:
         m_vendorSlotKey: vendor
-    - rid: 7366053338002227788
+    - rid: 7366053433846530277
       type: {class: CardPaymentSourceAvailableCondition, ns: Gameplay.Actions, asm: Gameplay.Runtime}
       data:
         m_paymentSlotKey: payment
-    - rid: 7366053338002227789
+    - rid: 7366053433846530278
       type: {class: PurchaseCardPackResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
       data:
         m_vendorSlotKey: vendor

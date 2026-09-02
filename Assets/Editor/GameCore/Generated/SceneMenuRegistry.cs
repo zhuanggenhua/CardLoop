@@ -11,7 +11,7 @@ namespace GameCore
     internal static class SceneMenuRegistry
     {
         private const string GeneratedFilePath = "Assets/Editor/GameCore/Generated/GameCoreSceneMenu.g.cs";
-        private const string SceneMenuRoot = "Scenes";
+        private const string SceneMenuRoot = "场景";
 
         static SceneMenuRegistry()
         {

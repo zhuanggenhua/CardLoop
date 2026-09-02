@@ -373,14 +373,14 @@ namespace Gameplay.Scenarios
 		{
 			if (run.DayCyclePhase == ScenarioDayCyclePhase.GameOver)
 			{
-				return "Game Over";
+				return "游戏结束";
 			}
 
 			if (run.DayCyclePhase == ScenarioDayCyclePhase.Inactive)
 			{
-				return $"Day {run.CurrentDay}";
+				return $"第 {run.CurrentDay} 天";
 			}
-			return $"Day {run.CurrentDay}";
+			return $"第 {run.CurrentDay} 天";
 		}
 
 		private static string GetPrimaryActionLabel(ScenarioRun run)

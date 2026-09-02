@@ -131,19 +131,42 @@ namespace YokiFrame
             handler.Data = data;
             handler.Tag = tag;
 
-            var panel = await LoadPanelUniTaskAsync(handler, ct);
-
-            mLoadingPanelTypes.Remove(type);
-
-            if (panel != default && panel.Transform != default)
+            IPanel panel = null;
+            bool handlerInOpenedCache = false;
+            try
             {
-                SetupPanelInternal(handler, panel);
-                OpenAndShowPanelInternal(panel, data);
-                return panel;
-            }
+                panel = await LoadPanelUniTaskAsync(handler, ct);
+                ct.ThrowIfCancellationRequested();
 
-            handler.Recycle();
-            return null;
+                if (panel != default && panel.Transform != default)
+                {
+                    handlerInOpenedCache = true;
+                    SetupPanelInternal(handler, panel);
+                    OpenAndShowPanelInternal(panel, data);
+                    return panel;
+                }
+
+                return null;
+            }
+            catch
+            {
+                if (handlerInOpenedCache)
+                {
+                    RemoveFromOpenedCache(type);
+                    handlerInOpenedCache = false;
+                }
+
+                DestroyPanelInternal(panel);
+                throw;
+            }
+            finally
+            {
+                mLoadingPanelTypes.Remove(type);
+                if (!handlerInOpenedCache)
+                {
+                    handler.Recycle();
+                }
+            }
         }
 #endif
 

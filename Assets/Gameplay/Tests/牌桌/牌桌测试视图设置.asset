@@ -37,7 +37,7 @@ MonoBehaviour:
     Guid: 970d74521f036a645a826889794e656e
     Locked: 1
   m_stackHeightStep: 0.002
-  m_baseSortingOrder: 10
+  m_baseSortingOrder: 0
   m_cardPickAudio: {fileID: 11400000, guid: 25d01cb9dbf62eb45adebba68793fcfb, type: 2}
   m_cardDropAudio: {fileID: 11400000, guid: c104863b3156a17418d8b237d21e6858, type: 2}
   m_cardSwipeAudio: {fileID: 11400000, guid: c3563c96566966147ba2a45c3cb864b3, type: 2}
@@ -49,7 +49,7 @@ MonoBehaviour:
   m_cashRegisterAudio: {fileID: 11400000, guid: 6d105530442674249b84a7e28f2d6b3f, type: 2}
   m_battleBaseSortingOrder: 100
   m_projectileSortingOrder: 140
-  m_cardSmokeSortingOrder: 150
+  m_cardSmokeSortingOrder: 0
   m_hitResultSortingOrder: 160
   m_meleeAttackAudio: {fileID: 11400000, guid: 7489a8e208ebe57469dd0dc7b1e9d4b5, type: 2}
   m_rangedAttackAudio: {fileID: 11400000, guid: e5bd88d49656974418283f7ab626d089, type: 2}
@@ -64,3 +64,4 @@ MonoBehaviour:
   m_attachRadius: 0.25
   m_dragHeight: 0.1
   m_moveDurationSeconds: 0.1
+  m_moveEase: 6

@@ -20,10 +20,10 @@ namespace Gameplay.Tests
 			TabletopCards state = new TabletopCards();
 			TabletopCard tabletopCard = state.CreateCard("test.card", Vector2.zero);
 			CardDefinition content = CreateContent("test.card");
-			GameObject viewObject = new GameObject("TabletopCardViewTest");
+			GameObject viewObject = CreateViewObject();
 			try
 			{
-				TabletopCardView view = viewObject.AddComponent<TabletopCardView>();
+				TabletopCardView view = viewObject.GetComponent<TabletopCardView>();
 				view.Bind(tabletopCard, content);
 				Assert.That(view.TabletopCard, Is.SameAs(tabletopCard));
 				Assert.That<TabletopCardId>(view.CardId, (IResolveConstraint)(object)Is.EqualTo((object)tabletopCard.Id));
@@ -44,10 +44,10 @@ namespace Gameplay.Tests
 			TabletopCards state = new TabletopCards();
 			TabletopCard tabletopCard = state.CreateCard("test.card", Vector2.zero);
 			CardDefinition content = CreateContent("test.other-card");
-			GameObject viewObject = new GameObject("TabletopCardViewTest");
+			GameObject viewObject = CreateViewObject();
 			try
 			{
-				TabletopCardView view = viewObject.AddComponent<TabletopCardView>();
+				TabletopCardView view = viewObject.GetComponent<TabletopCardView>();
 				Assert.Throws<ArgumentException>((TestDelegate)delegate
 				{
 					view.Bind(tabletopCard, content);
@@ -58,6 +58,16 @@ namespace Gameplay.Tests
 				Object.DestroyImmediate((Object)(object)viewObject);
 				Object.DestroyImmediate((Object)(object)content);
 			}
+		}
+
+		private static GameObject CreateViewObject()
+		{
+			GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+				"Assets/Art/Prefabs/牌桌/卡牌视图.prefab");
+			Assert.That(prefab, Is.Not.Null, "正式卡牌视图预制体不存在，不能用裸 GameObject 绕过生产表现依赖。");
+			GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+			Assert.That(instance, Is.Not.Null, "正式卡牌视图预制体实例化失败。");
+			return instance;
 		}
 
 		private static CardDefinition CreateContent(string contentId)

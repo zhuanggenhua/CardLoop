@@ -15,19 +15,80 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.recipe.building-house
   m_tagCodes:
-  m_displayName: 建造房屋
-  m_description: 模板配方参考：石头 ×1，木头 ×2，村民 ×1。制作耗时 30 秒。
+  m_displayName: "\u5EFA\u9020\u623F\u5C4B"
+  m_description: "\u6A21\u677F\u914D\u65B9\u53C2\u8003\uFF1A\u77F3\u5934 \xD71\uFF0C\u6728\u5934
+    \xD72\uFF0C\u6751\u6C11 \xD71\u3002\u5236\u4F5C\u8017\u65F6 30 \u79D2\u3002"
   m_icon:
     Address:
     Guid:
     Locked: 1
   m_turnCost: 1
   m_canStartFromClick: 0
-  m_journalGroupName: 建造
-  m_participationSlots: []
+  m_allowExcessCardsInStack: 0
+  m_recheckStackAfterCompletion: 1
+  m_recipeSelectionWeight: 1
+  m_journalGroupName: "\u5EFA\u9020"
+  m_participationSlots:
+  - m_key: stone
+    m_displayName: "\u77F3\u5934"
+    m_minimumParticipants: 1
+    m_maximumParticipants: 1
+    m_allowAdditionalMatchingParticipantsInStack: 0
+    m_allowedContentIds:
+    - m_value: test.foundation.day-cycle.sellable
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
+  - m_key: wood
+    m_displayName: "\u6728\u5934"
+    m_minimumParticipants: 2
+    m_maximumParticipants: 2
+    m_allowAdditionalMatchingParticipantsInStack: 0
+    m_allowedContentIds:
+    - m_value: test.foundation.product
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
+  - m_key: villager
+    m_displayName: "\u6751\u6C11"
+    m_minimumParticipants: 1
+    m_maximumParticipants: 1
+    m_allowAdditionalMatchingParticipantsInStack: 0
+    m_allowedContentIds:
+    - m_value: test.foundation.card
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
   m_conditions: []
-  m_resultIntents: []
+  m_resultIntents:
+  - rid: 7366053433846530267
+  - rid: 7366053433846530268
+  - rid: 7366053433846530269
   m_resultBranches: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 7366053433846530267
+      type: {class: UseCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
+      data:
+        m_slotKey: stone
+    - rid: 7366053433846530268
+      type: {class: UseCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
+      data:
+        m_slotKey: wood
+    - rid: 7366053433846530269
+      type: {class: CreateCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
+      data:
+        m_contentId:
+          m_value: test.foundation.recipe-output.house
+        m_count: 1
+        m_anchorSlotKey: villager

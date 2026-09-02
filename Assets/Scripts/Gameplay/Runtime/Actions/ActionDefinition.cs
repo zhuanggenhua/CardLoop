@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Gameplay.Content;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Gameplay.Actions
 {
@@ -23,6 +24,24 @@ namespace Gameplay.Actions
 		[LabelText("允许点击启动")]
 		[Tooltip("开启后，玩家单击参与卡牌也会查询这项行动；关闭时只通过拖拽、填槽或其它正式入口启动。")]
 		private bool m_canStartFromClick;
+
+		[Header("牌堆制作")]
+		[SerializeField]
+		[FormerlySerializedAs("m_allowSurplusMatchingCardsInStack")]
+		[LabelText("允许堆内额外卡牌")]
+		[Tooltip("对齐 StackCraft AllowExcessIngredients：完整牌堆里多出的任意卡牌可以留在堆里；耗时制作运行中也由它决定能否继续加合法材料，不再另填第二个开关。")]
+		private bool m_allowExcessCardsInStack;
+
+		[SerializeField]
+		[LabelText("完成后复查牌堆")]
+		[Tooltip("对齐 StackCraft 连续制作/剩余材料复查：行动完成并提交结果后，如果原牌堆仍有 ready 制作候选，则按配方候选权重重新启动下一次行动。")]
+		private bool m_recheckStackAfterCompletion;
+
+		[SerializeField]
+		[Min(0f)]
+		[LabelText("配方候选权重")]
+		[Tooltip("当完整牌堆同时匹配多个制作行动时，按这个相对权重选择实际启动的行动；只用于整堆制作候选，不影响行动内部随机结果分支。0 表示只有所有候选权重都为 0 时才参与等概率回退。")]
+		private float m_recipeSelectionWeight = 1f;
 
 		[Header("日志")]
 		[SerializeField]
@@ -84,6 +103,17 @@ namespace Gameplay.Actions
 
 		public bool CanStartFromClick => m_canStartFromClick;
 
+		public bool AllowExcessCardsInStack => m_allowExcessCardsInStack;
+
+		/// <summary>
+		/// StackCraft 的运行中加料由 AllowExcessIngredients 派生：只有耗时制作存在活动任务时才有加料入口。
+		/// </summary>
+		public bool AllowRunningStackAdditions => AllowExcessCardsInStack && TurnCost > 0;
+
+		public bool RecheckStackAfterCompletion => m_recheckStackAfterCompletion;
+
+		public float RecipeSelectionWeight => m_recipeSelectionWeight;
+
 		public string JournalGroupName => m_journalGroupName ?? string.Empty;
 
 		protected override void ValidateContent(ContentValidationContext context)
@@ -94,6 +124,20 @@ namespace Gameplay.Actions
 				context.AddError(
 					"ACTION_TURN_COST_INVALID",
 					$"行动 {ContentId} 的消耗回合数不能为负数：{TurnCost}。",
+					this);
+			}
+			if ((AllowRunningStackAdditions || RecheckStackAfterCompletion) && TurnCost <= 0)
+			{
+				context.AddError(
+					"ACTION_STACK_CRAFT_RECHECK_REQUIRES_DURATION",
+					$"行动 {ContentId} 的运行中加料或完成后复查只能用于耗时制作行动，消耗回合数必须大于 0。",
+					this);
+			}
+			if (!float.IsFinite(RecipeSelectionWeight) || RecipeSelectionWeight < 0f)
+			{
+				context.AddError(
+					"ACTION_RECIPE_SELECTION_WEIGHT_INVALID",
+					$"行动 {ContentId} 的配方候选权重必须是大于等于 0 的有限数值，当前值为 {RecipeSelectionWeight}。",
 					this);
 			}
 			ValidateJournalGroupName(context);

@@ -38,6 +38,7 @@ metadata:
 | Unity Input System | `Packages/manifest.json` 中的 `com.unity.inputsystem`；项目入口见 `ai-quick/README.md` | Unity 官方包文档：`https://docs.unity3d.com/Packages/com.unity.inputsystem@1.19/manual/index.html`。 |
 | Unity Cinemachine | `Packages/manifest.json` 中的 `com.unity.cinemachine` | Unity 官方包文档：`https://docs.unity3d.com/Packages/com.unity.cinemachine@3.1/manual/index.html`；当前项目专项卡待补。 |
 | Unity Timeline | `Packages/manifest.json` 中的 `com.unity.timeline`、EX-GAS Timeline 专项文档 | Unity 官方包文档：`https://docs.unity3d.com/Packages/com.unity.timeline@1.8/manual/index.html`；EX-GAS 时间轴先读插件文档。 |
+| Mirror Networking（计划接入） | 尚未安装；项目裁决见 `.spec/decisions/0003-mirror-networking.md` | Mirror 官方文档：`https://mirror-networking.gitbook.io/docs/`；接入前先读官方 Host / Server / Client、Remote Actions、SyncVars、Interest Management 文档。 |
 | AIBridge Unity | `Packages/com.aibridge.unity/README.md`、`Packages/com.aibridge.unity/package.json` | `Packages/com.aibridge.unity/package.json` 的 `repository.url`。 |
 | PuerTS Unity MCP | `puerts-unity-mcp/README.md`、`puerts-unity-mcp/README-zh.md`、`puerts-unity-mcp/Packages/puerts-unity-mcp/package.json` | 本地 README 和 package.json；项目职责矩阵见 [`ai-quick/unity-automation-tools.md`](ai-quick/unity-automation-tools.md)。 |
 | PuerTS Core / V8 | `puerts-unity-mcp/third_party/puerts/unity/upms/core/package.json`、`puerts-unity-mcp/third_party/puerts/unity/upms/v8/package.json` | 作为 PuerTS Unity MCP 的底层依赖处理，不作为独立 Unity 自动化入口。 |

@@ -40,6 +40,7 @@ metadata:
 - `.spec` 目录和 skill 目录使用 kebab-case。
 - GameCore 作为通用框架时，运行时默认值、编辑器入口、作者菜单、存档目录、输入绑定 key、配置文件名和生成物默认名使用 `GameCore` 或职责名；不得使用当前 Unity 工程名、未来游戏名或来源工程名。当前工程名只允许出现在仓库路径、项目事实、迁移记录、验证记录等“说明当前工作区”的文档位置。
 - 项目侧正式玩法资产、素材文件、Prefab、ScriptableObject、Sprite Library、场景实例和正式测试场景入口优先中文命名；尤其是给策划、关卡、技能或表现作者直接选择的 SO 资产，文件名和 Inspector 显示名都应使用中文表达现实含义。
+- CardLoop 自有场景文件名、场景内部的自有根对象名和作者可见场景菜单名使用中文现实名称。测试场景按职责命名，例如“地基测试”“地基标题测试”“地基地图测试”“地基第二地图测试”等；“地基测试”是综合回归入口，其余专项场景只承载独立加载 / 入口职责，不得把多个职责强行塞进一张场景，也不得把专项场景误称为多个主入口。C# 类型名、测试类名和内部代码符号继续使用英文。Unity 默认示例、插件示例、第三方模板和来源工程目录不属于 CardLoop 自有场景，不因本规则改名。
 - 游戏素材目录按 Unity / 参考工程约定使用英文类别名，具体自有资源文件名使用中文现实名称。当前正式入口为 `Assets/Art/Sprites`、`Assets/Art/Textures`、`Assets/Art/Materials`、`Assets/Art/Prefabs`、`Assets/Audio/SFX`；后续新增材质、Prefab、Sprite Library 等类别时，先使用行业约定英文目录，再在目录内使用中文资源名。不得把约定俗成的资源类别目录写成 `素材/图片/音效/特效` 这类中文分类。
 - 从参考模板改造后归 CardLoop 使用的自有素材必须按上述目录规则迁入项目自有资源目录，并把资源文件名、Prefab 根对象名和作者可见地址改成中文现实名称。只有第三方原件留在参考目录、外部协议键、代码符号或工具强制 ASCII 时才保留英文。
 - 中文资源名是项目正式作者入口，不是临时测试例外；不得因为文件名包含中文、Unicode 或空格外的非 ASCII 字符，就把自有图片、音频、材质、粒子、Prefab 或场景实例改回英文。真正需要 ASCII 的位置必须能指出外部工具、协议或构建链的硬约束。
@@ -50,7 +51,7 @@ metadata:
 - C# 类名、结构体名、接口名、枚举名、方法名、字段符号、属性符号、事件符号和命名空间必须按项目现有英文符号风格保持稳定；中文通过 Inspector 特性、菜单名、资产名、注释和文档承载，不把运行时代码符号强行改成中文。
 - 自有玩法顶级模块统一拼作 `Gameplay`，不得新增历史拼写 `GamePlay`。正式 C# 命名空间按真实职责分为 `Gameplay.Content`、`Gameplay.Actions`、`Gameplay.Tabletop`、`Gameplay.Scenarios`，牌桌拥有的行动运行对象进入 `Gameplay.Tabletop.Actions`；编辑器工具在 `Gameplay.Editor.<职责>`，测试在 `Gameplay.Tests`。目录、程序集根命名空间和作者菜单必须同步使用这一拼写与层级。
 - 命名空间、程序集和目录已经提供模块上下文时，类型名不得重复模块或项目名。`Gameplay.Content` 下使用 `ContentIndex`，`Gameplay.Actions` 下使用 `ActionDefinition`，不得使用 `GameplayContentIndex`、`GameplayActionDefinition`；只有跨命名空间确实存在无法通过限定名解决的冲突，或外部协议明确要求模块前缀时，才保留前缀并在专项文档说明原因。
-- 命名参考按职责而不是来源工程名裁决：StackCraft 使用 `Quest`、`QuestManager`、`EncounterDefinition`，GameCore 使用 `ResourceSystem`、`SaveSystem`，EX-GAS 使用 `AbilitySystemCell`、`GameplayTagController`。CardLoop 吸收职责时沿用这种“命名空间提供上下文、类型名表达职责”的方式，不复制 `StackCraft`、`GameCore` 或 `Gameplay` 前缀。
+- 命名参考按职责而不是来源工程名裁决：命名空间提供模块上下文，类型名表达现实职责；CardLoop 吸收外部候选职责时不得复制来源项目名前缀，也不得重复追加 `GameCore` 或 `Gameplay` 这类已有上下文前缀。
 - Gameplay 正式玩法层命名优先使用游戏、桌游和 Unity 语义。作者静态配置用 `Definition`，运行时可写事实用 `State`，内容技术 SO 基类可用 `Asset`，查询/登记用 `Index` / `Registry`，纯计算器用 `Resolver` / `Evaluator` / `Validator` / `Selector`，测试场景装配器用 `Harness`。启动/单局编排只有真正承担新局、读档、场景组合、保存恢复或生命周期调度时才用 `Director`；`Director` 即使继承 `AGameSystem` 也不重复追加 `System`，应使用 `ScenarioDirector`，不得使用 `DirectorSystem` 或 `ScenarioDirectorSystem`。单局状态边界只有在成熟框架校准和项目职责归属审查后确认需要独立状态容器时才用 `RuntimeContext`；牌桌用 `Tabletop` / `Board` / `CardView`，运行时协作者用 `System` / `RuntimeSystem`。
 - `Bootstrap`、`Provider`、`Store`、`Router`、`Service`、`Controller` 等词只有在对接第三方 / Unity 既有概念，或确实承担对应职责时才允许使用，并必须能说明职责归属、生命周期和验收点。不得为了显得架构完整使用网页端、后端或通用框架空壳名，也不得用命名包装掩盖旧职责没有重构。
 - 第三方原始目录、代码符号和兼容外部 ID 保留原名，不为美观强行改。

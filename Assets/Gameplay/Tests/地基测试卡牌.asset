@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.card
   m_tagCodes: e9030000ea157a00
-  m_displayName: 村民
-  m_description: 健康的村民。
+  m_displayName: "\u6751\u6C11"
+  m_description: "\u5065\u5EB7\u7684\u6751\u6C11\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u6751\u6C11"

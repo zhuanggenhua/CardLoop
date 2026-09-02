@@ -16,7 +16,7 @@ namespace Gameplay.Tests.Support.Editor
 	/// <summary>标题入口的地基验收资产生成切片；正式运行代码不依赖这里的测试剧本与临时视觉。</summary>
 	public static partial class FoundationTestSceneMenu
 	{
-		internal const string TitleScenePath = "Assets/Scenes/FoundationTitleTest.unity";
+		internal const string TitleScenePath = "Assets/Scenes/地基标题测试.unity";
 		private const string ScenarioTitlePanelPrefabPath = GameplayUiPrefabFolder + "/ScenarioTitlePanel.prefab";
 		private const string SettingsPanelPrefabPath = GameplayUiPrefabFolder + "/UISettings.prefab";
 
@@ -30,7 +30,7 @@ namespace Gameplay.Tests.Support.Editor
 			EnsureSettingsPanelPrefab();
 			GameObject runtimeRootPrefab = EnsureRuntimeRootPrefab(EnsureConfigAsset());
 
-			GameObject runtimeEntryObject = new("FoundationTitleRuntimeEntry");
+			GameObject runtimeEntryObject = new("地基标题测试入口");
 			SceneManager.MoveGameObjectToScene(runtimeEntryObject, scene);
 			FoundationTestRuntimeEntry runtimeEntry = runtimeEntryObject.AddComponent<FoundationTestRuntimeEntry>();
 			SerializedObject serializedEntry = new(runtimeEntry);

@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d1ae288adf6482f875ac9e18ff97db7, type: 3}
+  m_Name: "\u5730\u57FA\u914D\u65B9\u4EA7\u7269\u5A74\u513F"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CharacterCardDefinition
+  m_contentId:
+    m_value: test.foundation.recipe-output.baby
+  m_tagCodes: 40420f00ea157a00
+  m_displayName: "\u5A74\u513F"
+  m_description: "\u53EF\u7231\u7684\u5A74\u513F\u3002"
+  m_icon:
+    Address:
+    Guid:
+    Locked: 1
+  m_initialUses: 1
+  m_sellValue: 0
+  m_countsTowardCardLimit: 1
+  m_cardLimitBonus: 0
+  m_periodicProductionCardId:
+    m_value:
+  m_periodicProductionIntervalSeconds: 0
+  m_automaticMovementRetentionCapacity: 0
+  m_cardArt:
+    Address: "\u5A74\u513F"
+    Guid: ec3b52365a7a4da6b3c3aba8cc318d95
+    Locked: 1
+  m_cardSurface:
+    Address: "\u5361\u724C\u8868\u9762_\u89D2\u8272"
+    Guid: 753f0937c1d64950b0f47e534f841748
+    Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}
+  m_abilitySystemPresetId: 1005
+  m_attributeOverrides:
+  - m_attributeCode: 1
+    m_baseValue: 5
+  - m_attributeCode: 7
+    m_baseValue: 5
+  - m_attributeCode: 4
+    m_baseValue: 2
+  - m_attributeCode: 5
+    m_baseValue: 1
+  - m_attributeCode: 10
+    m_baseValue: 50
+  - m_attributeCode: 11
+    m_baseValue: 95
+  - m_attributeCode: 12
+    m_baseValue: 5
+  - m_attributeCode: 13
+    m_baseValue: 5
+  - m_attributeCode: 14
+    m_baseValue: 150
+  m_automaticBattleAbilityCode: 20005
+  m_automaticAggroRadius: 0
+  m_automaticAttackRadius: 0

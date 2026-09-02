@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.pack.beginning.egg
   m_tagCodes: e9030000ec157a00
-  m_displayName: 鸡蛋
-  m_description: 先烹饪再食用。
+  m_displayName: "\u9E21\u86CB"
+  m_description: "\u5148\u70F9\u996A\u518D\u98DF\u7528\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u9E21\u86CB"

@@ -6,43 +6,43 @@ namespace GameCore
 {
     internal static class GameCoreSceneMenu
     {
-        [MenuItem("Scenes/Scenes/FoundationMapTest", priority = 1000)]
-        private static void OpenScene_000_Scenes_FoundationMapTest()
-        {
-            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationMapTest.unity");
-        }
-
-        [MenuItem("Scenes/Scenes/FoundationSecondMapTest", priority = 1001)]
-        private static void OpenScene_001_Scenes_FoundationSecondMapTest()
-        {
-            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationSecondMapTest.unity");
-        }
-
-        [MenuItem("Scenes/Scenes/FoundationStackCraftParityTest", priority = 1002)]
-        private static void OpenScene_002_Scenes_FoundationStackCraftParityTest()
-        {
-            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationStackCraftParityTest.unity");
-        }
-
-        [MenuItem("Scenes/Scenes/FoundationTest", priority = 1003)]
-        private static void OpenScene_003_Scenes_FoundationTest()
-        {
-            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationTest.unity");
-        }
-
-        [MenuItem("Scenes/Scenes/FoundationTitleTest", priority = 1004)]
-        private static void OpenScene_004_Scenes_FoundationTitleTest()
-        {
-            SceneMenuRegistry.OpenScene("Assets/Scenes/FoundationTitleTest.unity");
-        }
-
-        [MenuItem("Scenes/Scenes/SampleScene", priority = 1005)]
-        private static void OpenScene_005_Scenes_SampleScene()
+        [MenuItem("场景/Scenes/SampleScene", priority = 1000)]
+        private static void OpenScene_000_Scenes_SampleScene()
         {
             SceneMenuRegistry.OpenScene("Assets/Scenes/SampleScene.unity");
         }
 
-        [MenuItem("Scenes/Settings/Scenes/URP2DSceneTemplate", priority = 1006)]
+        [MenuItem("场景/Scenes/地基地图测试", priority = 1001)]
+        private static void OpenScene_001_Scenes_地基地图测试()
+        {
+            SceneMenuRegistry.OpenScene("Assets/Scenes/地基地图测试.unity");
+        }
+
+        [MenuItem("场景/Scenes/地基标题测试", priority = 1002)]
+        private static void OpenScene_002_Scenes_地基标题测试()
+        {
+            SceneMenuRegistry.OpenScene("Assets/Scenes/地基标题测试.unity");
+        }
+
+        [MenuItem("场景/Scenes/地基测试", priority = 1003)]
+        private static void OpenScene_003_Scenes_地基测试()
+        {
+            SceneMenuRegistry.OpenScene("Assets/Scenes/地基测试.unity");
+        }
+
+        [MenuItem("场景/Scenes/地基第二地图测试", priority = 1004)]
+        private static void OpenScene_004_Scenes_地基第二地图测试()
+        {
+            SceneMenuRegistry.OpenScene("Assets/Scenes/地基第二地图测试.unity");
+        }
+
+        [MenuItem("场景/Scenes/模板同态测试", priority = 1005)]
+        private static void OpenScene_005_Scenes_模板同态测试()
+        {
+            SceneMenuRegistry.OpenScene("Assets/Scenes/模板同态测试.unity");
+        }
+
+        [MenuItem("场景/Settings/Scenes/URP2DSceneTemplate", priority = 1006)]
         private static void OpenScene_006_Settings_Scenes_URP2DSceneTemplate()
         {
             SceneMenuRegistry.OpenScene("Assets/Settings/Scenes/URP2DSceneTemplate.unity");

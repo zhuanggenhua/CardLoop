@@ -6,7 +6,6 @@ metadata:
   role: project-reference
   source: project-source + yooasset-official-entry
   status: 已交付
-  verified_at: 2026-08-13
   update_triggers: mod-schema-change, mod-loader-change, resource-package-change, validation-policy-change
 ---
 

@@ -15,20 +15,24 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.pack.open
   m_tagCodes:
-  m_displayName: 打开卡包
-  m_description: 多次点击卡包，完全打开并取得里面的所有卡牌。
+  m_displayName: "\u6253\u5F00\u5361\u5305"
+  m_description: "\u591A\u6B21\u70B9\u51FB\u5361\u5305\uFF0C\u5B8C\u5168\u6253\u5F00\u5E76\u53D6\u5F97\u91CC\u9762\u7684\u6240\u6709\u5361\u724C\u3002"
   m_icon:
     Address:
     Guid:
     Locked: 1
   m_turnCost: 0
   m_canStartFromClick: 1
+  m_allowExcessCardsInStack: 0
+  m_recheckStackAfterCompletion: 0
+  m_recipeSelectionWeight: 1
   m_journalGroupName:
   m_participationSlots:
   - m_key: pack
     m_displayName: "\u5361\u5305"
     m_minimumParticipants: 1
     m_maximumParticipants: 1
+    m_allowAdditionalMatchingParticipantsInStack: 0
     m_allowedContentIds:
     - m_value: test.foundation.pack
     - m_value: test.foundation.pack.beginning
@@ -40,12 +44,12 @@ MonoBehaviour:
     m_requiredNoneAbilitySystemTagCodes:
   m_conditions: []
   m_resultIntents:
-  - rid: 7366053338002227786
+  - rid: 7366053433846530275
   m_resultBranches: []
   references:
     version: 2
     RefIds:
-    - rid: 7366053338002227786
+    - rid: 7366053433846530275
       type: {class: OpenCardPackResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
       data:
         m_packSlotKey: pack

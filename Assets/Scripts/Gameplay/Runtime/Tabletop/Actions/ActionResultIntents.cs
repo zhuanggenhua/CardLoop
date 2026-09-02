@@ -26,6 +26,24 @@ namespace Gameplay.Tabletop.Actions
 				"ACTION_RESULT_EXPLORE_SLOT_UNKNOWN");
 		}
 	}
+
+	/// <summary>声明从探索槽中的区域卡按其加权产出表生成一张卡牌。</summary>
+	[Serializable]
+	public sealed class ExploreLootResultIntent : ActionResultIntent
+	{
+		[SerializeField]
+		[ActionSlotReference]
+		[LabelText("区域槽位")]
+		[Tooltip("结算时从该槽位绑定的第一个带区域标签且配置探索产出的卡牌中随机生成一张产出卡。")]
+		private string m_areaSlotKey;
+
+		public string AreaSlotKey => m_areaSlotKey ?? string.Empty;
+
+		protected override void ValidateResult(ActionResultValidationContext context)
+		{
+			context.ValidateSlotReference(AreaSlotKey, "ACTION_RESULT_EXPLORE_LOOT_AREA_SLOT_UNKNOWN");
+		}
+	}
 	/// <summary>声明把一张装备卡挂到角色槽位；同槽旧装备由角色卡替换并回到牌桌。</summary>
 	[Serializable]
 	public sealed class EquipCardResultIntent : ActionResultIntent
@@ -349,7 +367,7 @@ namespace Gameplay.Tabletop.Actions
 		[SerializeField]
 		[ActionSlotReference]
 		[LabelText("出售目标槽位")]
-		[Tooltip("用于确认本次出售拖到的收购点等交互目标存在；货币生成在被售卡牌释放出的牌堆位置。")]
+		[Tooltip("用于确认本次出售拖到的收购点等交互目标存在；货币生成在收购点配置的位置。")]
 		private string m_anchorSlotKey;
 
 		public string SoldSlotKey => m_soldSlotKey ?? string.Empty;

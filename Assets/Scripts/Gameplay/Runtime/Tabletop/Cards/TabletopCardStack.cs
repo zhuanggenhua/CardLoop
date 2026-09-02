@@ -133,6 +133,11 @@ namespace Gameplay.Tabletop
 
 		internal TabletopCardStack DetachFrom(int startIndex)
 		{
+			return DetachFrom(startIndex, Position);
+		}
+
+		internal TabletopCardStack DetachFrom(int startIndex, Vector2 detachedPosition)
+		{
 			if (startIndex <= 0 || startIndex >= m_cards.Count)
 			{
 				throw new ArgumentOutOfRangeException(nameof(startIndex), "拆堆位置必须位于牌堆中间。");
@@ -145,7 +150,7 @@ namespace Gameplay.Tabletop
 			{
 				detachedCards[i].DetachFromStack(this);
 			}
-			return new TabletopCardStack(detachedCards, Position, isPlacementLocked: false);
+			return new TabletopCardStack(detachedCards, detachedPosition, isPlacementLocked: false);
 		}
 
 		/// <summary>从当前牌堆抽出指定位置的一张卡，剩余卡牌继续留在原牌堆并保持相对顺序。</summary>

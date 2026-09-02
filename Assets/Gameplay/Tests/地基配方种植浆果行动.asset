@@ -15,19 +15,62 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.recipe.growing-berry
   m_tagCodes:
-  m_displayName: 种植浆果
-  m_description: 模板配方参考：土壤 ×1，浆果 ×1。制作耗时 120 秒。
+  m_displayName: "\u79CD\u690D\u6D46\u679C"
+  m_description: "\u6A21\u677F\u914D\u65B9\u53C2\u8003\uFF1A\u571F\u58E4 \xD71\uFF0C\u6D46\u679C
+    \xD71\u3002\u5236\u4F5C\u8017\u65F6 120 \u79D2\u3002"
   m_icon:
     Address:
     Guid:
     Locked: 1
   m_turnCost: 1
   m_canStartFromClick: 0
-  m_journalGroupName: 畜牧
-  m_participationSlots: []
+  m_allowExcessCardsInStack: 0
+  m_recheckStackAfterCompletion: 1
+  m_recipeSelectionWeight: 1
+  m_journalGroupName: "\u755C\u7267"
+  m_participationSlots:
+  - m_key: soil
+    m_displayName: "\u571F\u58E4"
+    m_minimumParticipants: 1
+    m_maximumParticipants: 1
+    m_allowAdditionalMatchingParticipantsInStack: 1
+    m_allowedContentIds:
+    - m_value: test.foundation.pack.beginning.soil
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
+  - m_key: berry
+    m_displayName: "\u6D46\u679C"
+    m_minimumParticipants: 1
+    m_maximumParticipants: 1
+    m_allowAdditionalMatchingParticipantsInStack: 0
+    m_allowedContentIds:
+    - m_value: test.foundation.day-cycle.food
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
   m_conditions: []
-  m_resultIntents: []
+  m_resultIntents:
+  - rid: 7366053433846530265
+  - rid: 7366053433846530266
   m_resultBranches: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 7366053433846530265
+      type: {class: UseCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
+      data:
+        m_slotKey: berry
+    - rid: 7366053433846530266
+      type: {class: CreateCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
+      data:
+        m_contentId:
+          m_value: test.foundation.pack.reward.first
+        m_count: 1
+        m_anchorSlotKey: soil

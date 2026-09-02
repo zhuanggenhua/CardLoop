@@ -18,7 +18,7 @@ namespace Gameplay.Tests
     /// <summary>验证统一地基场景通过正式 UIKit 和 SaveKit 完成模板等价的存档操作。</summary>
     public sealed class ScenarioSavePanelPlayModeTests
     {
-        private const string FoundationScenePath = "Assets/Scenes/FoundationTest.unity";
+        private const string FoundationScenePath = "Assets/Scenes/地基测试.unity";
         private string m_saveDirectory;
 
         [UnitySetUp]

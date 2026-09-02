@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 732affab875846bba73045887651397f, type: 3}
+  m_Name: "\u5730\u57FA\u914D\u65B9\u4EA7\u7269\u6728\u6750"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
+  m_contentId:
+    m_value: test.foundation.recipe-output.timber
+  m_tagCodes: 40420f00ec157a00
+  m_displayName: "\u6728\u6750"
+  m_description: "\u7531\u6728\u5934\u52A0\u5DE5\u800C\u6210\u3002"
+  m_icon:
+    Address:
+    Guid:
+    Locked: 1
+  m_initialUses: 1
+  m_sellValue: 2
+  m_countsTowardCardLimit: 1
+  m_cardLimitBonus: 0
+  m_periodicProductionCardId:
+    m_value:
+  m_periodicProductionIntervalSeconds: 0
+  m_automaticMovementRetentionCapacity: 0
+  m_cardArt:
+    Address: "\u6728\u6750"
+    Guid: ed2cb1e5ba8746afb88ed62f873fdc3b
+    Locked: 1
+  m_cardSurface:
+    Address: "\u5361\u724C\u8868\u9762_\u6750\u6599"
+    Guid: 6d529dce1b3f467f979979d5cb1e25fe
+    Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}

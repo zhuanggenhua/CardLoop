@@ -50,6 +50,27 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void ScenarioRun_DepositsOnlyCurrencyFromMixedStackAndLeavesOtherCards()
+		{
+			using ChestScenarioContext context = CreateScenario(includeVendor: false);
+			TabletopCard firstCoin = context.Run.Tabletop.CreateCard(context.Coin.ContentId, new Vector2(-1f, 0f));
+			TabletopCard filler = context.Run.Tabletop.CreateCard(context.Buyer.ContentId, new Vector2(-0.7f, 0f));
+			TabletopCard secondCoin = context.Run.Tabletop.CreateCard(context.Coin.ContentId, new Vector2(-0.4f, 0f));
+			context.Run.Tabletop.MergeStackOnto(filler.Id, firstCoin.Id);
+			TabletopCardStack mixedStack = context.Run.Tabletop.MergeStackOnto(secondCoin.Id, firstCoin.Id);
+			ChestCard chest = (ChestCard)context.Run.Tabletop.CreateCard(context.Chest.ContentId, new Vector2(1f, 0f));
+
+			ActionCandidate depositCandidate = context.FindCandidates(mixedStack.TopCard, chest).Single(candidate => candidate.Action == context.DepositAction);
+			context.Run.StartAction(ActionRequest.FromCandidate(depositCandidate));
+
+			Assert.That(chest.StoredCurrencyCount, Is.EqualTo(2));
+			Assert.That(context.CountCards(context.Coin.ContentId), Is.Zero);
+			Assert.That(context.CountCards(context.Buyer.ContentId), Is.EqualTo(1));
+			Assert.That(context.Run.Tabletop.Cards.TryGetStackContaining(filler.Id, out TabletopCardStack remainingStack), Is.True);
+			Assert.That(remainingStack.Cards.Select(card => card.Id), Is.EqualTo(new[] { filler.Id }));
+		}
+
+		[Test]
 		public void ScenarioRun_ChestPaysPackVendorWithoutRemovingChest()
 		{
 			using ChestScenarioContext context = CreateScenario(includeVendor: true);
@@ -87,7 +108,8 @@ namespace Gameplay.Tests
 		private static ChestScenarioContext CreateScenario(bool includeVendor)
 		{
 			CardDefinition coin = CreateCard("test.chest.coin");
-			CardDefinition buyer = CreateCard("test.chest.buyer");
+			JsonUtility.FromJsonOverwrite("{\"m_countsTowardCardLimit\":false}", coin);
+			CardBuyerDefinition buyer = CreateBuyer("test.chest.buyer", coin.ContentId);
 			ChestCardDefinition chest = CreateChest("test.chest.card", coin.ContentId, capacity: 2, sellValue: 3);
 			ActionDefinition depositAction = CreateDepositAction(chest.ContentId, coin.ContentId);
 			ActionDefinition withdrawAction = CreateWithdrawAction(chest.ContentId);
@@ -95,7 +117,7 @@ namespace Gameplay.Tests
 			CardDefinition reward = CreateCard("test.chest.reward");
 			CardPackDefinition pack = ScriptableObject.CreateInstance<CardPackDefinition>();
 			JsonUtility.FromJsonOverwrite(
-				"{\"m_contentId\":{\"m_value\":\"test.chest.pack\"},\"m_slots\":[{\"m_entries\":[{\"m_cardId\":{\"m_value\":\"test.chest.reward\"},\"m_weight\":1}]}]}",
+				"{\"m_contentId\":{\"m_value\":\"test.chest.pack\"},\"m_countsTowardCardLimit\":false,\"m_slots\":[{\"m_entries\":[{\"m_cardId\":{\"m_value\":\"test.chest.reward\"},\"m_weight\":1}]}]}",
 				pack);
 			PackVendorDefinition vendor = CreateVendor("test.chest.vendor", pack.ContentId, price: 2);
 			ActionDefinition purchaseAction = CreatePurchaseAction(chest.ContentId, coin.ContentId, vendor.ContentId);
@@ -131,6 +153,16 @@ namespace Gameplay.Tests
 			CardDefinition card = ScriptableObject.CreateInstance<CardDefinition>();
 			JsonUtility.FromJsonOverwrite("{\"m_contentId\":{\"m_value\":\"" + contentId + "\"}}", card);
 			return card;
+		}
+
+		private static CardBuyerDefinition CreateBuyer(string contentId, ContentId currencyCardId)
+		{
+			CardBuyerDefinition buyer = ScriptableObject.CreateInstance<CardBuyerDefinition>();
+			SerializedObject serialized = new SerializedObject(buyer);
+			serialized.FindProperty("m_contentId").FindPropertyRelative("m_value").stringValue = contentId;
+			serialized.FindProperty("m_currencyCardId").FindPropertyRelative("m_value").stringValue = currencyCardId.Value;
+			serialized.ApplyModifiedPropertiesWithoutUndo();
+			return buyer;
 		}
 
 		private static ChestCardDefinition CreateChest(string contentId, ContentId currencyCardId, int capacity, int sellValue)
@@ -255,7 +287,7 @@ namespace Gameplay.Tests
 				ScenarioRun run,
 				UnityEngine.Object[] assets,
 				CardDefinition coin,
-				CardDefinition buyer,
+				CardBuyerDefinition buyer,
 				ChestCardDefinition chest,
 				ActionDefinition depositAction,
 				ActionDefinition withdrawAction,

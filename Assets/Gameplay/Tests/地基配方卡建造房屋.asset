@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.recipe-card.building-house
   m_tagCodes: e9030000f0157a00
-  m_displayName: 配方：房屋
-  m_description: 石头 ×1，木头 ×2，村民 ×1。
+  m_displayName: "\u914D\u65B9\uFF1A\u623F\u5C4B"
+  m_description: "\u77F3\u5934 \xD71\uFF0C\u6728\u5934 \xD72\uFF0C\u6751\u6C11 \xD71\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u914D\u65B9\u5361"

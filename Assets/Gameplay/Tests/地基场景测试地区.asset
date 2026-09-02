@@ -21,7 +21,7 @@ MonoBehaviour:
     Address:
     Guid:
     Locked: 1
-  m_sceneAddress: FoundationMapTest
+  m_sceneAddress: 地基地图测试
   m_tabletopPlacement:
     m_bounds:
       serializedVersion: 2
@@ -115,4 +115,7 @@ MonoBehaviour:
         m_requiredTargetBottomContentTagCodes: f3157a00
         m_requiresSameContent: 0
     m_cardLimitBonusExpansionPerPoint: {x: 0.06, y: 0.04}
+    m_automaticMovementIntervalSeconds: 5
+    m_automaticMovementRadius: 1
+    m_automaticMovementMaxAttempts: 5
   m_arrivalPosition: {x: 0, y: 0}

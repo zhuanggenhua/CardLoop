@@ -128,17 +128,85 @@ namespace Gameplay.Tabletop.Actions
 				{
 					throw new InvalidOperationException($"可用行动集合的第 {actionIndex + 1} 项缺少有效内容 ID。");
 				}
-				if (seenActionIds.Add(action.ContentId) && TryCreateCandidate(action, participants, out var candidate))
+				if (seenActionIds.Add(action.ContentId) &&
+					TryCreateCandidate(
+						action,
+						participants,
+						allowUnboundParticipants: false,
+						out var candidate))
 				{
 					if (TryCreateDraggedTailCandidate(action, participants, draggedStackTail, out var stackTailCandidate))
 					{
 						candidates.Add(stackTailCandidate);
 						continue;
 					}
-					if (ShouldRejectBecauseDraggedTailCannotFillSourceSlot(action, participants, draggedStackTail))
+					if (!AllowsStackCraftPartialDraggedTail(action) &&
+						ShouldRejectBecauseDraggedTailCannotFillSourceSlot(action, participants, draggedStackTail))
 					{
 						continue;
 					}
+					candidates.Add(candidate);
+				}
+			}
+			return candidates.ToArray();
+		}
+
+		internal static ActionCandidate[] FindStackCandidates(
+			TabletopCardStack stack,
+			TabletopCards cards,
+			ContentIndex contentIndex,
+			IReadOnlyList<ActionDefinition> availableActions)
+		{
+			if (stack == null)
+			{
+				throw new ArgumentNullException(nameof(stack));
+			}
+			if (cards == null)
+			{
+				throw new ArgumentNullException(nameof(cards));
+			}
+			if (contentIndex == null)
+			{
+				throw new ArgumentNullException(nameof(contentIndex));
+			}
+			if (availableActions == null)
+			{
+				throw new ArgumentNullException(nameof(availableActions));
+			}
+
+			List<CandidateParticipant> participants = new List<CandidateParticipant>(stack.Cards.Count);
+			for (int cardIndex = 0; cardIndex < stack.Cards.Count; cardIndex++)
+			{
+				TabletopCardId cardId = stack.Cards[cardIndex].Id;
+				if (!TryCreateParticipant(cardId, cards, contentIndex, out var participant))
+				{
+					throw new InvalidOperationException(
+						$"牌堆中的卡牌 {cardId} 无法解析为行动参与对象。");
+				}
+				participants.Add(participant);
+			}
+
+			List<ActionCandidate> candidates = new List<ActionCandidate>();
+			HashSet<ContentId> seenActionIds = new HashSet<ContentId>();
+			for (int actionIndex = 0; actionIndex < availableActions.Count; actionIndex++)
+			{
+				ActionDefinition action = availableActions[actionIndex];
+				if (action == null)
+				{
+					throw new InvalidOperationException($"可用行动集合的第 {actionIndex + 1} 项为空。");
+				}
+				if (!action.ContentId.IsValid)
+				{
+					throw new InvalidOperationException($"可用行动集合的第 {actionIndex + 1} 项缺少有效内容 ID。");
+				}
+				if (seenActionIds.Add(action.ContentId) &&
+					TryCreateCandidate(
+						action,
+						participants,
+						allowUnboundParticipants: action.AllowExcessCardsInStack,
+						out var candidate) &&
+					candidate.IsReady)
+				{
 					candidates.Add(candidate);
 				}
 			}
@@ -190,7 +258,11 @@ namespace Gameplay.Tabletop.Actions
 			return participants;
 		}
 
-		private static bool TryCreateCandidate(ActionDefinition action, IReadOnlyList<CandidateParticipant> participants, out ActionCandidate candidate)
+		private static bool TryCreateCandidate(
+			ActionDefinition action,
+			IReadOnlyList<CandidateParticipant> participants,
+			bool allowUnboundParticipants,
+			out ActionCandidate candidate)
 		{
 			IReadOnlyList<ActionSlotDefinition> slots = action.ParticipationSlots;
 			if (!AreSlotsUsable(slots))
@@ -204,7 +276,14 @@ namespace Gameplay.Tabletop.Actions
 				working[slotIndex] = new List<TabletopCardId>();
 			}
 			SearchResult best = null;
-			SearchAssignments(0, participants, slots, working, ref best, forbiddenSlotIndex: -1);
+			SearchAssignments(
+				0,
+				participants,
+				slots,
+				working,
+				ref best,
+				forbiddenSlotIndex: -1,
+				allowUnboundParticipants);
 			if (best == null)
 			{
 				candidate = null;
@@ -257,7 +336,14 @@ namespace Gameplay.Tabletop.Actions
 				}
 
 				SearchResult best = null;
-				SearchAssignments(0, otherParticipants, slots, working, ref best, sourceSlotIndex);
+				SearchAssignments(
+					0,
+					otherParticipants,
+					slots,
+					working,
+					ref best,
+					sourceSlotIndex,
+					allowUnboundParticipants: false);
 				if (best != null)
 				{
 					candidate = CreateCandidate(action, slots, best);
@@ -303,6 +389,46 @@ namespace Gameplay.Tabletop.Actions
 			return false;
 		}
 
+		private static bool AllowsStackCraftPartialDraggedTail(ActionDefinition action)
+		{
+			return HasResultIntent(action, intent => intent is DepositCurrencyIntoChestResultIntent);
+		}
+
+		private static bool HasResultIntent(ActionDefinition action, Func<ActionResultIntent, bool> predicate)
+		{
+			if (action == null)
+			{
+				return false;
+			}
+			if (predicate == null)
+			{
+				throw new ArgumentNullException(nameof(predicate));
+			}
+			for (int i = 0; i < action.ResultIntents.Count; i++)
+			{
+				if (predicate(action.ResultIntents[i]))
+				{
+					return true;
+				}
+			}
+			for (int branchIndex = 0; branchIndex < action.ResultBranches.Count; branchIndex++)
+			{
+				ActionResultBranchDefinition branch = action.ResultBranches[branchIndex];
+				if (branch == null)
+				{
+					continue;
+				}
+				for (int intentIndex = 0; intentIndex < branch.ResultIntents.Count; intentIndex++)
+				{
+					if (predicate(branch.ResultIntents[intentIndex]))
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
 		private static bool CanAssignParticipantsExcludingSlot(
 			IReadOnlyList<ActionSlotDefinition> slots,
 			IReadOnlyList<CandidateParticipant> participants,
@@ -315,7 +441,14 @@ namespace Gameplay.Tabletop.Actions
 			}
 
 			SearchResult best = null;
-			SearchAssignments(0, participants, slots, working, ref best, forbiddenSlotIndex);
+			SearchAssignments(
+				0,
+				participants,
+				slots,
+				working,
+				ref best,
+				forbiddenSlotIndex,
+				allowUnboundParticipants: false);
 			return best != null;
 		}
 
@@ -332,7 +465,14 @@ namespace Gameplay.Tabletop.Actions
 			return new ActionCandidate(action, bindings, best.MissingParticipantCount);
 		}
 
-		private static void SearchAssignments(int participantIndex, IReadOnlyList<CandidateParticipant> participants, IReadOnlyList<ActionSlotDefinition> slots, List<TabletopCardId>[] working, ref SearchResult best, int forbiddenSlotIndex)
+		private static void SearchAssignments(
+			int participantIndex,
+			IReadOnlyList<CandidateParticipant> participants,
+			IReadOnlyList<ActionSlotDefinition> slots,
+			List<TabletopCardId>[] working,
+			ref SearchResult best,
+			int forbiddenSlotIndex,
+			bool allowUnboundParticipants)
 		{
 			if (participantIndex >= participants.Count)
 			{
@@ -351,13 +491,69 @@ namespace Gameplay.Tabletop.Actions
 					continue;
 				}
 				ActionSlotDefinition slot = slots[slotIndex];
-				if ((slot.MaximumParticipants <= 0 || working[slotIndex].Count < slot.MaximumParticipants) && ActionParticipationEvaluator.MatchesParticipant(slot, participant.ContentAsset, participant.AbilitySystemCell))
+				if (!ActionParticipationEvaluator.MatchesParticipant(
+						slot,
+						participant.ContentAsset,
+						participant.AbilitySystemCell))
+				{
+					continue;
+				}
+
+				if (slot.MaximumParticipants <= 0 || working[slotIndex].Count < slot.MaximumParticipants)
 				{
 					working[slotIndex].Add(participant.CardId);
-					SearchAssignments(participantIndex + 1, participants, slots, working, ref best, forbiddenSlotIndex);
+					SearchAssignments(
+						participantIndex + 1,
+						participants,
+						slots,
+						working,
+						ref best,
+						forbiddenSlotIndex,
+						allowUnboundParticipants);
 					working[slotIndex].RemoveAt(working[slotIndex].Count - 1);
 				}
 			}
+			if (allowUnboundParticipants)
+			{
+				SearchAssignments(
+					participantIndex + 1,
+					participants,
+					slots,
+					working,
+					ref best,
+					forbiddenSlotIndex,
+					allowUnboundParticipants);
+				return;
+			}
+			if (CanLeaveParticipantUnbound(participant, slots))
+			{
+				SearchAssignments(
+					participantIndex + 1,
+					participants,
+					slots,
+					working,
+					ref best,
+					forbiddenSlotIndex,
+					allowUnboundParticipants);
+			}
+		}
+
+		private static bool CanLeaveParticipantUnbound(CandidateParticipant participant, IReadOnlyList<ActionSlotDefinition> slots)
+		{
+			for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)
+			{
+				ActionSlotDefinition slot = slots[slotIndex];
+				if (slot != null &&
+					slot.AllowAdditionalMatchingParticipantsInStack &&
+					ActionParticipationEvaluator.MatchesParticipant(
+						slot,
+						participant.ContentAsset,
+						participant.AbilitySystemCell))
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		private static bool CanSlotAcceptCount(ActionSlotDefinition slot, int participantCount)

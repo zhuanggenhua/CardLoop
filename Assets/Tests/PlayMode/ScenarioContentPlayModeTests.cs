@@ -27,9 +27,9 @@ namespace Gameplay.Tests
     /// </summary>
     public sealed class ScenarioContentPlayModeTests
     {
-        private const string FoundationScenePath = "Assets/Scenes/FoundationTest.unity";
-        private const string FoundationMapScenePath = "Assets/Scenes/FoundationMapTest.unity";
-        private const string FoundationSecondMapScenePath = "Assets/Scenes/FoundationSecondMapTest.unity";
+        private const string FoundationScenePath = "Assets/Scenes/地基测试.unity";
+        private const string FoundationMapScenePath = "Assets/Scenes/地基地图测试.unity";
+        private const string FoundationSecondMapScenePath = "Assets/Scenes/地基第二地图测试.unity";
         private string m_saveDirectory;
 
         [UnitySetUp]
@@ -602,14 +602,14 @@ namespace Gameplay.Tests
             YokiFrame.EventKit.Type.Register<SceneTransitionEndedEvent>(OnTransitionEnded);
             try
             {
-                yield return sceneSystem.TransitionToAsync("FoundationMapTest").ToCoroutine();
+                yield return sceneSystem.TransitionToAsync("地基地图测试").ToCoroutine();
 
-                Assert.That(sceneSystem.CurrentSceneAddress, Is.EqualTo("FoundationMapTest"));
-                Assert.That(YokiFrame.SceneKit.IsSceneLoaded("FoundationMapTest"), Is.True);
-                Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("FoundationMapTest"));
+                Assert.That(sceneSystem.CurrentSceneAddress, Is.EqualTo("地基地图测试"));
+                Assert.That(YokiFrame.SceneKit.IsSceneLoaded("地基地图测试"), Is.True);
+                Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("地基地图测试"));
                 Assert.That(
                     SceneManager.GetActiveScene().GetRootGameObjects()
-                        .Any(root => root.name == "FoundationMapMarker"),
+                        .Any(root => root.name == "地基地图测试标记"),
                     Is.True);
                 CollectionAssert.AreEqual(
                     new[]
@@ -623,17 +623,17 @@ namespace Gameplay.Tests
                     lifecycle);
 
                 lifecycle.Clear();
-                yield return sceneSystem.TransitionToAsync("FoundationSecondMapTest").ToCoroutine();
+                yield return sceneSystem.TransitionToAsync("地基第二地图测试").ToCoroutine();
 
-                Assert.That(sceneSystem.CurrentSceneAddress, Is.EqualTo("FoundationSecondMapTest"));
-                Assert.That(YokiFrame.SceneKit.IsSceneLoaded("FoundationMapTest"), Is.False);
-                Assert.That(YokiFrame.SceneKit.IsSceneLoaded("FoundationSecondMapTest"), Is.True);
-                Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("FoundationSecondMapTest"));
+                Assert.That(sceneSystem.CurrentSceneAddress, Is.EqualTo("地基第二地图测试"));
+                Assert.That(YokiFrame.SceneKit.IsSceneLoaded("地基地图测试"), Is.False);
+                Assert.That(YokiFrame.SceneKit.IsSceneLoaded("地基第二地图测试"), Is.True);
+                Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("地基第二地图测试"));
                 Assert.That(
                     SceneManager.GetActiveScene().GetRootGameObjects()
-                        .Any(root => root.name == "FoundationSecondMapMarker"),
+                        .Any(root => root.name == "地基第二地图测试标记"),
                     Is.True);
-                Scene unloadedScene = SceneManager.GetSceneByName("FoundationMapTest");
+                Scene unloadedScene = SceneManager.GetSceneByName("地基地图测试");
                 Assert.That(!unloadedScene.IsValid() || !unloadedScene.isLoaded, Is.True);
                 CollectionAssert.AreEqual(
                     new[]
@@ -684,7 +684,7 @@ namespace Gameplay.Tests
             bool unloadCompleted = false;
 
             sceneLoader.LoadAsync(
-                "FoundationMapTest",
+                "地基地图测试",
                 YokiFrame.SceneLoadMode.Additive,
                 scene =>
                 {
@@ -715,7 +715,7 @@ namespace Gameplay.Tests
 
             Assert.That(usedBeforeUnload, Is.True, "加载完成后，资源包必须被标记为正在使用。");
             Assert.That(usedAfterUnload, Is.False, "显式卸载完成后，资源包不能继续被场景加载器占用。");
-            Scene unloadedScene = SceneManager.GetSceneByName("FoundationMapTest");
+            Scene unloadedScene = SceneManager.GetSceneByName("地基地图测试");
             Assert.That(!unloadedScene.IsValid() || !unloadedScene.isLoaded, Is.True);
         }
 

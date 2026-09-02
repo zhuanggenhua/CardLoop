@@ -36,6 +36,8 @@ namespace Gameplay.Tabletop.Actions
 	{
 		private readonly ReadOnlyCollection<ActionSlotBinding> m_bindings;
 
+		internal ActionDefinition Action { get; }
+
 		public ContentId ActionId { get; }
 
 		public string ResultBranchKey { get; }
@@ -83,7 +85,8 @@ namespace Gameplay.Tabletop.Actions
 			{
 				throw new ArgumentOutOfRangeException("turnCost", turnCost, "行动实例回合消耗必须大于或等于 0。");
 			}
-			ActionId = candidate.Action.ContentId;
+			Action = candidate.Action;
+			ActionId = Action.ContentId;
 			m_bindings = new List<ActionSlotBinding>(candidate.Bindings).AsReadOnly();
 			ResultBranchKey = resultBranchKey ?? string.Empty;
 			ResultPlan = resultPlan ?? throw new ArgumentNullException("resultPlan");

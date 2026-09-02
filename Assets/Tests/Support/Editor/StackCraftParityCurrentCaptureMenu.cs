@@ -31,6 +31,7 @@ namespace Gameplay.Tests.Support.Editor
 		private const string SessionCaptureRequestedKey = SessionPrefix + "CaptureRequested";
 		private const string ScreenshotFileName = "stackcraft-parity-current-ready.png";
 		private const string ResultFileName = "stackcraft-parity-current-ready.json";
+		private const string ExpectedStarterPackArtworkName = "初始卡包";
 		private const double PlayModeTimeoutSeconds = 90d;
 		private const double ScreenshotTimeoutSeconds = 5d;
 
@@ -269,7 +270,7 @@ namespace Gameplay.Tests.Support.Editor
 
 			if (!controller.IsReady)
 			{
-				pendingReason = "FoundationTestSceneHarness 尚未完成内容、牌桌和 HUD 绑定。";
+				pendingReason = "FoundationTestSceneHarness 尚未完成内容、牌桌、输入和必需 HUD 绑定。";
 				return false;
 			}
 
@@ -336,9 +337,10 @@ namespace Gameplay.Tests.Support.Editor
 				throw new InvalidOperationException($"Starter 卡包标题错误：{packView.DisplayedTitleText}。");
 			}
 
-			if (!packView.DisplaysArtwork || packView.DisplayedArtwork.name != "Starter")
+			if (!packView.DisplaysArtwork || packView.DisplayedArtwork.name != ExpectedStarterPackArtworkName)
 			{
-				pendingReason = "Starter 卡包插画尚未完成 YooAsset 投影。";
+				pendingReason =
+					$"Starter 卡包插画尚未完成 YooAsset 投影，当前={packView.DisplayedArtwork?.name ?? "(空)"}。";
 				return false;
 			}
 

@@ -1,179 +1,35 @@
 ---
 name: unity-skills
-description: 'Unity Editor 自动化总入口。用于在 Unity 中创建/修改对象、场景、脚本、资源、材质、灯光、设置、测试或批量操作。'
+description: 通过本项目已安装的 UnitySkills 包自动化 Unity Editor；用于场景、对象、脚本、资源、材质、测试和批量操作，不复制上游模块文档。
 ---
 
-# Unity Skills
+# Unity Skills（项目薄入口）
 
-Use this skill when the user wants to automate the Unity Editor through the local UnitySkills REST server.
+本文件只裁决 CardLoop 使用 UnitySkills 的项目边界。通用协议、REST schema、模块说明和官方链接不在 `.spec` 重复保存，统一读取本地包内资料：
 
-## Schema: pick the cheapest layer that answers your question
+- 上游入口：`Packages/com.besty.unity-skills/unity-skills~/SKILL.md`
+- 模块索引：`Packages/com.besty.unity-skills/unity-skills~/skills/SKILL.md`
+- 模块资料：`Packages/com.besty.unity-skills/unity-skills~/skills/<module>/SKILL.md`
+- 官方链接索引：`Packages/com.besty.unity-skills/unity-skills~/references/*.md`
 
-The schema is the canonical source for exact skill names, parameters, defaults, and returns — **but you rarely need the expensive layers**. Route by task shape (all layers are server-cached with ETag/304 and served off the main thread):
+## 项目边界
 
-- **Intent is specific** ("create a cube", "set this SO field") → `GET /skills/recommend?intent=<words>&topN=10&includeSchema=true` (~2-5 KB) returns scored candidates **with parameter schemas** — often the only lookup you need. If you already know the skill name, skip lookups entirely and go straight to the dryRun gate below.
-- **Task touches one or two areas** → directory first: `GET /skills?brief=1` (~19 KB ≈ 3.4K tokens — all 729 skill names grouped by module, names are self-describing `module_verb`) to lock the module(s), then `GET /skills/schema?category=<Category>` (~13–44 KB) for exact signatures. Typical session cost ≈ 10K tokens instead of 35K.
-- **Exploratory / cross-module / unsure what exists** → full awareness: `GET /skills?summary=1` (~143 KB ≈ 35K tokens — every skill's full description). The only layer with all descriptions at once; reach for it when the cheaper layers left you unsure, **not by default**.
-- **Full detail (rare)**: `GET /skills/schema` — full schema with exact parameter schemas (~`618 KB` ≈ 150K tokens, client-cached 300s + disk-cached under `~/.unity_skills/cache/` with ETag/304 revalidation, so short-lived CLI processes reuse it too). Only when you need many modules' exact signatures at once.
+- 使用前先按 `.spec/skills/before-you-code/SKILL.md` 锁定问题对象、真相来源、目标入口 / 环境和验收口径。
+- UnitySkills 只操作当前 CardLoop 项目的唯一 Unity Editor；不得为绕过阻塞另起第二个 Editor。
+- 准确参数、返回值、权限模式和可用 skill 以本机 UnitySkills server 的 `/health`、`/skills`、schema / dryRun 输出和包内 `SKILL.md` 为准。
+- 修改脚本、资源、Prefab、场景或包配置前，继续遵守 `.spec/rules/system.md`、`.spec/knowledge/standards/unity-serialization-safety.md` 和对应功能规范。
+- 批量写入、Prefab / Scene 变更、删除、高风险包操作或可能触发 Domain Reload 的动作，必须先做 dryRun / 计划检查，并按项目规则说明影响范围。
 
-Python helper shortcuts: `unity_skills.search_skills("keyword")` greps the cached summary **locally** and returns only matching entries — the 143 KB stays on disk, out of your context. `get_skills_summary()` / `get_skill_schema()` wrap the layers above with memory+disk caching.
+## 不承载内容
 
-**Before executing a skill — the dryRun gate (do not skip).** The lite/summary manifest is for *awareness* (picking the right skill), not for calling. Descriptions are informal (human-written, not a formal signature; some omit parameter hints) and parameter schemas are omitted. Before the first execution of any skill whose exact parameters you don't already hold in context, **dryRun it**: `POST /skill/<name>?mode=dryRun` with your best-guess args. The server validates parameters and, on error, returns `unknownParams` with `suggestions` (the correct parameter names) plus the full `parameters` schema — iterate until `valid: true`, then execute without `?mode=dryRun`. This is the mechanism that turns "awareness" into "correct operation steps"; never guess parameters from descriptions and never skip dryRun for a skill you have not yet called successfully this session. Mode values are strictly validated (v2.1.0+): a mistyped `?mode=` / `?dryRun=` value (e.g. `mode=dry_run`, `dryRun=1`) is rejected with `INVALID_MODE` and the request is **not** executed — a typo can never silently fall through to a real execution.
+- 不在 `.spec/skills/unity-skills/` 内保存上游 `skills/`、`references/`、示例、脚本或完整模块文档。
+- 不把 UnitySkills 通用模块注册成多个 CardLoop 项目 skill；CardLoop 只有本薄入口一个 `unity-skills` 项目 skill。
+- 不用 UnitySkills 的可执行成功替代业务完成声明；编译、场景回读、PlayMode、截图或玩家效果仍按目标验收口径单独证明。
 
-**Multi-skill tasks — aggregate-plan first.** When a task needs several skills in sequence, call `workflow_plan` (`POST` a JSON array of `{name, params}` steps) before executing any of them. It returns combined `steps`, `dependencies`, `totalRisk`, and `warnings`, so you sequence correctly and surface cross-step blockers before the first mutation. Then dryRun + execute each step in order.
+## 读取路由
 
-**Multi-skill execution — `POST /skills/batch` (v2.1.0+).** When the sequence is deterministic (no step needs a previous step's return value), execute it in **one** HTTP call instead of N: body `{"steps":[{"skill":"<name>","args":{...}}, ...], "continueOnError":false}` (≤50 steps). Each step runs the full single-skill pipeline (validation, permission gate, undo, audit). Default is fail-fast — on a step error the rest are returned as `skipped`; `continueOnError: true` skips failed steps instead. Authorization responses (`MODE_RESTRICTED` / `CONFIRMATION_REQUIRED`) always interrupt regardless and carry the grant token in that step's error. Response: `{status: "completed"|"partial", executed, failed, results:[{index, skill, status, result|error}]}`. `?mode=dryRun` validates every step in one shot without executing (never interrupts) — the batch counterpart of the dryRun gate. v1 boundary: a later step cannot reference an earlier step's output — when you need that, fall back to step-by-step calls.
-
-Use bundled module docs (`MODULE.md`, with `skills/INDEX.md` as the index) for routing guidance, guardrails, and minimal examples, not as the canonical source of exact signatures. In this CardLoop project install, internal UnitySkills modules are documentation files, not separate project skills.
-
-Current snapshot: `729` REST skills, `51` functional source modules, `68` module documentation directories (`49` REST/module docs + `19` advisory docs), Unity `2022.3+`, default timeout `15 minutes`.
-
-Python helper: `unity-skills/scripts/unity_skills.py`
-
-## Operating Mode (v1.9.0+)
-
-Operating mode is a **server-side permission gate**, configured in `Window > UnitySkills > Server` and persisted in EditorPrefs per-machine. It is not an AI routing policy and **cannot** be switched via chat or REST — chat-side trigger words no longer apply.
-
-### Boot Handshake
-
-On session start (or before the first skill call), call `GET /health` and read:
-
-- `currentMode` — `"approval"` / `"auto"` / `"bypass"`
-- `panelApprovalRequired` — only meaningful under Approval; selects the grant channel
-- `pendingCount` — outstanding grant requests
-
-### Three Modes (aligned with Claude Code permission modes)
-
-> **Factory default:** a fresh install starts in **Auto**; an upgraded install (any pre-existing `UnitySkills_*` pref) starts in **Bypass**. It **never** defaults to Approval. The "Claude Code 类比" column below is only a mental model, **not** the factory default — always read `/health.currentMode` before acting.
-
-| Mode | Claude Code 类比（心智对照，非默认） | FullAuto skill | Auto-detected NeverInSemi skill |
-|---|---|---|---|
-| **Approval** | ≈ `default` / `plan` | First call returns `MODE_RESTRICTED`; run the grant protocol below | `MODE_FORBIDDEN` |
-| **Auto** | ≈ `acceptEdits` | Executes directly (audit written); **you must self-assess** sensitive cases | `MODE_FORBIDDEN` |
-| **Bypass** | ≈ `bypassPermissions` | Executes directly | Executes directly (only `ConfirmationToken` still gates high-risk) |
-
-`NeverInSemi` is derived automatically by `IsForbiddenInSemi()` — there is no manual marker. See "Skill Mode Annotation" below.
-
-### Approval Mode Grant Protocol
-
-Approval grants are **single-shot one-step execution**: a successful `/permission/grant` call runs the original skill server-side and returns the result in the same response. You do **not** retry the skill after grant. Grants are **not** persisted — calling the same skill a second time will hit `MODE_RESTRICTED` again and must go through grant again. If the user wants permanent bypass for a skill, direct them to the Allowlist (see below).
-
-On `MODE_RESTRICTED`, branch on `details.approvalChannel`:
-
-**Dialog channel** (`"dialog"`, default — `panelApprovalRequired = false`)
-
-1. Tell the user in chat: "要调用 `<skill>` 来 `<目的>`，参数 `<argsSummary>`，请求码 #`<token 前 6 位>`，是否允许？"
-2. After explicit user consent, call `POST /permission/grant { skill, token, args }` **once**
-3. On success, the response contains `{ ok: true, executed: true, skill, result: <Execute output> }` — the skill has already run server-side. Consume `result` directly; **do not call the original skill endpoint again**
-
-**Panel channel** (`"panel"`, when `panelApprovalRequired = true`)
-
-1. Tell the user in chat: "要调用 `<skill>` 来 `<目的>`，请到 `Window > UnitySkills` 面板的 Pending Grant Requests 点 `[Approve]`（请求码 #`<token 前 6 位>`）"
-2. **Do not call `/permission/grant` yet** — calling it before the user clicks Approve returns `GRANT_PENDING_APPROVAL`
-3. Poll `GET /permission/status?token=<token>` to observe the request state (look at `focus.approvedByPanel`)
-4. Once the user has pressed Approve in the panel, call `POST /permission/grant { skill, token, args }` **once** — this takes the Granted branch and triggers one-step execution, returning `{ ok: true, executed: true, skill, result }`. Consume `result` directly; **do not call the original skill endpoint again**
-
-> Note: panel approval no longer auto-routes the result back to the AI. The Approve click only flips the request into the Granted state; AI must follow up with one `/permission/grant` call to fetch the execution result.
-
-On `MODE_FORBIDDEN`: the skill is auto-classified as NeverInSemi (Delete / Domain Reload / Play Mode / high-risk). It is callable only under Bypass, **or** if the user has explicitly added it to the Allowlist (see below). **Do not attempt the grant flow** — tell the user the action requires Bypass mode, an Allowlist entry, or offer an alternative skill.
-
-### Allowlist (user-managed permanent bypass)
-
-The Allowlist is a **user-managed** permanent whitelist of skill names, configured in `Window > UnitySkills > Server` settings drawer (Allowlist Skills section / `+ Add Skill` button). It is independent of Approval grants:
-
-- Allowlisted skills execute directly under any mode — the server skips the Approval/MODE_RESTRICTED gate
-- **An Allowlist entry overrides MODE_FORBIDDEN** for that skill (covers Delete / MayEnterPlayMode / MayTriggerReload / `RiskLevel="high"`). This is intentional: the user has explicitly opted in
-- **Allowlist does NOT bypass the high-risk ConfirmationToken gate.** When `RequireConfirmation` is enabled (Settings drawer → Runtime → Require Confirmation), high-risk skills still require the `_confirm` token two-step handshake even if allowlisted — Allowlist only covers the mode/approval channel, not the per-call safety confirmation
-- The list is **opaque to the AI**: allowlisted skills look like normal successful calls, never returning `MODE_RESTRICTED`
-- **The AI should not call `/permission/allowlist/add` on its own initiative.** Only call it when the user has explicitly authorized a session-scoped bulk add (e.g. "把这几个 skill 加白名单方便我后面批量调"); otherwise direct the user to add entries through the panel
-- Allowlist endpoints: `GET /permission/allowlist` / `POST /permission/allowlist/add` / `POST /permission/allowlist/remove` (body `{skill}` or `{all: true}`)
-
-> The previous `GrantedSkills` semantics ("after one grant the skill is permanently auto-allowed") has been removed. Grants are now single-shot. Permanent allow == Allowlist; one-shot approval == grant.
-
-### Auto Mode Self-Assessment
-
-Under Auto, FullAuto skills run directly. You **must pause and confirm with the user** in chat when any of the following apply:
-
-- Batch operation touching ≥ `5` objects
-- Prefab apply / scene-level mutation / asset overwrite
-- Dry-run shows irreversible changes (deletes, overrides, cascading edits)
-
-This confirmation is a chat-level check (explain plan + risk + ask), independent of the server-side mode gate. The server will not stop you in Auto — the audit log records the call regardless.
-
-### Relationship with `ConfirmationTokenService`
-
-Mode authorization (persistent, per-skill) and `ConfirmationToken` (single-shot, per-call) are **orthogonal**:
-
-- Mode check runs first; if allowed, the existing confirmation gate may still issue `CONFIRMATION_REQUIRED` with a dry-run for `RiskLevel=high` or `Operation.Delete` skills
-- Granted skills still flow through `ConfirmationToken` when triggered — continue using the original dry-run → user consent → retry with `_confirm` loop
-- Neither replaces the other
-
-### Skill Mode Annotation
-
-The REST surface (~`750` skills) is partitioned by `[UnitySkill]` `Mode` and runtime metadata. Use schema endpoints for the canonical list:
-
-| Annotation | Count | Source |
-|---|---|---|
-| `SkillMode.SemiAuto` | ~`270` | Manually annotated. Covers read-only / query / analyze skills across `script` / `perception` / `scene` / `editor` / `asset` / `workflow` / `debug` / `console` and most modules' info / list / get / find skills |
-| Auto-detected NeverInSemi | ~`75-79` | `IsForbiddenInSemi()` derives purely from `Operation.Delete`, `MayEnterPlayMode`, `MayTriggerReload`, `RiskLevel="high"` (no fallback list) |
-| `SkillMode.FullAuto` (default) | remainder | Unannotated skills (write / mutate by default). Approval requires grant; Auto / Bypass execute directly |
-
-SemiAuto (read/query/analyze) skills are directly callable in every mode and span the modules below; use `GET /skills?category=<Category>` for the exact list (write skills in the same modules stay FullAuto):
-
-- **script** (read/list/get_info/find_in_file/get_compile_feedback) · **perception** (scene_analyze/context/health_check/find_hotspots, project_stack_detect) · **scene** (get_info/get_hierarchy/get_loaded/find_objects) · **editor** (get_context/state/selection/tags/layers) · **asset** (find/get_info) · **workflow** (list/session_*/plan — prefer workflow & batch helpers for planning/preview/jobs/rollback) · **debug + console** (check_compilation/get_errors/get_system_info/get_memory_info/get_logs)
-- plus most modules' own info / list / get / find skills. **Advisory**: `19` design-only modules (no REST skills) — see Coding Reference Index below.
-
-## Core Rules
-
-1. If the user specifies a Unity version or editor line, set instance/version routing first with `unity_skills.set_unity_version(...)`.
-2. **BATCH-FIRST** — whenever the task touches `2+` objects, use the `*_batch` variant. Calling the single-object skill in a loop is N round-trips (and `2N` under Approval, since each call needs its own grant). Always look for a `*_batch` form before looping.
-3. For multi-step editor mutations, prefer workflow wrappers instead of free-form mutation sequences.
-4. Script edits, define changes, package changes, some imports, and test template creation can trigger compilation or Domain Reload. Wait and retry on transient unavailability.
-5. `test_*` skills are async. They return a `jobId` and must be polled with `test_get_result(jobId)`.
-6. **Object location (Unity 6000.4+)** — on Unity 6000.4+ the legacy `instanceId` is reported as `0` and is no longer a reliable handle; locate GameObjects/components by `entityId` (the `entityId` field returned by object skills) instead. Locator priority is `entityId > instanceId > path > name`. Object skills accept a synthetic `entityId` parameter and return both `entityId` and `instanceId`; on Unity < 6000.4 the `instanceId` path still works unchanged.
-
-## Coding Reference Index
-
-Before writing or refactoring Unity code, **load the relevant advisory module first**. These are the `19` `Documentation only` design modules (no REST skills — loadable under any mode) that pin rules to engine source and prevent hallucinated / removed APIs. Load on demand by topic, not all at once.
-
-**General coding & architecture** — before writing gameplay code or making structural decisions:
-
-| Module | Load when |
-|---|---|
-| `project-scout` | Before proposing changes in an existing project — first check Unity version, packages, asmdef, folders, coding patterns |
-| `architecture` | Module boundaries, scene design, SOLID structure, decoupling, refactor direction |
-| `script-roles` | Whether a class should be a MonoBehaviour, ScriptableObject, plain C# service, or installer |
-| `scriptdesign` | Code review, reducing coupling, improving maintainability, refactoring scripts |
-| `patterns` | Choosing among ScriptableObject / event / state-machine / object-pool / observer designs |
-| `testability` | Improving testability, isolating logic out of MonoBehaviour, planning EditMode/PlayMode tests |
-| `asmdef` | Module boundaries, faster compiles, clearer dependencies, editor/runtime/test split |
-| `async` | Choosing among Update / coroutine / UniTask / timers, or cleanup & cancellation |
-| `inspector` | SerializeField usage, Tooltip/Header organization, validation, Inspector UX |
-| `scene-contracts` | Required scene objects, component dependencies, bootstrap logic, reference wiring |
-| `adr` | Comparing options, choosing among approaches, locking in a design decision |
-| `performance` | Performance review, frame drops, Update/allocation/pooling/physics optimization |
-| `blueprints` | Starter structure for a small game (platformer, shooter, runner, puzzle, tower-defense, clicker, card) |
-
-**Library-specific** — before writing code against that library (guards against removed / hallucinated APIs):
-
-| Module | Load before writing |
-|---|---|
-| `addressables-design` | `InitializeAsync` / `LoadAssetAsync` / `LoadSceneAsync` / `UpdateCatalogs` / `AssetReference` |
-| `dotween-design` | `DOTween.Init` / `DOMove` / `Sequence` / `SetLoops` / `SetLink` / `ToUniTask` |
-| `netcode-design` | `NetworkBehaviour` / RPC / `NetworkVariable` / Spawn |
-| `shadergraph-design` | Graph structure, node chains, SubGraph boundaries, keyword / blackboard layout |
-| `unitask-design` | `async UniTask` / `UniTaskVoid` / `PlayerLoopTiming` / `CancellationToken` / `WhenAll` |
-| `yooasset-design` | `ResourcePackage` / `AssetHandle` / `Downloader` / `FileSystem` / `AssetBundleBuilder` |
-| `yaml-editing` | Hand-editing `.unity` / `.prefab` / `.asset` / `.meta` / ProjectSettings YAML when REST cannot reach (compile failure, `.meta`, hidden ProjectSettings fields, merge conflict) |
-
-**Unity API reference**: `references/*.md` — official API grouped by topic (`2d`, `3d`, `animation`, `assets`, `audio`, `editor`, `networking`, `physics`, `rendering`, `scripting`, `shaders`, `ui`, `xr`, …). Read the relevant file to ground exact signatures instead of guessing.
-
-Load any module via the index: `unity-skills/skills/<module>/MODULE.md`.
-
-## Route
-
-- Module index: `unity-skills/skills/INDEX.md`
-- Script guidance: `unity-skills/skills/script/MODULE.md`
-- Advisory guidance: load advisory modules on demand from the module index
-
-> **XR rule**: Before calling any `xr_*` skill in a session, load `skills/xr/MODULE.md` first. XR is reflection-based; wrong property names can fail silently.
+- 场景 / 对象 / Prefab / 资源自动化：先读包内 `skills/scene`、`skills/gameobject`、`skills/prefab`、`skills/asset` 对应 `SKILL.md`。
+- 脚本、程序集、测试和编译反馈：先读包内 `skills/script`、`skills/asmdef`、`skills/test` 对应 `SKILL.md`。
+- 架构、模式、脚本角色、序列化手改：只在进入对应代码或 YAML 修改时，按需读取包内 advisory 模块。
+- UGUI / UI Toolkit / TMP：先读 `.spec/skills/unity-ui-development/SKILL.md`，再按需读取包内 UI 模块。
+- UPM 包管理：先读 `.spec/skills/unity-package-management/SKILL.md`，再按需读取包内 package 模块。

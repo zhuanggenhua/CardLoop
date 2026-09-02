@@ -38,18 +38,18 @@ namespace Gameplay.Tests.Support.Editor
     public static partial class FoundationTestSceneMenu
     {
         /// <summary>统一 Gameplay 地基运行验收场景的固定资产路径。</summary>
-        internal const string ScenePath = "Assets/Scenes/FoundationTest.unity";
+        internal const string ScenePath = "Assets/Scenes/地基测试.unity";
 
 		/// <summary>StackCraft 开局卡包同态验收场景的固定资产路径。</summary>
-		internal const string StackCraftParityScenePath = "Assets/Scenes/FoundationStackCraftParityTest.unity";
+		internal const string StackCraftParityScenePath = "Assets/Scenes/模板同态测试.unity";
 
-		private const string StackCraftParitySceneName = "FoundationStackCraftParityTest";
+		private const string StackCraftParitySceneName = "模板同态测试";
 
         /// <summary>场景切换验收使用的第一张附加地图场景路径。</summary>
-        internal const string MapScenePath = "Assets/Scenes/FoundationMapTest.unity";
+        internal const string MapScenePath = "Assets/Scenes/地基地图测试.unity";
 
         /// <summary>场景切换验收使用的第二张附加地图场景路径。</summary>
-        internal const string SecondMapScenePath = "Assets/Scenes/FoundationSecondMapTest.unity";
+        internal const string SecondMapScenePath = "Assets/Scenes/地基第二地图测试.unity";
         private const string ConfigPath = "Assets/Scenes/FoundationTestConfig.asset";
         private const string ConfigAssetName = "FoundationTestConfig";
         private const string CollectorSettingPath = "Assets/BundleCollectorSetting.asset";
@@ -77,6 +77,10 @@ namespace Gameplay.Tests.Support.Editor
 		private const string TestBeginningSlimePath = TestContentFolder + "/地基开端史莱姆.asset";
 		private const string TestBeginningGoldenKeyPath = TestContentFolder + "/地基开端金钥匙.asset";
 		private const string TestBeginningEggPath = TestContentFolder + "/地基开端鸡蛋.asset";
+		private const string TestRecipeOutputHousePath = TestContentFolder + "/地基配方产物房屋.asset";
+		private const string TestRecipeOutputBabyPath = TestContentFolder + "/地基配方产物婴儿.asset";
+		private const string TestRecipeOutputTimberPath = TestContentFolder + "/地基配方产物木材.asset";
+		private const string TestRecipeOutputWoodenStickPath = TestContentFolder + "/地基配方产物木棍.asset";
 		private const int NeutralCreatureAscPresetId = 1005;
 		private const int HostileCreatureAscPresetId = 1006;
 		private const string TestRecipeGrowingBerryActionPath = TestContentFolder + "/地基配方种植浆果行动.asset";
@@ -128,12 +132,14 @@ namespace Gameplay.Tests.Support.Editor
         private const string TabletopViewSettingsPath = TabletopTestFolder + "/牌桌测试视图设置.asset";
 		private const string ScenarioScreenEffectProfilePath = TabletopTestFolder + "/剧本屏幕效果配置.asset";
         private const string GameplaySpriteFolder = "Assets/Art/Sprites";
+		private const string GameplayTextureFolder = "Assets/Art/Textures";
 		private const string GameplayMaterialFolder = "Assets/Art/Materials";
 		private const string GameplayShaderFolder = "Assets/Art/Shaders";
 		private const string GameplayModelFolder = "Assets/Art/Models";
-        private const string GameplayAudioClipFolder = "Assets/Audio/SFX";
+		private const string GameplayAudioClipFolder = "Assets/Audio/SFX";
         private const string GameplayCardArtFolder = GameplaySpriteFolder + "/CardArts";
 		private const string StackCraftSpriteFolder = GameplaySpriteFolder + "/StackCraft";
+		private const string StackCraftTextureFolder = GameplayTextureFolder + "/StackCraft";
 		private const string TabletopCardArtPath = GameplaySpriteFolder + "/卡牌占位图.png";
 		private const string StackCraftSquareSpritePath = StackCraftSpriteFolder + "/Square.png";
 		private const string StackCraftStatsCardSpritePath = StackCraftSpriteFolder + "/Stats_Card.png";
@@ -150,20 +156,22 @@ namespace Gameplay.Tests.Support.Editor
         private const string RockCardArtPath = GameplayCardArtFolder + "/岩石.png";
         private const string StoneCardArtPath = GameplayCardArtFolder + "/石头.png";
         private const string CoinCardArtPath = GameplayCardArtFolder + "/金币.png";
-		private const string StackCraftPlaceholderCardArtPath = StackCraftSpriteFolder + "/CardArts/Placeholder.png";
+		private const string StackCraftPlaceholderCardArtPath = StackCraftTextureFolder + "/CardArts/Placeholder.png";
         private const string GoblinCardArtPath = GameplayCardArtFolder + "/哥布林.png";
         private const string TreasureChestCardArtPath = GameplayCardArtFolder + "/宝箱.png";
         private const string WoodenChestCardArtPath = GameplayCardArtFolder + "/木箱.png";
-        private const string UnusedStarterPackCardArtPath = GameplayCardArtFolder + "/初始卡包.png";
-		private const string UnusedBeginningPackCardArtPath = GameplayCardArtFolder + "/开端卡包.png";
-        private const string StarterPackCardArtPath = StackCraftSpriteFolder + "/PackArts/Starter.png";
-		private const string BeginningPackCardArtPath = StackCraftSpriteFolder + "/PackArts/Beginning.png";
+        private const string StarterPackCardArtPath = GameplayCardArtFolder + "/初始卡包.png";
+		private const string BeginningPackCardArtPath = GameplayCardArtFolder + "/开端卡包.png";
 		private const string SoilCardArtPath = GameplayCardArtFolder + "/土壤.png";
 		private const string TreeCardArtPath = GameplayCardArtFolder + "/树.png";
 		private const string ChickenCardArtPath = GameplayCardArtFolder + "/鸡.png";
 		private const string SlimeCardArtPath = GameplayCardArtFolder + "/史莱姆.png";
 		private const string GoldenKeyCardArtPath = GameplayCardArtFolder + "/金钥匙.png";
 		private const string EggCardArtPath = GameplayCardArtFolder + "/鸡蛋.png";
+		private const string HouseCardArtPath = GameplayCardArtFolder + "/房屋.png";
+		private const string BabyCardArtPath = GameplayCardArtFolder + "/婴儿.png";
+		private const string TimberCardArtPath = GameplayCardArtFolder + "/木材.png";
+		private const string WoodenStickCardArtPath = GameplayCardArtFolder + "/木棍.png";
 		private const string RecipeCardArtPath = GameplayCardArtFolder + "/配方卡.png";
 		private const string CardSurfaceShaderPath = GameplayShaderFolder + "/卡牌表面.shadergraph";
 		private const string CardOutlineShaderPath = GameplayShaderFolder + "/卡牌轮廓.shadergraph";
@@ -238,14 +246,18 @@ namespace Gameplay.Tests.Support.Editor
         private const string GoblinCardArtAddress = "哥布林";
         private const string TreasureChestCardArtAddress = "宝箱";
         private const string WoodenChestCardArtAddress = "木箱";
-        private const string StarterPackCardArtAddress = "PackArts_Starter";
-		private const string BeginningPackCardArtAddress = "PackArts_Beginning";
+        private const string StarterPackCardArtAddress = "初始卡包";
+		private const string BeginningPackCardArtAddress = "开端卡包";
 		private const string SoilCardArtAddress = "土壤";
 		private const string TreeCardArtAddress = "树";
 		private const string ChickenCardArtAddress = "鸡";
 		private const string SlimeCardArtAddress = "史莱姆";
 		private const string GoldenKeyCardArtAddress = "金钥匙";
 		private const string EggCardArtAddress = "鸡蛋";
+		private const string HouseCardArtAddress = "房屋";
+		private const string BabyCardArtAddress = "婴儿";
+		private const string TimberCardArtAddress = "木材";
+		private const string WoodenStickCardArtAddress = "木棍";
 		private const string RecipeCardArtAddress = "配方卡";
 		private const string CharacterCardSurfaceAddress = "卡牌表面_角色";
 		private const string MobCardSurfaceAddress = "卡牌表面_生物";
@@ -284,8 +296,6 @@ namespace Gameplay.Tests.Support.Editor
 		private const string UiSubmitClipPath = GameplayAudioClipFolder + "/界面点击.wav";
         private const string TestPanelFontPath =
             TabletopTestFolder + "/地基测试中文字体.asset";
-		private const string StackCraftSurfaceFontPath =
-			"Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
 		private static readonly Vector2 StackCraftPackInstanceViewSize = new(0.9f, 1.3000002f);
 		private static readonly Vector2 StackCraftTradeZoneViewSize = new(0.90000004f, 1.1250004f);
 		private static readonly Rect StackCraftBoardPlacementBounds = new Rect(-6f, -4f, 12f, 8f);
@@ -295,6 +305,9 @@ namespace Gameplay.Tests.Support.Editor
 		private static readonly Vector2 StackCraftBoardStackStep = new Vector2(0f, -0.18f);
 		private const int StackCraftBoardOverlapResolveMaxIterations = 8;
 		private const float StackCraftBoardSpawnAttachRadius = 1f;
+		private const float StackCraftBoardAutomaticMovementIntervalSeconds = 5f;
+		private const float StackCraftBoardAutomaticMovementRadius = 1f;
+		private const int StackCraftBoardAutomaticMovementMaxAttempts = 5;
 		private static readonly Vector2 StackCraftBoardCardLimitBonusExpansionPerPoint = new Vector2(0.06f, 0.04f);
 		private static readonly Vector3 StackCraftBoardLocalBoundsSize = new Vector3(48f, 0f, 32f);
 		private const float StackCraftBoardSurfaceHeight = -0.05f;
@@ -302,9 +315,6 @@ namespace Gameplay.Tests.Support.Editor
 		private const int StackCraftBaseCardLimit = 24;
 		private const int StackCraftHungerPerCharacter = 2;
 		private const float StackCraftReferenceDayDurationSeconds = 120f;
-		private const float StackCraftAutomaticMovementIntervalSeconds = 5f;
-		private const float StackCraftAutomaticMovementRadius = 1f;
-		private const int StackCraftAutomaticMovementMaxAttempts = 5;
 		private const string RuntimeRootPrefabPath = TabletopTestFolder + "/FoundationTestRuntimeRoot.prefab";
 		private const string TestPanelFontSourcePath =
 			"Packages/com.besty.unity-skills/Editor/UI/Fonts/UnitySkillsCN-Regular.ttf";
@@ -319,8 +329,8 @@ namespace Gameplay.Tests.Support.Editor
         public static void RebuildTestScene()
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-            RebuildMapTestScene(MapScenePath, "FoundationMapMarker");
-            RebuildMapTestScene(SecondMapScenePath, "FoundationSecondMapMarker");
+            RebuildMapTestScene(MapScenePath, "地基地图测试标记");
+            RebuildMapTestScene(SecondMapScenePath, "地基第二地图测试标记");
             GameConfig config = EnsureConfigAsset();
             EnsureTestCardAsset();
             EnsureTestProductAsset();
@@ -368,6 +378,19 @@ namespace Gameplay.Tests.Support.Editor
             Debug.Log(
                 $"Gameplay 地基测试场景已重建：{ScenePath}，StackCraft 同态场景已重建：{StackCraftParityScenePath}。独立运行时使用 {RuntimeRootPrefabPath}。");
         }
+
+		/// <summary>
+		/// 同步 StackCraft Textures 自有副本的导入类型，不重建场景或内容资产。
+		/// </summary>
+		[MenuItem("Gameplay/地基/同步 StackCraft 材质纹理导入")]
+		public static void SyncStackCraftTextureImporters()
+		{
+			AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+			EnsureStackCraftTextureImporters();
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+			Debug.Log("StackCraft 材质纹理导入同步完成。");
+		}
 
 		private static void RebuildTabletopScene(
 			string scenePath,
@@ -933,14 +956,18 @@ namespace Gameplay.Tests.Support.Editor
 				GoblinCardArtPath,
 				TreasureChestCardArtPath,
 				WoodenChestCardArtPath,
-				UnusedStarterPackCardArtPath,
-				UnusedBeginningPackCardArtPath,
+				StarterPackCardArtPath,
+				BeginningPackCardArtPath,
 				SoilCardArtPath,
 				TreeCardArtPath,
 				ChickenCardArtPath,
 				SlimeCardArtPath,
 				GoldenKeyCardArtPath,
 				EggCardArtPath,
+				HouseCardArtPath,
+				BabyCardArtPath,
+				TimberCardArtPath,
+				WoodenStickCardArtPath,
 				RecipeCardArtPath,
 				CharacterCardSurfacePath,
 				MobCardSurfacePath,
@@ -964,7 +991,8 @@ namespace Gameplay.Tests.Support.Editor
 			HashSet<string> ownedCollectorPaths = new(exactAssetPaths, System.StringComparer.Ordinal)
 			{
 				"Assets/Scenes",
-				StackCraftSpriteFolder
+				StackCraftSpriteFolder,
+				StackCraftTextureFolder
 			};
 			group.Collectors.RemoveAll(candidate =>
 				!ownedCollectorPaths.Contains(candidate.CollectPath));
@@ -973,6 +1001,7 @@ namespace Gameplay.Tests.Support.Editor
 				EnsureExactTestAssetCollector(group, exactAssetPaths[i]);
 			}
 			EnsureStackCraftSpriteCollector(group);
+			EnsureStackCraftTextureCollector(group);
             EditorUtility.SetDirty(setting);
         }
 
@@ -1190,7 +1219,7 @@ namespace Gameplay.Tests.Support.Editor
                 contentIdValue,
                 out string cardArtPath,
                 out string cardArtAddressValue);
-			WriteSoftSpriteReference(
+			WriteSoftAssetReference(
 				serializedContent,
 				"m_cardArt",
 				cardArtPath,
@@ -1275,16 +1304,6 @@ namespace Gameplay.Tests.Support.Editor
 		{
 			RequireProperty(serializedContent, "m_overrideViewSize").boolValue = overrideViewSize;
 			RequireProperty(serializedContent, "m_viewSize").vector2Value = viewSize;
-		}
-
-private static void WriteSoftSpriteReference(
-			SerializedObject serializedContent,
-			string propertyName,
-			string assetPath,
-			string address,
-			string fieldDisplayName)
-		{
-			WriteSoftAssetReference(serializedContent, propertyName, assetPath, address, fieldDisplayName);
 		}
 
 		private static void WriteSoftAssetReference(
@@ -1401,18 +1420,33 @@ private static void WriteSoftSpriteReference(
 					cardArtPath = EggCardArtPath;
 					cardArtAddress = EggCardArtAddress;
 					return;
+				case FoundationTestSceneHarness.TestRecipeOutputHouseContentId:
+					cardArtPath = HouseCardArtPath;
+					cardArtAddress = HouseCardArtAddress;
+					return;
+				case FoundationTestSceneHarness.TestRecipeOutputBabyContentId:
+					cardArtPath = BabyCardArtPath;
+					cardArtAddress = BabyCardArtAddress;
+					return;
+				case FoundationTestSceneHarness.TestRecipeOutputTimberContentId:
+					cardArtPath = TimberCardArtPath;
+					cardArtAddress = TimberCardArtAddress;
+					return;
+				case FoundationTestSceneHarness.TestRecipeOutputWoodenStickContentId:
+					cardArtPath = WoodenStickCardArtPath;
+					cardArtAddress = WoodenStickCardArtAddress;
+					return;
 				case FoundationTestSceneHarness.TestRecipeGrowingBerryCardContentId:
 				case FoundationTestSceneHarness.TestRecipeBuildingHouseCardContentId:
 				case FoundationTestSceneHarness.TestRecipeMakingLoveCardContentId:
 				case FoundationTestSceneHarness.TestRecipeMakingTimberCardContentId:
-				case FoundationTestSceneHarness.TestRecipeCraftingStickCardContentId:
+                case FoundationTestSceneHarness.TestRecipeCraftingStickCardContentId:
 					cardArtPath = RecipeCardArtPath;
 					cardArtAddress = RecipeCardArtAddress;
 					return;
                 default:
-                    cardArtPath = TabletopCardArtPath;
-                    cardArtAddress = TabletopCardArtAddress;
-                    return;
+					throw new MissingReferenceException(
+						$"未登记 StackCraft 同态内容的卡面美术：{contentIdValue}");
             }
         }
 
@@ -1510,6 +1544,15 @@ private static void WriteSoftSpriteReference(
 					cardSurfacePath = ValuableCardSurfacePath;
 					cardSurfaceAddress = ValuableCardSurfaceAddress;
 					return;
+				case FoundationTestSceneHarness.TestRecipeOutputHouseContentId:
+					cardSurfacePath = StructureCardSurfacePath;
+					cardSurfaceAddress = StructureCardSurfaceAddress;
+					return;
+				case FoundationTestSceneHarness.TestRecipeOutputTimberContentId:
+				case FoundationTestSceneHarness.TestRecipeOutputWoodenStickContentId:
+					cardSurfacePath = MaterialCardSurfacePath;
+					cardSurfaceAddress = MaterialCardSurfaceAddress;
+					return;
 				default:
 					cardSurfacePath = MaterialCardSurfacePath;
 					cardSurfaceAddress = MaterialCardSurfaceAddress;
@@ -1544,6 +1587,7 @@ private static void WriteSoftSpriteReference(
                     $"{nameof(ActionDefinition)} 的回合消耗、日志分组、参与槽位、结果意图或随机分支字段已变更，测试行动生成器需要同步更新。");
             }
 
+			WriteDefaultRecipeSelectionWeight(serializedAction);
             turnCost.intValue = 2;
             journalGroupName.stringValue = "建造";
             slots.arraySize = 1;
@@ -1551,6 +1595,7 @@ private static void WriteSoftSpriteReference(
             RequireRelative(slot, "m_displayName").stringValue = "参与者";
             RequireRelative(slot, "m_minimumParticipants").intValue = 2;
             RequireRelative(slot, "m_maximumParticipants").intValue = 2;
+            RequireRelative(slot, "m_allowAdditionalMatchingParticipantsInStack").boolValue = false;
             WriteContentIdArray(RequireRelative(slot, "m_allowedContentIds"), "test.foundation.card");
             WriteIntArray(RequireRelative(slot, "m_requiredAllContentTagCodes"), XTag.Faction);
             WriteIntArray(
@@ -1611,6 +1656,7 @@ private static void WriteSoftSpriteReference(
 					$"{nameof(ActionDefinition)} 的作者字段已变更，填槽测试行动生成器需要同步更新。");
 			}
 
+			WriteDefaultRecipeSelectionWeight(serializedAction);
 			turnCost.intValue = 1;
 			journalGroupName.stringValue = "杂项";
 			slots.arraySize = 1;
@@ -1618,6 +1664,7 @@ private static void WriteSoftSpriteReference(
 			RequireRelative(slot, "m_displayName").stringValue = "参与者";
 			RequireRelative(slot, "m_minimumParticipants").intValue = 3;
 			RequireRelative(slot, "m_maximumParticipants").intValue = 3;
+			RequireRelative(slot, "m_allowAdditionalMatchingParticipantsInStack").boolValue = false;
 			WriteContentIdArray(
 				RequireRelative(slot, "m_allowedContentIds"),
 				FoundationTestSceneHarness.TestContentId);
@@ -1770,6 +1817,7 @@ private static void WriteSoftSpriteReference(
 				"打开卡包",
 				"多次点击卡包，完全打开并取得里面的所有卡牌。"
 			);
+			WriteDefaultRecipeSelectionWeight(serializedAction);
 			RequireProperty(serializedAction, "m_turnCost").intValue = 0;
 			RequireProperty(serializedAction, "m_canStartFromClick").boolValue = true;
 			SerializedProperty actionSlots = RequireProperty(serializedAction, "m_participationSlots");
@@ -1853,11 +1901,6 @@ private static void WriteSoftSpriteReference(
 				TestBeginningChickenPath,
 				FoundationTestSceneHarness.TestBeginningPackEggContentId,
 				intervalSeconds: 30f);
-			WriteAutomaticMovementFields(
-				TestBeginningChickenPath,
-				intervalSeconds: StackCraftAutomaticMovementIntervalSeconds,
-				radius: StackCraftAutomaticMovementRadius,
-				maxAttempts: StackCraftAutomaticMovementMaxAttempts);
 			EnsureBeginningPackMobAsset(
 				TestBeginningSlimePath,
 				FoundationTestSceneHarness.TestBeginningPackSlimeContentId,
@@ -1876,11 +1919,6 @@ private static void WriteSoftSpriteReference(
 					criticalChance: 5,
 					criticalMultiplier: 150));
 			WriteCardInstanceFields(TestBeginningSlimePath, initialUses: 1, sellValue: 1, countsTowardLimit: true);
-			WriteAutomaticMovementFields(
-				TestBeginningSlimePath,
-				intervalSeconds: StackCraftAutomaticMovementIntervalSeconds,
-				radius: StackCraftAutomaticMovementRadius,
-				maxAttempts: StackCraftAutomaticMovementMaxAttempts);
 			WriteAutomaticHostileBehaviorFields(
 				TestBeginningSlimePath,
 				aggroRadius: 5f,
@@ -1892,37 +1930,74 @@ private static void WriteSoftSpriteReference(
 				"纯金制成的钥匙。能打开的东西应该很珍贵。",
 				XTag.Faction_Player);
 			WriteCardInstanceFields(TestBeginningGoldenKeyPath, initialUses: 1, sellValue: 3, countsTowardLimit: true);
+			EnsureRecipeOutputCardAssets();
 
 			EnsureRecipeActionAsset(
 				TestRecipeGrowingBerryActionPath,
 				FoundationTestSceneHarness.TestRecipeGrowingBerryActionContentId,
 				"种植浆果",
 				"StackCraft 配方参考：土壤 ×1，浆果 ×1。制作耗时 120 秒。",
-				"畜牧");
+				"畜牧",
+				new[]
+				{
+					new RecipeIngredientSpec("soil", "土壤", FoundationTestSceneHarness.TestBeginningPackSoilContentId, 1, consumeOnCompletion: false, allowAdditionalMatchingParticipantsInStack: true),
+					new RecipeIngredientSpec("berry", "浆果", FoundationTestSceneHarness.TestFoodContentId, 1, consumeOnCompletion: true, allowAdditionalMatchingParticipantsInStack: false),
+				},
+				FoundationTestSceneHarness.TestCardPackFirstRewardContentId,
+				recheckStackAfterCompletion: true);
 			EnsureRecipeActionAsset(
 				TestRecipeBuildingHouseActionPath,
 				FoundationTestSceneHarness.TestRecipeBuildingHouseActionContentId,
 				"建造房屋",
 				"StackCraft 配方参考：石头 ×1，木头 ×2，村民 ×1。制作耗时 30 秒。",
-				"建造");
+				"建造",
+				new[]
+				{
+					new RecipeIngredientSpec("stone", "石头", FoundationTestSceneHarness.TestSellableCardContentId, 1, consumeOnCompletion: true, allowAdditionalMatchingParticipantsInStack: false),
+					new RecipeIngredientSpec("wood", "木头", FoundationTestSceneHarness.TestProductContentId, 2, consumeOnCompletion: true, allowAdditionalMatchingParticipantsInStack: false),
+					new RecipeIngredientSpec("villager", "村民", FoundationTestSceneHarness.TestContentId, 1, consumeOnCompletion: false, allowAdditionalMatchingParticipantsInStack: false),
+				},
+				FoundationTestSceneHarness.TestRecipeOutputHouseContentId,
+				recheckStackAfterCompletion: true);
 			EnsureRecipeActionAsset(
 				TestRecipeMakingLoveActionPath,
 				FoundationTestSceneHarness.TestRecipeMakingLoveActionContentId,
 				"孕育",
 				"StackCraft 配方参考：房屋 ×1，村民 ×2。制作耗时 20 秒。",
-				"畜牧");
+				"畜牧",
+				new[]
+				{
+					new RecipeIngredientSpec("house", "房屋", FoundationTestSceneHarness.TestRecipeOutputHouseContentId, 1, consumeOnCompletion: false, allowAdditionalMatchingParticipantsInStack: false),
+					new RecipeIngredientSpec("villager", "村民", FoundationTestSceneHarness.TestContentId, 2, consumeOnCompletion: false, allowAdditionalMatchingParticipantsInStack: false),
+				},
+				FoundationTestSceneHarness.TestRecipeOutputBabyContentId,
+				recheckStackAfterCompletion: false);
 			EnsureRecipeActionAsset(
 				TestRecipeMakingTimberActionPath,
 				FoundationTestSceneHarness.TestRecipeMakingTimberActionContentId,
 				"制作木材",
 				"StackCraft 配方参考：木头 ×1，村民 ×1。制作耗时 10 秒。",
-				"加工");
+				"加工",
+				new[]
+				{
+					new RecipeIngredientSpec("wood", "木头", FoundationTestSceneHarness.TestProductContentId, 1, consumeOnCompletion: true, allowAdditionalMatchingParticipantsInStack: false),
+					new RecipeIngredientSpec("villager", "村民", FoundationTestSceneHarness.TestContentId, 1, consumeOnCompletion: false, allowAdditionalMatchingParticipantsInStack: false),
+				},
+				FoundationTestSceneHarness.TestRecipeOutputTimberContentId,
+				recheckStackAfterCompletion: true);
 			EnsureRecipeActionAsset(
 				TestRecipeCraftingStickActionPath,
 				FoundationTestSceneHarness.TestRecipeCraftingStickActionContentId,
 				"制作木棍",
 				"StackCraft 配方参考：木材 ×1，村民 ×1。制作耗时 10 秒。",
-				"加工");
+				"加工",
+				new[]
+				{
+					new RecipeIngredientSpec("timber", "木材", FoundationTestSceneHarness.TestRecipeOutputTimberContentId, 1, consumeOnCompletion: true, allowAdditionalMatchingParticipantsInStack: false),
+					new RecipeIngredientSpec("villager", "村民", FoundationTestSceneHarness.TestContentId, 1, consumeOnCompletion: false, allowAdditionalMatchingParticipantsInStack: false),
+				},
+				FoundationTestSceneHarness.TestRecipeOutputWoodenStickContentId,
+				recheckStackAfterCompletion: true);
 
 			EnsureRecipeCardAsset(
 				TestRecipeGrowingBerryCardPath,
@@ -1951,6 +2026,52 @@ private static void WriteSoftSpriteReference(
 				"木材 ×1，村民 ×1。");
 
 			EnsureBeginningPackAsset();
+		}
+
+		private static void EnsureRecipeOutputCardAssets()
+		{
+			EnsureTestCardAsset(
+				TestRecipeOutputHousePath,
+				FoundationTestSceneHarness.TestRecipeOutputHouseContentId,
+				"房屋",
+				"舒适的住所。",
+				XTag.Faction);
+			WriteCardInstanceFields(TestRecipeOutputHousePath, initialUses: 1, sellValue: 5, countsTowardLimit: true);
+
+			EnsureBeginningPackMobAsset(
+				TestRecipeOutputBabyPath,
+				FoundationTestSceneHarness.TestRecipeOutputBabyContentId,
+				"婴儿",
+				"可爱的婴儿。",
+				XTag.Faction,
+				abilitySystemPresetId: NeutralCreatureAscPresetId,
+				hasAutomaticHostility: false,
+				attributeOverrides: CreateStackCraftCombatAttributeOverrides(
+					maxHealth: 5,
+					attack: 2,
+					defense: 1,
+					attackSpeed: 50,
+					accuracy: 95,
+					dodge: 5,
+					criticalChance: 5,
+					criticalMultiplier: 150));
+			WriteCardInstanceFields(TestRecipeOutputBabyPath, initialUses: 1, sellValue: 0, countsTowardLimit: true);
+
+			EnsureTestCardAsset(
+				TestRecipeOutputTimberPath,
+				FoundationTestSceneHarness.TestRecipeOutputTimberContentId,
+				"木材",
+				"由木头加工而成。",
+				XTag.Faction);
+			WriteCardInstanceFields(TestRecipeOutputTimberPath, initialUses: 1, sellValue: 2, countsTowardLimit: true);
+
+			EnsureTestCardAsset(
+				TestRecipeOutputWoodenStickPath,
+				FoundationTestSceneHarness.TestRecipeOutputWoodenStickContentId,
+				"木棍",
+				"由木材加工成的木棍。",
+				XTag.Faction);
+			WriteCardInstanceFields(TestRecipeOutputWoodenStickPath, initialUses: 1, sellValue: 2, countsTowardLimit: true);
 		}
 
 		private static void EnsureBeginningPackMobAsset(
@@ -2043,12 +2164,46 @@ private static void WriteSoftSpriteReference(
 			}
 		}
 
+		private readonly struct RecipeIngredientSpec
+		{
+			public RecipeIngredientSpec(
+				string slotKey,
+				string displayName,
+				string contentId,
+				int count,
+				bool consumeOnCompletion,
+				bool allowAdditionalMatchingParticipantsInStack)
+			{
+				SlotKey = slotKey;
+				DisplayName = displayName;
+				ContentId = contentId;
+				Count = count;
+				ConsumeOnCompletion = consumeOnCompletion;
+				AllowAdditionalMatchingParticipantsInStack = allowAdditionalMatchingParticipantsInStack;
+			}
+
+			public string SlotKey { get; }
+
+			public string DisplayName { get; }
+
+			public string ContentId { get; }
+
+			public int Count { get; }
+
+			public bool ConsumeOnCompletion { get; }
+
+			public bool AllowAdditionalMatchingParticipantsInStack { get; }
+		}
+
 		private static void EnsureRecipeActionAsset(
 			string assetPath,
 			string contentId,
 			string displayName,
 			string description,
-			string journalGroupName)
+			string journalGroupName,
+			IReadOnlyList<RecipeIngredientSpec> ingredients,
+			string outputContentId,
+			bool recheckStackAfterCompletion)
 		{
 			ActionDefinition action = AssetDatabase.LoadAssetAtPath<ActionDefinition>(assetPath);
 			if (action == null)
@@ -2056,17 +2211,109 @@ private static void WriteSoftSpriteReference(
 				action = ScriptableObject.CreateInstance<ActionDefinition>();
 				AssetDatabase.CreateAsset(action, assetPath);
 			}
+			if (ingredients == null || ingredients.Count == 0)
+			{
+				throw new InvalidOperationException($"配方行动 {displayName} 缺少材料槽位。");
+			}
+			if (string.IsNullOrWhiteSpace(outputContentId))
+			{
+				throw new InvalidOperationException($"配方行动 {displayName} 缺少产物内容 ID。");
+			}
+
 			SerializedObject serializedAction = WriteCommonContentFields(action, contentId, displayName, description);
+			WriteDefaultRecipeSelectionWeight(serializedAction);
 			RequireProperty(serializedAction, "m_journalGroupName").stringValue = journalGroupName;
 			RequireProperty(serializedAction, "m_turnCost").intValue = 1;
 			RequireProperty(serializedAction, "m_canStartFromClick").boolValue = false;
-			RequireProperty(serializedAction, "m_participationSlots").arraySize = 0;
+			RequireProperty(serializedAction, "m_allowExcessCardsInStack").boolValue = false;
+			RequireProperty(serializedAction, "m_recheckStackAfterCompletion").boolValue = recheckStackAfterCompletion;
+			SerializedProperty slots = RequireProperty(serializedAction, "m_participationSlots");
+			slots.arraySize = ingredients.Count;
+			for (int ingredientIndex = 0; ingredientIndex < ingredients.Count; ingredientIndex++)
+			{
+				WriteRecipeIngredientSlot(
+					slots.GetArrayElementAtIndex(ingredientIndex),
+					ingredients[ingredientIndex]);
+			}
 			RequireProperty(serializedAction, "m_conditions").arraySize = 0;
-			RequireProperty(serializedAction, "m_resultIntents").arraySize = 0;
+			SerializedProperty intents = RequireProperty(serializedAction, "m_resultIntents");
+			intents.arraySize = CountRecipeResultIntents(ingredients);
+			int intentIndex = 0;
+			string outputAnchorSlotKey = ResolveRecipeOutputAnchorSlotKey(ingredients);
+			for (int ingredientIndex = 0; ingredientIndex < ingredients.Count; ingredientIndex++)
+			{
+				RecipeIngredientSpec ingredient = ingredients[ingredientIndex];
+				if (!ingredient.ConsumeOnCompletion)
+				{
+					continue;
+				}
+
+				SerializedProperty useIntent = intents.GetArrayElementAtIndex(intentIndex);
+				useIntent.managedReferenceValue = new UseCardsResultIntent();
+				RequireRelative(useIntent, "m_slotKey").stringValue = ingredient.SlotKey;
+				intentIndex++;
+			}
+			SerializedProperty createIntent = intents.GetArrayElementAtIndex(intentIndex);
+			createIntent.managedReferenceValue = new CreateCardsResultIntent();
+			RequireRelative(createIntent, "m_contentId")
+				.FindPropertyRelative("m_value").stringValue = outputContentId;
+			RequireRelative(createIntent, "m_count").intValue = 1;
+			RequireRelative(createIntent, "m_anchorSlotKey").stringValue = outputAnchorSlotKey;
 			RequireProperty(serializedAction, "m_resultBranches").arraySize = 0;
 			serializedAction.ApplyModifiedPropertiesWithoutUndo();
 			action.EnsureLocalAuthoringKeys();
 			EditorUtility.SetDirty(action);
+		}
+
+		private static void WriteRecipeIngredientSlot(
+			SerializedProperty slot,
+			RecipeIngredientSpec ingredient)
+		{
+			if (ingredient.Count <= 0)
+			{
+				throw new InvalidOperationException(
+					$"配方材料 {ingredient.DisplayName} 的数量必须大于 0。");
+			}
+
+			RequireRelative(slot, "m_key").stringValue = ingredient.SlotKey;
+			RequireRelative(slot, "m_displayName").stringValue = ingredient.DisplayName;
+			RequireRelative(slot, "m_minimumParticipants").intValue = ingredient.Count;
+			RequireRelative(slot, "m_maximumParticipants").intValue = ingredient.Count;
+			RequireRelative(slot, "m_allowAdditionalMatchingParticipantsInStack").boolValue =
+				ingredient.AllowAdditionalMatchingParticipantsInStack;
+			WriteContentIdArray(RequireRelative(slot, "m_allowedContentIds"), ingredient.ContentId);
+			WriteIntArray(RequireRelative(slot, "m_requiredAllContentTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredAnyContentTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredNoneContentTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredAllAbilitySystemTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredAnyAbilitySystemTagCodes"));
+			WriteIntArray(RequireRelative(slot, "m_requiredNoneAbilitySystemTagCodes"));
+		}
+
+		private static int CountRecipeResultIntents(IReadOnlyList<RecipeIngredientSpec> ingredients)
+		{
+			int count = 1;
+			for (int ingredientIndex = 0; ingredientIndex < ingredients.Count; ingredientIndex++)
+			{
+				if (ingredients[ingredientIndex].ConsumeOnCompletion)
+				{
+					count++;
+				}
+			}
+			return count;
+		}
+
+		private static string ResolveRecipeOutputAnchorSlotKey(IReadOnlyList<RecipeIngredientSpec> ingredients)
+		{
+			for (int ingredientIndex = 0; ingredientIndex < ingredients.Count; ingredientIndex++)
+			{
+				if (!ingredients[ingredientIndex].ConsumeOnCompletion)
+				{
+					return ingredients[ingredientIndex].SlotKey;
+				}
+			}
+
+			return ingredients[0].SlotKey;
 		}
 
 		private static void EnsureRecipeCardAsset(
@@ -2258,6 +2505,7 @@ private static void WriteSoftSpriteReference(
 				FoundationTestSceneHarness.TestPurchaseCardPackActionContentId,
 				"购买卡包",
 				"把货币投入商贩；付款可以分次保存，满价后生成卡包。");
+			WriteDefaultRecipeSelectionWeight(serializedAction);
 			RequireProperty(serializedAction, "m_turnCost").intValue = 0;
 			RequireProperty(serializedAction, "m_canStartFromClick").boolValue = false;
 			SerializedProperty slots = RequireProperty(serializedAction, "m_participationSlots");
@@ -2349,6 +2597,7 @@ private static void WriteSoftSpriteReference(
 				FoundationTestSceneHarness.TestDepositCurrencyIntoChestActionContentId,
 				"存入钱箱",
 				"把货币拖到钱箱，立即把货币卡转换为钱箱里的存币数量。");
+			WriteDefaultRecipeSelectionWeight(serializedAction);
 			RequireProperty(serializedAction, "m_turnCost").intValue = 0;
 			RequireProperty(serializedAction, "m_canStartFromClick").boolValue = false;
 			SerializedProperty slots = RequireProperty(serializedAction, "m_participationSlots");
@@ -2397,6 +2646,7 @@ private static void WriteSoftSpriteReference(
 				FoundationTestSceneHarness.TestWithdrawCurrencyFromChestActionContentId,
 				"取出钱箱货币",
 				"单击存有 Coin 的钱箱，立即取出一张 Coin 卡。");
+			WriteDefaultRecipeSelectionWeight(serializedAction);
 			RequireProperty(serializedAction, "m_turnCost").intValue = 0;
 			RequireProperty(serializedAction, "m_canStartFromClick").boolValue = true;
 			SerializedProperty slots = RequireProperty(serializedAction, "m_participationSlots");
@@ -2429,8 +2679,8 @@ private static void WriteSoftSpriteReference(
 			EnsureTestFoodAsset(
 				TestFoodPath,
 				FoundationTestSceneHarness.TestFoodContentId,
-				"Berry",
-				"Picked from the bush.",
+				"浆果",
+				"从灌木丛上摘下的浆果。",
 				nutritionPerUse: 1,
 				sellValue: 1);
 		}
@@ -2508,25 +2758,6 @@ private static void WriteSoftSpriteReference(
 			EditorUtility.SetDirty(card);
 		}
 
-		private static void WriteAutomaticMovementFields(
-			string assetPath,
-			float intervalSeconds,
-			float radius,
-			int maxAttempts)
-		{
-			CardDefinition card = AssetDatabase.LoadAssetAtPath<CardDefinition>(assetPath);
-			if (card == null)
-			{
-				throw new MissingReferenceException($"测试卡牌不存在：{assetPath}");
-			}
-			SerializedObject serializedCard = new SerializedObject(card);
-			RequireProperty(serializedCard, "m_automaticMovementIntervalSeconds").floatValue = intervalSeconds;
-			RequireProperty(serializedCard, "m_automaticMovementRadius").floatValue = radius;
-			RequireProperty(serializedCard, "m_automaticMovementMaxAttempts").intValue = maxAttempts;
-			serializedCard.ApplyModifiedPropertiesWithoutUndo();
-			EditorUtility.SetDirty(card);
-		}
-
 		private static void WriteAutomaticHostileBehaviorFields(
 			string assetPath,
 			float aggroRadius,
@@ -2566,6 +2797,7 @@ private static void WriteSoftSpriteReference(
 				FoundationTestSceneHarness.TestSellActionContentId,
 				"出售",
 				"把可售卡拖到收购点，立即移除该卡并按出售价值生成货币。");
+			WriteDefaultRecipeSelectionWeight(serializedAction);
 			RequireProperty(serializedAction, "m_turnCost").intValue = 0;
 			SerializedProperty slots = RequireProperty(serializedAction, "m_participationSlots");
 			slots.arraySize = 2;
@@ -2611,6 +2843,7 @@ private static void WriteSoftSpriteReference(
 			RequireRelative(slot, "m_displayName").stringValue = displayName;
 			RequireRelative(slot, "m_minimumParticipants").intValue = 1;
 			RequireRelative(slot, "m_maximumParticipants").intValue = 1;
+			RequireRelative(slot, "m_allowAdditionalMatchingParticipantsInStack").boolValue = false;
 			WriteContentIdArray(RequireRelative(slot, "m_allowedContentIds"));
 			WriteIntArray(RequireRelative(slot, "m_requiredAllContentTagCodes"));
 			WriteIntArray(RequireRelative(slot, "m_requiredAnyContentTagCodes"));
@@ -2630,6 +2863,7 @@ private static void WriteSoftSpriteReference(
 			RequireRelative(slot, "m_displayName").stringValue = displayName;
 			RequireRelative(slot, "m_minimumParticipants").intValue = 1;
 			RequireRelative(slot, "m_maximumParticipants").intValue = 1;
+			RequireRelative(slot, "m_allowAdditionalMatchingParticipantsInStack").boolValue = false;
 			WriteContentIdArray(RequireRelative(slot, "m_allowedContentIds"), contentId);
 			WriteIntArray(RequireRelative(slot, "m_requiredAllContentTagCodes"));
 			WriteIntArray(RequireRelative(slot, "m_requiredAnyContentTagCodes"));
@@ -2700,6 +2934,11 @@ private static void WriteSoftSpriteReference(
 					$"{serializedObject.targetObject.GetType().Name} 缺少作者字段 {propertyName}。");
 			}
 			return property;
+		}
+
+		private static void WriteDefaultRecipeSelectionWeight(SerializedObject serializedAction)
+		{
+			RequireProperty(serializedAction, "m_recipeSelectionWeight").floatValue = 1f;
 		}
 
         private static void WriteTestResultBranch(
@@ -2966,8 +3205,10 @@ private static void WriteSoftSpriteReference(
 			RequireProperty(serializedScenario, "m_secondsPerTurn").floatValue =
 				StackCraftReferenceDayDurationSeconds;
 			SerializedProperty dayCycle = RequireProperty(serializedScenario, "m_dayCycleRules");
+			RequireRelative(dayCycle, "m_enabled").boolValue = false;
 			RequireRelative(dayCycle, "m_hungerPerCharacter").intValue = StackCraftHungerPerCharacter;
 			RequireRelative(dayCycle, "m_baseCardLimit").intValue = StackCraftBaseCardLimit;
+			RequireRelative(dayCycle, "m_encounters").arraySize = 0;
 			serializedScenario.ApplyModifiedPropertiesWithoutUndo();
 			EditorUtility.SetDirty(scenario);
 		}
@@ -2991,9 +3232,16 @@ private static void WriteSoftSpriteReference(
                 placement.FindPropertyRelative("m_spawnAttachRadius");
             SerializedProperty cardLimitBonusExpansionPerPoint =
                 placement.FindPropertyRelative("m_cardLimitBonusExpansionPerPoint");
+            SerializedProperty automaticMovementIntervalSeconds =
+                placement.FindPropertyRelative("m_automaticMovementIntervalSeconds");
+            SerializedProperty automaticMovementRadius =
+                placement.FindPropertyRelative("m_automaticMovementRadius");
+            SerializedProperty automaticMovementMaxAttempts =
+                placement.FindPropertyRelative("m_automaticMovementMaxAttempts");
             if (bounds == null || restrictedAreas == null || cardSize == null || cardMargin == null ||
                 stackStep == null || overlapResolveMaxIterations == null || spawnAttachRadius == null ||
-                cardLimitBonusExpansionPerPoint == null)
+                cardLimitBonusExpansionPerPoint == null || automaticMovementIntervalSeconds == null ||
+                automaticMovementRadius == null || automaticMovementMaxAttempts == null)
             {
                 throw new MissingReferenceException("牌桌放置作者字段已变更，测试剧本生成器需要同步更新。");
             }
@@ -3007,6 +3255,9 @@ private static void WriteSoftSpriteReference(
             overlapResolveMaxIterations.intValue = StackCraftBoardOverlapResolveMaxIterations;
             spawnAttachRadius.floatValue = StackCraftBoardSpawnAttachRadius;
             cardLimitBonusExpansionPerPoint.vector2Value = StackCraftBoardCardLimitBonusExpansionPerPoint;
+            automaticMovementIntervalSeconds.floatValue = StackCraftBoardAutomaticMovementIntervalSeconds;
+            automaticMovementRadius.floatValue = StackCraftBoardAutomaticMovementRadius;
+            automaticMovementMaxAttempts.intValue = StackCraftBoardAutomaticMovementMaxAttempts;
         }
 
         private static void WriteTestBattleFormation(SerializedProperty formationRules)
@@ -3109,6 +3360,7 @@ private static void WriteSoftSpriteReference(
             EnsureFolder(TabletopTestFolder);
 			EnsureFolder(TabletopPrefabFolder);
 			EnsureFolder(GameplayUiPrefabFolder);
+			EnsureStackCraftTextureImporters();
             Sprite cardSprite = LoadRequiredSprite(TabletopCardArtPath, "项目卡牌占位图");
 			Sprite hitNormalSprite = LoadRequiredSprite(HitNormalSpritePath, "项目普通命中图标");
 			Sprite hitMissSprite = LoadRequiredSprite(HitMissSpritePath, "项目未命中图标");
@@ -3122,7 +3374,7 @@ private static void WriteSoftSpriteReference(
 				MagicProjectileSpritePath,
 				"项目魔法投射物图片");
 
-            EnsureTabletopCardViewPrefab(cardSprite);
+			EnsureTabletopCardViewPrefab();
             EnsureTabletopActionProgressViewPrefab();
 			EnsureTabletopBattleAreaViewPrefab(cardSprite);
 			EnsureTabletopProjectileViewPrefab(arrowProjectileSprite, magicProjectileSprite);
@@ -3382,7 +3634,7 @@ private static void WriteSoftSpriteReference(
 			RequireProperty(serializedSettings, "m_criticalAudio").objectReferenceValue = criticalAudio;
 
             stackHeightStep.floatValue = 0.002f;
-            baseSortingOrder.intValue = 10;
+            baseSortingOrder.intValue = 0;
             battleBaseSortingOrder.intValue = 100;
 			projectileSortingOrder.intValue = 140;
 			cardSmokeSortingOrder.intValue = 150;
@@ -3421,6 +3673,82 @@ private static void WriteSoftSpriteReference(
 			}
 
 			return settings;
+		}
+
+		/// <summary>
+		/// 参考工程 Textures 目录下的素材由材质直接消费，必须作为普通纹理导入，不能伪装成 Sprite。
+		/// HUD、投射物和战斗区域来自参考工程 Sprites 目录，仍保留各自的 Sprite 导入类型。
+		/// </summary>
+		private static void EnsureStackCraftTextureImporters()
+		{
+			string[] materialTextureFolders =
+			{
+				GameplayCardArtFolder,
+				StackCraftTextureFolder + "/Backgrounds",
+				StackCraftTextureFolder + "/CardArts",
+				StackCraftTextureFolder + "/Cards",
+				StackCraftTextureFolder + "/PackArts"
+			};
+			HashSet<string> materialTexturePaths = new(StringComparer.Ordinal);
+			for (int folderIndex = 0; folderIndex < materialTextureFolders.Length; folderIndex++)
+			{
+				string folder = materialTextureFolders[folderIndex];
+				foreach (string assetGuid in AssetDatabase.FindAssets("t:Texture2D", new[] { folder }))
+				{
+					materialTexturePaths.Add(AssetDatabase.GUIDToAssetPath(assetGuid));
+				}
+			}
+			materialTexturePaths.Add(StackCraftTextureFolder + "/Pack.png");
+			materialTexturePaths.Add(StackCraftTextureFolder + "/EquipmentSlots.png");
+			materialTexturePaths.Add(StackCraftTextureFolder + "/Icon.png");
+			materialTexturePaths.Add(StackCraftTextureFolder + "/Puff.png");
+
+			foreach (string assetPath in materialTexturePaths.OrderBy(path => path, StringComparer.Ordinal))
+			{
+				TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+				if (importer == null)
+				{
+					throw new MissingReferenceException(
+						$"StackCraft 同态材质纹理缺少 TextureImporter：{assetPath}");
+				}
+				bool requiresReimport = false;
+				if (importer.textureType != TextureImporterType.Default)
+				{
+					importer.textureType = TextureImporterType.Default;
+					requiresReimport = true;
+				}
+				if (importer.spriteImportMode != SpriteImportMode.None)
+				{
+					importer.spriteImportMode = SpriteImportMode.None;
+					requiresReimport = true;
+				}
+				if (importer.npotScale != TextureImporterNPOTScale.ToNearest)
+				{
+					importer.npotScale = TextureImporterNPOTScale.ToNearest;
+					requiresReimport = true;
+				}
+				bool alphaIsTransparency =
+					assetPath == StackCraftTextureFolder + "/EquipmentSlots.png" ||
+					assetPath == StackCraftTextureFolder + "/Icon.png";
+				if (importer.alphaIsTransparency != alphaIsTransparency)
+				{
+					importer.alphaIsTransparency = alphaIsTransparency;
+					requiresReimport = true;
+				}
+				if (requiresReimport)
+				{
+					importer.SaveAndReimport();
+				}
+				if (AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath) == null ||
+					importer.textureType != TextureImporterType.Default ||
+					importer.spriteImportMode != SpriteImportMode.None ||
+					importer.npotScale != TextureImporterNPOTScale.ToNearest ||
+					importer.alphaIsTransparency != alphaIsTransparency)
+				{
+					throw new MissingReferenceException(
+						$"StackCraft 同态材质纹理重导入后与参考导入设置不一致：{assetPath}");
+				}
+			}
 		}
 
 		private static Sprite LoadRequiredSprite(string assetPath, string description)
@@ -3646,44 +3974,7 @@ private static void WriteSoftSpriteReference(
 			return fontAsset;
 		}
 
-		private static TMP_FontAsset LoadStackCraftSurfaceFont()
-		{
-			TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(
-				StackCraftSurfaceFontPath);
-			if (fontAsset == null)
-			{
-				throw new MissingReferenceException(
-					$"缺少 StackCraft 卡牌 / 命中 UI 字体来源：{StackCraftSurfaceFontPath}");
-			}
-
-			return fontAsset;
-		}
-
-		private static void EnsureStackCraftSurfaceFontFallback(
-			TMP_FontAsset stackCraftFont,
-			TMP_FontAsset chineseFallbackFont)
-		{
-			if (stackCraftFont == null)
-			{
-				throw new MissingReferenceException("StackCraft 卡牌主字体为空，无法生成卡牌视图。");
-			}
-			if (chineseFallbackFont == null)
-			{
-				throw new MissingReferenceException("卡牌中文 fallback 字体为空，无法保证中文卡牌内容可显示。");
-			}
-
-			stackCraftFont.fallbackFontAssetTable ??= new List<TMP_FontAsset>();
-			if (stackCraftFont.fallbackFontAssetTable.Contains(chineseFallbackFont))
-			{
-				return;
-			}
-
-			stackCraftFont.fallbackFontAssetTable.Add(chineseFallbackFont);
-			EditorUtility.SetDirty(stackCraftFont);
-			AssetDatabase.SaveAssets();
-		}
-
-        private static void EnsureTabletopCardViewPrefab(Sprite cardSprite)
+		private static void EnsureTabletopCardViewPrefab()
         {
 			Mesh cardMesh = LoadRequiredMesh(CardMeshPath, "StackCraft 卡牌 FBX 自有副本");
 			Mesh packMesh = LoadRequiredMesh(PackMeshPath, "StackCraft Pack.fbx 自有副本");
@@ -3702,8 +3993,7 @@ private static void WriteSoftSpriteReference(
 			Material cardBuyerCurrencyIconMaterial = LoadRequiredMaterial(
 				CardBuyerCurrencyIconMaterialPath,
 				"StackCraft CardBuyer 货币图标材质自有副本");
-			TMP_FontAsset cardFont = LoadStackCraftSurfaceFont();
-			EnsureStackCraftSurfaceFontFallback(cardFont, EnsureTestPanelFont());
+			TMP_FontAsset cardFont = EnsureTestPanelFont();
 			TMP_FontAsset previousDefaultFont = TMP_Settings.instance == null
 				? null
 				: TMP_Settings.defaultFontAsset;
@@ -3843,6 +4133,7 @@ private static void WriteSoftSpriteReference(
 				equipmentPanelRenderer.receiveShadows = false;
 				BoxCollider equipmentPanelCollider = equipmentPanelObject.AddComponent<BoxCollider>();
 				equipmentPanelCollider.size = new Vector3(0.45f, 0f, 0.15000002f);
+				equipmentPanelObject.SetActive(false);
 
 				GameObject healthTextObject = new("生命");
 				healthTextObject.transform.SetParent(characterStatusRoot.transform, false);
@@ -3884,6 +4175,7 @@ private static void WriteSoftSpriteReference(
 				serializedView.FindProperty("m_priceLabel").objectReferenceValue = priceLabel;
 				serializedView.FindProperty("m_nutritionLabel").objectReferenceValue = nutritionLabel;
 				serializedView.FindProperty("m_characterStatusRoot").objectReferenceValue = characterStatusRoot;
+				serializedView.FindProperty("m_equipmentPanelRoot").objectReferenceValue = equipmentPanelObject;
 				serializedView.FindProperty("m_healthLabel").objectReferenceValue = healthLabel;
 				serializedView.FindProperty("m_hurtFlashDelaySeconds").floatValue = 0.05f;
 				serializedView.FindProperty("m_hurtFlashTweenSeconds").floatValue = 0.1f;
@@ -3915,8 +4207,7 @@ private static void WriteSoftSpriteReference(
 			Sprite advantageSprite,
 			Sprite disadvantageSprite)
 		{
-			TMP_FontAsset fontAsset = LoadStackCraftSurfaceFont();
-			EnsureStackCraftSurfaceFontFallback(fontAsset, EnsureTestPanelFont());
+			TMP_FontAsset fontAsset = EnsureTestPanelFont();
 			GameObject root = new(
 				"命中结果",
 				typeof(RectTransform),
@@ -4694,7 +4985,7 @@ private static void WriteSoftSpriteReference(
 
         private static void EnsureScenarioTurnPanelPrefab()
         {
-			TMP_FontAsset statsFontAsset = LoadStackCraftSurfaceFont();
+			TMP_FontAsset statsFontAsset = EnsureTestPanelFont();
 			Sprite squareSprite = LoadRequiredSprite(
 				StackCraftSquareSpritePath,
 				"StackCraft HUD 时间进度条图片");
@@ -5691,12 +5982,11 @@ private static void WriteSoftSpriteReference(
 
         private static void EnsureScenarioJournalPanelPrefab()
         {
-            Sprite uiSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
-            TMP_FontAsset fontAsset = LoadStackCraftSurfaceFont();
-			EnsureStackCraftSurfaceFontFallback(fontAsset, EnsureTestPanelFont());
-            if (uiSprite == null || fontAsset == null)
+            Sprite viewportMaskSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UIMask.psd");
+            TMP_FontAsset fontAsset = EnsureTestPanelFont();
+            if (viewportMaskSprite == null || fontAsset == null)
             {
-                throw new MissingReferenceException("缺少剧本日志所需的内置图片或测试字体。");
+                throw new MissingReferenceException("缺少剧本日志所需的遮罩图片或测试字体。");
             }
 
             GameObject root = new(
@@ -5712,8 +6002,8 @@ private static void WriteSoftSpriteReference(
                 rootRect.offsetMin = Vector2.zero;
                 rootRect.offsetMax = Vector2.zero;
                 Image rootImage = root.GetComponent<Image>();
-                rootImage.sprite = uiSprite;
-                rootImage.type = Image.Type.Sliced;
+                rootImage.sprite = null;
+                rootImage.type = Image.Type.Simple;
                 rootImage.color = Color.clear;
                 rootImage.raycastTarget = false;
 
@@ -5748,7 +6038,7 @@ private static void WriteSoftSpriteReference(
 				header.localScale = Vector3.one;
 				header.localRotation = Quaternion.identity;
 				Image headerImage = headerObject.GetComponent<Image>();
-				headerImage.sprite = uiSprite;
+				headerImage.sprite = null;
 				headerImage.color = new Color(0.5019608f, 0.5019608f, 0.5019608f, 0.9019608f);
 				headerImage.raycastTarget = false;
 				HorizontalLayoutGroup headerLayout = headerObject.GetComponent<HorizontalLayoutGroup>();
@@ -5764,7 +6054,7 @@ private static void WriteSoftSpriteReference(
 				Toggle questsTab = CreateStackCraftJournalTabToggle(
 					"QuestsToggle",
 					header,
-					uiSprite,
+					null,
 					fontAsset,
 					headerToggleGroup,
 					"任务",
@@ -5772,7 +6062,7 @@ private static void WriteSoftSpriteReference(
 				Toggle actionsTab = CreateStackCraftJournalTabToggle(
 					"RecipesToggle",
 					header,
-					uiSprite,
+					null,
 					fontAsset,
 					headerToggleGroup,
 					"配方",
@@ -5781,7 +6071,7 @@ private static void WriteSoftSpriteReference(
 				Button menuToggle = CreateStackCraftJournalMenuButton(
 					"MenuToggle",
 					menuPanel,
-					uiSprite,
+					null,
 					fontAsset);
 				TextMeshProUGUI menuToggleLabel = menuToggle.GetComponentInChildren<TextMeshProUGUI>(true);
 				if (menuToggleLabel == null)
@@ -5792,7 +6082,7 @@ private static void WriteSoftSpriteReference(
                 Button closeButton = CreateSavePanelButton(
                     "Close",
                     menuPanel,
-                    uiSprite,
+                    null,
                     fontAsset,
                     "×",
                     new Vector2(1f, 1f),
@@ -5806,7 +6096,8 @@ private static void WriteSoftSpriteReference(
 				CanvasGroup questsViewGroup = CreateStackCraftJournalView(
 					"QuestsView",
 					menuPanel,
-					uiSprite,
+					null,
+					viewportMaskSprite,
 					showByDefault: true,
 					out RectTransform questsView,
 					out ScrollRect questsScrollRect);
@@ -5819,7 +6110,8 @@ private static void WriteSoftSpriteReference(
 				CanvasGroup actionsViewGroup = CreateStackCraftJournalView(
 					"RecipesView",
 					menuPanel,
-					uiSprite,
+					null,
+					viewportMaskSprite,
 					showByDefault: false,
 					out RectTransform actionsView,
 					out ScrollRect actionsScrollRect);
@@ -5945,7 +6237,8 @@ private static void WriteSoftSpriteReference(
 		private static CanvasGroup CreateStackCraftJournalView(
 			string objectName,
 			Transform parent,
-			Sprite sprite,
+			Sprite backgroundSprite,
+			Sprite viewportSprite,
 			bool showByDefault,
 			out RectTransform viewportRect,
 			out ScrollRect scrollRect)
@@ -5966,7 +6259,7 @@ private static void WriteSoftSpriteReference(
 			viewRect.localScale = Vector3.one;
 			viewRect.localRotation = Quaternion.identity;
 			Image image = viewObject.GetComponent<Image>();
-			image.sprite = sprite;
+			image.sprite = backgroundSprite;
 			image.type = Image.Type.Sliced;
 			image.color = new Color(0f, 0f, 0f, 0.9019608f);
 			CanvasGroup group = viewObject.GetComponent<CanvasGroup>();
@@ -5989,7 +6282,7 @@ private static void WriteSoftSpriteReference(
 			viewportRect.localScale = Vector3.one;
 			viewportRect.localRotation = Quaternion.identity;
 			Image viewportImage = viewportObject.GetComponent<Image>();
-			viewportImage.sprite = sprite;
+			viewportImage.sprite = viewportSprite;
 			viewportImage.type = Image.Type.Sliced;
 			viewportImage.color = Color.white;
 			Mask viewportMask = viewportObject.GetComponent<Mask>();
@@ -6209,7 +6502,6 @@ private static void WriteSoftSpriteReference(
 
             tabletopRoot.AddComponent<TabletopCardDragInput>();
 			tabletopRoot.AddComponent<TabletopInteraction>();
-			tabletopRoot.AddComponent<ScenarioPauseInput>();
 
             FoundationTestSceneHarness controller =
                 tabletopRoot.AddComponent<FoundationTestSceneHarness>();
@@ -6262,6 +6554,26 @@ private static void WriteSoftSpriteReference(
             collector.AssetTags = "test";
             collector.UserData = string.Empty;
         }
+
+		private static void EnsureStackCraftTextureCollector(BundleCollectorGroup group)
+		{
+			BundleCollector collector = group.Collectors.SingleOrDefault(candidate =>
+				string.Equals(candidate.CollectPath, StackCraftTextureFolder, System.StringComparison.Ordinal));
+			if (collector == null)
+			{
+				collector = new BundleCollector();
+				group.Collectors.Add(collector);
+			}
+
+			collector.CollectPath = StackCraftTextureFolder;
+			collector.CollectorGUID = AssetDatabase.AssetPathToGUID(StackCraftTextureFolder);
+			collector.CollectorType = ECollectorType.MainAssetCollector;
+			collector.AddressRuleName = nameof(AddressByFolderAndFileName);
+			collector.PackRuleName = nameof(PackDirectory);
+			collector.FilterRuleName = nameof(CollectAll);
+			collector.AssetTags = "test";
+			collector.UserData = string.Empty;
+		}
 
         private static void EnsureFolder(string folderPath)
         {

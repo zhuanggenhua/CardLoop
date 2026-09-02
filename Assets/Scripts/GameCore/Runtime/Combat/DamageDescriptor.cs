@@ -226,7 +226,7 @@ namespace GameCore
         }
 
         // 攻击者引用用于仇恨、击退、自伤判定等需要真实角色实例的后续逻辑。
-        [SerializeField] private PersistableReference<CharacterBase> m_character;
+        [SerializeField] private CharacterBase m_character;
 
         // 我们继续保留“攻击发起那一刻”的已缓存战斗属性，
         // 只缓存命中结算实际需要的 EX-GAS 属性值，不保存另一份角色属性容器。
@@ -234,7 +234,7 @@ namespace GameCore
 
         public bool TryResolveCharacter(out CharacterBase resolvedCharacter)
         {
-            resolvedCharacter = m_character.ResolveOrNull();
+            resolvedCharacter = m_character;
             return resolvedCharacter != null;
         }
 

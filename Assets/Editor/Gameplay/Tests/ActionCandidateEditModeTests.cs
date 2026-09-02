@@ -65,6 +65,152 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void FindStackCandidates_AllowsOptedInExcessCardsWithoutBindingThem()
+		{
+			CardDefinition station = CreateCardDefinition("test.stack.station");
+			CardDefinition ingredient = CreateCardDefinition("test.stack.ingredient");
+			CardDefinition unrelatedCard = CreateCardDefinition("test.stack.unrelated");
+			ActionDefinition strictAction = CreateWorkbenchCraftActionDefinition(
+				"test.stack.strict",
+				station.ContentId.Value,
+				ingredient.ContentId.Value,
+				allowExcessCards: false);
+			ActionDefinition excessAction = CreateWorkbenchCraftActionDefinition(
+				"test.stack.excess",
+				station.ContentId.Value,
+				ingredient.ContentId.Value,
+				allowExcessCards: true);
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(
+					new ContentAsset[] { station, ingredient, unrelatedCard, strictAction, excessAction });
+				TabletopCards state = new TabletopCards();
+				TabletopCard stationCard = state.CreateCard(station.ContentId, Vector2.zero);
+				TabletopCard firstIngredient = state.CreateCard(ingredient.ContentId, Vector2.zero);
+				TabletopCard secondIngredient = state.CreateCard(ingredient.ContentId, Vector2.zero);
+				TabletopCard extraUnrelatedCard = state.CreateCard(unrelatedCard.ContentId, Vector2.zero);
+				state.MergeStackOnto(firstIngredient.Id, stationCard.Id);
+				state.MergeStackOnto(secondIngredient.Id, stationCard.Id);
+				state.MergeStackOnto(extraUnrelatedCard.Id, stationCard.Id);
+				TabletopCardStack stack = state.GetStackContaining(stationCard.Id);
+
+				ActionCandidate[] strictCandidates = ActionCandidateResolver.FindStackCandidates(
+					stack,
+					state,
+					contentIndex,
+					new[] { strictAction });
+				ActionCandidate[] excessCandidates = ActionCandidateResolver.FindStackCandidates(
+					stack,
+					state,
+					contentIndex,
+					new[] { excessAction });
+
+				Assert.That(strictCandidates, Is.Empty);
+				Assert.That(excessCandidates, Has.Length.EqualTo(1));
+				Assert.That(excessCandidates[0].IsReady, Is.True);
+				CollectionAssert.AreEqual(
+					new[] { stationCard.Id },
+					excessCandidates[0].Bindings[0].CardIds);
+				CollectionAssert.AreEqual(
+					new[] { firstIngredient.Id, secondIngredient.Id },
+					excessCandidates[0].Bindings[1].CardIds);
+			}
+			finally
+			{
+				Object.DestroyImmediate(station);
+				Object.DestroyImmediate(ingredient);
+				Object.DestroyImmediate(unrelatedCard);
+				Object.DestroyImmediate(strictAction);
+				Object.DestroyImmediate(excessAction);
+			}
+		}
+
+		[Test]
+		public void FindStackCandidates_MatchesStackCraftStandardRecipeExcessOnlyForOptedInResourceSlot()
+		{
+			CardDefinition soil = CreateCardDefinition("test.stackcraft.soil");
+			CardDefinition berry = CreateCardDefinition("test.stackcraft.berry");
+			CardDefinition wood = CreateCardDefinition("test.stackcraft.wood");
+			CardDefinition villager = CreateCardDefinition("test.stackcraft.villager");
+			CardDefinition unrelated = CreateCardDefinition("test.stackcraft.unrelated");
+			ActionDefinition growBerryBushAction = CreateStackCraftStandardRecipeActionDefinition(
+				"test.stackcraft.recipe.grow-berry-bush",
+				new RecipeSlotSpec("soil", soil.ContentId.Value, 1, allowAdditionalMatchingParticipantsInStack: true),
+				new RecipeSlotSpec("berry", berry.ContentId.Value, 1, allowAdditionalMatchingParticipantsInStack: false));
+			ActionDefinition makeTimberAction = CreateStackCraftStandardRecipeActionDefinition(
+				"test.stackcraft.recipe.make-timber",
+				new RecipeSlotSpec("wood", wood.ContentId.Value, 2, allowAdditionalMatchingParticipantsInStack: false),
+				new RecipeSlotSpec("villager", villager.ContentId.Value, 1, allowAdditionalMatchingParticipantsInStack: false));
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(
+					new ContentAsset[] { soil, berry, wood, villager, unrelated, growBerryBushAction, makeTimberAction });
+				TabletopCards exactResourceExcessState = new TabletopCards();
+				TabletopCard firstSoil = exactResourceExcessState.CreateCard(soil.ContentId, Vector2.zero);
+				TabletopCard secondSoil = exactResourceExcessState.CreateCard(soil.ContentId, Vector2.zero);
+				TabletopCard berryCard = exactResourceExcessState.CreateCard(berry.ContentId, Vector2.zero);
+				exactResourceExcessState.MergeStackOnto(secondSoil.Id, firstSoil.Id);
+				exactResourceExcessState.MergeStackOnto(berryCard.Id, firstSoil.Id);
+				TabletopCardStack resourceExcessStack = exactResourceExcessState.GetStackContaining(firstSoil.Id);
+
+				ActionCandidate[] resourceExcessCandidates = ActionCandidateResolver.FindStackCandidates(
+					resourceExcessStack,
+					exactResourceExcessState,
+					contentIndex,
+					new[] { growBerryBushAction });
+
+				Assert.That(resourceExcessCandidates, Has.Length.EqualTo(1));
+				Assert.That(resourceExcessCandidates[0].IsReady, Is.True);
+				CollectionAssert.AreEqual(new[] { firstSoil.Id }, resourceExcessCandidates[0].Bindings[0].CardIds);
+				CollectionAssert.AreEqual(new[] { berryCard.Id }, resourceExcessCandidates[0].Bindings[1].CardIds);
+
+				TabletopCards unrelatedState = new TabletopCards();
+				TabletopCard unrelatedFirstSoil = unrelatedState.CreateCard(soil.ContentId, Vector2.zero);
+				TabletopCard unrelatedSecondSoil = unrelatedState.CreateCard(soil.ContentId, Vector2.zero);
+				TabletopCard unrelatedBerry = unrelatedState.CreateCard(berry.ContentId, Vector2.zero);
+				TabletopCard unrelatedCard = unrelatedState.CreateCard(unrelated.ContentId, Vector2.zero);
+				unrelatedState.MergeStackOnto(unrelatedSecondSoil.Id, unrelatedFirstSoil.Id);
+				unrelatedState.MergeStackOnto(unrelatedBerry.Id, unrelatedFirstSoil.Id);
+				unrelatedState.MergeStackOnto(unrelatedCard.Id, unrelatedFirstSoil.Id);
+
+				ActionCandidate[] unrelatedCandidates = ActionCandidateResolver.FindStackCandidates(
+					unrelatedState.GetStackContaining(unrelatedFirstSoil.Id),
+					unrelatedState,
+					contentIndex,
+					new[] { growBerryBushAction });
+
+				Assert.That(unrelatedCandidates, Is.Empty);
+
+				TabletopCards materialExcessState = new TabletopCards();
+				TabletopCard firstWood = materialExcessState.CreateCard(wood.ContentId, Vector2.zero);
+				TabletopCard secondWood = materialExcessState.CreateCard(wood.ContentId, Vector2.zero);
+				TabletopCard thirdWood = materialExcessState.CreateCard(wood.ContentId, Vector2.zero);
+				TabletopCard villagerCard = materialExcessState.CreateCard(villager.ContentId, Vector2.zero);
+				materialExcessState.MergeStackOnto(secondWood.Id, firstWood.Id);
+				materialExcessState.MergeStackOnto(thirdWood.Id, firstWood.Id);
+				materialExcessState.MergeStackOnto(villagerCard.Id, firstWood.Id);
+
+				ActionCandidate[] materialExcessCandidates = ActionCandidateResolver.FindStackCandidates(
+					materialExcessState.GetStackContaining(firstWood.Id),
+					materialExcessState,
+					contentIndex,
+					new[] { makeTimberAction });
+
+				Assert.That(materialExcessCandidates, Is.Empty);
+			}
+			finally
+			{
+				Object.DestroyImmediate(soil);
+				Object.DestroyImmediate(berry);
+				Object.DestroyImmediate(wood);
+				Object.DestroyImmediate(villager);
+				Object.DestroyImmediate(unrelated);
+				Object.DestroyImmediate(growBerryBushAction);
+				Object.DestroyImmediate(makeTimberAction);
+			}
+		}
+
+		[Test]
 		public void FindCandidates_UsesPointerOrderAsTheDeterministicTieBreakForEquivalentSlots()
 		{
 			CardDefinition cardDefinition = CreateCardDefinition("test.card");
@@ -394,6 +540,23 @@ namespace Gameplay.Tests
 			return definition;
 		}
 
+		private static ActionDefinition CreateWorkbenchCraftActionDefinition(
+			string actionId,
+			string stationContentId,
+			string ingredientContentId,
+			bool allowExcessCards)
+		{
+			ActionDefinition definition = ScriptableObject.CreateInstance<ActionDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				"{\"m_contentId\":{\"m_value\":\"" + actionId + "\"}," +
+				"\"m_turnCost\":1," +
+				"\"m_allowExcessCardsInStack\":" + (allowExcessCards ? "true" : "false") + "," +
+				"\"m_participationSlots\":[" +
+				"{\"m_key\":\"station\",\"m_minimumParticipants\":1,\"m_maximumParticipants\":1,\"m_allowedContentIds\":[{\"m_value\":\"" + stationContentId + "\"}]}," +
+				"{\"m_key\":\"ingredient\",\"m_minimumParticipants\":2,\"m_maximumParticipants\":2,\"m_allowedContentIds\":[{\"m_value\":\"" + ingredientContentId + "\"}]}]}",
+				definition);
+			return definition;
+		}
 		private static ActionDefinition CreateTwoSlotActionDefinition(string actionId, string allowedContentId)
 		{
 			ActionDefinition definition = ScriptableObject.CreateInstance<ActionDefinition>();
@@ -415,6 +578,62 @@ namespace Gameplay.Tests
 				"{\"m_key\":\"sold\",\"m_minimumParticipants\":1,\"m_maximumParticipants\":" + sourceMaximum + ",\"m_allowedContentIds\":[{\"m_value\":\"" + soldContentId + "\"}]}," +
 				"{\"m_key\":\"buyer\",\"m_minimumParticipants\":1,\"m_maximumParticipants\":1,\"m_allowedContentIds\":[{\"m_value\":\"" + buyerContentId + "\"}]}]}",
 				definition);
+			return definition;
+		}
+
+		private readonly struct RecipeSlotSpec
+		{
+			internal RecipeSlotSpec(
+				string key,
+				string contentId,
+				int count,
+				bool allowAdditionalMatchingParticipantsInStack)
+			{
+				Key = key;
+				ContentId = contentId;
+				Count = count;
+				AllowAdditionalMatchingParticipantsInStack = allowAdditionalMatchingParticipantsInStack;
+			}
+
+			internal string Key { get; }
+
+			internal string ContentId { get; }
+
+			internal int Count { get; }
+
+			internal bool AllowAdditionalMatchingParticipantsInStack { get; }
+		}
+
+		private static ActionDefinition CreateStackCraftStandardRecipeActionDefinition(
+			string actionId,
+			params RecipeSlotSpec[] slotSpecs)
+		{
+			ActionDefinition definition = ScriptableObject.CreateInstance<ActionDefinition>();
+			System.Text.StringBuilder json = new System.Text.StringBuilder();
+			json.Append("{\"m_contentId\":{\"m_value\":\"");
+			json.Append(actionId);
+			json.Append("\"},\"m_turnCost\":1,\"m_allowExcessCardsInStack\":false,\"m_participationSlots\":[");
+			for (int slotIndex = 0; slotIndex < slotSpecs.Length; slotIndex++)
+			{
+				if (slotIndex > 0)
+				{
+					json.Append(',');
+				}
+				RecipeSlotSpec spec = slotSpecs[slotIndex];
+				json.Append("{\"m_key\":\"");
+				json.Append(spec.Key);
+				json.Append("\",\"m_minimumParticipants\":");
+				json.Append(spec.Count);
+				json.Append(",\"m_maximumParticipants\":");
+				json.Append(spec.Count);
+				json.Append(",\"m_allowAdditionalMatchingParticipantsInStack\":");
+				json.Append(spec.AllowAdditionalMatchingParticipantsInStack ? "true" : "false");
+				json.Append(",\"m_allowedContentIds\":[{\"m_value\":\"");
+				json.Append(spec.ContentId);
+				json.Append("\"}]}");
+			}
+			json.Append("]}");
+			JsonUtility.FromJsonOverwrite(json.ToString(), definition);
 			return definition;
 		}
 	}

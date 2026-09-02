@@ -10,9 +10,20 @@ namespace Gameplay.Tests
 	internal static class TabletopTestPlacement
 	{
 		internal static readonly TabletopCardPlacementRules Rules =
-			new TabletopCardPlacementRules(
+			CreateRules();
+
+		internal static TabletopCardPlacementRules CreateRules(
+			float automaticMovementIntervalSeconds = TabletopCardPlacementRules.DefaultAutomaticMovementIntervalSeconds,
+			float automaticMovementRadius = TabletopCardPlacementRules.DefaultAutomaticMovementRadius,
+			int automaticMovementMaxAttempts = TabletopCardPlacementRules.DefaultAutomaticMovementMaxAttempts)
+		{
+			return new TabletopCardPlacementRules(
 				new TabletopCardPlacementArea(new Rect(-1000f, -1000f, 2000f, 2000f)),
-				new TabletopCardStackGeometry(new Vector2(0.00001f, 0.00001f), Vector2.zero));
+				new TabletopCardStackGeometry(new Vector2(0.00001f, 0.00001f), Vector2.zero),
+				automaticMovementIntervalSeconds: automaticMovementIntervalSeconds,
+				automaticMovementRadius: automaticMovementRadius,
+				automaticMovementMaxAttempts: automaticMovementMaxAttempts);
+		}
 
 		internal static TabletopCard CreateCard(
 			this TabletopCards cards,

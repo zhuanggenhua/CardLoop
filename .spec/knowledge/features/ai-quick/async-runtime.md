@@ -6,7 +6,6 @@ metadata:
   role: project-reference
   source: official-entry + project-source
   status: 已交付
-  verified_at: 2026-08-11
   update_triggers: unitask-version-change, cancellation-policy-change, async-entry-change
 ---
 

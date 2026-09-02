@@ -141,7 +141,7 @@ namespace Gameplay.Actions
 		}
 	}
 
-	/// <summary>要求指定槽位中的箱子至少存有一个货币单位。</summary>
+	/// <summary>要求指定槽位中的箱子单独成堆且至少存有一个货币单位。</summary>
 	[Serializable]
 	public sealed class ChestHasStoredCurrencyCondition : ActionCondition
 	{
@@ -162,7 +162,13 @@ namespace Gameplay.Actions
 				throw new InvalidOperationException(
 					$"行动 {context.Action.ContentId} 的箱子存币条件引用了不存在的牌桌卡牌 {binding.CardIds[0]}。");
 			}
-			return card is ChestCard chest && chest.StoredCurrencyCount > 0;
+			if (card is not ChestCard chest)
+			{
+				return false;
+			}
+
+			TabletopCardStack stack = context.Cards.GetStackContaining(chest.Id);
+			return chest.StoredCurrencyCount > 0 && stack.Cards.Count == 1;
 		}
 
 		protected override void ValidateCondition(ActionResultValidationContext context)

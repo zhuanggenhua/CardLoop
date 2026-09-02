@@ -6,7 +6,6 @@ metadata:
   role: project-reference
   source: official-entry + project-source
   status: 已交付
-  verified_at: 2026-08-04
   update_triggers: yokiframe-version-change, event-contract-change, lifecycle-change
 ---
 
@@ -77,7 +76,7 @@ private void OnMapLoaded(MapLoadedEvent _)
 
 private async UniTask RequestMapTransition(MapSystem mapSystem)
 {
-    await mapSystem.RequestTransitionAsync("FoundationMapTest");
+    await mapSystem.RequestTransitionAsync("地基地图测试");
 }
 ```
 

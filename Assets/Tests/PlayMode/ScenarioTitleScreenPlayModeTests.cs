@@ -20,7 +20,7 @@ namespace Gameplay.Tests
     /// <summary>验证 StackCraft 标题入口由正式剧本导演和 UIKit 组合提供等价玩家流程。</summary>
     public sealed class ScenarioTitleScreenPlayModeTests
     {
-        private const string TitleScenePath = "Assets/Scenes/FoundationTitleTest.unity";
+        private const string TitleScenePath = "Assets/Scenes/地基标题测试.unity";
         private string m_saveDirectory;
         private bool m_previousRunInBackground;
 

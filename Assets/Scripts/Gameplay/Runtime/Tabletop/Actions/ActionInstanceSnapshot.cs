@@ -598,6 +598,15 @@ namespace Gameplay.Tabletop.Actions
 		[SerializeField]
 		private ulong m_anchorCardId;
 
+		[SerializeField]
+		private bool m_allowAnchorStackSpawnAttach;
+
+		[SerializeField]
+		private float m_spawnPresentationHeightOffset;
+
+		[SerializeField]
+		private bool m_useDragHeightForSpawn;
+
 		internal ActionResearchDiscoverySnapshot(ResearchDiscoverySpec research)
 		{
 			if (research == null)
@@ -612,6 +621,9 @@ namespace Gameplay.Tabletop.Actions
 				m_recipeCardIds[i] = research.Entries[i].RecipeCardId;
 			}
 			m_anchorCardId = research.AnchorCardId.Value;
+			m_allowAnchorStackSpawnAttach = research.AllowAnchorStackSpawnAttach;
+			m_spawnPresentationHeightOffset = research.SpawnPresentationHeightOffset;
+			m_useDragHeightForSpawn = research.UseDragHeightForSpawn;
 		}
 
 		internal ResearchDiscoverySpec CreateRuntimeSpec()
@@ -637,7 +649,12 @@ namespace Gameplay.Tabletop.Actions
 				}
 				entries.Add(new ResearchDiscoveryEntrySpec(m_actionIds[i], m_recipeCardIds[i]));
 			}
-			return new ResearchDiscoverySpec(entries, anchorCardId);
+			return new ResearchDiscoverySpec(
+				entries,
+				anchorCardId,
+				m_allowAnchorStackSpawnAttach,
+				m_spawnPresentationHeightOffset,
+				m_useDragHeightForSpawn);
 		}
 	}
 
@@ -662,6 +679,15 @@ namespace Gameplay.Tabletop.Actions
 		[SerializeField]
 		private Vector2 m_positionOffset;
 
+		[SerializeField]
+		private bool m_allowAnchorStackSpawnAttach;
+
+		[SerializeField]
+		private float m_spawnPresentationHeightOffset;
+
+		[SerializeField]
+		private bool m_useDragHeightForSpawn;
+
 		public ContentId ContentId => m_contentId;
 
 		public int Count => m_count;
@@ -672,6 +698,12 @@ namespace Gameplay.Tabletop.Actions
 
 		public Vector2 PositionOffset => m_positionOffset;
 
+		public bool AllowAnchorStackSpawnAttach => m_allowAnchorStackSpawnAttach;
+
+		public float SpawnPresentationHeightOffset => m_spawnPresentationHeightOffset;
+
+		public bool UseDragHeightForSpawn => m_useDragHeightForSpawn;
+
 		internal ActionCardCreationSnapshot(CardCreationSpec creation)
 		{
 			m_contentId = creation.ContentId;
@@ -679,6 +711,9 @@ namespace Gameplay.Tabletop.Actions
 			m_anchorCardId = creation.AnchorCardId.Value;
 			m_createAsSingleStack = creation.CreateAsSingleStack;
 			m_positionOffset = creation.PositionOffset;
+			m_allowAnchorStackSpawnAttach = creation.AllowAnchorStackSpawnAttach;
+			m_spawnPresentationHeightOffset = creation.SpawnPresentationHeightOffset;
+			m_useDragHeightForSpawn = creation.UseDragHeightForSpawn;
 		}
 
 		internal CardCreationSpec CreateRuntimeSpec()
@@ -695,7 +730,15 @@ namespace Gameplay.Tabletop.Actions
 			{
 				throw new InvalidOperationException("行动结果计划快照包含无效产物位置卡牌 ID。");
 			}
-			return new CardCreationSpec(ContentId, Count, AnchorCardId, CreateAsSingleStack, PositionOffset);
+			return new CardCreationSpec(
+				ContentId,
+				Count,
+				AnchorCardId,
+				CreateAsSingleStack,
+				PositionOffset,
+				AllowAnchorStackSpawnAttach,
+				SpawnPresentationHeightOffset,
+				UseDragHeightForSpawn);
 		}
 	}
 }

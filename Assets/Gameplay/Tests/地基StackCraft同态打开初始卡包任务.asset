@@ -15,24 +15,22 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.quest.stackcraft-parity.open-starter-pack
   m_tagCodes:
-  m_displayName: 打开初始卡包
-  m_description: 多次点击初始卡包，完全打开并取得里面的所有卡牌。
+  m_displayName: "\u6253\u5F00\u521D\u59CB\u5361\u5305"
+  m_description: "\u591A\u6B21\u70B9\u51FB\u521D\u59CB\u5361\u5305\uFF0C\u5B8C\u5168\u6253\u5F00\u5E76\u53D6\u5F97\u91CC\u9762\u7684\u6240\u6709\u5361\u724C\u3002"
   m_icon:
     Address:
     Guid:
     Locked: 1
   m_prerequisiteQuestIds: []
-  m_journalGroupName: 入门
+  m_journalGroupName: "\u5165\u95E8"
   m_tasks:
-  - rid: 7366053338002227795
+  - rid: 7366053433846530284
   references:
     version: 2
     RefIds:
-    - rid: 7366053338002227795
+    - rid: 7366053433846530284
       type: {class: ActionCompletionQuestTaskDefinition, ns: Gameplay.Quests, asm: Gameplay.Runtime}
       data:
         m_actionId:
           m_value: test.foundation.pack.open
         m_requiredCompletionCount: 1
-
-

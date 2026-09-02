@@ -127,3 +127,24 @@ test("rejects .codex/skills as a project skill source", () => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /\.codex\/skills/);
 });
+
+test("rejects UnitySkills package documentation copied into .spec", () => {
+  const root = makeFixture();
+  write(path.join(root, ".spec/skills/unity-skills/SKILL.md"), [
+    "---",
+    "name: unity-skills",
+    "description: thin entrypoint",
+    "---",
+    "# Unity Skills",
+    "",
+    "Packages/com.besty.unity-skills/unity-skills~/SKILL.md",
+    "Packages/com.besty.unity-skills/unity-skills~/skills/SKILL.md",
+    "不在 `.spec/skills/unity-skills/` 内保存上游",
+    "",
+  ].join("\n"));
+  write(path.join(root, ".spec/skills/unity-skills", "skills", "scene", "COPIED.md"), "# copied module\n");
+
+  const result = spawnSync(process.execPath, [lintPath, root], { cwd: root, encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /UnitySkills 上游资料镜像/);
+});

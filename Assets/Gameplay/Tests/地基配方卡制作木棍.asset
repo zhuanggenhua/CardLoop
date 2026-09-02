@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.recipe-card.crafting-stick
   m_tagCodes: e9030000f0157a00
-  m_displayName: 配方：木棍
-  m_description: 木材 ×1，村民 ×1。
+  m_displayName: "\u914D\u65B9\uFF1A\u6728\u68CD"
+  m_description: "\u6728\u6750 \xD71\uFF0C\u6751\u6C11 \xD71\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u914D\u65B9\u5361"

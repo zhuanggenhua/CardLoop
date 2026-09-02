@@ -29,7 +29,7 @@ namespace Gameplay.Tests
 			Assert.That(session.IsActive, Is.False);
 			Assert.That(intent.PressPointerPosition, Is.EqualTo(pointerPressPosition));
 			Assert.That(intent.ReleasePointerPosition, Is.EqualTo(new Vector2(4f, 7f)));
-			Assert.That(intent.RequestedStackPosition, Is.EqualTo(new Vector2(1f, 8f)));
+			Assert.That(intent.ReleasedCardTablePosition, Is.EqualTo(new Vector2(1f, 8f)));
 		}
 
 		[Test]
@@ -42,6 +42,20 @@ namespace Gameplay.Tests
 
 			Assert.That(session.Update(new Vector2(100f, 0f), new Vector2(0.49f, 0f)), Is.False);
 			Assert.That(session.Update(new Vector2(100f, 0f), new Vector2(0.5f, 0f)), Is.True);
+		}
+
+		[Test]
+		public void Update_UsesConstrainedStackPositionForStackCraftClickThreshold()
+		{
+			TabletopCards cards = new TabletopCards();
+			TabletopCard card = cards.CreateCard("test.table-threshold.constrained", Vector2.zero);
+			TabletopCardDragSession session = new TabletopCardDragSession(0.5f);
+			session.Begin(card.Id, Vector2.zero, Vector2.zero, card.Position);
+
+			Assert.That(
+				session.Update(new Vector2(100f, 0f), new Vector2(10f, 0f), Vector2.zero),
+				Is.False,
+				"StackCraft 用卡牌释放时的实际位置判定点击；拖拽中被桌面边界夹住时，不能用未夹取的指针目标提前判定为拖拽。");
 		}
 
 		[Test]
@@ -79,15 +93,18 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
-		public void Update_CrossingThresholdKeepsDragStateUntilRelease()
+		public void End_ReturningBelowThresholdProducesClickIntent()
 		{
 			TabletopCards state = new TabletopCards();
 			TabletopCard tabletopCard = state.CreateCard("test.card", Vector2.zero);
 			TabletopCardDragSession session = new TabletopCardDragSession(0.5f);
 			session.Begin(tabletopCard.Id, Vector2.zero, Vector2.zero, tabletopCard.Position);
 			Assert.That<bool>(session.Update(new Vector2(0.5f, 0f), new Vector2(5f, 0f)), (IResolveConstraint)(object)Is.True);
-			Assert.That<bool>(session.Update(new Vector2(0.1f, 0f), new Vector2(1f, 0f)), (IResolveConstraint)(object)Is.True);
-			Assert.That<bool>(session.End(new Vector2(0.1f, 0f), new Vector2(1f, 0f)).IsDrag, (IResolveConstraint)(object)Is.True);
+			Assert.That<bool>(session.Update(new Vector2(0.1f, 0f), new Vector2(0.1f, 0f)), (IResolveConstraint)(object)Is.False);
+			Assert.That<bool>(
+				session.End(new Vector2(0.1f, 0f), new Vector2(0.1f, 0f)).IsDrag,
+				(IResolveConstraint)(object)Is.False,
+				"StackCraft 松手时只用卡牌实际起止位置距离判定点击；曾经超过阈值后回到原位仍应按点击处理。");
 		}
 
 		[Test]

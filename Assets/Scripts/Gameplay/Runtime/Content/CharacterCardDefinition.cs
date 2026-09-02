@@ -57,6 +57,9 @@ namespace Gameplay.Content
 		public bool HasAutomaticHostileBehavior =>
 			AutomaticAggroRadius > 0f || AutomaticAttackRadius > 0f;
 
+		public override bool UsesAutomaticMovement =>
+			base.UsesAutomaticMovement || HasAutomaticHostileBehavior;
+
 		internal AbilitySystemCellConfig CreateAbilitySystemConfig()
 		{
 			if (m_abilitySystemPresetId <= 0)
@@ -259,14 +262,6 @@ namespace Gameplay.Content
 					$"角色卡 {ContentId} 的攻击半径不能大于索敌半径。",
 					this);
 			}
-			if (!HasAutomaticMovement)
-			{
-				context.AddError(
-					"CHARACTER_CARD_AUTOMATIC_HOSTILITY_REQUIRES_MOVEMENT",
-					$"角色卡 {ContentId} 配置了自动敌对行为，但没有配置自动移动触发间隔。",
-					this);
-			}
-
 			if (!ConfigHasTag(config, XTag.Faction_Enemy))
 			{
 				context.AddError(

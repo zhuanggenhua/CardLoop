@@ -61,6 +61,7 @@ namespace YokiFrame
 #else
                 KitLogger.Error("[UIRoot] 面板加载失败: " + handler.Type.Name);
 #endif
+                loader.UnLoadAndRecycle();
                 return null;
             }
 
@@ -90,6 +91,7 @@ namespace YokiFrame
 #else
                     KitLogger.Error("[UIRoot] 面板加载失败: " + handler.Type.Name);
 #endif
+                    loader.UnLoadAndRecycle();
                     onComplete?.Invoke(null);
                     return;
                 }
@@ -121,7 +123,10 @@ namespace YokiFrame
                 panel.Handler = handler;
                 SetLevelOfPanel(handler.Level, panel);
                 onComplete?.Invoke(panel);
+                yield break;
             }
+
+            onComplete?.Invoke(null);
         }
 #endif
 
@@ -129,58 +134,72 @@ namespace YokiFrame
         public async UniTask<IPanel> LoadPanelUniTaskAsync(PanelHandler handler, CancellationToken ct = default)
         {
             var loader = mLoaderPool.AllocateLoader();
+            bool loaderAssignedToHandler = false;
 
-            GameObject prefab;
+            try
+            {
+                GameObject prefab;
 
-            // 优先用原生 UniTask 加载器
-            if (loader is IPanelLoaderUniTask uniTaskLoader)
-            {
-                prefab = await uniTaskLoader.LoadUniTaskAsync(handler, ct);
-            }
-            else
-            {
-                // 回退：TCS 包装回调
-                var tcs = new UniTaskCompletionSource<GameObject>();
-                loader.LoadAsync(handler, p => tcs.TrySetResult(p));
-                prefab = await tcs.Task.AttachExternalCancellation(ct);
-            }
-
-            if (prefab == default)
-            {
-#if YOKIFRAME_ZSTRING_SUPPORT
-                using (var sb = Cysharp.Text.ZString.CreateStringBuilder())
+                // 优先用原生 UniTask 加载器
+                if (loader is IPanelLoaderUniTask uniTaskLoader)
                 {
-                    sb.Append("[UIRoot] 面板加载失败: ");
-                    sb.Append(handler.Type.Name);
-                    KitLogger.Error(sb.ToString());
+                    prefab = await uniTaskLoader.LoadUniTaskAsync(handler, ct);
                 }
-#else
-                KitLogger.Error("[UIRoot] 面板加载失败: " + handler.Type.Name);
-#endif
-                return null;
-            }
+                else
+                {
+                    // 回退：TCS 包装回调
+                    var tcs = new UniTaskCompletionSource<GameObject>();
+                    loader.LoadAsync(handler, p => tcs.TrySetResult(p));
+                    prefab = await tcs.Task.AttachExternalCancellation(ct);
+                }
 
-            handler.Prefab = prefab;
-            handler.Loader = loader;
+                ct.ThrowIfCancellationRequested();
+
+                if (prefab == default)
+                {
+#if YOKIFRAME_ZSTRING_SUPPORT
+                    using (var sb = Cysharp.Text.ZString.CreateStringBuilder())
+                    {
+                        sb.Append("[UIRoot] 面板加载失败: ");
+                        sb.Append(handler.Type.Name);
+                        KitLogger.Error(sb.ToString());
+                    }
+#else
+                    KitLogger.Error("[UIRoot] 面板加载失败: " + handler.Type.Name);
+#endif
+                    return null;
+                }
+
+                handler.Prefab = prefab;
+                handler.Loader = loader;
+                loaderAssignedToHandler = true;
 
 #if UNITY_2022_3_OR_NEWER
-            var op = InstantiateAsync(prefab);
-            await op.ToUniTask(cancellationToken: ct);
-            if (op.isDone && op.Result.Length > 0)
-            {
-                var panel = op.Result[0].GetComponent<UIPanel>();
-                handler.Panel = panel;
-                panel.Handler = handler;
+                var op = InstantiateAsync(prefab);
+                await op.ToUniTask(cancellationToken: ct);
+                if (op.isDone && op.Result.Length > 0)
+                {
+                    var panel = op.Result[0].GetComponent<UIPanel>();
+                    handler.Panel = panel;
+                    panel.Handler = handler;
+                    SetLevelOfPanel(handler.Level, panel);
+                    return panel;
+                }
+                return null;
+#else
+                var panel = Instantiate(prefab).GetComponent<UIPanel>();
+                SetupPanelHandler(handler, loader, prefab, panel);
                 SetLevelOfPanel(handler.Level, panel);
                 return panel;
-            }
-            return null;
-#else
-            var panel = Instantiate(prefab).GetComponent<UIPanel>();
-            SetupPanelHandler(handler, loader, prefab, panel);
-            SetLevelOfPanel(handler.Level, panel);
-            return panel;
 #endif
+            }
+            finally
+            {
+                if (!loaderAssignedToHandler)
+                {
+                    loader.UnLoadAndRecycle();
+                }
+            }
         }
 #endif
 

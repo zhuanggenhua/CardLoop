@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.recipe-card.growing-berry
   m_tagCodes: e9030000f0157a00
-  m_displayName: 配方：浆果丛
-  m_description: 土壤 ×1，浆果 ×1。
+  m_displayName: "\u914D\u65B9\uFF1A\u6D46\u679C\u4E1B"
+  m_description: "\u571F\u58E4 \xD71\uFF0C\u6D46\u679C \xD71\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u914D\u65B9\u5361"

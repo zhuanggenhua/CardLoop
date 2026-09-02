@@ -47,6 +47,7 @@ node .spec/tools/unity-yaml-guard.mjs
 ## 资源本体核对
 
 - 用户反馈 Prefab、Sprite、Material、Texture、粒子或 UI 节点本体为空、预览不对、字段为空时，优先查资源本体字段和 GUID / fileID，不用运行时日志替代。
+- Sprite 的矩形、九宫格 border、pivot、outline、自动/网格切片等元数据归 Unity Importer / Sprite Editor Data Provider 所有，不得手工拼写或批量替换 `.meta` 来改这些数据。需要修改时，必须通过 Unity Editor、UnitySkills importer 能力或官方 `ISpriteEditorDataProvider` 路线，并先检查 importer 是否支持对应编辑能力；能力检查失败就是停止条件，不能绕过后继续写入。
 - 粒子 `ParticleSystemRenderer` 必须按 Renderer 模块核对：`m_RenderMode`、`m_NormalDirection`、材质、排序层、遮罩、粒子尺寸、材质 shader、贴图槽和透明队列。
 - 截图、录屏或编辑器观察只能作为视觉目标和差异定位证据，不能单独反推玩家、相机、出生点、物理对象或玩法对象 Transform。
 

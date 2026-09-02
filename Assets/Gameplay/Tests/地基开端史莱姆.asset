@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.pack.beginning.slime
   m_tagCodes: ea030000f1157a00
-  m_displayName: 史莱姆
-  m_description: 湿滑的史莱姆。
+  m_displayName: "\u53F2\u83B1\u59C6"
+  m_description: "\u6E7F\u6ED1\u7684\u53F2\u83B1\u59C6\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 5
-  m_automaticMovementRadius: 1
-  m_automaticMovementMaxAttempts: 5
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u53F2\u83B1\u59C6"

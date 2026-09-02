@@ -183,7 +183,15 @@ namespace YokiFrame
                 // 未完成，排队等待
                 var waitTcs = new UniTaskCompletionSource<ResHandler>();
                 handler.AddLoadedCallback(h => waitTcs.TrySetResult(h));
-                return await waitTcs.Task.AttachExternalCancellation(cancellationToken);
+                try
+                {
+                    return await waitTcs.Task.AttachExternalCancellation(cancellationToken);
+                }
+                catch
+                {
+                    handler.Release();
+                    throw;
+                }
             }
 
             // 缓存未命中 — 新建 handler
@@ -197,29 +205,37 @@ namespace YokiFrame
 
             Object asset;
 
-            // 优先用原生 UniTask 加载器（零额外分配）
-            if (handler.Loader is IResLoaderUniTask uniTaskLoader)
+            try
             {
-                asset = await uniTaskLoader.LoadUniTaskAsync<T>(path, cancellationToken);
+                // 优先用原生 UniTask 加载器（零额外分配）
+                if (handler.Loader is IResLoaderUniTask uniTaskLoader)
+                {
+                    asset = await uniTaskLoader.LoadUniTaskAsync<T>(path, cancellationToken);
+                }
+                else
+                {
+                    // 回退：用 TCS 包装回调
+                    var tcs = new UniTaskCompletionSource<Object>();
+                    handler.Loader.LoadAsync<T>(path, a => tcs.TrySetResult(a));
+                    asset = await tcs.Task.AttachExternalCancellation(cancellationToken);
+                }
+
+                handler.Asset = asset;
+                handler.IsDone = true;
+
+                if (asset == default)
+                {
+                    KitLogger.Error($"[ResKit] 资源加载失败: {path}");
+                }
+
+                handler.InvokeLoadedCallbacks();
+                return handler;
             }
-            else
+            catch
             {
-                // 回退：用 TCS 包装回调
-                var tcs = new UniTaskCompletionSource<Object>();
-                handler.Loader.LoadAsync<T>(path, a => tcs.TrySetResult(a));
-                asset = await tcs.Task.AttachExternalCancellation(cancellationToken);
+                handler.Release();
+                throw;
             }
-
-            handler.Asset = asset;
-            handler.IsDone = true;
-
-            if (asset == default)
-            {
-                KitLogger.Error($"[ResKit] 资源加载失败: {path}");
-            }
-
-            handler.InvokeLoadedCallbacks();
-            return handler;
         }
 
         /// <summary>
@@ -407,29 +423,37 @@ namespace YokiFrame
 
             Object[] assets;
 
-            if (loader is IAllAssetsLoaderUniTask uniTaskLoader)
+            try
             {
-                var result = await uniTaskLoader.LoadAllUniTaskAsync<T>(path, cancellationToken);
-                assets = result as Object[] ?? ConvertToObjectArray(result);
-            }
-            else if (loader is IAllAssetsLoader allLoader)
-            {
-                var tcs = new UniTaskCompletionSource<T[]>();
-                allLoader.LoadAllAsync<T>(path, r => tcs.TrySetResult(r));
-                var result = await tcs.Task.AttachExternalCancellation(cancellationToken);
-                assets = result as Object[] ?? ConvertToObjectArray(result);
-            }
-            else
-            {
-                KitLogger.Error("[ResKit] 当前加载器不支持 LoadAllUniTaskAsync");
-                handler.Release();
-                return null;
-            }
+                if (loader is IAllAssetsLoaderUniTask uniTaskLoader)
+                {
+                    var result = await uniTaskLoader.LoadAllUniTaskAsync<T>(path, cancellationToken);
+                    assets = result as Object[] ?? ConvertToObjectArray(result);
+                }
+                else if (loader is IAllAssetsLoader allLoader)
+                {
+                    var tcs = new UniTaskCompletionSource<T[]>();
+                    allLoader.LoadAllAsync<T>(path, r => tcs.TrySetResult(r));
+                    var result = await tcs.Task.AttachExternalCancellation(cancellationToken);
+                    assets = result as Object[] ?? ConvertToObjectArray(result);
+                }
+                else
+                {
+                    KitLogger.Error("[ResKit] 当前加载器不支持 LoadAllUniTaskAsync");
+                    handler.Release();
+                    return null;
+                }
 
-            handler.AllAssetObjects = assets;
-            handler.IsDone = true;
-            handler.InvokeLoadedCallbacks();
-            return handler;
+                handler.AllAssetObjects = assets;
+                handler.IsDone = true;
+                handler.InvokeLoadedCallbacks();
+                return handler;
+            }
+            catch
+            {
+                handler.Release();
+                throw;
+            }
         }
 
         /// <summary>
@@ -449,29 +473,37 @@ namespace YokiFrame
 
             Object[] assets;
 
-            if (loader is ISubAssetsLoaderUniTask uniTaskLoader)
+            try
             {
-                var result = await uniTaskLoader.LoadSubUniTaskAsync<T>(path, cancellationToken);
-                assets = result.AllSubAssets as Object[] ?? ConvertToObjectArray(result.AllSubAssets);
-            }
-            else if (loader is ISubAssetsLoader subLoader)
-            {
-                var tcs = new UniTaskCompletionSource<SubAssetsResult<T>>();
-                subLoader.LoadSubAsync<T>(path, r => tcs.TrySetResult(r));
-                var result = await tcs.Task.AttachExternalCancellation(cancellationToken);
-                assets = result.AllSubAssets as Object[] ?? ConvertToObjectArray(result.AllSubAssets);
-            }
-            else
-            {
-                KitLogger.Error("[ResKit] 当前加载器不支持 LoadSubUniTaskAsync");
-                handler.Release();
-                return null;
-            }
+                if (loader is ISubAssetsLoaderUniTask uniTaskLoader)
+                {
+                    var result = await uniTaskLoader.LoadSubUniTaskAsync<T>(path, cancellationToken);
+                    assets = result.AllSubAssets as Object[] ?? ConvertToObjectArray(result.AllSubAssets);
+                }
+                else if (loader is ISubAssetsLoader subLoader)
+                {
+                    var tcs = new UniTaskCompletionSource<SubAssetsResult<T>>();
+                    subLoader.LoadSubAsync<T>(path, r => tcs.TrySetResult(r));
+                    var result = await tcs.Task.AttachExternalCancellation(cancellationToken);
+                    assets = result.AllSubAssets as Object[] ?? ConvertToObjectArray(result.AllSubAssets);
+                }
+                else
+                {
+                    KitLogger.Error("[ResKit] 当前加载器不支持 LoadSubUniTaskAsync");
+                    handler.Release();
+                    return null;
+                }
 
-            handler.AllAssetObjects = assets;
-            handler.IsDone = true;
-            handler.InvokeLoadedCallbacks();
-            return handler;
+                handler.AllAssetObjects = assets;
+                handler.IsDone = true;
+                handler.InvokeLoadedCallbacks();
+                return handler;
+            }
+            catch
+            {
+                handler.Release();
+                throw;
+            }
         }
 
         #endregion

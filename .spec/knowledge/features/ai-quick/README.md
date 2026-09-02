@@ -6,7 +6,6 @@ metadata:
   role: index
   source: official-entry-index + project-source
   status: 已交付
-  verified_at: 2026-08-04
   update_triggers: package-version-change, public-entry-change, lifecycle-change, generator-change
 ---
 
@@ -56,7 +55,7 @@ metadata:
 
 ## 更新协议
 
-每张卡的 frontmatter 记录 `verified_at` 和 `update_triggers`。发生以下变化时，只更新受影响的项目事实，并重新检查官方入口链接和源码符号：
+每张卡的 frontmatter 只记录 `update_triggers` 等更新触发条件，不维护固定日期作为当前证明。发生以下变化或进入代码重构前，只更新受影响的项目事实，并重新检查官方入口链接和当前源码符号：
 
 - 包版本、官方仓库、本地 README 或插件内置文档变化。
 - 项目公开类、公开方法、初始化顺序、释放规则或事件/数据契约变化。

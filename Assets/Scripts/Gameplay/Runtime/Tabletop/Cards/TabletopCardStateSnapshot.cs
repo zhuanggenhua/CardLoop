@@ -77,7 +77,13 @@ namespace Gameplay.Tabletop
 		private float m_periodicProductionElapsedSeconds;
 
 		[SerializeField]
+		private float m_periodicProductionInitialDelaySeconds;
+
+		[SerializeField]
 		private float m_automaticMovementElapsedSeconds;
+
+		[SerializeField]
+		private float m_automaticMovementInitialDelaySeconds;
 
 		[SerializeReference]
 		private TabletopCardRuntimeStateSnapshot m_runtimeState;
@@ -90,7 +96,11 @@ namespace Gameplay.Tabletop
 
 		public float PeriodicProductionElapsedSeconds => m_periodicProductionElapsedSeconds;
 
+		public float PeriodicProductionInitialDelaySeconds => m_periodicProductionInitialDelaySeconds;
+
 		public float AutomaticMovementElapsedSeconds => m_automaticMovementElapsedSeconds;
+
+		public float AutomaticMovementInitialDelaySeconds => m_automaticMovementInitialDelaySeconds;
 
 		public TabletopCardRuntimeStateSnapshot RuntimeState => m_runtimeState;
 
@@ -105,13 +115,17 @@ namespace Gameplay.Tabletop
 			int remainingUses,
 			float periodicProductionElapsedSeconds,
 			float automaticMovementElapsedSeconds,
+			float periodicProductionInitialDelaySeconds,
+			float automaticMovementInitialDelaySeconds,
 			TabletopCardRuntimeStateSnapshot runtimeState = null)
 		{
 			m_cardId = cardId.Value;
 			m_contentId = contentId;
 			m_remainingUses = remainingUses;
 			m_periodicProductionElapsedSeconds = periodicProductionElapsedSeconds;
+			m_periodicProductionInitialDelaySeconds = periodicProductionInitialDelaySeconds;
 			m_automaticMovementElapsedSeconds = automaticMovementElapsedSeconds;
+			m_automaticMovementInitialDelaySeconds = automaticMovementInitialDelaySeconds;
 			m_runtimeState = runtimeState;
 		}
 	}

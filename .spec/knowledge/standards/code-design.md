@@ -15,7 +15,8 @@ metadata:
 - 新增或改写业务代码、编辑器工具、运行时服务、ScriptableObject 作者源、UI 绑定或测试夹具前。
 - 准备新增接口、抽象类、工厂、策略、事件、服务、管理器、上下文、注册表、缓存或包装层前。
 - 审查代码是否存在上帝类、魔法字符串、复制粘贴、第二套真相、临时桥接层、过度接口或防护性架构时。
-- 如果问题涉及 Gameplay 模块边界、对象模型、继承 / 组合、单局生命周期、Mod、联机或 StackCraft 吸收，必须继续读 [`gameplay-architecture.md`](gameplay-architecture.md)。
+- 如果问题涉及 YokiFrame / GameCore / Gameplay 分层、GameCore 特化或代码归属，必须先读 [`framework-layering.md`](framework-layering.md)。
+- 如果问题涉及 Gameplay 模块边界、对象模型、继承 / 组合、单局生命周期、Mod、联机或外部参考候选吸收，必须继续读 [`gameplay-architecture.md`](gameplay-architecture.md)。
 
 ## 基本原则
 
@@ -48,7 +49,7 @@ metadata:
 | 对象池 | 高频创建 / 销毁对象造成明确分配、GC 或性能压力时。 | 稀有对象、生命周期简单对象或资源真相不清时提前池化。 |
 | 适配器 / 包装层 | 连接第三方 API、跨模块稳定边界、权限校验、回放记录、生命周期转换等真实职责时。 | 只转发方法名、掩盖旧职责没有重构、形成临时桥接层；CardLoop 内部系统关系不得被命名或汇报成外部项目适配壳。 |
 
-需要更细的 Unity 模式选择时，读取项目 UnitySkills 模块：`.spec/skills/unity-skills/skills/patterns/MODULE.md`。涉及模块边界、SOLID、职责拆分和结构性重构时，读取 `.spec/skills/unity-skills/skills/architecture/MODULE.md` 和 `.spec/skills/unity-skills/skills/scriptdesign/MODULE.md`。
+需要更细的 Unity 模式选择时，读取包内 UnitySkills 模块：`Packages/com.besty.unity-skills/unity-skills~/skills/patterns/SKILL.md`。涉及模块边界、SOLID、职责拆分和结构性重构时，读取 `Packages/com.besty.unity-skills/unity-skills~/skills/architecture/SKILL.md` 和 `Packages/com.besty.unity-skills/unity-skills~/skills/scriptdesign/SKILL.md`。
 
 ## 反模式清单
 

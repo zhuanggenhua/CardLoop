@@ -15,8 +15,8 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.pack.beginning.soil
   m_tagCodes: e9030000e9157a00
-  m_displayName: 土壤
-  m_description: 植物生长的土壤。
+  m_displayName: "\u571F\u58E4"
+  m_description: "\u690D\u7269\u751F\u957F\u7684\u571F\u58E4\u3002"
   m_icon:
     Address:
     Guid:
@@ -28,9 +28,6 @@ MonoBehaviour:
   m_periodicProductionCardId:
     m_value:
   m_periodicProductionIntervalSeconds: 0
-  m_automaticMovementIntervalSeconds: 0
-  m_automaticMovementRadius: 0
-  m_automaticMovementMaxAttempts: 0
   m_automaticMovementRetentionCapacity: 0
   m_cardArt:
     Address: "\u571F\u58E4"

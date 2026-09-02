@@ -18,6 +18,7 @@
  *  7. agents / skills frontmatter:只允许 name + description,且 name 与文件 / 目录名一致。
  *  8. knowledge frontmatter、链接可达、索引链可达和 standards 根索引直登。
  *  9. 废弃入口、迁移残留和禁止运行时兜底表述不得回流。
+ * 10. UnitySkills 项目入口只能保留薄 SKILL.md，不得把包内 modules / references 镜像复制进 .spec。
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -242,6 +243,28 @@ function assertSkillFrontmatter() {
   }
 }
 
+function assertUnitySkillsThinEntrypoint() {
+  const unitySkillsDir = path.join(specRoot, "skills", "unity-skills");
+  if (!fs.existsSync(unitySkillsDir)) return;
+
+  const files = walk(unitySkillsDir).map((file) => rel(file));
+  const allowed = new Set([".spec/skills/unity-skills/SKILL.md"]);
+  for (const file of files) {
+    if (!allowed.has(file)) {
+      fail(`${file} 是 UnitySkills 上游资料镜像；.spec/skills/unity-skills 只能保留薄 SKILL.md，通用资料读取 Packages/com.besty.unity-skills/unity-skills~`);
+    }
+  }
+
+  const skillText = read(".spec/skills/unity-skills/SKILL.md");
+  for (const required of [
+    "Packages/com.besty.unity-skills/unity-skills~/SKILL.md",
+    "Packages/com.besty.unity-skills/unity-skills~/skills/SKILL.md",
+    "不在 `.spec/skills/unity-skills/` 内保存上游",
+  ]) {
+    if (!skillText.includes(required)) fail(`.spec/skills/unity-skills/SKILL.md 缺少薄入口说明：${required}`);
+  }
+}
+
 function assertAgentFrontmatter() {
   const agentsDir = path.join(specRoot, "agents");
   for (const agentFile of walk(agentsDir).filter((file) => file.endsWith(".agent.md"))) {
@@ -449,6 +472,7 @@ assertDecisionAdrs();
 assertTaskCards();
 assertNoRetiredEntrypoints();
 assertSkillFrontmatter();
+assertUnitySkillsThinEntrypoint();
 assertAgentFrontmatter();
 assertKnowledgeFrontmatter();
 assertKnowledgeLinks();

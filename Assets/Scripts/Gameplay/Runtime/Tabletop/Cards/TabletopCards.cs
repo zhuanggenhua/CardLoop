@@ -18,16 +18,48 @@ namespace Gameplay.Tabletop
 
 		internal TabletopCardId SpawnAttachIgnoredStackCardId { get; }
 
+		/// <summary>创建时仅用于放置解算的临时锁定锚点；不改变牌堆的长期锁定状态。</summary>
+		internal TabletopCardId PlacementLockedStackCardId { get; }
+
+		/// <summary>只影响新卡首帧表现高度；StackCraft 开包产物会在源卡包当前高度上额外抬升 0.1。</summary>
+		internal float SpawnPresentationHeightOffset { get; }
+
+		/// <summary>新卡首帧表现的来源卡牌；仅用于读取当前拖起卡包的可见高度。</summary>
+		internal TabletopCardId SpawnPresentationOriginCardId { get; }
+
+		/// <summary>是否从当前拖拽高度开始出生；它与放置解算时的临时锁定是两个独立事实。</summary>
+		internal bool UseDragHeightForSpawn { get; }
+
 		internal TabletopCardCreationRequest(
 			ContentId contentId,
 			int count,
 			Vector2 position,
-			TabletopCardId spawnAttachIgnoredStackCardId = default)
+			TabletopCardId spawnAttachIgnoredStackCardId = default,
+			TabletopCardId placementLockedStackCardId = default,
+			float spawnPresentationHeightOffset = 0f,
+			TabletopCardId spawnPresentationOriginCardId = default,
+			bool useDragHeightForSpawn = false)
 		{
+			if (!float.IsFinite(spawnPresentationHeightOffset) || spawnPresentationHeightOffset < 0f)
+			{
+				throw new ArgumentException(
+					"卡牌创建请求的出生表现高度偏移必须是大于等于 0 的有限值。",
+					nameof(spawnPresentationHeightOffset));
+			}
+			if (useDragHeightForSpawn && !spawnPresentationOriginCardId.IsValid)
+			{
+				throw new ArgumentException(
+					"使用拖拽高度的卡牌创建请求必须引用当前被拖起的来源卡牌。",
+					nameof(spawnPresentationOriginCardId));
+			}
 			ContentId = contentId;
 			Count = count;
 			Position = position;
 			SpawnAttachIgnoredStackCardId = spawnAttachIgnoredStackCardId;
+			PlacementLockedStackCardId = placementLockedStackCardId;
+			SpawnPresentationHeightOffset = spawnPresentationHeightOffset;
+			SpawnPresentationOriginCardId = spawnPresentationOriginCardId;
+			UseDragHeightForSpawn = useDragHeightForSpawn;
 		}
 	}
 
@@ -124,11 +156,19 @@ namespace Gameplay.Tabletop
 			TabletopCardPlacementRules placementRules,
 			bool isPlacementLocked = false,
 			int initialUses = 1,
-			Func<TabletopCardId, TabletopCard> createCard = null)
+			Func<TabletopCardId, TabletopCard> createCard = null,
+			TabletopCardId placementLockedStackCardId = default)
 		{
 			TabletopCardId bottomCardId = CreateNextStackBottomCardId(contentId, position, count);
 			Dictionary<TabletopCardId, Vector2> solvedPositions =
-				ResolveNewStackPlacement(bottomCardId, contentId, position, count, isPlacementLocked, placementRules);
+				ResolveNewStackPlacement(
+					bottomCardId,
+					contentId,
+					position,
+					count,
+					isPlacementLocked,
+					placementRules,
+					placementLockedStackCardId);
 			List<TabletopCard> cards = new List<TabletopCard>(count);
 			try
 			{
@@ -151,6 +191,45 @@ namespace Gameplay.Tabletop
 					solvedPositions[bottomCardId],
 					isPlacementLocked,
 					solvedPositions);
+			}
+			catch
+			{
+				DisposeCharacterCards(cards);
+				throw;
+			}
+		}
+
+		internal TabletopCardStack CreateCardStackAtRequestedPosition(
+			ContentId contentId,
+			int count,
+			Vector2 position,
+			bool isPlacementLocked = false,
+			int initialUses = 1,
+			Func<TabletopCardId, TabletopCard> createCard = null)
+		{
+			CreateNextStackBottomCardId(contentId, position, count);
+			List<TabletopCard> cards = new List<TabletopCard>(count);
+			try
+			{
+				for (int i = 0; i < count; i++)
+				{
+					TabletopCardId cardId = new TabletopCardId(m_cardIdSequence.NextValue + (ulong)i);
+					TabletopCard card = createCard != null
+						? createCard(cardId)
+						: new TabletopCard(cardId, contentId, initialUses);
+					if (card == null || card.Id != cardId || card.ContentId != contentId)
+					{
+						DisposeCharacterCard(card);
+						throw new InvalidOperationException($"卡牌 {contentId} 的运行时工厂返回了空对象或错误身份。");
+					}
+					cards.Add(card);
+				}
+
+				return AddCardStack(
+					cards,
+					position,
+					isPlacementLocked,
+					solvedPositions: null);
 			}
 			catch
 			{
@@ -321,18 +400,67 @@ namespace Gameplay.Tabletop
 
 		internal void ReflowPlacement(TabletopCardPlacementRules placementRules)
 		{
+			ReflowPlacement(placementRules, temporarilyLockedStackCardId: default);
+		}
+
+		internal void ReflowPlacementAfterDrop(TabletopCardPlacementRules placementRules)
+		{
+			ReflowPlacement(
+				placementRules,
+				temporarilyLockedStackCardId: default,
+				requireConverged: false,
+				unresolvedMessage: null,
+				enforceInitialAreaConstraints: false);
+		}
+
+		internal void ReflowPlacementAfterSpawn(
+			TabletopCardPlacementRules placementRules,
+			TabletopCardId temporarilyLockedStackCardId)
+		{
+			ReflowPlacement(
+				placementRules,
+				temporarilyLockedStackCardId,
+				requireConverged: false,
+				unresolvedMessage: null,
+				enforceInitialAreaConstraints: false);
+		}
+
+		internal void ReflowPlacement(
+			TabletopCardPlacementRules placementRules,
+			TabletopCardId temporarilyLockedStackCardId)
+		{
+			ReflowPlacement(
+				placementRules,
+				temporarilyLockedStackCardId,
+				requireConverged: true,
+				unresolvedMessage: "当前牌桌没有足够空间把现有牌堆收回新的放置边界内。");
+		}
+
+		private void ReflowPlacement(
+			TabletopCardPlacementRules placementRules,
+			TabletopCardId temporarilyLockedStackCardId,
+			bool requireConverged,
+			string unresolvedMessage,
+			bool enforceInitialAreaConstraints = true)
+		{
 			if (placementRules == null)
 			{
 				throw new ArgumentNullException(nameof(placementRules));
 			}
 
+			List<TabletopCardStackSpatialBody> bodies = CreateSpatialBodies(placementRules.Geometry);
+			LockStackForCreationPlacementIfNeeded(
+				bodies,
+				placementRules.Geometry,
+				temporarilyLockedStackCardId);
 			TabletopCardStackSpatialResult result = TabletopCardStackPlacementSolver.Solve(
 				placementRules.Area,
-				CreateSpatialBodies(placementRules.Geometry),
-				placementRules.OverlapResolveMaxIterations);
-			if (!result.Converged)
+				bodies,
+				placementRules.OverlapResolveMaxIterations,
+				enforceInitialAreaConstraints);
+			if (requireConverged && !result.Converged)
 			{
-				throw new InvalidOperationException("当前牌桌没有足够空间把现有牌堆收回新的放置边界内。");
+				throw new InvalidOperationException(unresolvedMessage);
 			}
 			if (ApplySolvedPositions(CreateSolvedPositionMap(result)))
 			{
@@ -448,6 +576,11 @@ namespace Gameplay.Tabletop
 
 		internal TabletopCardStack DetachStackAt(TabletopCardId cardId)
 		{
+			return DetachStackAt(cardId, null);
+		}
+
+		internal TabletopCardStack DetachStackAt(TabletopCardId cardId, Vector2? detachedStackPosition)
+		{
 			TabletopCardStack source = GetStackContaining(cardId);
 			int splitIndex = source.GetDraggedSegmentStartIndex(cardId);
 			if (splitIndex == 0)
@@ -456,9 +589,15 @@ namespace Gameplay.Tabletop
 				{
 					throw new InvalidOperationException("锁定堆栈不能整体移走。");
 				}
+				if (detachedStackPosition.HasValue && source.Position != detachedStackPosition.Value)
+				{
+					// StackCraft 用按下瞬间的可见卡牌位置作为拖拽起点，整叠拖拽也必须提交到同一锚点。
+					source.MoveTo(detachedStackPosition.Value);
+					Revision++;
+				}
 				return source;
 			}
-			TabletopCardStack detached = source.DetachFrom(splitIndex);
+			TabletopCardStack detached = source.DetachFrom(splitIndex, detachedStackPosition ?? source.Position);
 			m_stacks.Add(detached);
 			Revision++;
 			return detached;
@@ -466,29 +605,61 @@ namespace Gameplay.Tabletop
 
 		internal bool TryPlaceStack(TabletopCardId cardId, Vector2 position, TabletopCardPlacementRules placementRules, out TabletopCardStack placedStack)
 		{
-			if (!TryCreateStackPlacementPlan(cardId, position, placementRules, out StackPlacementPlan plan))
+			RequireStackPlacementInput(cardId, position, placementRules);
+			TabletopCardStack source = GetStackContaining(cardId);
+			int splitIndex = source.GetDraggedSegmentStartIndex(cardId);
+			if (splitIndex == 0 && source.IsPlacementLocked)
 			{
-				placedStack = null;
-				return false;
+				throw new InvalidOperationException("锁定堆栈不能整体移走。");
 			}
 
-			TabletopCardStack source = plan.Source;
-			bool changed = plan.SplitIndex > 0;
-			if (plan.SplitIndex > 0)
+			bool changed = splitIndex > 0;
+			if (splitIndex > 0)
 			{
-				placedStack = source.DetachFrom(plan.SplitIndex);
+				placedStack = source.DetachFrom(splitIndex);
 				m_stacks.Add(placedStack);
 			}
 			else
 			{
 				placedStack = source;
 			}
-			changed |= ApplySolvedPositions(plan.SolvedPositions);
+			Vector2 releasedPosition = ResolveStackCraftReleasePosition(
+				placedStack,
+				position,
+				placementRules);
+			if (placedStack.Position != releasedPosition)
+			{
+				placedStack.MoveTo(releasedPosition);
+				changed = true;
+			}
 			if (changed)
 			{
 				Revision++;
 			}
+			ReflowPlacementAfterDrop(placementRules);
 			return true;
+		}
+
+		internal void MoveStackToStackCraftReleasePosition(
+			TabletopCardStack stack,
+			Vector2 requestedPosition,
+			TabletopCardPlacementRules placementRules)
+		{
+			if (stack == null)
+			{
+				throw new ArgumentNullException(nameof(stack));
+			}
+			RequireStackPlacementInput(stack.TopCard.Id, requestedPosition, placementRules);
+			Vector2 releasedPosition = ResolveStackCraftReleasePosition(
+				stack,
+				requestedPosition,
+				placementRules);
+			if (stack.Position != releasedPosition)
+			{
+				// StackCraft 普通释放会先把被拖牌堆压回桌面落点，再尝试吸附到目标堆。
+				stack.MoveTo(releasedPosition);
+				Revision++;
+			}
 		}
 
 		/// <summary>只抽出并放置指定卡牌；不同于玩家拖拽尾段牌堆，不会带走它上方的卡牌。</summary>
@@ -524,90 +695,113 @@ namespace Gameplay.Tabletop
 
 		internal bool CanPlaceStack(TabletopCardId cardId, Vector2 position, TabletopCardPlacementRules placementRules)
 		{
-			return TryCreateStackPlacementPlan(cardId, position, placementRules, out _);
-		}
-
-		private bool TryCreateStackPlacementPlan(
-			TabletopCardId cardId,
-			Vector2 position,
-			TabletopCardPlacementRules placementRules,
-			out StackPlacementPlan plan)
-		{
-			if (!IsFinitePosition(position))
-			{
-				throw new ArgumentException("牌桌位置必须是有限二维坐标。", "position");
-			}
-			if (placementRules == null)
-			{
-				throw new ArgumentNullException("placementRules");
-			}
+			RequireStackPlacementInput(cardId, position, placementRules);
 			TabletopCardStack source = GetStackContaining(cardId);
 			int splitIndex = source.GetDraggedSegmentStartIndex(cardId);
 			if (splitIndex == 0 && source.IsPlacementLocked)
 			{
 				throw new InvalidOperationException("锁定堆栈不能整体移走。");
 			}
-			int candidateStackCount = m_stacks.Count + ((splitIndex > 0) ? 1 : 0);
-			List<TabletopCardStackSpatialBody> spatialBodies = new List<TabletopCardStackSpatialBody>(candidateStackCount);
-			for (int stackIndex = 0; stackIndex < m_stacks.Count; stackIndex++)
+			return true;
+		}
+
+		internal Vector2 ClampStackPositionToBounds(
+			TabletopCardId cardId,
+			Vector2 position,
+			TabletopCardPlacementRules placementRules)
+		{
+			if (!IsFinitePosition(position))
 			{
-				TabletopCardStack stack = m_stacks[stackIndex];
-				if (stack != source)
-				{
-					spatialBodies.Add(CreateSpatialBody(placementRules.Geometry, stack));
-					continue;
-				}
-				if (splitIndex == 0)
-				{
-					spatialBodies.Add(CreateSpatialBody(
-						placementRules.Geometry,
-						source.BottomCard.Id,
-						position,
-						source.Cards.Count,
-						source.IsPlacementLocked,
-						source.TopCard.ContentId));
-					continue;
-				}
-				spatialBodies.Add(CreateSpatialBody(
-					placementRules.Geometry,
-					source.Cards[splitIndex - 1].Id,
-					source.Position,
-					splitIndex,
-					source.IsPlacementLocked,
-					source.TopCard.ContentId));
-				spatialBodies.Add(CreateSpatialBody(
-					placementRules.Geometry,
-					source.BottomCard.Id,
-					position,
-					source.Cards.Count - splitIndex,
-					isLocked: false,
-					topCardContentId: source.Cards[splitIndex].ContentId));
+				throw new ArgumentException("牌桌拖拽位置必须是有限二维坐标。", nameof(position));
 			}
-			TabletopCardStackSpatialResult spatialResult = TabletopCardStackPlacementSolver.Solve(
-				placementRules.Area,
-				spatialBodies,
-				placementRules.OverlapResolveMaxIterations);
-			if (!spatialResult.Converged)
+			if (placementRules == null)
 			{
-				plan = default;
-				return false;
-			}
-			Dictionary<TabletopCardId, Vector2> solvedPositions = new Dictionary<TabletopCardId, Vector2>(spatialResult.Bodies.Count);
-			for (int bodyIndex = 0; bodyIndex < spatialResult.Bodies.Count; bodyIndex++)
-			{
-				TabletopCardStackSpatialBody body = spatialResult.Bodies[bodyIndex];
-				solvedPositions.Add(body.BottomCardId, body.Position);
-			}
-			for (int i = 0; i < spatialBodies.Count; i++)
-			{
-				if (!solvedPositions.ContainsKey(spatialBodies[i].BottomCardId))
-				{
-					throw new InvalidOperationException($"空间解算结果缺少底牌为 {spatialBodies[i].BottomCardId} 的候选堆栈。");
-				}
+				throw new ArgumentNullException(nameof(placementRules));
 			}
 
-			plan = new StackPlacementPlan(source, splitIndex, solvedPositions);
-			return true;
+			TabletopCardStack stack = GetStackContaining(cardId);
+			return placementRules.Geometry.ClampStackPositionToBounds(
+				placementRules.Area.Bounds,
+				position,
+				stack.Cards.Count,
+				ResolveCardSize(stack.TopCard.ContentId, placementRules.Geometry));
+		}
+
+		internal Vector2 MoveStackDuringLocalDrag(
+			TabletopCardId cardId,
+			Vector2 position,
+			TabletopCardPlacementRules placementRules)
+		{
+			if (!IsFinitePosition(position))
+			{
+				throw new ArgumentException("牌桌拖拽位置必须是有限二维坐标。", nameof(position));
+			}
+			if (placementRules == null)
+			{
+				throw new ArgumentNullException(nameof(placementRules));
+			}
+
+			TabletopCardStack stack = GetStackContaining(cardId);
+			Vector2 clampedPosition = placementRules.Geometry.ClampStackPositionToBounds(
+				placementRules.Area.Bounds,
+				position,
+				stack.Cards.Count,
+				ResolveCardSize(stack.TopCard.ContentId, placementRules.Geometry));
+			if ((stack.Position - clampedPosition).sqrMagnitude > 9.999999E-09f)
+			{
+				// StackCraft 拖拽中只更新当前牌堆的目标位置；牌堆成员和结构没有变化，不触发整桌刷新版本。
+				stack.MoveTo(clampedPosition);
+			}
+			return clampedPosition;
+		}
+
+		private void RequireStackPlacementInput(
+			TabletopCardId cardId,
+			Vector2 position,
+			TabletopCardPlacementRules placementRules)
+		{
+			if (!cardId.IsValid)
+			{
+				throw new ArgumentException("牌桌放置必须引用有效局内卡牌。", nameof(cardId));
+			}
+			if (!IsFinitePosition(position))
+			{
+				throw new ArgumentException("牌桌位置必须是有限二维坐标。", nameof(position));
+			}
+			if (placementRules == null)
+			{
+				throw new ArgumentNullException(nameof(placementRules));
+			}
+		}
+
+		private Vector2 ResolveStackCraftReleasePosition(
+			TabletopCardStack stack,
+			Vector2 requestedPosition,
+			TabletopCardPlacementRules placementRules)
+		{
+			if (stack == null)
+			{
+				throw new ArgumentNullException(nameof(stack));
+			}
+			List<TabletopCardStackSpatialBody> releasedBody = new List<TabletopCardStackSpatialBody>(1)
+			{
+				CreateSpatialBody(
+					placementRules.Geometry,
+					stack.BottomCard.Id,
+					requestedPosition,
+					stack.Cards.Count,
+					isLocked: false,
+					topCardContentId: stack.TopCard.ContentId)
+			};
+			TabletopCardStackSpatialResult result = TabletopCardStackPlacementSolver.Solve(
+				placementRules.Area,
+				releasedBody,
+				placementRules.OverlapResolveMaxIterations);
+			if (result.Bodies.Count != 1)
+			{
+				throw new InvalidOperationException("牌桌释放位置解算必须只返回当前释放牌堆。");
+			}
+			return result.Bodies[0].Position;
 		}
 
 		private bool TryCreateSingleCardPlacementPlan(
@@ -681,11 +875,6 @@ namespace Gameplay.Tabletop
 				placementRules.Area,
 				spatialBodies,
 				placementRules.OverlapResolveMaxIterations);
-			if (!spatialResult.Converged)
-			{
-				plan = default;
-				return false;
-			}
 
 			Dictionary<TabletopCardId, Vector2> solvedPositions = new Dictionary<TabletopCardId, Vector2>(spatialResult.Bodies.Count);
 			for (int bodyIndex = 0; bodyIndex < spatialResult.Bodies.Count; bodyIndex++)
@@ -723,25 +912,6 @@ namespace Gameplay.Tabletop
 				}
 			}
 			return changed;
-		}
-
-		private readonly struct StackPlacementPlan
-		{
-			internal TabletopCardStack Source { get; }
-
-			internal int SplitIndex { get; }
-
-			internal IReadOnlyDictionary<TabletopCardId, Vector2> SolvedPositions { get; }
-
-			internal StackPlacementPlan(
-				TabletopCardStack source,
-				int splitIndex,
-				IReadOnlyDictionary<TabletopCardId, Vector2> solvedPositions)
-			{
-				Source = source ?? throw new ArgumentNullException(nameof(source));
-				SplitIndex = splitIndex;
-				SolvedPositions = solvedPositions ?? throw new ArgumentNullException(nameof(solvedPositions));
-			}
 		}
 
 		private readonly struct SingleCardPlacementPlan
@@ -846,7 +1016,8 @@ namespace Gameplay.Tabletop
 			IReadOnlyList<TabletopCardId> removalCardIds,
 			IReadOnlyList<TabletopCardCreationRequest> creations,
 			IReadOnlyList<TabletopCardRestorationRequest> restorations,
-			TabletopCardPlacementRules placementRules)
+			TabletopCardPlacementRules placementRules,
+			bool requirePlacementConverged = true)
 		{
 			if (removalCardIds == null)
 			{
@@ -903,12 +1074,14 @@ namespace Gameplay.Tabletop
 				}
 				if (remainingCount > 0)
 				{
+					bool isLocked = stack.IsPlacementLocked ||
+						ShouldLockStackForCreationPlacement(stack, creations);
 					bodies.Add(CreateSpatialBody(
 						placementRules.Geometry,
 						remainingBottomCardId,
 						stack.Position,
 						remainingCount,
-						stack.IsPlacementLocked,
+						isLocked,
 						remainingTopCardContentId));
 				}
 			}
@@ -978,7 +1151,7 @@ namespace Gameplay.Tabletop
 				placementRules.Area,
 				bodies,
 				placementRules.OverlapResolveMaxIterations);
-			if (!result.Converged)
+			if (requirePlacementConverged && !result.Converged)
 			{
 				throw new InvalidOperationException("牌桌没有足够空间原子提交本次卡牌移除与产物创建。");
 			}
@@ -990,7 +1163,10 @@ namespace Gameplay.Tabletop
 			bool isPlacementLocked,
 			IReadOnlyDictionary<TabletopCardId, Vector2> solvedPositions)
 		{
-			ApplySolvedPositions(solvedPositions);
+			if (solvedPositions != null)
+			{
+				ApplySolvedPositions(solvedPositions);
+			}
 			TabletopCardStack stack = new TabletopCardStack(cards, position, isPlacementLocked);
 			for (int i = 0; i < cards.Count; i++)
 			{
@@ -1130,7 +1306,8 @@ namespace Gameplay.Tabletop
 			Vector2 requestedPosition,
 			int cardCount,
 			bool isPlacementLocked,
-			TabletopCardPlacementRules placementRules)
+			TabletopCardPlacementRules placementRules,
+			TabletopCardId placementLockedStackCardId = default)
 		{
 			if (placementRules == null)
 			{
@@ -1138,6 +1315,10 @@ namespace Gameplay.Tabletop
 			}
 
 			List<TabletopCardStackSpatialBody> bodies = CreateSpatialBodies(placementRules.Geometry);
+			LockStackForCreationPlacementIfNeeded(
+				bodies,
+				placementRules.Geometry,
+				placementLockedStackCardId);
 			bodies.Add(CreateSpatialBody(
 				placementRules.Geometry,
 				cardId,
@@ -1149,12 +1330,50 @@ namespace Gameplay.Tabletop
 				placementRules.Area,
 				bodies,
 				placementRules.OverlapResolveMaxIterations);
-			if (!result.Converged)
-			{
-				throw new InvalidOperationException(
-					$"牌桌没有满足当前规则的空间用于创建卡牌 {cardId}。");
-			}
+			// StackCraft 生成卡牌时先把新牌放进桌面，再做有限轮重叠解算；同点出生的多张卡不会阻止生成。
 			return CreateSolvedPositionMap(result);
+		}
+
+		private void LockStackForCreationPlacementIfNeeded(
+			IList<TabletopCardStackSpatialBody> bodies,
+			TabletopCardStackGeometry geometry,
+			TabletopCardId placementLockedStackCardId)
+		{
+			if (!placementLockedStackCardId.IsValid)
+			{
+				return;
+			}
+			for (int stackIndex = 0; stackIndex < m_stacks.Count; stackIndex++)
+			{
+				TabletopCardStack stack = m_stacks[stackIndex];
+				if (stack.IndexOf(placementLockedStackCardId) < 0)
+				{
+					continue;
+				}
+				bodies[stackIndex] = CreateSpatialBody(
+					geometry,
+					stack.BottomCard.Id,
+					stack.Position,
+					stack.Cards.Count,
+					isLocked: true,
+					topCardContentId: stack.TopCard.ContentId);
+				return;
+			}
+		}
+
+		private static bool ShouldLockStackForCreationPlacement(
+			TabletopCardStack stack,
+			IReadOnlyList<TabletopCardCreationRequest> creations)
+		{
+			for (int creationIndex = 0; creationIndex < creations.Count; creationIndex++)
+			{
+				TabletopCardId cardId = creations[creationIndex].PlacementLockedStackCardId;
+				if (cardId.IsValid && stack.IndexOf(cardId) >= 0)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		private Dictionary<TabletopCardId, Vector2> ResolveRestoredCardPlacement(
@@ -1254,7 +1473,7 @@ namespace Gameplay.Tabletop
 				ResolveCardSize(stack.TopCard.ContentId, geometry));
 		}
 
-		private Vector2 ResolveCardSize(ContentId contentId, TabletopCardStackGeometry geometry)
+		internal Vector2 ResolveCardSize(ContentId contentId, TabletopCardStackGeometry geometry)
 		{
 			Vector2 cardSize = m_resolveCardSize(contentId, geometry.CardSize);
 			if (!float.IsFinite(cardSize.x) || !float.IsFinite(cardSize.y) || cardSize.x <= 0f || cardSize.y <= 0f)

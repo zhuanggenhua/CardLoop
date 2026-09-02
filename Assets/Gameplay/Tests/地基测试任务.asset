@@ -15,20 +15,20 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.quest
   m_tagCodes:
-  m_displayName: 地基测试任务
+  m_displayName: "\u5730\u57FA\u6D4B\u8BD5\u4EFB\u52A1"
   m_description: "\u5B8C\u6210\u4E00\u6B21\u5730\u57FA\u6D4B\u8BD5\u884C\u52A8\u540E\u5B8C\u6210\uFF0C\u7528\u4E8E\u9A8C\u8BC1\u5267\u672C\u4EFB\u52A1\u5B50\u9879\u6D88\u8D39\u5DF2\u7ED3\u7B97\u884C\u52A8\u4E8B\u5B9E\u3002"
   m_icon:
     Address:
     Guid:
     Locked: 1
   m_prerequisiteQuestIds: []
-  m_journalGroupName: 基础
+  m_journalGroupName: "\u57FA\u7840"
   m_tasks:
-  - rid: 7366053338002227794
+  - rid: 7366053433846530283
   references:
     version: 2
     RefIds:
-    - rid: 7366053338002227794
+    - rid: 7366053433846530283
       type: {class: ActionCompletionQuestTaskDefinition, ns: Gameplay.Quests, asm: Gameplay.Runtime}
       data:
         m_actionId:

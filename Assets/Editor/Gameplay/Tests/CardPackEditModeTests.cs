@@ -60,6 +60,64 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void OpenPackAction_SpawnsDrawnCardAtStackCraftLiftedPackHeight()
+		{
+			using PackTestContext context = PackTestContext.Create(
+				12345u,
+				new[] { PackSlot(CardEntry("test.pack.product.first", 1)) });
+			List<TabletopPresentationCue> cues = new List<TabletopPresentationCue>();
+			context.Run.Tabletop.PresentationCueRequested += cues.Add;
+			try
+			{
+				context.OpenPack();
+
+				Assert.That(cues, Has.Some.Matches<TabletopPresentationCue>(cue =>
+					cue.Kind == TabletopPresentationCueKind.CardSpawn &&
+					cue.UsesDragHeight &&
+					cue.HasSpawnOriginCardId &&
+					cue.SpawnOriginCardId == context.PackCardId &&
+					Mathf.Approximately(cue.SpawnHeightOffset, 0.1f)));
+			}
+			finally
+			{
+				context.Run.Tabletop.PresentationCueRequested -= cues.Add;
+			}
+		}
+
+		[Test]
+		public void OpenPackAction_SpawnsRecipeCardAtStackCraftLiftedPackHeight()
+		{
+			using PackTestContext context = PackTestContext.Create(
+				12345u,
+				new[]
+				{
+					PackSlot(
+						1f,
+						new[] { CardEntry("test.pack.product.first", 1) },
+						RecipeEntry("test.pack.recipe.first", "test.pack.recipe-card.first"))
+				});
+			List<TabletopPresentationCue> cues = new List<TabletopPresentationCue>();
+			context.Run.Tabletop.PresentationCueRequested += cues.Add;
+			try
+			{
+				context.OpenPack();
+
+				Assert.That(context.CountCards("test.pack.recipe-card.first"), Is.EqualTo(1));
+				Assert.That(context.CountCards("test.pack.product.first"), Is.Zero);
+				Assert.That(cues, Has.Some.Matches<TabletopPresentationCue>(cue =>
+					cue.Kind == TabletopPresentationCueKind.CardSpawn &&
+					cue.UsesDragHeight &&
+					cue.HasSpawnOriginCardId &&
+					cue.SpawnOriginCardId == context.PackCardId &&
+					Mathf.Approximately(cue.SpawnHeightOffset, 0.1f)));
+			}
+			finally
+			{
+				context.Run.Tabletop.PresentationCueRequested -= cues.Add;
+			}
+		}
+
+		[Test]
 		public void OpenPackAction_DiscoversOnlyUndiscoveredRecipeBeforeFallingBackToCards()
 		{
 			using PackTestContext context = PackTestContext.Create(
@@ -117,10 +175,22 @@ namespace Gameplay.Tests
 
 		private static void SetField(object target, string fieldName, object value)
 		{
-			target.GetType().GetField(
-				fieldName,
-				System.Reflection.BindingFlags.Instance |
-				System.Reflection.BindingFlags.NonPublic)?.SetValue(target, value);
+			Type type = target.GetType();
+			while (type != null)
+			{
+				System.Reflection.FieldInfo field = type.GetField(
+					fieldName,
+					System.Reflection.BindingFlags.Instance |
+					System.Reflection.BindingFlags.NonPublic);
+				if (field != null)
+				{
+					field.SetValue(target, value);
+					return;
+				}
+				type = type.BaseType;
+			}
+
+			throw new MissingFieldException(target.GetType().FullName, fieldName);
 		}
 
 		private sealed class PackTestContext : IDisposable
@@ -158,6 +228,7 @@ namespace Gameplay.Tests
 				CardPackDefinition pack = ScriptableObject.CreateInstance<CardPackDefinition>();
 				SetContentId(pack, "test.pack.card");
 				SetField(pack, "m_slots", slots);
+				SetField(pack, "m_countsTowardCardLimit", false);
 				assets.Add(pack);
 
 				HashSet<string> referencedCardIds = new HashSet<string>(StringComparer.Ordinal);

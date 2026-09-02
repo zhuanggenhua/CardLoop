@@ -15,19 +15,62 @@ MonoBehaviour:
   m_contentId:
     m_value: test.foundation.recipe.crafting-stick
   m_tagCodes:
-  m_displayName: 制作木棍
-  m_description: 模板配方参考：木材 ×1，村民 ×1。制作耗时 10 秒。
+  m_displayName: "\u5236\u4F5C\u6728\u68CD"
+  m_description: "\u6A21\u677F\u914D\u65B9\u53C2\u8003\uFF1A\u6728\u6750 \xD71\uFF0C\u6751\u6C11
+    \xD71\u3002\u5236\u4F5C\u8017\u65F6 10 \u79D2\u3002"
   m_icon:
     Address:
     Guid:
     Locked: 1
   m_turnCost: 1
   m_canStartFromClick: 0
-  m_journalGroupName: 加工
-  m_participationSlots: []
+  m_allowExcessCardsInStack: 0
+  m_recheckStackAfterCompletion: 1
+  m_recipeSelectionWeight: 1
+  m_journalGroupName: "\u52A0\u5DE5"
+  m_participationSlots:
+  - m_key: timber
+    m_displayName: "\u6728\u6750"
+    m_minimumParticipants: 1
+    m_maximumParticipants: 1
+    m_allowAdditionalMatchingParticipantsInStack: 0
+    m_allowedContentIds:
+    - m_value: test.foundation.recipe-output.timber
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
+  - m_key: villager
+    m_displayName: "\u6751\u6C11"
+    m_minimumParticipants: 1
+    m_maximumParticipants: 1
+    m_allowAdditionalMatchingParticipantsInStack: 0
+    m_allowedContentIds:
+    - m_value: test.foundation.card
+    m_requiredAllContentTagCodes:
+    m_requiredAnyContentTagCodes:
+    m_requiredNoneContentTagCodes:
+    m_requiredAllAbilitySystemTagCodes:
+    m_requiredAnyAbilitySystemTagCodes:
+    m_requiredNoneAbilitySystemTagCodes:
   m_conditions: []
-  m_resultIntents: []
+  m_resultIntents:
+  - rid: 7366053433846530273
+  - rid: 7366053433846530274
   m_resultBranches: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 7366053433846530273
+      type: {class: UseCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
+      data:
+        m_slotKey: timber
+    - rid: 7366053433846530274
+      type: {class: CreateCardsResultIntent, ns: Gameplay.Tabletop.Actions, asm: Gameplay.Runtime}
+      data:
+        m_contentId:
+          m_value: test.foundation.recipe-output.wooden-stick
+        m_count: 1
+        m_anchorSlotKey: villager
