@@ -34,6 +34,12 @@ namespace Gameplay.Scenarios
 		[Tooltip("进入本剧本时启用的任务定义。编辑器自动保存所选任务的唯一内容 ID；前置任务也必须包含在同一列表中。")]
 		private ContentId[] m_questIds = Array.Empty<ContentId>();
 
+		[SerializeField]
+		[ContentIdReference]
+		[LabelText("开局已发现内容")]
+		[Tooltip("单局开始时默认写入已发现集合的内容，例如开局可用行动或日志条目。")]
+		private ContentId[] m_initialDiscoveredContentIds = Array.Empty<ContentId>();
+
 		[Header("时间")]
 		[SerializeField]
 		[Min(1f)]
@@ -62,6 +68,9 @@ namespace Gameplay.Scenarios
 		private BattleFormationRules m_battleFormationRules = new BattleFormationRules();
 
 		public IReadOnlyList<ContentId> QuestIds => m_questIds ?? Array.Empty<ContentId>();
+
+		public IReadOnlyList<ContentId> InitialDiscoveredContentIds =>
+			m_initialDiscoveredContentIds ?? Array.Empty<ContentId>();
 
 		public ContentId InitialRegionId => m_initialRegionId;
 
@@ -149,6 +158,38 @@ namespace Gameplay.Scenarios
 							$"剧本 {ContentId} 包含任务 {questId}，但没有同时包含它的前置任务 {prerequisiteId}。",
 							this);
 					}
+				}
+			}
+
+			ValidateInitialDiscoveredContent(context);
+		}
+
+		private void ValidateInitialDiscoveredContent(ContentValidationContext context)
+		{
+			HashSet<ContentId> discoveredContentIds = new();
+			for (int i = 0; i < InitialDiscoveredContentIds.Count; i++)
+			{
+				ContentId contentId = InitialDiscoveredContentIds[i];
+				if (!contentId.IsValid)
+				{
+					context.AddError(
+						"SCENARIO_INITIAL_DISCOVERED_CONTENT_INVALID",
+						$"剧本 {ContentId} 的第 {i + 1} 个开局已发现内容 ID 无效。",
+						this);
+				}
+				else if (!discoveredContentIds.Add(contentId))
+				{
+					context.AddError(
+						"SCENARIO_INITIAL_DISCOVERED_CONTENT_DUPLICATE",
+						$"剧本 {ContentId} 重复声明开局已发现内容 {contentId}。",
+						this);
+				}
+				else if (!context.TryGet(contentId, out ContentAsset _))
+				{
+					context.AddError(
+						"SCENARIO_INITIAL_DISCOVERED_CONTENT_UNKNOWN",
+						$"剧本 {ContentId} 引用了当前内容作者源中不存在的开局已发现内容 {contentId}。",
+						this);
 				}
 			}
 		}

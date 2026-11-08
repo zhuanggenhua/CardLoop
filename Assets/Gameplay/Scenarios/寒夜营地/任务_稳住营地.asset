@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8987fccd731d0c64ba95dda0abbd1be8, type: 3}
+  m_Name: "\u4EFB\u52A1_\u7A33\u4F4F\u8425\u5730"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Quests.QuestDefinition
+  m_contentId:
+    m_value: quest.hanye-camp.stabilize-camp
+  m_tagCodes: 
+  m_displayName: "\u7A33\u4F4F\u8425\u5730"
+  m_description: "\u6491\u5230\u7B2C 4 \u5929\uFF0C\u4FDD\u4F4F\u963F\u5B81\uFF0C\u5E76\u7559\u4E0B\u81F3\u5C11
+    2 \u70B9\u98DF\u7269\u3002"
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_prerequisiteQuestIds: []
+  m_journalGroupName: "\u76EE\u6807"
+  m_tasks:
+  - rid: 1242270147996549270
+  - rid: 1242270147996549271
+  - rid: 1242270147996549272
+  - rid: 1242270147996549273
+  references:
+    version: 2
+    RefIds:
+    - rid: 1242270147996549270
+      type: {class: CardExplorationQuestTaskDefinition, ns: Gameplay.Quests, asm: Gameplay.Runtime}
+      data:
+        m_cardId:
+          m_value: card.hanye-camp.location-store
+        m_requiredExplorationCount: 1
+    - rid: 1242270147996549271
+      type: {class: DayReachedQuestTaskDefinition, ns: Gameplay.Quests, asm: Gameplay.Runtime}
+      data:
+        m_requiredDay: 4
+    - rid: 1242270147996549272
+      type: {class: CardPossessionQuestTaskDefinition, ns: Gameplay.Quests, asm: Gameplay.Runtime}
+      data:
+        m_cardId:
+          m_value: card.hanye-camp.survivor-aning
+        m_requiredCardCount: 1
+    - rid: 1242270147996549273
+      type: {class: FoodNutritionQuestTaskDefinition, ns: Gameplay.Quests, asm: Gameplay.Runtime}
+      data:
+        m_requiredNutrition: 2

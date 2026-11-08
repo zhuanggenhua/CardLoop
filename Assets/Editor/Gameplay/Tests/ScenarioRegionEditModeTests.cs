@@ -62,6 +62,89 @@ namespace Gameplay.Tests
 			}
 		}
 
+		[Test]
+		public void CreateRun_CreatesInitialRegionCardsOnTabletop()
+		{
+			CardDefinition scout = CreateCard("test.region.initial.scout");
+			CardDefinition food = CreateCard("test.region.initial.food");
+			ScenarioRegionDefinition camp = CreateRegionWithInitialCards(
+				"test.region.initial.camp",
+				"{\"m_cardId\":{\"m_value\":\"test.region.initial.scout\"}," +
+				"\"m_count\":1,\"m_position\":{\"x\":-1.5,\"y\":0.5},\"m_isPlacementLocked\":false}",
+				"{\"m_cardId\":{\"m_value\":\"test.region.initial.food\"}," +
+				"\"m_count\":2,\"m_position\":{\"x\":1.5,\"y\":0.5},\"m_isPlacementLocked\":true}");
+			ScenarioDefinition scenario = CreateScenario(
+				"test.scenario.initial-region-cards",
+				camp.ContentId.Value,
+				camp.ContentId.Value);
+			ScenarioRun run = null;
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[]
+				{
+					scout,
+					food,
+					camp,
+					scenario
+				});
+				run = new ScenarioRun(scenario, contentIndex, 12345u);
+
+				Assert.That(run.Tabletop.Cards.CardCount, Is.EqualTo(3));
+				Assert.That(CountCards(run.Tabletop, scout.ContentId), Is.EqualTo(1));
+				Assert.That(CountCards(run.Tabletop, food.ContentId), Is.EqualTo(2));
+				Assert.That(run.Tabletop.Cards.Stacks[0].Position, Is.EqualTo(new Vector2(-1.5f, 0.5f)));
+				Assert.That(run.Tabletop.Cards.Stacks[1].IsPlacementLocked, Is.True);
+			}
+			finally
+			{
+				run?.End();
+				UnityEngine.Object.DestroyImmediate(scout);
+				UnityEngine.Object.DestroyImmediate(food);
+				UnityEngine.Object.DestroyImmediate(camp);
+				UnityEngine.Object.DestroyImmediate(scenario);
+			}
+		}
+
+		[Test]
+		public void Restore_DoesNotCreateInitialRegionCardsAgain()
+		{
+			CardDefinition card = CreateCard("test.region.initial.restore-card");
+			ScenarioRegionDefinition camp = CreateRegionWithInitialCards(
+				"test.region.initial.restore-camp",
+				"{\"m_cardId\":{\"m_value\":\"test.region.initial.restore-card\"}," +
+				"\"m_count\":2,\"m_position\":{\"x\":0,\"y\":0},\"m_isPlacementLocked\":false}");
+			ScenarioDefinition scenario = CreateScenario(
+				"test.scenario.initial-region-restore",
+				camp.ContentId.Value,
+				camp.ContentId.Value);
+			ScenarioRun run = null;
+			ScenarioRun restored = null;
+			try
+			{
+				ContentIndex contentIndex = ContentIndex.Build(new ContentAsset[]
+				{
+					card,
+					camp,
+					scenario
+				});
+				run = new ScenarioRun(scenario, contentIndex, 12345u);
+				ScenarioRunSnapshot snapshot = run.CreateSnapshot();
+				restored = ScenarioRun.Restore(scenario, contentIndex, snapshot);
+
+				Assert.That(run.Tabletop.Cards.CardCount, Is.EqualTo(2));
+				Assert.That(restored.Tabletop.Cards.CardCount, Is.EqualTo(2));
+				Assert.That(CountCards(restored.Tabletop, card.ContentId), Is.EqualTo(2));
+			}
+			finally
+			{
+				restored?.End();
+				run?.End();
+				UnityEngine.Object.DestroyImmediate(card);
+				UnityEngine.Object.DestroyImmediate(camp);
+				UnityEngine.Object.DestroyImmediate(scenario);
+			}
+		}
+
 		private static CardDefinition CreateCard(string contentId)
 		{
 			CardDefinition definition = ScriptableObject.CreateInstance<CardDefinition>();
@@ -79,6 +162,36 @@ namespace Gameplay.Tests
 				$"{{\"m_contentId\":{{\"m_value\":\"{contentId}\"}}}}",
 				definition);
 			return definition;
+		}
+
+		private static ScenarioRegionDefinition CreateRegionWithInitialCards(
+			string contentId,
+			params string[] initialCardJson)
+		{
+			ScenarioRegionDefinition definition =
+				ScriptableObject.CreateInstance<ScenarioRegionDefinition>();
+			JsonUtility.FromJsonOverwrite(
+				$"{{\"m_contentId\":{{\"m_value\":\"{contentId}\"}}," +
+				$"\"m_initialCards\":[{string.Join(",", initialCardJson)}]}}",
+				definition);
+			return definition;
+		}
+
+		private static int CountCards(Gameplay.Tabletop.Tabletop tabletop, ContentId contentId)
+		{
+			int count = 0;
+			for (int stackIndex = 0; stackIndex < tabletop.Cards.Stacks.Count; stackIndex++)
+			{
+				var cards = tabletop.Cards.Stacks[stackIndex].Cards;
+				for (int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
+				{
+					if (cards[cardIndex].ContentId.Equals(contentId))
+					{
+						count++;
+					}
+				}
+			}
+			return count;
 		}
 
 		private static ScenarioDefinition CreateScenario(

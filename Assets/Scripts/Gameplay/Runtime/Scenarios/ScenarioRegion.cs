@@ -50,6 +50,7 @@ namespace Gameplay.Scenarios
 				battleFormationRules,
 				cardIdSequence);
 			Tabletop.InitializeAuthoritativeRandom(authoritativeRandomSeed);
+			CreateInitialCards(definition);
 		}
 
 		internal ScenarioRegion(
@@ -99,6 +100,26 @@ namespace Gameplay.Scenarios
 		internal ScenarioRegionSnapshot CreateSnapshot()
 		{
 			return new ScenarioRegionSnapshot(Id, Tabletop.CreateSnapshot());
+		}
+
+		private void CreateInitialCards(ScenarioRegionDefinition definition)
+		{
+			IReadOnlyList<ScenarioInitialCardPlacementDefinition> initialCards = definition.InitialCards;
+			for (int i = 0; i < initialCards.Count; i++)
+			{
+				ScenarioInitialCardPlacementDefinition initialCard = initialCards[i];
+				if (initialCard == null)
+				{
+					throw new InvalidOperationException(
+						$"剧本地区 {definition.ContentId} 的第 {i + 1} 个开局牌桌配置为空。");
+				}
+
+				Tabletop.CreateCardStack(
+					initialCard.CardId,
+					initialCard.Count,
+					initialCard.Position,
+					initialCard.IsPlacementLocked);
+			}
 		}
 	}
 }

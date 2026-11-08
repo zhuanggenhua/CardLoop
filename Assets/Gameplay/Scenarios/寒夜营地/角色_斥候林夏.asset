@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d1ae288adf6482f875ac9e18ff97db7, type: 3}
+  m_Name: "\u89D2\u8272_\u65A5\u5019\u6797\u590F"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CharacterCardDefinition
+  m_contentId:
+    m_value: card.hanye-camp.scout-linxia
+  m_tagCodes: ea157a00
+  m_displayName: "\u65A5\u5019\u6797\u590F"
+  m_description: "\u64C5\u957F\u5916\u51FA\u4FA6\u5BDF\u7684\u53EF\u63A7\u89D2\u8272\u3002\u9996\u7248\u8D1F\u8D23\u63A2\u7D22\u3001\u641C\u522E\u548C\u5B88\u5907\u3002"
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_initialUses: 1
+  m_sellValue: 0
+  m_countsTowardCardLimit: 1
+  m_cardLimitBonus: 0
+  m_periodicProductionCardId:
+    m_value: 
+  m_periodicProductionIntervalSeconds: 0
+  m_automaticMovementRetentionCapacity: 0
+  m_loot: []
+  m_cardArt:
+    Address: "\u5361\u724C\u5360\u4F4D\u56FE"
+    Guid: 0f54d867b9639e44c646777766827b09
+    Locked: 1
+  m_cardSurface:
+    Address: "\u5361\u724C\u8868\u9762_\u89D2\u8272"
+    Guid: 753f0937c1d64950b0f47e534f841748
+    Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}
+  m_abilitySystemPresetId: 1001
+  m_attributeOverrides: []
+  m_automaticBattleAbilityCode: 20005
+  m_automaticAggroRadius: 0
+  m_automaticAttackRadius: 0

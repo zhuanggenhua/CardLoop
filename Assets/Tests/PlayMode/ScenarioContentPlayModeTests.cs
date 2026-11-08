@@ -30,6 +30,17 @@ namespace Gameplay.Tests
         private const string FoundationScenePath = "Assets/Scenes/地基测试.unity";
         private const string FoundationMapScenePath = "Assets/Scenes/地基地图测试.unity";
         private const string FoundationSecondMapScenePath = "Assets/Scenes/地基第二地图测试.unity";
+        private const string HanYeCampScenarioId = "scenario.hanye-camp";
+        private const string HanYeCampScoutId = "card.hanye-camp.scout-linxia";
+        private const string HanYeCampMechanicId = "card.hanye-camp.mechanic-laozhou";
+        private const string HanYeCampAningId = "card.hanye-camp.survivor-aning";
+        private const string HanYeCampServiceAreaId = "card.hanye-camp.base-service-area";
+        private const string HanYeCampStoreId = "card.hanye-camp.location-store";
+        private const string HanYeCampClinicId = "card.hanye-camp.location-clinic";
+        private const string HanYeCampBrokenFenceId = "card.hanye-camp.threat-broken-fence";
+        private const string HanYeCampExploreActionId = "action.hanye-camp.explore-location";
+        private const string HanYeCampScavengeActionId = "action.hanye-camp.scavenge-supplies";
+        private const string HanYeCampDefendActionId = "action.hanye-camp.defend-camp";
         private string m_saveDirectory;
 
         [UnitySetUp]
@@ -325,6 +336,79 @@ namespace Gameplay.Tests
             Assert.That(secondRun.ConfirmedTurnIndex, Is.Zero);
             Assert.That(secondRun.ScenarioId, Is.EqualTo(firstRun.ScenarioId));
             Assert.Throws<System.InvalidOperationException>(() => firstRun.ConfirmTurn());
+        }
+
+        [UnityTest]
+        public IEnumerator HanYeCamp_StartsThroughScenarioDirectorAndBindsVisibleTabletop()
+        {
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode(
+                FoundationScenePath,
+                new LoadSceneParameters(LoadSceneMode.Single));
+
+            float timeoutAt = Time.realtimeSinceStartup + 20f;
+            while (GameManager.StartupState is GameManagerStartupState.NotStarted or GameManagerStartupState.Initializing)
+            {
+                Assert.Less(Time.realtimeSinceStartup, timeoutAt, "GameManager 启动超时。");
+                yield return null;
+            }
+
+            Assert.That(GameManager.StartupState, Is.EqualTo(GameManagerStartupState.Ready),
+                GameManager.StartupException?.ToString());
+
+            FoundationTestSceneHarness harness = Object.FindAnyObjectByType<FoundationTestSceneHarness>();
+            while (harness == null || !harness.IsReady)
+            {
+                Assert.Less(Time.realtimeSinceStartup, timeoutAt, "统一地基场景完成牌桌装配超时。");
+                harness = Object.FindAnyObjectByType<FoundationTestSceneHarness>();
+                yield return null;
+            }
+
+            ScenarioDirector director = GameManager.GetSystem<ScenarioDirector>();
+            yield return director.EndScenarioAsync().ToCoroutine();
+            yield return director.StartScenarioAsync(new ContentId(HanYeCampScenarioId), 12345u).ToCoroutine();
+
+            timeoutAt = Time.realtimeSinceStartup + 20f;
+            while (!harness.IsReady ||
+                   harness.ScenarioRun?.ScenarioId.Value != HanYeCampScenarioId ||
+                   !HasRenderedCardViews(
+                       HanYeCampScoutId,
+                       HanYeCampMechanicId,
+                       HanYeCampAningId,
+                       HanYeCampServiceAreaId,
+                       HanYeCampStoreId,
+                       HanYeCampClinicId,
+                       HanYeCampBrokenFenceId))
+            {
+                Assert.Less(Time.realtimeSinceStartup, timeoutAt, "寒夜营地牌桌绑定和卡牌显示超时。");
+                yield return null;
+            }
+
+            ScenarioRun run = director.ActiveRun;
+            TabletopView tabletopView = Object.FindAnyObjectByType<TabletopView>();
+            TabletopInteraction interaction = Object.FindAnyObjectByType<TabletopInteraction>();
+            Assert.That(director.ActiveScenarioId.Value, Is.EqualTo(HanYeCampScenarioId));
+            Assert.That(tabletopView, Is.Not.Null);
+            Assert.That(tabletopView.BoundTabletop, Is.SameAs(run.Tabletop));
+            Assert.That(interaction, Is.Not.Null);
+            Assert.That(interaction.IsBound, Is.True);
+            Assert.That(run.Tabletop.Cards.CardCount, Is.EqualTo(10));
+            Assert.That(run.GetDiscoveredActions().Select(action => action.ContentId.Value), Is.EquivalentTo(new[]
+            {
+                HanYeCampExploreActionId,
+                HanYeCampScavengeActionId,
+                HanYeCampDefendActionId
+            }));
+            Assert.That(CountCards(run, HanYeCampScoutId), Is.EqualTo(1));
+            Assert.That(CountCards(run, HanYeCampStoreId), Is.EqualTo(1));
+            Assert.That(CountCards(run, HanYeCampBrokenFenceId), Is.EqualTo(1));
+            Assert.That(
+                FindReadyDragCandidate(run, HanYeCampScoutId, HanYeCampStoreId, HanYeCampExploreActionId),
+                Is.Not.Null,
+                "寒夜营地启动后，斥候拖到便利店必须能形成可执行探索行动。");
+            Assert.That(
+                FindReadyDragCandidate(run, HanYeCampMechanicId, HanYeCampBrokenFenceId, HanYeCampDefendActionId),
+                Is.Not.Null,
+                "寒夜营地启动后，维修员拖到破损栅栏必须能形成可执行守备行动。");
         }
 
 		[UnityTest]
@@ -728,6 +812,81 @@ namespace Gameplay.Tests
                 "项目 SceneKit 场景后端必须提供资源包占用校验，供资源系统拒绝卸载正在使用的 Mod 包。");
 
             return (bool)usesPackage.Invoke(sceneLoaderPool, new object[] { packageName });
+        }
+
+        private static bool HasRenderedCardViews(params string[] contentIds)
+        {
+            TabletopCardView[] views = Object.FindObjectsByType<TabletopCardView>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            for (int contentIndex = 0; contentIndex < contentIds.Length; contentIndex++)
+            {
+                ContentId expected = new ContentId(contentIds[contentIndex]);
+                if (!views.Any(view => view.ContentId == expected && view.DisplaysArtwork))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static ActionCandidate FindReadyDragCandidate(
+            ScenarioRun run,
+            string sourceContentId,
+            string targetContentId,
+            string actionContentId)
+        {
+            TabletopCard source = FindCard(run, sourceContentId);
+            TabletopCard target = FindCard(run, targetContentId);
+            ActionCandidate[] candidates = run.FindActionCandidates(
+                new TabletopCardPointerReleaseIntent(
+                    source.Id,
+                    source.Position,
+                    target.Position,
+                    source.Position,
+                    isDrag: true,
+                    target.Id));
+            return candidates.SingleOrDefault(candidate =>
+                candidate.Action.ContentId.Value == actionContentId &&
+                candidate.IsReady);
+        }
+
+        private static TabletopCard FindCard(ScenarioRun run, string contentId)
+        {
+            ContentId expected = new ContentId(contentId);
+            for (int stackIndex = 0; stackIndex < run.Tabletop.Cards.Stacks.Count; stackIndex++)
+            {
+                IReadOnlyList<TabletopCard> cards = run.Tabletop.Cards.Stacks[stackIndex].Cards;
+                for (int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
+                {
+                    if (cards[cardIndex].ContentId == expected)
+                    {
+                        return cards[cardIndex];
+                    }
+                }
+            }
+
+            throw new System.InvalidOperationException($"牌桌上找不到内容：{contentId}");
+        }
+
+        private static int CountCards(ScenarioRun run, string contentId)
+        {
+            ContentId expected = new ContentId(contentId);
+            int count = 0;
+            for (int stackIndex = 0; stackIndex < run.Tabletop.Cards.Stacks.Count; stackIndex++)
+            {
+                IReadOnlyList<TabletopCard> cards = run.Tabletop.Cards.Stacks[stackIndex].Cards;
+                for (int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
+                {
+                    if (cards[cardIndex].ContentId == expected)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
         }
 
         [UnityTearDown]

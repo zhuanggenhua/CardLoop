@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 732affab875846bba73045887651397f, type: 3}
+  m_Name: "\u5730\u70B9_\u5E9F\u5F03\u8BCA\u6240"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Content.CardDefinition
+  m_contentId:
+    m_value: card.hanye-camp.location-clinic
+  m_tagCodes: f2157a00
+  m_displayName: "\u5E9F\u5F03\u8BCA\u6240"
+  m_description: "\u505C\u7535\u540E\u7684\u4E61\u9547\u8BCA\u6240\u3002\u80FD\u627E\u5230\u836F\u54C1\uFF0C\u4E5F\u53EF\u80FD\u66B4\u9732\u6551\u63F4\u98CE\u9669\u3002"
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_initialUses: 3
+  m_sellValue: 0
+  m_countsTowardCardLimit: 1
+  m_cardLimitBonus: 0
+  m_periodicProductionCardId:
+    m_value: 
+  m_periodicProductionIntervalSeconds: 0
+  m_automaticMovementRetentionCapacity: 0
+  m_loot:
+  - m_cardId:
+      m_value: card.hanye-camp.resource-medicine
+    m_weight: 4
+  - m_cardId:
+      m_value: card.hanye-camp.food-scraps
+    m_weight: 2
+  - m_cardId:
+      m_value: card.hanye-camp.resource-plank
+    m_weight: 2
+  - m_cardId:
+      m_value: card.hanye-camp.event-infection-doubt
+    m_weight: 2
+  - m_cardId:
+      m_value: card.hanye-camp.location-house
+    m_weight: 2
+  - m_cardId:
+      m_value: card.hanye-camp.survivor-wanderer
+    m_weight: 1
+  - m_cardId:
+      m_value: card.hanye-camp.event-cold-wave
+    m_weight: 1
+  m_cardArt:
+    Address: "\u5361\u724C\u5360\u4F4D\u56FE"
+    Guid: 0f54d867b9639e44c646777766827b09
+    Locked: 1
+  m_cardSurface:
+    Address: "\u5361\u724C\u8868\u9762_\u5730\u533A"
+    Guid: 64e782f727f04aba9f02eb1760d14a2b
+    Locked: 1
+  m_overrideViewSize: 0
+  m_viewSize: {x: 1, y: 1}

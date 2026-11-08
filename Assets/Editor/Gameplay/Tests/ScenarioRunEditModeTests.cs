@@ -770,6 +770,18 @@ namespace Gameplay.Tests
 			return count;
 		}
 
+		private static bool HasValidationIssue(ContentValidationReport report, string code)
+		{
+			for (int i = 0; i < report.Issues.Count; i++)
+			{
+				if (report.Issues[i].Code == code)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		[Test]
 		public void ScenarioDefinition_RejectsNonPositiveTurnsPerDay()
 		{
@@ -798,6 +810,29 @@ namespace Gameplay.Tests
 					BuildContentIndex(new ContentAsset[] { scenario }));
 
 				StringAssert.Contains("SCENARIO_SECONDS_PER_TURN_INVALID", exception.Message);
+			}
+			finally
+			{
+				Object.DestroyImmediate(scenario);
+			}
+		}
+
+		[Test]
+		public void ScenarioDefinition_RejectsUnknownInitialDiscoveredContent()
+		{
+			ScenarioDefinition scenario = CreateScenario("test.scenario.initial-discovered-invalid");
+			SetInitialDiscoveredContent(
+				scenario,
+				"test.scenario.initial-discovered-invalid.missing");
+			try
+			{
+				ContentValidationReport report = ContentValidator.ValidateContentAssets(
+					new ContentAsset[] { ScenarioRegions[scenario], scenario });
+
+				Assert.That(report.HasErrors, Is.True);
+				Assert.That(
+					HasValidationIssue(report, "SCENARIO_INITIAL_DISCOVERED_CONTENT_UNKNOWN"),
+					Is.True);
 			}
 			finally
 			{
@@ -862,6 +897,59 @@ namespace Gameplay.Tests
 			void OnTurnConfirmed(ScenarioTurnConfirmedEvent confirmedEvent)
 			{
 				receivedEvents.Add(confirmedEvent);
+			}
+		}
+
+		[Test]
+		public void CreateRun_AppliesInitialDiscoveredContentToActionsAndQuests()
+		{
+			CardDefinition worker = CreateCard("test.scenario.initial-discovered.worker");
+			ActionDefinition action = CreateAction(
+				"test.scenario.initial-discovered.action",
+				worker.ContentId.Value);
+			QuestDefinition quest = CreateDiscoveryQuest(
+				"test.scenario.initial-discovered.quest",
+				action.ContentId.Value);
+			ScenarioDefinition scenario = CreateScenario(
+				"test.scenario.initial-discovered",
+				quest.ContentId.Value);
+			SetInitialDiscoveredContent(scenario, action.ContentId.Value);
+			try
+			{
+				ContentIndex contentIndex = BuildContentIndex(new ContentAsset[]
+				{
+					worker,
+					action,
+					quest,
+					scenario
+				});
+				ScenarioRun run = new ScenarioRun(scenario, contentIndex, 12345u);
+
+				Assert.That(run.IsContentDiscovered(action.ContentId), Is.True);
+				Assert.That(run.GetDiscoveredActions(), Has.Length.EqualTo(1));
+				TabletopCard participant = run.Tabletop.CreateCard(worker.ContentId, Vector2.zero);
+				ActionCandidate[] candidates = run.FindActionCandidates(
+					new TabletopCardPointerReleaseIntent(
+						participant.Id,
+						Vector2.zero,
+						Vector2.one,
+						Vector2.zero,
+						isDrag: true,
+						default));
+				Assert.That(candidates, Has.Length.EqualTo(1));
+
+				run.ActivateInitialQuests();
+
+				Assert.That(
+					run.QuestLog.GetQuest(quest.ContentId).Status,
+					Is.EqualTo(QuestStatus.Completed));
+			}
+			finally
+			{
+				Object.DestroyImmediate(worker);
+				Object.DestroyImmediate(action);
+				Object.DestroyImmediate(quest);
+				Object.DestroyImmediate(scenario);
 			}
 		}
 
@@ -1372,6 +1460,40 @@ namespace Gameplay.Tests
 		}
 
 		[Test]
+		public void Restore_UsesSnapshotDiscoveredContentInsteadOfScenarioInitialDiscoveredContent()
+		{
+			CardDefinition worker = CreateCard("test.snapshot.initial-discovered.worker");
+			ActionDefinition action = CreateAction(
+				"test.snapshot.initial-discovered.action",
+				worker.ContentId.Value);
+			ScenarioDefinition scenario = CreateScenario("test.snapshot.initial-discovered.scenario");
+			try
+			{
+				ContentIndex contentIndex = BuildContentIndex(new ContentAsset[]
+				{
+					worker,
+					action,
+					scenario
+				});
+				ScenarioRun original = new ScenarioRun(scenario, contentIndex, 12345u);
+				ScenarioRunSnapshot snapshot = JsonUtility.FromJson<ScenarioRunSnapshot>(
+					JsonUtility.ToJson(original.CreateSnapshot()));
+				SetInitialDiscoveredContent(scenario, action.ContentId.Value);
+
+				ScenarioRun restored = ScenarioRun.Restore(scenario, contentIndex, snapshot);
+
+				Assert.That(restored.IsContentDiscovered(action.ContentId), Is.False);
+				Assert.That(restored.GetDiscoveredActions(), Is.Empty);
+			}
+			finally
+			{
+				Object.DestroyImmediate(worker);
+				Object.DestroyImmediate(action);
+				Object.DestroyImmediate(scenario);
+			}
+		}
+
+		[Test]
 		public void Snapshot_RestoresTheWholeRunAfterJsonRoundTrip()
 		{
 			CardDefinition worker = CreateCard("test.snapshot.worker");
@@ -1607,6 +1729,23 @@ namespace Gameplay.Tests
 					"\"},{\"m_value\":\"" + secondRegionId + "\"}],\"m_questIds\":[" + questJson + "]}",
 				definition);
 			return definition;
+		}
+
+		private static void SetInitialDiscoveredContent(
+			ScenarioDefinition scenario,
+			params string[] contentIds)
+		{
+			SerializedObject serializedScenario = new(scenario);
+			SerializedProperty initialDiscovered =
+				serializedScenario.FindProperty("m_initialDiscoveredContentIds");
+			initialDiscovered.arraySize = contentIds.Length;
+			for (int i = 0; i < contentIds.Length; i++)
+			{
+				initialDiscovered
+					.GetArrayElementAtIndex(i)
+					.FindPropertyRelative("m_value").stringValue = contentIds[i];
+			}
+			serializedScenario.ApplyModifiedPropertiesWithoutUndo();
 		}
 
 		private static ScenarioDefinition CreateScenario(

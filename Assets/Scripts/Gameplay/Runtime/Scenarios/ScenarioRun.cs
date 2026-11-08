@@ -251,6 +251,7 @@ namespace Gameplay.Scenarios
 				throw new InvalidOperationException(
 					$"剧本 {definition.ContentId} 的初始地区 {definition.InitialRegionId} 未包含在地区列表中。");
 			}
+			InitializeDiscoveredContent(definition);
 		}
 
 		private ScenarioRun(
@@ -517,6 +518,30 @@ namespace Gameplay.Scenarios
 		public bool IsContentDiscovered(ContentId contentId)
 		{
 			return contentId.IsValid && m_discoveredContentIds.Contains(contentId);
+		}
+
+		private void InitializeDiscoveredContent(ScenarioDefinition definition)
+		{
+			IReadOnlyList<ContentId> initialContentIds = definition.InitialDiscoveredContentIds;
+			for (int i = 0; i < initialContentIds.Count; i++)
+			{
+				ContentId contentId = initialContentIds[i];
+				if (!contentId.IsValid)
+				{
+					throw new InvalidOperationException(
+						$"剧本 {definition.ContentId} 的第 {i + 1} 个开局已发现内容 ID 无效。");
+				}
+				if (!m_contentIndex.TryGet(contentId, out ContentAsset _))
+				{
+					throw new InvalidOperationException(
+						$"剧本 {definition.ContentId} 的开局已发现内容 {contentId} 不存在。");
+				}
+				if (!m_discoveredContentIds.Add(contentId))
+				{
+					throw new InvalidOperationException(
+						$"剧本 {definition.ContentId} 重复声明开局已发现内容 {contentId}。");
+				}
+			}
 		}
 
 		/// <summary>查询当前单局日志中的任务或配方 / 行动条目是否已被玩家查看。</summary>

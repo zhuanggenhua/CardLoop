@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 435156c947e99c24e93b7f17c8aa4353, type: 3}
+  m_Name: "\u5BD2\u591C\u8425\u5730"
+  m_EditorClassIdentifier: Gameplay.Runtime::Gameplay.Scenarios.ScenarioDefinition
+  m_contentId:
+    m_value: scenario.hanye-camp
+  m_tagCodes: 
+  m_displayName: "\u5BD2\u591C\u8425\u5730"
+  m_description: "\u77ED\u5C40\u56FA\u5B88\u63A2\u7D22\u5267\u672C\u3002\u767D\u5929\u6D3E\u89D2\u8272\u63A2\u7D22\u548C\u641C\u522E\uFF0C\u591C\u665A\u5904\u7406\u98DF\u7269\u4E0E\u4E8B\u4EF6\u538B\u529B\u3002"
+  m_icon:
+    Address: 
+    Guid: 
+    Locked: 1
+  m_initialRegionId:
+    m_value: scenario.hanye-camp.region
+  m_regionIds:
+  - m_value: scenario.hanye-camp.region
+  m_questIds:
+  - m_value: quest.hanye-camp.stabilize-camp
+  m_initialDiscoveredContentIds:
+  - m_value: action.hanye-camp.explore-location
+  - m_value: action.hanye-camp.scavenge-supplies
+  - m_value: action.hanye-camp.defend-camp
+  m_turnsPerDay: 2
+  m_secondsPerTurn: 1
+  m_dayCycleRules:
+    m_enabled: 1
+    m_hungerPerCharacter: 1
+    m_baseCardLimit: 8
+    m_feedingHealingEffectId: 2005
+    m_encounters:
+    - m_key: broken-fence-night
+      m_notificationMessage: "\u591C\u91CC\u56F4\u680F\u53C8\u88AB\u649E\u5F00\u4E00\u6BB5\u3002"
+      m_cardId:
+        m_value: card.hanye-camp.threat-broken-fence
+      m_count: 1
+      m_oneTimeOnly: 1
+      m_minimumDay: 1
+      m_maximumDay: 1
+      m_interval: 0
+      m_priority: 30
+      m_chance: 1
+      m_maxCardsOnTabletop: 100
+    - m_key: cold-wave-night
+      m_notificationMessage: "\u5BD2\u6F6E\u538B\u4E0B\u6765\uFF0C\u8425\u5730\u5FC5\u987B\u817E\u51FA\u4EBA\u624B\u5904\u7406\u3002"
+      m_cardId:
+        m_value: card.hanye-camp.event-cold-wave
+      m_count: 1
+      m_oneTimeOnly: 1
+      m_minimumDay: 2
+      m_maximumDay: 2
+      m_interval: 0
+      m_priority: 20
+      m_chance: 1
+      m_maxCardsOnTabletop: 100
+    - m_key: infection-doubt-night
+      m_notificationMessage: "\u6709\u4EBA\u5F00\u59CB\u53D1\u70E7\uFF0C\u611F\u67D3\u7591\u4E91\u5728\u8425\u5730\u91CC\u8513\u5EF6\u3002"
+      m_cardId:
+        m_value: card.hanye-camp.event-infection-doubt
+      m_count: 1
+      m_oneTimeOnly: 1
+      m_minimumDay: 3
+      m_maximumDay: 3
+      m_interval: 0
+      m_priority: 10
+      m_chance: 1
+      m_maxCardsOnTabletop: 100
+  m_battleFormationRules:
+    m_sideLayouts: []
+    m_areaMargin: {x: 0.1, y: 0.1}
